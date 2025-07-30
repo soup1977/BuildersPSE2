@@ -6,6 +6,7 @@ Imports BuildersPSE2.BuildersPSE.Models
 Public Class frmCreateEditProject
     Private ReadOnly da As New DataAccess()
     Private currentProject As ProjectModel
+    Private copiedLevels As List(Of LevelModel)
     Private isNewProject As Boolean = True
 
     Public Sub New(Optional selectedProj As ProjectModel = Nothing)
@@ -40,6 +41,7 @@ Public Class frmCreateEditProject
                 })
             Next
             LoadProjectData()
+
         End If
         tabControlRight.TabPages.Remove(tabOverrides)
         tabControlRight.TabPages.Remove(tabRollup)
@@ -71,6 +73,7 @@ Public Class frmCreateEditProject
         cmbLevelType.DataSource = da.GetProductTypes()
         cmbLevelType.DisplayMember = "ProductTypeName"
         cmbLevelType.ValueMember = "ProductTypeID"
+
     End Sub
 
     Private Sub TvProjectTree_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles tvProjectTree.AfterSelect
@@ -90,13 +93,24 @@ Public Class frmCreateEditProject
                 tabControlRight.TabPages.Add(tabRollup)
                 LoadBuildingInfo(CType(selected, BuildingModel))
                 LoadRollup(selected)
+                Me.BeginInvoke(Sub()
+                                   tabControlRight.SelectedTab = tabBuildingInfo
+                                   txtBuildingName.Focus()
+                                   txtBuildingName.SelectAll()
+                               End Sub)
             Case TypeOf selected Is LevelModel
                 tabControlRight.TabPages.Add(tabLevelInfo)
                 tabControlRight.TabPages.Add(tabRollup)
                 LoadLevelInfo(CType(selected, LevelModel))
                 LoadRollup(selected)
+                Me.BeginInvoke(Sub()
+                                   tabControlRight.SelectedTab = tabLevelInfo
+                                   txtLevelName.Focus()
+                                   txtLevelName.SelectAll()
+                               End Sub)
         End Select
     End Sub
+
 
     Private Sub LoadProjectInfo(proj As ProjectModel)
         txtJBID.Text = proj.JBID
@@ -227,7 +241,7 @@ Public Class frmCreateEditProject
                 dgvRollup.Rows.Add("Job Supplies Cost", CDec(If(level.JobSuppliesCost, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Items Cost", CDec(If(level.ItemsCost, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Delivery Cost", CDec(If(level.DeliveryCost, 0D)).ToString("C2"))
-                Dim margin As Decimal = If(level.OverallPrice = 0, 0D, ((CDec(If(level.OverallPrice, 0D)) - CDec(If(level.OverallCost, 0D)) + CDec(If(level.DeliveryCost, 0D))) / CDec(level.OverallPrice)))
+                Dim margin As Decimal = If(level.OverallPrice = 0, 0D, ((CDec((If(level.OverallPrice, 0D)) - CDec(If(level.DeliveryCost, 0D))) - CDec(If(level.OverallCost, 0D))) / CDec((If(level.OverallPrice, 0D)) - CDec(If(level.DeliveryCost, 0D)))))
                 dgvRollup.Rows.Add("Margin", margin.ToString("P1"))
         End Select
         dgvRollup.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
@@ -322,9 +336,18 @@ Public Class frmCreateEditProject
     Private Sub cmsTreeMenu_Opening(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles cmsTreeMenu.Opening
         mnuAddBuilding.Visible = TypeOf tvProjectTree.SelectedNode.Tag Is ProjectModel
         mnuAddLevel.Visible = TypeOf tvProjectTree.SelectedNode.Tag Is BuildingModel
-        mnuEdit.Visible = True
         mnuDelete.Visible = True
         EditPSEToolStripMenuItem.Visible = True
+        mnuCopyLevels.Visible = False
+        mnuPasteLevels.Visible = False
+        If TypeOf tvProjectTree.SelectedNode.Tag Is BuildingModel Then
+            Dim selectedBldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
+            If selectedBldg.Levels.Count > 0 Then
+                mnuCopyLevels.Visible = True
+            ElseIf copiedLevels IsNot Nothing AndAlso copiedLevels.Count > 0 Then
+                mnuPasteLevels.Visible = True
+            End If
+        End If
     End Sub
 
     Private Sub mnuAddBuilding_Click(sender As Object, e As EventArgs) Handles mnuAddBuilding.Click
@@ -347,9 +370,7 @@ Public Class frmCreateEditProject
         LoadProjectData()
     End Sub
 
-    Private Sub mnuEdit_Click(sender As Object, e As EventArgs) Handles mnuEdit.Click
-        ' Handled by selection changing tabs
-    End Sub
+
 
     Private Sub mnuDelete_Click(sender As Object, e As EventArgs) Handles mnuDelete.Click
         If MessageBox.Show("Delete selected item?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
@@ -367,7 +388,42 @@ Public Class frmCreateEditProject
             LoadProjectData()
         End If
     End Sub
+    Private Sub mnuCopyLevels_Click(sender As Object, e As EventArgs) Handles mnuCopyLevels.Click
+        Dim selectedBldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
+        copiedLevels = New List(Of LevelModel)
+        For Each level In selectedBldg.Levels
+            Dim clonedLevel As New LevelModel With {
+            .LevelName = level.LevelName,
+            .LevelNumber = level.LevelNumber,
+            .ProductTypeID = level.ProductTypeID,
+            .ProductTypeName = level.ProductTypeName
+        }
+            copiedLevels.Add(clonedLevel)
+        Next
+    End Sub
 
+    Private Sub mnuPasteLevels_Click(sender As Object, e As EventArgs) Handles mnuPasteLevels.Click
+        Dim targetBldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
+        If targetBldg.Levels.Count > 0 Then
+            MessageBox.Show("Cannot paste to a building with existing levels.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+        If copiedLevels Is Nothing OrElse copiedLevels.Count = 0 Then
+            MessageBox.Show("No levels copied.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+        For Each clonedLevel In copiedLevels
+            Dim newLevel As New LevelModel With {
+            .LevelName = clonedLevel.LevelName,
+            .LevelNumber = clonedLevel.LevelNumber,
+            .ProductTypeID = clonedLevel.ProductTypeID,
+            .ProductTypeName = clonedLevel.ProductTypeName
+        }
+            targetBldg.Levels.Add(newLevel)
+            da.SaveLevel(newLevel, targetBldg.BuildingID, currentProject.ProjectID)
+        Next
+        LoadProjectData()
+    End Sub
     Private Sub btnAddCusttoProj_Click(sender As Object, e As EventArgs) Handles btnAddCusttoProj.Click
         If cboCustomer.SelectedIndex <> -1 Then
             Dim selectedCustomer As CustomerModel = CType(cboCustomer.SelectedItem, CustomerModel)
@@ -401,5 +457,9 @@ Public Class frmCreateEditProject
         Else
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
+    End Sub
+
+    Private Sub btnRecalcRollup_Click(sender As Object, e As EventArgs) Handles btnRecalcRollup.Click
+
     End Sub
 End Class

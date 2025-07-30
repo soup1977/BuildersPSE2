@@ -74,7 +74,7 @@ Partial Class FrmPSE
         Me.PanelDetails = New System.Windows.Forms.Panel()
         Me.btnDeleteUnit = New System.Windows.Forms.Button()
         Me.btnSaveNewOnly = New System.Windows.Forms.Button()
-        Me.LblActualUnitQty = New System.Windows.Forms.Label()
+        Me.LblActualUnitQuantity = New System.Windows.Forms.Label()
         Me.TxtActualUnitQuantity = New System.Windows.Forms.TextBox()
         Me.LblTotalSellPricePerSQFT = New System.Windows.Forms.Label()
         Me.TxtTotalSellPricePerSQFT = New System.Windows.Forms.TextBox()
@@ -113,17 +113,22 @@ Partial Class FrmPSE
         Me.BtnCancel = New System.Windows.Forms.Button()
         Me.LblReferencedRawUnit = New System.Windows.Forms.Label()
         Me.TxtReferencedRawUnit = New System.Windows.Forms.TextBox()
+        Me.ContextMenuActualUnits = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DeleteActualUnitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContextMenuLevels.SuspendLayout()
         Me.TabControlData.SuspendLayout()
         Me.TabUnitBased.SuspendLayout()
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.PanelDetails.SuspendLayout()
+        Me.ContextMenuActualUnits.SuspendLayout()
         Me.SuspendLayout()
         '
         'TreeViewLevels
         '
         Me.TreeViewLevels.ContextMenuStrip = Me.ContextMenuLevels
         Me.TreeViewLevels.Dock = System.Windows.Forms.DockStyle.Left
+        Me.TreeViewLevels.HideSelection = False
         Me.TreeViewLevels.Location = New System.Drawing.Point(0, 0)
         Me.TreeViewLevels.Name = "TreeViewLevels"
         Me.TreeViewLevels.Size = New System.Drawing.Size(278, 707)
@@ -240,11 +245,12 @@ Partial Class FrmPSE
         Me.btnReuseActualUnit.Name = "btnReuseActualUnit"
         Me.btnReuseActualUnit.Size = New System.Drawing.Size(149, 29)
         Me.btnReuseActualUnit.TabIndex = 53
-        Me.btnReuseActualUnit.Text = "Reuse Actual Unit"
+        Me.btnReuseActualUnit.Text = "Add Actual Unit to Level"
         Me.btnReuseActualUnit.UseVisualStyleBackColor = True
         '
         'ListboxExistingActualUnits
         '
+        Me.ListboxExistingActualUnits.ContextMenuStrip = Me.ContextMenuActualUnits
         Me.ListboxExistingActualUnits.FormattingEnabled = True
         Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(166, 10)
         Me.ListboxExistingActualUnits.Name = "ListboxExistingActualUnits"
@@ -555,7 +561,7 @@ Partial Class FrmPSE
         Me.PanelDetails.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.PanelDetails.Controls.Add(Me.btnDeleteUnit)
         Me.PanelDetails.Controls.Add(Me.btnSaveNewOnly)
-        Me.PanelDetails.Controls.Add(Me.LblActualUnitQty)
+        Me.PanelDetails.Controls.Add(Me.LblActualUnitQuantity)
         Me.PanelDetails.Controls.Add(Me.TxtActualUnitQuantity)
         Me.PanelDetails.Controls.Add(Me.LblTotalSellPricePerSQFT)
         Me.PanelDetails.Controls.Add(Me.TxtTotalSellPricePerSQFT)
@@ -619,13 +625,13 @@ Partial Class FrmPSE
         Me.btnSaveNewOnly.Text = "New Actual Unit"
         Me.btnSaveNewOnly.UseVisualStyleBackColor = False
         '
-        'LblActualUnitQty
+        'LblActualUnitQuantity
         '
-        Me.LblActualUnitQty.Location = New System.Drawing.Point(10, 167)
-        Me.LblActualUnitQty.Name = "LblActualUnitQty"
-        Me.LblActualUnitQty.Size = New System.Drawing.Size(100, 23)
-        Me.LblActualUnitQty.TabIndex = 46
-        Me.LblActualUnitQty.Text = "Unit Plan Qty:"
+        Me.LblActualUnitQuantity.Location = New System.Drawing.Point(10, 167)
+        Me.LblActualUnitQuantity.Name = "LblActualUnitQuantity"
+        Me.LblActualUnitQuantity.Size = New System.Drawing.Size(100, 23)
+        Me.LblActualUnitQuantity.TabIndex = 46
+        Me.LblActualUnitQuantity.Text = "Unit Plan Qty:"
         '
         'TxtActualUnitQuantity
         '
@@ -927,6 +933,24 @@ Partial Class FrmPSE
         Me.TxtReferencedRawUnit.Size = New System.Drawing.Size(150, 20)
         Me.TxtReferencedRawUnit.TabIndex = 15
         '
+        'ContextMenuActualUnits
+        '
+        Me.ContextMenuActualUnits.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EditToolStripMenuItem, Me.DeleteActualUnitToolStripMenuItem})
+        Me.ContextMenuActualUnits.Name = "ContextMenuActualUnits"
+        Me.ContextMenuActualUnits.Size = New System.Drawing.Size(170, 48)
+        '
+        'EditToolStripMenuItem
+        '
+        Me.EditToolStripMenuItem.Name = "EditToolStripMenuItem"
+        Me.EditToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.EditToolStripMenuItem.Text = "Edit Actual Unit"
+        '
+        'DeleteActualUnitToolStripMenuItem
+        '
+        Me.DeleteActualUnitToolStripMenuItem.Name = "DeleteActualUnitToolStripMenuItem"
+        Me.DeleteActualUnitToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.DeleteActualUnitToolStripMenuItem.Text = "Delete Actual Unit"
+        '
         'FrmPSE
         '
         Me.BackColor = System.Drawing.Color.LightGray
@@ -943,11 +967,12 @@ Partial Class FrmPSE
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).EndInit()
         Me.PanelDetails.ResumeLayout(False)
         Me.PanelDetails.PerformLayout()
+        Me.ContextMenuActualUnits.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
 
-    Private WithEvents LblActualUnitQty As Label
+    Private WithEvents LblActualUnitQuantity As Label
     Private WithEvents TxtActualUnitQuantity As TextBox
     Private WithEvents TreeViewLevels As TreeView
     Private WithEvents TabControlData As TabControl
@@ -1037,4 +1062,7 @@ Partial Class FrmPSE
     Friend WithEvents ContextMenuLevels As ContextMenuStrip
     Friend WithEvents mnuCopyUnits As ToolStripMenuItem
     Friend WithEvents mnuPasteUnits As ToolStripMenuItem
+    Friend WithEvents ContextMenuActualUnits As ContextMenuStrip
+    Friend WithEvents EditToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents DeleteActualUnitToolStripMenuItem As ToolStripMenuItem
 End Class

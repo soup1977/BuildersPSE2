@@ -688,6 +688,25 @@ Namespace BuildersPSE.DataAccess
                                      End Sub, "Error loading mappings for level " & levelID)
             Return mappings
         End Function
+        Public Function GetActualToLevelMappingsByActualUnitID(actualUnitID As Integer) As List(Of ActualToLevelMappingModel)
+            Dim mappings As New List(Of ActualToLevelMappingModel)
+            Dim params As SqlParameter() = {New SqlParameter("@ActualUnitID", actualUnitID)}
+            ExecuteWithErrorHandling(Sub()
+                                         Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader("SELECT * FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID", params)
+                                             While reader.Read()
+                                                 Dim mapping As New ActualToLevelMappingModel With {
+                                             .MappingID = reader.GetInt32(reader.GetOrdinal("MappingID")),
+                                             .ProjectID = reader.GetInt32(reader.GetOrdinal("ProjectID")),
+                                             .ActualUnitID = actualUnitID,
+                                             .LevelID = reader.GetInt32(reader.GetOrdinal("LevelID")),
+                                             .Quantity = reader.GetInt32(reader.GetOrdinal("Quantity"))
+                                         }
+                                                 mappings.Add(mapping)
+                                             End While
+                                         End Using
+                                     End Sub, "Error loading mappings for actual unit " & actualUnitID)
+            Return mappings
+        End Function
 
         Public Function GetActualUnitsByProject(projectID As Integer) As List(Of ActualUnitModel)
             Dim actualUnits As New List(Of ActualUnitModel)
@@ -821,44 +840,93 @@ Namespace BuildersPSE.DataAccess
                                              End If
                                          End Using
 
-                                         Dim overallSqft As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallSQFT, params))
-                                         Dim overallLF As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallLF, params))
-                                         Dim overallBDFT As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallBDFT, params))
-                                         Dim lumberCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLumberCost, params))
-                                         Dim plateCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculatePlateCost, params))
-                                         Dim laborCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLaborCost, params))
-                                         Dim laborMH As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLaborMH, params))
-                                         Dim designCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateDesignCost, params))
-                                         Dim mgmtCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateMGMTCost, params))
-                                         Dim suppliesCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateJobSuppliesCost, params))
-                                         Dim itemsCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateItemsCost, params))
-                                         Dim deliveryCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateDeliveryCost, params))
-                                         Dim overallCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallCost, params))
+                                         ' Create fresh params for each subsequent call
+                                         Dim overallSqftParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim overallSqftObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallSQFT, overallSqftParams)
+                                         Dim overallSqft As Decimal = If(overallSqftObj Is DBNull.Value OrElse overallSqftObj Is Nothing, 0D, CDec(overallSqftObj))
+
+                                         Dim overallLFParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim overallLFObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallLF, overallLFParams)
+                                         Dim overallLF As Decimal = If(overallLFObj Is DBNull.Value OrElse overallLFObj Is Nothing, 0D, CDec(overallLFObj))
+
+                                         Dim overallBDFTParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim overallBDFTObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallBDFT, overallBDFTParams)
+                                         Dim overallBDFT As Decimal = If(overallBDFTObj Is DBNull.Value OrElse overallBDFTObj Is Nothing, 0D, CDec(overallBDFTObj))
+
+                                         Dim lumberCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim lumberCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLumberCost, lumberCostParams)
+                                         Dim lumberCost As Decimal = If(lumberCostObj Is DBNull.Value OrElse lumberCostObj Is Nothing, 0D, CDec(lumberCostObj))
+
+                                         Dim plateCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim plateCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculatePlateCost, plateCostParams)
+                                         Dim plateCost As Decimal = If(plateCostObj Is DBNull.Value OrElse plateCostObj Is Nothing, 0D, CDec(plateCostObj))
+
+                                         Dim laborCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim laborCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLaborCost, laborCostParams)
+                                         Dim laborCost As Decimal = If(laborCostObj Is DBNull.Value OrElse laborCostObj Is Nothing, 0D, CDec(laborCostObj))
+
+                                         Dim laborMHParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim laborMHObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLaborMH, laborMHParams)
+                                         Dim laborMH As Decimal = If(laborMHObj Is DBNull.Value OrElse laborMHObj Is Nothing, 0D, CDec(laborMHObj))
+
+                                         Dim designCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim designCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateDesignCost, designCostParams)
+                                         Dim designCost As Decimal = If(designCostObj Is DBNull.Value OrElse designCostObj Is Nothing, 0D, CDec(designCostObj))
+
+                                         Dim mgmtCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim mgmtCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateMGMTCost, mgmtCostParams)
+                                         Dim mgmtCost As Decimal = If(mgmtCostObj Is DBNull.Value OrElse mgmtCostObj Is Nothing, 0D, CDec(mgmtCostObj))
+
+                                         Dim suppliesCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim suppliesCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateJobSuppliesCost, suppliesCostParams)
+                                         Dim suppliesCost As Decimal = If(suppliesCostObj Is DBNull.Value OrElse suppliesCostObj Is Nothing, 0D, CDec(suppliesCostObj))
+
+                                         Dim itemsCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim itemsCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateItemsCost, itemsCostParams)
+                                         Dim itemsCost As Decimal = If(itemsCostObj Is DBNull.Value OrElse itemsCostObj Is Nothing, 0D, CDec(itemsCostObj))
+
+                                         Dim deliveryCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim deliveryCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateDeliveryCost, deliveryCostParams)
+                                         Dim deliveryCost As Decimal = If(deliveryCostObj Is DBNull.Value OrElse deliveryCostObj Is Nothing, 0D, CDec(deliveryCostObj))
+
+                                         Dim overallCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                         Dim overallCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallCost, overallCostParams)
+                                         Dim overallCost As Decimal = If(overallCostObj Is DBNull.Value OrElse overallCostObj Is Nothing, 0D, CDec(overallCostObj))
+
                                          Dim marginPercent As Decimal = GetMarginPercent(projectID, productTypeID)
-                                         Dim overallPrice As Decimal = If(marginPercent >= 1D, overallCost, overallCost / (1D - marginPercent)) + deliveryCost
+                                         Dim overallPrice As Decimal
+                                         If marginPercent > 0D Then
+                                             overallPrice = If(marginPercent >= 1D, overallCost + deliveryCost, overallCost / (1D - marginPercent) + deliveryCost)
+                                         Else
+                                             Dim sumUnitSellNoDelParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+                                             Dim sumUnitSellNoDelObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateSumUnitSellNoDelivery, sumUnitSellNoDelParams)
+                                             Dim sumUnitSellNoDel As Decimal = If(sumUnitSellNoDelObj Is DBNull.Value OrElse sumUnitSellNoDelObj Is Nothing, overallCost, CDec(sumUnitSellNoDelObj)) ' Fallback to 0 margin if query fails
+                                             overallPrice = sumUnitSellNoDel + deliveryCost
+                                         End If
+
                                          Dim commonSqft As Decimal = 0 ' Retrieve from Levels if applicable
                                          Dim totalSqft As Decimal = overallSqft + commonSqft
                                          Dim avgPricePerSqft As Decimal = If(totalSqft > 0D, overallPrice / totalSqft, 0D)
 
                                          Dim updateParams As New Dictionary(Of String, Object) From {
-                                             {"@LevelID", levelID},
-                                             {"@OverallSQFT", overallSqft},
-                                             {"@OverallLF", overallLF},
-                                             {"@OverallBDFT", overallBDFT},
-                                             {"@LumberCost", lumberCost},
-                                             {"@PlateCost", plateCost},
-                                             {"@LaborCost", laborCost},
-                                             {"@LaborMH", laborMH},
-                                             {"@DesignCost", designCost},
-                                             {"@MGMTCost", mgmtCost},
-                                             {"@JobSuppliesCost", suppliesCost},
-                                             {"@ItemsCost", itemsCost},
-                                             {"@DeliveryCost", deliveryCost},
-                                             {"@OverallCost", overallCost},
-                                             {"@OverallPrice", overallPrice},
-                                             {"@TotalSQFT", totalSqft},
-                                             {"@AvgPricePerSQFT", avgPricePerSqft}
-                                         }
+                                     {"@LevelID", levelID},
+                                     {"@OverallSQFT", overallSqft},
+                                     {"@OverallLF", overallLF},
+                                     {"@OverallBDFT", overallBDFT},
+                                     {"@LumberCost", lumberCost},
+                                     {"@PlateCost", plateCost},
+                                     {"@LaborCost", laborCost},
+                                     {"@LaborMH", laborMH},
+                                     {"@DesignCost", designCost},
+                                     {"@MGMTCost", mgmtCost},
+                                     {"@JobSuppliesCost", suppliesCost},
+                                     {"@ItemsCost", itemsCost},
+                                     {"@DeliveryCost", deliveryCost},
+                                     {"@OverallCost", overallCost},
+                                     {"@OverallPrice", overallPrice},
+                                     {"@TotalSQFT", totalSqft},
+                                     {"@AvgPricePerSQFT", avgPricePerSqft}
+                                 }
                                          SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateLevelRollupsSql, BuildParameters(updateParams))
                                      End Sub, "Error updating level rollups for ID " & levelID)
         End Sub
@@ -872,37 +940,44 @@ Namespace BuildersPSE.DataAccess
                                              If reader.Read() Then projectID = reader.GetInt32(0)
                                          End Using
 
-                                         Dim floorCostPerBldg As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateFloorCostPerBldg, levelInfoParams))
-                                         Dim floorDeliveryCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateFloorDeliveryCost, levelInfoParams))
-                                         Dim roofCostPerBldg As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateRoofCostPerBldg, levelInfoParams))
-                                         Dim roofDeliveryCost As Decimal = CDec(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateRoofDeliveryCost, levelInfoParams))
-                                         Dim wallCostPerBldg As Decimal = 0D ' Stub for future
-                                         Dim wallDeliveryCost As Decimal = 0D ' Stub
+                                         Dim floorPricePerBldgParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
+                                         Dim floorPricePerBldgObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateFloorPricePerBldg, floorPricePerBldgParams)
+                                         Dim floorPricePerBldg As Decimal = If(floorPricePerBldgObj Is DBNull.Value OrElse floorPricePerBldgObj Is Nothing, 0D, CDec(floorPricePerBldgObj))
 
-                                         Dim floorMargin As Decimal = GetMarginPercent(projectID, 1)
-                                         Dim floorPricePerBldg As Decimal = If(floorMargin >= 1D, floorCostPerBldg, floorCostPerBldg / (1D - floorMargin)) + floorDeliveryCost
-                                         Dim roofMargin As Decimal = GetMarginPercent(projectID, 2)
-                                         Dim roofPricePerBldg As Decimal = If(roofMargin >= 1D, roofCostPerBldg, roofCostPerBldg / (1D - roofMargin)) + roofDeliveryCost
-                                         Dim wallPricePerBldg As Decimal = wallCostPerBldg + wallDeliveryCost ' Stub
+                                         Dim roofPricePerBldgParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
+                                         Dim roofPricePerBldgObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateRoofPricePerBldg, roofPricePerBldgParams)
+                                         Dim roofPricePerBldg As Decimal = If(roofPricePerBldgObj Is DBNull.Value OrElse roofPricePerBldgObj Is Nothing, 0D, CDec(roofPricePerBldgObj))
+
+                                         Dim wallPricePerBldg As Decimal = 0D ' Stub for future
+
+                                         Dim floorBaseCostParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
+                                         Dim floorBaseCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateFloorBaseCost, floorBaseCostParams)
+                                         Dim floorBaseCost As Decimal = If(floorBaseCostObj Is DBNull.Value OrElse floorBaseCostObj Is Nothing, 0D, CDec(floorBaseCostObj))
+
+                                         Dim roofBaseCostParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
+                                         Dim roofBaseCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateRoofBaseCost, roofBaseCostParams)
+                                         Dim roofBaseCost As Decimal = If(roofBaseCostObj Is DBNull.Value OrElse roofBaseCostObj Is Nothing, 0D, CDec(roofBaseCostObj))
+
+                                         Dim wallBaseCost As Decimal = 0D ' Stub
 
                                          Dim extendedFloorCost As Decimal = floorPricePerBldg * bldgQty
                                          Dim extendedRoofCost As Decimal = roofPricePerBldg * bldgQty
                                          Dim extendedWallCost As Decimal = wallPricePerBldg * bldgQty
 
-                                         Dim overallCost As Decimal = floorCostPerBldg + roofCostPerBldg + wallCostPerBldg
+                                         Dim overallCost As Decimal = floorBaseCost + roofBaseCost + wallBaseCost
                                          Dim overallPrice As Decimal = floorPricePerBldg + roofPricePerBldg + wallPricePerBldg
 
                                          Dim updateParams As New Dictionary(Of String, Object) From {
-                                             {"@BuildingID", buildingID},
-                                             {"@FloorCostPerBldg", floorPricePerBldg},
-                                             {"@RoofCostPerBldg", roofPricePerBldg},
-                                             {"@WallCostPerBldg", wallPricePerBldg},
-                                             {"@ExtendedFloorCost", extendedFloorCost},
-                                             {"@ExtendedRoofCost", extendedRoofCost},
-                                             {"@ExtendedWallCost", extendedWallCost},
-                                             {"@OverallPrice", overallPrice},
-                                             {"@OverallCost", overallCost}
-                                         }
+                                     {"@BuildingID", buildingID},
+                                     {"@FloorCostPerBldg", floorPricePerBldg},
+                                     {"@RoofCostPerBldg", roofPricePerBldg},
+                                     {"@WallCostPerBldg", wallPricePerBldg},
+                                     {"@ExtendedFloorCost", extendedFloorCost},
+                                     {"@ExtendedRoofCost", extendedRoofCost},
+                                     {"@ExtendedWallCost", extendedWallCost},
+                                     {"@OverallPrice", overallPrice},
+                                     {"@OverallCost", overallCost}
+                                 }
                                          SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateBuildingRollupsSql, BuildParameters(updateParams))
                                      End Sub, "Error updating building rollups for ID " & buildingID)
         End Sub
@@ -980,6 +1055,25 @@ Namespace BuildersPSE.DataAccess
                                              End Sub, "Error deleting mapping")
                 End Using
             End Using
+        End Sub
+
+        Public Sub DeleteActualUnit(actualUnitID As Integer)
+            ExecuteWithErrorHandling(Sub()
+                                         ' Check for existing mappings with a new parameter
+                                         Dim mappingParams As SqlParameter() = {New SqlParameter("@ActualUnitID", actualUnitID)}
+                                         Dim mappingCount As Integer = CInt(SqlConnectionManager.Instance.ExecuteScalar(Of Object)("SELECT COUNT(*) FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID", mappingParams))
+                                         If mappingCount > 0 Then
+                                             Throw New ApplicationException($"Cannot delete ActualUnit with {mappingCount} existing level mapping(s).")
+                                         End If
+
+                                         ' Delete components with a new parameter
+                                         Dim componentParams As SqlParameter() = {New SqlParameter("@ActualUnitID", actualUnitID)}
+                                         SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteCalculatedComponentsByActualUnitID, componentParams)
+
+                                         ' Delete unit with a new parameter
+                                         Dim unitParams As SqlParameter() = {New SqlParameter("@ActualUnitID", actualUnitID)}
+                                         SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteActualUnit, unitParams)
+                                     End Sub, "Error deleting actual unit " & actualUnitID)
         End Sub
 
         Public Function GetConfigValue(configKey As String) As Decimal

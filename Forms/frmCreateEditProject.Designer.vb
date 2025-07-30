@@ -27,11 +27,16 @@ Partial Class frmCreateEditProject
         Me.cmsTreeMenu = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.mnuAddBuilding = New System.Windows.Forms.ToolStripMenuItem()
         Me.mnuAddLevel = New System.Windows.Forms.ToolStripMenuItem()
-        Me.mnuEdit = New System.Windows.Forms.ToolStripMenuItem()
         Me.mnuDelete = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EditPSEToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.mnuCopyLevels = New System.Windows.Forms.ToolStripMenuItem()
+        Me.mnuPasteLevels = New System.Windows.Forms.ToolStripMenuItem()
         Me.tabControlRight = New System.Windows.Forms.TabControl()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
         Me.pnlProjectInfo = New System.Windows.Forms.Panel()
+        Me.cboState = New System.Windows.Forms.ComboBox()
+        Me.cboEstimator = New System.Windows.Forms.ComboBox()
+        Me.cboProjectType = New System.Windows.Forms.ComboBox()
         Me.cboSalesman = New System.Windows.Forms.ComboBox()
         Me.cboCustomer = New System.Windows.Forms.ComboBox()
         Me.btnAddSalestoProj = New System.Windows.Forms.Button()
@@ -105,10 +110,6 @@ Partial Class frmCreateEditProject
         Me.lblLevelNumber = New System.Windows.Forms.Label()
         Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
-        Me.EditPSEToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.cboProjectType = New System.Windows.Forms.ComboBox()
-        Me.cboEstimator = New System.Windows.Forms.ComboBox()
-        Me.cboState = New System.Windows.Forms.ComboBox()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -135,6 +136,7 @@ Partial Class frmCreateEditProject
         '
         Me.tvProjectTree.ContextMenuStrip = Me.cmsTreeMenu
         Me.tvProjectTree.Dock = System.Windows.Forms.DockStyle.Left
+        Me.tvProjectTree.HideSelection = False
         Me.tvProjectTree.Location = New System.Drawing.Point(0, 0)
         Me.tvProjectTree.Name = "tvProjectTree"
         Me.tvProjectTree.Size = New System.Drawing.Size(230, 600)
@@ -142,9 +144,9 @@ Partial Class frmCreateEditProject
         '
         'cmsTreeMenu
         '
-        Me.cmsTreeMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAddBuilding, Me.mnuAddLevel, Me.mnuEdit, Me.mnuDelete, Me.EditPSEToolStripMenuItem})
+        Me.cmsTreeMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAddBuilding, Me.mnuAddLevel, Me.mnuDelete, Me.EditPSEToolStripMenuItem, Me.mnuCopyLevels, Me.mnuPasteLevels})
         Me.cmsTreeMenu.Name = "cmsTreeMenu"
-        Me.cmsTreeMenu.Size = New System.Drawing.Size(144, 114)
+        Me.cmsTreeMenu.Size = New System.Drawing.Size(144, 136)
         '
         'mnuAddBuilding
         '
@@ -158,17 +160,29 @@ Partial Class frmCreateEditProject
         Me.mnuAddLevel.Size = New System.Drawing.Size(143, 22)
         Me.mnuAddLevel.Text = "Add Level"
         '
-        'mnuEdit
-        '
-        Me.mnuEdit.Name = "mnuEdit"
-        Me.mnuEdit.Size = New System.Drawing.Size(143, 22)
-        Me.mnuEdit.Text = "Edit"
-        '
         'mnuDelete
         '
         Me.mnuDelete.Name = "mnuDelete"
         Me.mnuDelete.Size = New System.Drawing.Size(143, 22)
         Me.mnuDelete.Text = "Delete"
+        '
+        'EditPSEToolStripMenuItem
+        '
+        Me.EditPSEToolStripMenuItem.Name = "EditPSEToolStripMenuItem"
+        Me.EditPSEToolStripMenuItem.Size = New System.Drawing.Size(143, 22)
+        Me.EditPSEToolStripMenuItem.Text = "Edit PSE"
+        '
+        'mnuCopyLevels
+        '
+        Me.mnuCopyLevels.Name = "mnuCopyLevels"
+        Me.mnuCopyLevels.Size = New System.Drawing.Size(143, 22)
+        Me.mnuCopyLevels.Text = "Copy Levels"
+        '
+        'mnuPasteLevels
+        '
+        Me.mnuPasteLevels.Name = "mnuPasteLevels"
+        Me.mnuPasteLevels.Size = New System.Drawing.Size(143, 22)
+        Me.mnuPasteLevels.Text = "Paste Levels"
         '
         'tabControlRight
         '
@@ -249,8 +263,37 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Size = New System.Drawing.Size(562, 544)
         Me.pnlProjectInfo.TabIndex = 0
         '
+        'cboState
+        '
+        Me.cboState.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cboState.FormattingEnabled = True
+        Me.cboState.Items.AddRange(New Object() {"AK", "", "", "AL", "", "", "AR", "", "", "AZ", "", "", "CA", "", "", "CO", "", "", "CT", "", "", "DE", "", "", "FL", "", "", "GA", "", "", "HI", "", "", "IA", "", "", "ID", "", "", "IL", "", "", "IN", "", "", "KS", "", "", "KY", "", "", "LA", "", "", "ME", "", "", "MD", "", "", "MA", "", "", "MI", "", "", "MN", "", "", "MO", "", "", "MS", "", "", "MT", "", "", "NC", "", "", "ND", "", "", "NE", "", "", "NH", "", "", "NJ", "", "", "NM", "", "", "NV", "", "", "NY", "", "", "OH", "", "", "OK", "", "", "OR", "", "", "PA", "", "", "RI", "", "", "SC", "", "", "SD", "", "", "TN", "", "", "TX", "", "", "UT", "", "", "VA", "", "", "VT", "", "", "WA", "", "", "WI", "", "", "WV", "", "", "WY"})
+        Me.cboState.Location = New System.Drawing.Point(375, 88)
+        Me.cboState.Name = "cboState"
+        Me.cboState.Size = New System.Drawing.Size(51, 21)
+        Me.cboState.TabIndex = 6
+        '
+        'cboEstimator
+        '
+        Me.cboEstimator.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cboEstimator.FormattingEnabled = True
+        Me.cboEstimator.Location = New System.Drawing.Point(100, 166)
+        Me.cboEstimator.Name = "cboEstimator"
+        Me.cboEstimator.Size = New System.Drawing.Size(180, 21)
+        Me.cboEstimator.TabIndex = 12
+        '
+        'cboProjectType
+        '
+        Me.cboProjectType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cboProjectType.FormattingEnabled = True
+        Me.cboProjectType.Location = New System.Drawing.Point(375, 9)
+        Me.cboProjectType.Name = "cboProjectType"
+        Me.cboProjectType.Size = New System.Drawing.Size(164, 21)
+        Me.cboProjectType.TabIndex = 2
+        '
         'cboSalesman
         '
+        Me.cboSalesman.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboSalesman.FormattingEnabled = True
         Me.cboSalesman.Location = New System.Drawing.Point(361, 192)
         Me.cboSalesman.Name = "cboSalesman"
@@ -259,6 +302,7 @@ Partial Class frmCreateEditProject
         '
         'cboCustomer
         '
+        Me.cboCustomer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboCustomer.FormattingEnabled = True
         Me.cboCustomer.Location = New System.Drawing.Point(100, 193)
         Me.cboCustomer.Name = "cboCustomer"
@@ -883,37 +927,6 @@ Partial Class frmCreateEditProject
         Me.btnSaveLevelInfo.TabIndex = 6
         Me.btnSaveLevelInfo.Text = "Save Level Info"
         '
-        'EditPSEToolStripMenuItem
-        '
-        Me.EditPSEToolStripMenuItem.Name = "EditPSEToolStripMenuItem"
-        Me.EditPSEToolStripMenuItem.Size = New System.Drawing.Size(143, 22)
-        Me.EditPSEToolStripMenuItem.Text = "Edit PSE"
-        '
-        'cboProjectType
-        '
-        Me.cboProjectType.FormattingEnabled = True
-        Me.cboProjectType.Location = New System.Drawing.Point(375, 9)
-        Me.cboProjectType.Name = "cboProjectType"
-        Me.cboProjectType.Size = New System.Drawing.Size(164, 21)
-        Me.cboProjectType.TabIndex = 2
-        '
-        'cboEstimator
-        '
-        Me.cboEstimator.FormattingEnabled = True
-        Me.cboEstimator.Location = New System.Drawing.Point(100, 166)
-        Me.cboEstimator.Name = "cboEstimator"
-        Me.cboEstimator.Size = New System.Drawing.Size(180, 21)
-        Me.cboEstimator.TabIndex = 12
-        '
-        'cboState
-        '
-        Me.cboState.FormattingEnabled = True
-        Me.cboState.Items.AddRange(New Object() {"AK", "", "", "AL", "", "", "AR", "", "", "AZ", "", "", "CA", "", "", "CO", "", "", "CT", "", "", "DE", "", "", "FL", "", "", "GA", "", "", "HI", "", "", "IA", "", "", "ID", "", "", "IL", "", "", "IN", "", "", "KS", "", "", "KY", "", "", "LA", "", "", "ME", "", "", "MD", "", "", "MA", "", "", "MI", "", "", "MN", "", "", "MO", "", "", "MS", "", "", "MT", "", "", "NC", "", "", "ND", "", "", "NE", "", "", "NH", "", "", "NJ", "", "", "NM", "", "", "NV", "", "", "NY", "", "", "OH", "", "", "OK", "", "", "OR", "", "", "PA", "", "", "RI", "", "", "SC", "", "", "SD", "", "", "TN", "", "", "TX", "", "", "UT", "", "", "VA", "", "", "VT", "", "", "WA", "", "", "WI", "", "", "WV", "", "", "WY"})
-        Me.cboState.Location = New System.Drawing.Point(375, 88)
-        Me.cboState.Name = "cboState"
-        Me.cboState.Size = New System.Drawing.Size(51, 21)
-        Me.cboState.TabIndex = 6
-        '
         'frmCreateEditProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1019,7 +1032,6 @@ Partial Class frmCreateEditProject
     Friend WithEvents cmsTreeMenu As ContextMenuStrip
     Friend WithEvents mnuAddBuilding As ToolStripMenuItem
     Friend WithEvents mnuAddLevel As ToolStripMenuItem
-    Friend WithEvents mnuEdit As ToolStripMenuItem
     Friend WithEvents mnuDelete As ToolStripMenuItem
     Friend WithEvents ToolTip1 As ToolTip
     Friend WithEvents nudLevelNumber As NumericUpDown
@@ -1036,4 +1048,6 @@ Partial Class frmCreateEditProject
     Friend WithEvents cboEstimator As ComboBox
     Friend WithEvents cboProjectType As ComboBox
     Friend WithEvents cboState As ComboBox
+    Friend WithEvents mnuCopyLevels As ToolStripMenuItem
+    Friend WithEvents mnuPasteLevels As ToolStripMenuItem
 End Class

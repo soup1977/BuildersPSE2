@@ -56,6 +56,7 @@
         Public Const SelectActualUnitIDsByLevelID As String = "SELECT DISTINCT ActualUnitID FROM ActualToLevelMapping WHERE LevelID = @LevelID"
         Public Const CountMappingsByActualUnitID As String = "SELECT COUNT(*) FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitByID As String = "SELECT au.*, ru.RawUnitName AS ReferencedRawUnitName FROM ActualUnits au JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID WHERE au.ActualUnitID = @ActualUnitID"
+        Public Const SelectActualToLevelMappingsByActualUnitID As String = "SELECT * FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID"
 
         ' ActualToLevelMapping
         Public Const InsertActualToLevelMapping As String = "INSERT INTO ActualToLevelMapping (ProjectID, ActualUnitID, LevelID, Quantity) OUTPUT INSERTED.MappingID VALUES (@ProjectID, @ActualUnitID, @LevelID, @Quantity)"
@@ -110,5 +111,12 @@
         Public Const CalculateRoofCostPerBldg As String = "SELECT SUM(l.OverallCost) AS RoofCostPerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
         Public Const CalculateRoofDeliveryCost As String = "SELECT SUM(l.DeliveryCost) AS RoofDeliveryCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
         Public Const UpdateBuildingRollupsSql As String = "UPDATE Buildings SET FloorCostPerBldg = @FloorCostPerBldg, RoofCostPerBldg = @RoofCostPerBldg, WallCostPerBldg = @WallCostPerBldg, ExtendedFloorCost = @ExtendedFloorCost, ExtendedRoofCost = @ExtendedRoofCost, ExtendedWallCost = @ExtendedWallCost, OverallPrice = @OverallPrice, OverallCost = @OverallCost WHERE BuildingID = @BuildingID"
+
+        Public Const CalculateSumUnitSellNoDelivery As String = "SELECT SUM( (cc.Value * au.PlanSQFT * au.OptionalAdder * alm.Quantity) / (1 - ((ru.TotalSellPrice - ru.OverallCost) / ru.TotalSellPrice)) ) FROM ActualToLevelMapping alm JOIN ActualUnits au ON alm.ActualUnitID = au.ActualUnitID JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID JOIN CalculatedComponents cc ON cc.ActualUnitID = au.ActualUnitID WHERE alm.LevelID = @LevelID AND cc.ComponentType = 'OverallCost/SQFT' AND ru.TotalSellPrice > 0 AND ((ru.TotalSellPrice - ru.OverallCost) / ru.TotalSellPrice) BETWEEN 0 AND 0.999"
+        Public Const CalculateFloorPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS FloorPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 1"
+        Public Const CalculateRoofPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS RoofPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
+        Public Const CalculateFloorBaseCost As String = "SELECT SUM(l.OverallCost) AS FloorBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 1"
+        Public Const CalculateRoofBaseCost As String = "SELECT SUM(l.OverallCost) AS RoofBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
+
     End Module
 End Namespace
