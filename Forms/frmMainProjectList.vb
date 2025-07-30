@@ -1,7 +1,6 @@
 ﻿Option Strict On
 
 Imports BuildersPSE2.BuildersPSE.DataAccess
-
 Imports BuildersPSE2.BuildersPSE.Models
 
 Public Class frmMainProjectList
@@ -14,46 +13,58 @@ Public Class frmMainProjectList
 
     Private Sub LoadProjects()
         Try
-            projects = da.GetProjectList()
+            ' Use light load without details for list view optimization
+            projects = da.GetProjects(includeDetails:=False)
             DataGridViewProjects.DataSource = projects
-            With DataGridViewProjects
-                .Columns("ProjectType").Visible = False
-                .Columns("ProjectID").Visible = False
-                .Columns("Estimator").Visible = True
-                .Columns("Address").Visible = False
-                .Columns("City").Visible = False
-                .Columns("State").Visible = False
-                .Columns("Zip").Visible = False
-                .Columns("ArchPlansDated").Visible = False
-                .Columns("EngPlansDated").Visible = False
-                .Columns("MilesToJobSite").Visible = False
-                .Columns("TotalNetSqft").Visible = False
-                .Columns("TotalGrossSqft").Visible = False
-                .Columns("ProjectArchitect").Visible = False
-                .Columns("ProjectEngineer").Visible = False
-                .Columns("ProjectNotes").Visible = False
-                .Columns("CreatedDate").Visible = False
-                .Columns("JBID").HeaderText = "Proj Nbr"
-                .Columns("ProjectName").HeaderText = "Name"
-                .Columns("BidDate").HeaderText = "Bid Date"
-                .Columns("PrimaryCustomer").HeaderText = "Customer"
-                .Columns("PrimarySalesman").HeaderText = "Salesman"
-                .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-            End With
+            ConfigureGridColumns()
         Catch ex As Exception
+            ' Improved error handling with specific message and logging placeholder
             MessageBox.Show("Error loading projects: " & ex.Message, "Truss Alert", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            ' Log error here (e.g., to file or service) for profound knowledge analysis
         End Try
+    End Sub
+
+    Private Sub ConfigureGridColumns()
+        With DataGridViewProjects
+            .Columns("ProjectType").Visible = False
+            .Columns("ProjectID").Visible = False
+            .Columns("Estimator").Visible = True
+            .Columns("Address").Visible = False
+            .Columns("City").Visible = False
+            .Columns("State").Visible = False
+            .Columns("Zip").Visible = False
+            .Columns("ArchPlansDated").Visible = False
+            .Columns("EngPlansDated").Visible = False
+            .Columns("MilesToJobSite").Visible = False
+            .Columns("TotalNetSqft").Visible = False
+            .Columns("TotalGrossSqft").Visible = False
+            .Columns("ProjectArchitect").Visible = False
+            .Columns("ProjectEngineer").Visible = False
+            .Columns("ProjectNotes").Visible = False
+            .Columns("CreatedDate").Visible = False
+            .Columns("JBID").HeaderText = "Proj Nbr"
+            .Columns("ProjectName").HeaderText = "Name"
+            .Columns("BidDate").HeaderText = "Bid Date"
+            .Columns("PrimaryCustomer").HeaderText = "Customer"
+            .Columns("PrimarySalesman").HeaderText = "Salesman"
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+        End With
     End Sub
 
     Private Sub TxtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
         Dim searchText As String = txtSearch.Text.ToLower()
-        Dim filtered = projects.Where(Function(p) p.ProjectName.ToLower().Contains(searchText) OrElse
-                                              (p.BidDate.HasValue AndAlso p.BidDate.Value.ToString().Contains(searchText)) OrElse
-                                              p.PrimaryCustomer.ToLower().Contains(searchText) OrElse
-                                              p.PrimarySalesman.ToLower().Contains(searchText)).ToList()
+        If projects Is Nothing Then Exit Sub
+        Dim filtered As New List(Of ProjectModel)
+        For Each p As ProjectModel In projects
+            If (p.ProjectName?.ToLower().Contains(searchText) = True) OrElse
+                (p.BidDate.HasValue AndAlso p.BidDate.Value.ToString().ToLower().Contains(searchText)) OrElse
+                (p.PrimaryCustomer?.ToLower().Contains(searchText) = True) OrElse
+                (p.PrimarySalesman?.ToLower().Contains(searchText) = True) Then
+                filtered.Add(p)
+            End If
+        Next
         DataGridViewProjects.DataSource = filtered
     End Sub
-
 
     Private Sub BtnNewProject_Click(sender As Object, e As EventArgs) Handles btnNewProject.Click
         Using frm As New frmCreateEditProject() ' Open blank for new
@@ -80,7 +91,7 @@ Public Class frmMainProjectList
     Private Sub BtnOpenPSE_Click(sender As Object, e As EventArgs) Handles btnOpenPSE.Click
         If DataGridViewProjects.CurrentRow IsNot Nothing Then
             Dim selectedProj As ProjectModel = CType(DataGridViewProjects.CurrentRow.DataBoundItem, ProjectModel)
-            Using frm As New frmPSE(selectedProj.ProjectID) ' Pass ID as Integer
+            Using frm As New FrmPSE(selectedProj.ProjectID) ' Pass ID as Integer
                 frm.ShowDialog() ' Modal for focus - servant to workflow
             End Using
         Else
