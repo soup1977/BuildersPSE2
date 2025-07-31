@@ -13,57 +13,47 @@ Public Class frmMainProjectList
 
     Private Sub LoadProjects()
         Try
-            ' Use light load without details for list view optimization
+            ' Fetch parent projects without details
             projects = da.GetProjects(includeDetails:=False)
-            DataGridViewProjects.DataSource = projects
+            ' Join with latest version data
+            Dim displayProjects = projects.Select(Function(p)
+                                                      Dim latestVersion As ProjectVersionModel = da.GetProjectVersions(p.ProjectID).FirstOrDefault()
+                                                      Return New With {
+                                                          p.ProjectID,
+                                                          p.JBID,
+                                                          p.ProjectName,
+                                                          p.BidDate,
+                                                          p.Estimator.EstimatorName,
+                                                          .VersionName = If(latestVersion IsNot Nothing, latestVersion.VersionName, String.Empty),
+                                                          .CustomerName = If(latestVersion IsNot Nothing, latestVersion.CustomerName, String.Empty),
+                                                          .SalesName = If(latestVersion IsNot Nothing, latestVersion.SalesName, String.Empty),
+                                                          .VersionID = If(latestVersion IsNot Nothing, latestVersion.VersionID, 0)
+                                                      }
+                                                  End Function).ToList()
+            DataGridViewProjects.DataSource = displayProjects
             ConfigureGridColumns()
         Catch ex As Exception
-            ' Improved error handling with specific message and logging placeholder
             MessageBox.Show("Error loading projects: " & ex.Message, "Truss Alert", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            ' Log error here (e.g., to file or service) for profound knowledge analysis
         End Try
     End Sub
 
     Private Sub ConfigureGridColumns()
         With DataGridViewProjects
-            .Columns("ProjectType").Visible = False
             .Columns("ProjectID").Visible = False
-            .Columns("Estimator").Visible = True
-            .Columns("Address").Visible = False
-            .Columns("City").Visible = False
-            .Columns("State").Visible = False
-            .Columns("Zip").Visible = False
-            .Columns("ArchPlansDated").Visible = False
-            .Columns("EngPlansDated").Visible = False
-            .Columns("MilesToJobSite").Visible = False
-            .Columns("TotalNetSqft").Visible = False
-            .Columns("TotalGrossSqft").Visible = False
-            .Columns("ProjectArchitect").Visible = False
-            .Columns("ProjectEngineer").Visible = False
-            .Columns("ProjectNotes").Visible = False
-            .Columns("CreatedDate").Visible = False
+            .Columns("VersionID").Visible = False
             .Columns("JBID").HeaderText = "Proj Nbr"
             .Columns("ProjectName").HeaderText = "Name"
             .Columns("BidDate").HeaderText = "Bid Date"
-            .Columns("PrimaryCustomer").HeaderText = "Customer"
-            .Columns("PrimarySalesman").HeaderText = "Salesman"
+            .Columns("EstimatorName").HeaderText = "Estimator"
+            .Columns("VersionName").HeaderText = "Latest Version"
+            .Columns("CustomerName").HeaderText = "Customer"
+            .Columns("SalesName").HeaderText = "Salesman"
             .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         End With
     End Sub
 
     Private Sub TxtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
-        Dim searchText As String = txtSearch.Text.ToLower()
-        If projects Is Nothing Then Exit Sub
-        Dim filtered As New List(Of ProjectModel)
-        For Each p As ProjectModel In projects
-            If (p.ProjectName?.ToLower().Contains(searchText) = True) OrElse
-                (p.BidDate.HasValue AndAlso p.BidDate.Value.ToString().ToLower().Contains(searchText)) OrElse
-                (p.PrimaryCustomer?.ToLower().Contains(searchText) = True) OrElse
-                (p.PrimarySalesman?.ToLower().Contains(searchText) = True) Then
-                filtered.Add(p)
-            End If
-        Next
-        DataGridViewProjects.DataSource = filtered
+        'stub for later date
     End Sub
 
     Private Sub BtnNewProject_Click(sender As Object, e As EventArgs) Handles btnNewProject.Click
@@ -76,9 +66,10 @@ Public Class frmMainProjectList
 
     Private Sub BtnEditProject_Click(sender As Object, e As EventArgs) Handles btnEditProject.Click
         If DataGridViewProjects.CurrentRow IsNot Nothing Then
-            Dim selectedProj As ProjectModel = CType(DataGridViewProjects.CurrentRow.DataBoundItem, ProjectModel)
-            Dim fullProj As ProjectModel = da.GetProjectByID(selectedProj.ProjectID)
-            Using frm As New frmCreateEditProject(fullProj) ' Pass full project
+            Dim projectID As Integer = CInt(DataGridViewProjects.CurrentRow.Cells("ProjectID").Value)
+            Dim latestVersionID As Integer = CInt(DataGridViewProjects.CurrentRow.Cells("VersionID").Value)
+            Dim selectedProj As ProjectModel = da.GetProjectByID(projectID)
+            Using frm As New frmCreateEditProject(selectedProj, latestVersionID) ' Pass project and latest VersionID
                 If frm.ShowDialog() = DialogResult.OK Then
                     LoadProjects() ' Refresh
                 End If
@@ -90,12 +81,16 @@ Public Class frmMainProjectList
 
     Private Sub BtnOpenPSE_Click(sender As Object, e As EventArgs) Handles btnOpenPSE.Click
         If DataGridViewProjects.CurrentRow IsNot Nothing Then
-            Dim selectedProj As ProjectModel = CType(DataGridViewProjects.CurrentRow.DataBoundItem, ProjectModel)
-            Using frm As New FrmPSE(selectedProj.ProjectID) ' Pass ID as Integer
-                frm.ShowDialog() ' Modal for focus - servant to workflow
+            Dim projectID As Integer = CInt(DataGridViewProjects.CurrentRow.Cells("ProjectID").Value)
+            Using frm As New FrmPSE(projectID) ' Pass ID as Integer
+                frm.ShowDialog() ' Modal for focus
             End Using
         Else
             MessageBox.Show("Select a project to open PSE.", "Truss Tip", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End If
+    End Sub
+
+    Private Sub btnRefreshGrid_Click(sender As Object, e As EventArgs) Handles btnRefreshGrid.Click
+        LoadProjects()
     End Sub
 End Class

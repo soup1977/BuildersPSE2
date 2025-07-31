@@ -3,7 +3,6 @@
 Imports System.Configuration
 Imports System.Data.SqlClient
 
-
 Namespace BuildersPSE.Utilities
     Public Class SqlConnectionManager
         Private Shared _instance As SqlConnectionManager
@@ -82,6 +81,23 @@ Namespace BuildersPSE.Utilities
                 cmd.Parameters.AddRange(parameters)
             End If
             Return cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection) ' Auto-closes conn on reader close
+        End Function
+
+        ' Added: Helper method for executing queries with error handling (moved from DataAccess.vb)
+        Public Sub ExecuteWithErrorHandling(action As Action, errorMessage As String)
+            Try
+                action()
+            Catch ex As Exception
+                Throw New ApplicationException(errorMessage & ": " & ex.Message)
+            End Try
+        End Sub
+
+        ' Added: Helper for executing scalar with transaction (moved from DataAccess.vb)
+        Public Function ExecuteScalarTransactional(Of T)(query As String, params As SqlParameter(), conn As SqlConnection, transaction As SqlTransaction) As T
+            Using cmd As New SqlCommand(query, conn, transaction)
+                cmd.Parameters.AddRange(params)
+                Return CType(cmd.ExecuteScalar(), T)
+            End Using
         End Function
     End Class
 End Namespace

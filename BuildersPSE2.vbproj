@@ -82,6 +82,12 @@
     <Compile Include="Forms\frmCreateEditProject.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\frmCustomerDialog.Designer.vb">
+      <DependentUpon>frmCustomerDialog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmCustomerDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\frmMainProjectList.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -95,22 +101,28 @@
     <Compile Include="Forms\frmPSE.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\frmVersionDialog.Designer.vb">
+      <DependentUpon>frmVersionDialog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmVersionDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Models\ActualToLevelMappingModel.vb" />
     <Compile Include="Models\ActualUnitModel.vb" />
     <Compile Include="Models\BuildingModel.vb" />
     <Compile Include="Models\CalculatedComponentModel.vb" />
     <Compile Include="Models\ConfigurationModel.vb" />
     <Compile Include="Models\CustomerModel.vb" />
-    <Compile Include="Models\CustomerToProjectMappingModel.vb" />
+    <Compile Include="Models\CustomerTypeModel.vb" />
     <Compile Include="Models\EstimatorModel.vb" />
     <Compile Include="Models\LevelModel.vb" />
     <Compile Include="Models\ProductTypeModel.vb" />
     <Compile Include="Models\ProjectModel.vb" />
     <Compile Include="Models\ProjectProductSettingsModel.vb" />
     <Compile Include="Models\ProjectTypeModel.vb" />
+    <Compile Include="Models\ProjectVersionModel.vb" />
     <Compile Include="Models\RawUnitModel.vb" />
     <Compile Include="Models\SalesModel.vb" />
-    <Compile Include="Models\SalesToProjectMappingModel.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -138,6 +150,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmPSE.resx">
       <DependentUpon>frmPSE.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmVersionDialog.resx">
+      <DependentUpon>frmVersionDialog.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>

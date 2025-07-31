@@ -4,7 +4,7 @@ Imports System.Collections.Generic
 Namespace BuildersPSE.Models
     Public Class BuildingModel
         Public Property BuildingID As Integer
-        Public Property ProjectID As Integer ' FK to Projects
+        Public Property VersionID As Integer ' FK to Projects
         Public Property BuildingName As String
         Public Property BuildingType As Integer? ' e.g., 1, 2, 3
         Public Property ResUnits As Integer? ' e.g., 1, 2, 3

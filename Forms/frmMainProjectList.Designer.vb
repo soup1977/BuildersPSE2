@@ -27,6 +27,7 @@ Partial Class frmMainProjectList
         Me.btnNewProject = New System.Windows.Forms.Button()
         Me.btnEditProject = New System.Windows.Forms.Button()
         Me.btnOpenPSE = New System.Windows.Forms.Button()
+        Me.btnRefreshGrid = New System.Windows.Forms.Button()
         CType(Me.DataGridViewProjects, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -78,11 +79,21 @@ Partial Class frmMainProjectList
         Me.btnOpenPSE.Text = "Open PSE"
         Me.btnOpenPSE.UseVisualStyleBackColor = True
         '
+        'btnRefreshGrid
+        '
+        Me.btnRefreshGrid.Location = New System.Drawing.Point(439, 418)
+        Me.btnRefreshGrid.Name = "btnRefreshGrid"
+        Me.btnRefreshGrid.Size = New System.Drawing.Size(99, 21)
+        Me.btnRefreshGrid.TabIndex = 5
+        Me.btnRefreshGrid.Text = "Refresh Projects"
+        Me.btnRefreshGrid.UseVisualStyleBackColor = True
+        '
         'frmMainProjectList
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(800, 450)
+        Me.Controls.Add(Me.btnRefreshGrid)
         Me.Controls.Add(Me.btnOpenPSE)
         Me.Controls.Add(Me.btnEditProject)
         Me.Controls.Add(Me.btnNewProject)
@@ -101,4 +112,5 @@ Partial Class frmMainProjectList
     Friend WithEvents btnNewProject As Button
     Friend WithEvents btnEditProject As Button
     Friend WithEvents btnOpenPSE As Button
+    Friend WithEvents btnRefreshGrid As Button
 End Class

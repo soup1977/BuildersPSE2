@@ -6,12 +6,13 @@ Imports BuildersPSE2.BuildersPSE.Models
 Public Class frmCreateEditProject
     Private ReadOnly da As New DataAccess()
     Private currentProject As ProjectModel
+    Private currentVersionID As Integer
     Private copiedLevels As List(Of LevelModel)
     Private isNewProject As Boolean = True
 
-    Public Sub New(Optional selectedProj As ProjectModel = Nothing)
+    Public Sub New(Optional selectedProj As ProjectModel = Nothing, Optional versionID As Integer = 0)
         InitializeComponent()
-        cboCustomer.DataSource = da.GetCustomers()
+        cboCustomer.DataSource = da.GetCustomers(customerType:=1)
         cboCustomer.DisplayMember = "CustomerName"
         cboCustomer.ValueMember = "CustomerID"
         cboSalesman.DataSource = da.GetSales()
@@ -23,10 +24,22 @@ Public Class frmCreateEditProject
         cboEstimator.DataSource = da.GetEstimators()
         cboEstimator.DisplayMember = "EstimatorName"
         cboEstimator.ValueMember = "EstimatorID"
+        cboProjectArchitect.DataSource = da.GetCustomers(customerType:=2)
+        cboProjectArchitect.DisplayMember = "CustomerName"
+        cboProjectArchitect.ValueMember = "CustomerID"
+        cboProjectEngineer.DataSource = da.GetCustomers(customerType:=3)
+        cboProjectEngineer.DisplayMember = "CustomerName"
+        cboProjectEngineer.ValueMember = "CustomerID"
+        cboVersion.DataSource = New List(Of ProjectVersionModel)() ' Initialize to avoid null issues
+        cboVersion.DisplayMember = "VersionName"
+        cboVersion.ValueMember = "VersionID"
+        cmbLevelType.DataSource = da.GetProductTypes()
+        cmbLevelType.DisplayMember = "ProductTypeName"
+        cmbLevelType.ValueMember = "ProductTypeID"
+
         If selectedProj IsNot Nothing Then
             currentProject = selectedProj
             isNewProject = False
-            LoadProjectData()
         Else
             currentProject = New ProjectModel With {
                 .CreatedDate = DateTime.Today,
@@ -37,19 +50,63 @@ Public Class frmCreateEditProject
                 currentProject.Settings.Add(New ProjectProductSettingsModel With {
                     .ProductTypeID = pt.ProductTypeID,
                     .MarginPercent = 0,
-                    .LumberAdder = 0
+                    .LumberAdder = 0,
+                    .VersionID = 0
                 })
             Next
-            LoadProjectData()
-
         End If
-        tabControlRight.TabPages.Remove(tabOverrides)
-        tabControlRight.TabPages.Remove(tabRollup)
-        tabControlRight.TabPages.Remove(tabBuildingInfo)
-        tabControlRight.TabPages.Remove(tabLevelInfo)
+        currentVersionID = versionID
+        LoadVersions()
+        LoadProjectData()
     End Sub
 
+    Private Sub LoadVersions()
+        Try
+            If currentProject.ProjectID = 0 Then
+                cboVersion.DataSource = New List(Of ProjectVersionModel)()
+                LblStatus.Text = "Status: Save the project to create a version."
+                Return
+            End If
+            Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(currentProject.ProjectID)
+            cboVersion.DataSource = versions
+            If currentVersionID > 0 Then
+                cboVersion.SelectedValue = currentVersionID
+            ElseIf versions.Any() Then
+                cboVersion.SelectedIndex = 0
+                currentVersionID = CInt(cboVersion.SelectedValue)
+            Else
+                currentVersionID = 0 ' No version created yet
+                LblStatus.Text = "Status: No versions found. Save the project to create a base version."
+            End If
+            LoadVersionSpecificData()
+        Catch ex As Exception
+            LblStatus.Text = "Status: Error loading versions: " & ex.Message
+            MessageBox.Show("Error loading versions: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
     Private Sub LoadProjectData()
+        Try
+            tabControlRight.TabPages.Clear()
+            tabControlRight.TabPages.Add(tabProjectInfo)
+            If Not isNewProject Then
+                tabControlRight.TabPages.Add(tabOverrides)
+                tabControlRight.TabPages.Add(tabRollup)
+                tabControlRight.TabPages.Add(tabBuildingInfo)
+                tabControlRight.TabPages.Add(tabLevelInfo)
+            End If
+            LoadProjectInfo(currentProject)
+            LoadVersionSpecificData()
+            lblStatus.Text = "Status: Loaded " & tabControlRight.TabPages.Count & " tab(s) for " & If(isNewProject, "new project", "project ID " & currentProject.ProjectID) & "."
+        Catch ex As Exception
+            lblStatus.Text = "Status: Error loading project data: " & ex.Message
+            MessageBox.Show("Error loading project data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub LoadVersionSpecificData()
+        currentProject.Settings = da.GetProjectProductSettings(currentVersionID)
+        LoadOverrides(currentProject.Settings)
+        currentProject.Buildings = da.GetBuildingsByVersionID(currentVersionID)
         tvProjectTree.Nodes.Clear()
         Dim root As New TreeNode(currentProject.ProjectName) With {.Tag = currentProject}
         tvProjectTree.Nodes.Add(root)
@@ -63,54 +120,20 @@ Public Class frmCreateEditProject
         Next
         tvProjectTree.ExpandAll()
         tvProjectTree.SelectedNode = root
-        tabControlRight.TabPages.Add(tabProjectInfo)
-        tabControlRight.TabPages.Add(tabOverrides)
-        tabControlRight.TabPages.Add(tabRollup)
-        LoadProjectInfo(currentProject)
-        LoadOverrides(currentProject)
+        Dim selectedVersion As ProjectVersionModel = da.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID)
+        If selectedVersion IsNot Nothing Then
+            cboCustomer.SelectedValue = If(selectedVersion.CustomerID, 0)
+            cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
+        End If
         LoadRollup(currentProject)
-
-        cmbLevelType.DataSource = da.GetProductTypes()
-        cmbLevelType.DisplayMember = "ProductTypeName"
-        cmbLevelType.ValueMember = "ProductTypeID"
-
     End Sub
 
-    Private Sub TvProjectTree_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles tvProjectTree.AfterSelect
-        Dim selected As Object = tvProjectTree.SelectedNode.Tag
-        If selected Is Nothing Then Exit Sub
-        tabControlRight.TabPages.Clear()
-        Select Case True
-            Case TypeOf selected Is ProjectModel
-                tabControlRight.TabPages.Add(tabProjectInfo)
-                tabControlRight.TabPages.Add(tabOverrides)
-                tabControlRight.TabPages.Add(tabRollup)
-                LoadProjectInfo(CType(selected, ProjectModel))
-                LoadOverrides(CType(selected, ProjectModel))
-                LoadRollup(selected)
-            Case TypeOf selected Is BuildingModel
-                tabControlRight.TabPages.Add(tabBuildingInfo)
-                tabControlRight.TabPages.Add(tabRollup)
-                LoadBuildingInfo(CType(selected, BuildingModel))
-                LoadRollup(selected)
-                Me.BeginInvoke(Sub()
-                                   tabControlRight.SelectedTab = tabBuildingInfo
-                                   txtBuildingName.Focus()
-                                   txtBuildingName.SelectAll()
-                               End Sub)
-            Case TypeOf selected Is LevelModel
-                tabControlRight.TabPages.Add(tabLevelInfo)
-                tabControlRight.TabPages.Add(tabRollup)
-                LoadLevelInfo(CType(selected, LevelModel))
-                LoadRollup(selected)
-                Me.BeginInvoke(Sub()
-                                   tabControlRight.SelectedTab = tabLevelInfo
-                                   txtLevelName.Focus()
-                                   txtLevelName.SelectAll()
-                               End Sub)
-        End Select
+    Private Sub cboVersion_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboVersion.SelectedIndexChanged
+        If cboVersion.SelectedValue IsNot Nothing Then
+            currentVersionID = CInt(cboVersion.SelectedValue)
+            LoadVersionSpecificData()
+        End If
     End Sub
-
 
     Private Sub LoadProjectInfo(proj As ProjectModel)
         txtJBID.Text = proj.JBID
@@ -127,20 +150,16 @@ Public Class frmCreateEditProject
         nudMilesToJobSite.Value = proj.MilesToJobSite
         If proj.TotalNetSqft.HasValue Then nudTotalNetSqft.Value = proj.TotalNetSqft.Value Else nudTotalNetSqft.Value = 0
         If proj.TotalGrossSqft.HasValue Then nudTotalGrossSqft.Value = proj.TotalGrossSqft.Value Else nudTotalGrossSqft.Value = 0
-        txtProjectArchitect.Text = proj.ProjectArchitect
-        txtProjectEngineer.Text = proj.ProjectEngineer
+
+        cboProjectArchitect.SelectedValue = If(proj.ArchitectID, 0)
+        cboProjectEngineer.SelectedValue = If(proj.EngineerID, 0)
         txtProjectNotes.Text = proj.ProjectNotes
         dtpCreatedDate.Value = proj.CreatedDate
         dtpLastModified.Value = proj.LastModifiedDate
-
-        dgvCustomerProject.DataSource = proj.Customers
-        dgvCustomerProject.Columns("CustomerID").Visible = False
-        dgvSalesProject.DataSource = proj.Salespeople
-        dgvSalesProject.Columns("SalesID").Visible = False
     End Sub
 
-    Private Sub LoadOverrides(proj As ProjectModel)
-        dgvOverrides.DataSource = proj.Settings
+    Private Sub LoadOverrides(settings As List(Of ProjectProductSettingsModel))
+        dgvOverrides.DataSource = settings
         If dgvOverrides.Columns("ProductTypeName") Is Nothing Then
             Dim col As New DataGridViewComboBoxColumn With {
                 .DataSource = da.GetProductTypes(),
@@ -264,7 +283,85 @@ Public Class frmCreateEditProject
         cmbLevelType.SelectedValue = level.ProductTypeID
         nudLevelNumber.Value = level.LevelNumber
     End Sub
+    ' Add handlers for Add/Edit buttons
+    Private Sub btnAddCustomer_Click(sender As Object, e As EventArgs) Handles btnAddCustomer.Click
+        Using frm As New FrmCustomerDialog(defaultTypeID:=1)
+            If frm.ShowDialog() = DialogResult.OK Then
+                RefreshCustomerComboboxes()
+            End If
+        End Using
+    End Sub
 
+    Private Sub btnEditCustomer_Click(sender As Object, e As EventArgs) Handles btnEditCustomer.Click
+        If cboCustomer.SelectedValue IsNot Nothing AndAlso cboCustomer.SelectedValue IsNot DBNull.Value Then
+            Dim selectedCustomerID As Integer = CInt(cboCustomer.SelectedValue)
+            Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=1).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
+            If selectedCustomer IsNot Nothing Then
+                Using frm As New FrmCustomerDialog(selectedCustomer)
+                    If frm.ShowDialog() = DialogResult.OK Then
+                        RefreshCustomerComboboxes()
+                    End If
+                End Using
+            End If
+        Else
+            MessageBox.Show("Select a customer to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        End If
+    End Sub
+
+    Private Sub btnAddArchitect_Click(sender As Object, e As EventArgs) Handles btnAddArchitect.Click
+        Using frm As New FrmCustomerDialog(defaultTypeID:=2)
+            If frm.ShowDialog() = DialogResult.OK Then
+                RefreshCustomerComboboxes()
+            End If
+        End Using
+    End Sub
+
+    Private Sub btnEditArchitect_Click(sender As Object, e As EventArgs) Handles btnEditArchitect.Click
+        If cboProjectArchitect.SelectedValue IsNot Nothing AndAlso cboProjectArchitect.SelectedValue IsNot DBNull.Value Then
+            Dim selectedCustomerID As Integer = CInt(cboProjectArchitect.SelectedValue)
+            Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=2).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
+            If selectedCustomer IsNot Nothing Then
+                Using frm As New FrmCustomerDialog(selectedCustomer)
+                    If frm.ShowDialog() = DialogResult.OK Then
+                        RefreshCustomerComboboxes()
+                    End If
+                End Using
+            End If
+        Else
+            MessageBox.Show("Select an architect to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        End If
+    End Sub
+
+    Private Sub btnAddEngineer_Click(sender As Object, e As EventArgs) Handles btnAddEngineer.Click
+        Using frm As New FrmCustomerDialog(defaultTypeID:=3)
+            If frm.ShowDialog() = DialogResult.OK Then
+                RefreshCustomerComboboxes()
+            End If
+        End Using
+    End Sub
+
+    Private Sub btnEditEngineer_Click(sender As Object, e As EventArgs) Handles btnEditEngineer.Click
+        If cboProjectEngineer.SelectedValue IsNot Nothing AndAlso cboProjectEngineer.SelectedValue IsNot DBNull.Value Then
+            Dim selectedCustomerID As Integer = CInt(cboProjectEngineer.SelectedValue)
+            Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=3).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
+            If selectedCustomer IsNot Nothing Then
+                Using frm As New FrmCustomerDialog(selectedCustomer)
+                    If frm.ShowDialog() = DialogResult.OK Then
+                        RefreshCustomerComboboxes()
+                    End If
+                End Using
+            End If
+        Else
+            MessageBox.Show("Select an engineer to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        End If
+    End Sub
+
+    ' Helper to refresh all customer comboboxes after add/edit
+    Private Sub RefreshCustomerComboboxes()
+        cboCustomer.DataSource = da.GetCustomers(customerType:=1)
+        cboProjectArchitect.DataSource = da.GetCustomers(customerType:=2)
+        cboProjectEngineer.DataSource = da.GetCustomers(customerType:=3)
+    End Sub
     Private Sub btnSaveProjectInfo_Click(sender As Object, e As EventArgs) Handles btnSaveProjectInfo.Click
         Try
             currentProject.JBID = txtJBID.Text
@@ -283,13 +380,30 @@ Public Class frmCreateEditProject
             currentProject.MilesToJobSite = CInt(nudMilesToJobSite.Value)
             currentProject.TotalNetSqft = If(nudTotalNetSqft.Value > 0, CInt(nudTotalNetSqft.Value), Nothing)
             currentProject.TotalGrossSqft = CInt(nudTotalGrossSqft.Value)
-            currentProject.ProjectArchitect = txtProjectArchitect.Text
-            currentProject.ProjectEngineer = txtProjectEngineer.Text
+            currentProject.ArchitectID = If(cboProjectArchitect.SelectedValue IsNot DBNull.Value, CInt(cboProjectArchitect.SelectedValue), Nothing)
+            currentProject.EngineerID = If(cboProjectEngineer.SelectedValue IsNot DBNull.Value, CInt(cboProjectEngineer.SelectedValue), Nothing)
             currentProject.ProjectNotes = txtProjectNotes.Text
-            currentProject.Customers = CType(dgvCustomerProject.DataSource, List(Of CustomerModel))
-            currentProject.Salespeople = CType(dgvSalesProject.DataSource, List(Of SalesModel))
             da.SaveProject(currentProject)
-            MessageBox.Show("Project info saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Dim customerID As Integer? = If(cboCustomer.SelectedValue IsNot DBNull.Value, CInt(cboCustomer.SelectedValue), Nothing)
+            Dim salesID As Integer? = If(cboSalesman.SelectedValue IsNot DBNull.Value, CInt(cboSalesman.SelectedValue), Nothing)
+            If isNewProject AndAlso currentVersionID = 0 Then
+                currentVersionID = da.CreateProjectVersion(currentProject.ProjectID, "v1", "Base Version", customerID, salesID)
+                Dim productTypes As List(Of ProductTypeModel) = da.GetProductTypes()
+                For Each pt In productTypes
+                    Dim setting As New ProjectProductSettingsModel With {
+                        .VersionID = currentVersionID,
+                        .ProductTypeID = pt.ProductTypeID,
+                        .MarginPercent = 0,
+                        .LumberAdder = 0
+                    }
+                    da.SaveProjectProductSetting(setting, currentVersionID)
+                Next
+                isNewProject = False
+            ElseIf currentVersionID > 0 Then
+                da.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtProjectNotes.Text, customerID, salesID)
+            End If
+            MessageBox.Show("Project and version info saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadVersions()
             LoadProjectData()
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -301,7 +415,7 @@ Public Class frmCreateEditProject
             currentProject.Settings = CType(dgvOverrides.DataSource, List(Of ProjectProductSettingsModel))
             da.SaveProject(currentProject)
             MessageBox.Show("Overrides saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            LoadOverrides(currentProject)
+            LoadOverrides(currentProject.Settings)
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -312,7 +426,7 @@ Public Class frmCreateEditProject
             Dim bldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
             bldg.BuildingName = txtBuildingName.Text
             bldg.BldgQty = CInt(nudBldgQty.Value)
-            da.SaveBuilding(bldg, currentProject.ProjectID)
+            da.SaveBuilding(bldg, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -326,12 +440,55 @@ Public Class frmCreateEditProject
             level.ProductTypeID = CInt(cmbLevelType.SelectedValue)
             level.ProductTypeName = CType(cmbLevelType.SelectedItem, ProductTypeModel).ProductTypeName
             level.LevelNumber = CInt(nudLevelNumber.Value)
-            da.SaveLevel(level, level.BuildingID, currentProject.ProjectID)
+            da.SaveLevel(level, level.BuildingID, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub TvProjectTree_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles tvProjectTree.AfterSelect
+        Try
+            Dim selected As Object = tvProjectTree.SelectedNode.Tag
+            If selected Is Nothing Then
+                tabControlRight.TabPages.Clear()
+                Return
+            End If
+            tabControlRight.TabPages.Clear()
+            Select Case True
+                Case TypeOf selected Is ProjectModel
+                    tabControlRight.TabPages.Add(tabProjectInfo)
+                    tabControlRight.TabPages.Add(tabOverrides)
+                    tabControlRight.TabPages.Add(tabRollup)
+                    LoadProjectInfo(CType(selected, ProjectModel))
+                    LoadOverrides(currentProject.Settings)
+                    LoadRollup(selected)
+                Case TypeOf selected Is BuildingModel
+                    tabControlRight.TabPages.Add(tabBuildingInfo)
+                    tabControlRight.TabPages.Add(tabRollup)
+                    LoadBuildingInfo(CType(selected, BuildingModel))
+                    LoadRollup(selected)
+                    Me.BeginInvoke(Sub()
+                                       tabControlRight.SelectedTab = tabBuildingInfo
+                                       txtBuildingName.Focus()
+                                       txtBuildingName.SelectAll()
+                                   End Sub)
+                Case TypeOf selected Is LevelModel
+                    tabControlRight.TabPages.Add(tabLevelInfo)
+                    tabControlRight.TabPages.Add(tabRollup)
+                    LoadLevelInfo(CType(selected, LevelModel))
+                    LoadRollup(selected)
+                    Me.BeginInvoke(Sub()
+                                       tabControlRight.SelectedTab = tabLevelInfo
+                                       txtLevelName.Focus()
+                                       txtLevelName.SelectAll()
+                                   End Sub)
+            End Select
+        Catch ex As Exception
+            MessageBox.Show("Error selecting tree node: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
 
     Private Sub cmsTreeMenu_Opening(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles cmsTreeMenu.Opening
         mnuAddBuilding.Visible = TypeOf tvProjectTree.SelectedNode.Tag Is ProjectModel
@@ -353,7 +510,7 @@ Public Class frmCreateEditProject
     Private Sub mnuAddBuilding_Click(sender As Object, e As EventArgs) Handles mnuAddBuilding.Click
         Dim newBldg As New BuildingModel With {.BuildingName = "New Building", .BldgQty = 1}
         currentProject.Buildings.Add(newBldg)
-        da.SaveBuilding(newBldg, currentProject.ProjectID)
+        da.SaveBuilding(newBldg, currentVersionID)
         LoadProjectData()
     End Sub
 
@@ -366,11 +523,9 @@ Public Class frmCreateEditProject
             .ProductTypeName = "Floor"
         }
         selectedBldg.Levels.Add(newLevel)
-        da.SaveLevel(newLevel, selectedBldg.BuildingID, currentProject.ProjectID)
+        da.SaveLevel(newLevel, selectedBldg.BuildingID, currentVersionID)
         LoadProjectData()
     End Sub
-
-
 
     Private Sub mnuDelete_Click(sender As Object, e As EventArgs) Handles mnuDelete.Click
         If MessageBox.Show("Delete selected item?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
@@ -388,6 +543,7 @@ Public Class frmCreateEditProject
             LoadProjectData()
         End If
     End Sub
+
     Private Sub mnuCopyLevels_Click(sender As Object, e As EventArgs) Handles mnuCopyLevels.Click
         Dim selectedBldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
         copiedLevels = New List(Of LevelModel)
@@ -420,34 +576,9 @@ Public Class frmCreateEditProject
             .ProductTypeName = clonedLevel.ProductTypeName
         }
             targetBldg.Levels.Add(newLevel)
-            da.SaveLevel(newLevel, targetBldg.BuildingID, currentProject.ProjectID)
+            da.SaveLevel(newLevel, targetBldg.BuildingID, currentVersionID)
         Next
         LoadProjectData()
-    End Sub
-    Private Sub btnAddCusttoProj_Click(sender As Object, e As EventArgs) Handles btnAddCusttoProj.Click
-        If cboCustomer.SelectedIndex <> -1 Then
-            Dim selectedCustomer As CustomerModel = CType(cboCustomer.SelectedItem, CustomerModel)
-            If Not currentProject.Customers.Any(Function(c) c.CustomerID = selectedCustomer.CustomerID) Then
-                currentProject.Customers.Add(selectedCustomer)
-                dgvCustomerProject.DataSource = Nothing
-                dgvCustomerProject.DataSource = currentProject.Customers
-            Else
-                MessageBox.Show("Customer already added.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End If
-        End If
-    End Sub
-
-    Private Sub btnAddSalestoProj_Click(sender As Object, e As EventArgs) Handles btnAddSalestoProj.Click
-        If cboSalesman.SelectedIndex <> -1 Then
-            Dim selectedSales As SalesModel = CType(cboSalesman.SelectedItem, SalesModel)
-            If Not currentProject.Salespeople.Any(Function(s) s.SalesID = selectedSales.SalesID) Then
-                currentProject.Salespeople.Add(selectedSales)
-                dgvSalesProject.DataSource = Nothing
-                dgvSalesProject.DataSource = currentProject.Salespeople
-            Else
-                MessageBox.Show("Salesperson already added.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End If
-        End If
     End Sub
 
     Private Sub EditPSEToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditPSEToolStripMenuItem.Click
@@ -461,5 +592,34 @@ Public Class frmCreateEditProject
 
     Private Sub btnRecalcRollup_Click(sender As Object, e As EventArgs) Handles btnRecalcRollup.Click
 
+    End Sub
+
+    Private Sub btnCreateVersion_Click(sender As Object, e As EventArgs) Handles btnCreateVersion.Click
+        Using frm As New frmVersionDialog()
+            If frm.ShowDialog() = DialogResult.OK Then
+                Try
+                    Dim newVersionID As Integer = da.CreateProjectVersion(currentProject.ProjectID, frm.VersionName, frm.Description, Nothing, Nothing)
+                    currentVersionID = newVersionID
+                    LoadVersions()
+                    MessageBox.Show("Version created.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Catch ex As Exception
+                    MessageBox.Show("Error creating version: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                End Try
+            End If
+        End Using
+    End Sub
+
+    Private Sub btnDuplicateVersion_Click(sender As Object, e As EventArgs) Handles btnDuplicateVersion.Click
+        Using frm As New frmVersionDialog()
+            If frm.ShowDialog() = DialogResult.OK Then
+                Try
+                    da.DuplicateProjectVersion(currentVersionID, frm.VersionName, frm.Description, currentProject.ProjectID)
+                    LoadVersions()
+                    MessageBox.Show("Version duplicated.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Catch ex As Exception
+                    MessageBox.Show("Error duplicating version: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                End Try
+            End If
+        End Using
     End Sub
 End Class

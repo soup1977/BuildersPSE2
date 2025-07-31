@@ -4,7 +4,7 @@ Imports System.Collections.Generic
 Namespace BuildersPSE.Models
     Public Class LevelModel
         Public Property LevelID As Integer
-        Public Property ProjectID As Integer ' FK to Projects
+        Public Property VersionID As Integer ' FK to Projects
         Public Property BuildingID As Integer ' FK to Buildings
         Public Property ProductTypeID As Integer
         Public Property ProductTypeName As String  ' New: Friendly name from ProductType (populated via join)

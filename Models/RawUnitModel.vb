@@ -4,7 +4,7 @@ Imports System.Collections.Generic
 Namespace BuildersPSE.Models
     Public Class RawUnitModel
         Public Property RawUnitID As Integer ' PK, auto-incremented
-        Public Property ProjectID As Integer ' FK to Projects
+        Public Property VersionID As Integer ' FK to Projects
         Public Property ProductTypeID As Integer ' FK to ProductType (e.g., 1 for Floor)
         Public Property RawUnitName As String ' Descriptive name, used in pull-down selection
 
