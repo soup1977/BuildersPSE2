@@ -335,7 +335,10 @@ Public Class FrmPSE
                 LblStatus.Text = "Status: Project not found."
                 Return
             End If
-            Dim projectNode As TreeNode = TreeViewLevels.Nodes.Add(project.ProjectName)
+            Dim versions As List(Of ProjectVersionModel) = dataAccess.GetProjectVersions(selectedProjectID)
+            Dim selectedVersion As ProjectVersionModel = versions.FirstOrDefault(Function(v) v.VersionID = selectedVersionID)
+            Dim projectNodeText As String = project.ProjectName & If(selectedVersion IsNot Nothing, " - " & selectedVersion.VersionName, "")
+            Dim projectNode As TreeNode = TreeViewLevels.Nodes.Add(projectNodeText)
             projectNode.Tag = New Dictionary(Of String, Object) From {{"Type", "Project"}, {"ID", selectedProjectID}}
             Dim buildings = dataAccess.GetBuildingsByVersionID(selectedVersionID)
             If Not buildings.Any() Then
@@ -719,18 +722,26 @@ Public Class FrmPSE
 
     Private Sub BtnImportLevelData_Click(sender As Object, e As EventArgs) Handles BtnImportLevelData.Click
         Dim ofd As New OpenFileDialog With {
-            .Filter = "CSV Files|*.csv"
-        }
+        .Filter = "CSV Files|*.csv"
+    }
         If ofd.ShowDialog() = DialogResult.OK Then
             isImporting = True
+            Dim productTypeID As Integer = -1 ' Default value
+            If selectedLevelID <> -1 Then
+                Dim levelTag = DirectCast(TreeViewLevels.SelectedNode.Tag, Dictionary(Of String, Object))
+                productTypeID = CInt(levelTag("ProductTypeID")) ' Initialize from selected level
+            End If
             Try
-                Dim productTypeID As Integer = 1 ' Default; CSV overrides
-                dataAccess.ImportRawUnits(selectedVersionID, ofd.FileName, productTypeID)
-                LblStatus.Text = "Status: Raw units imported successfully for version " & selectedVersionID & "."
-                If selectedLevelID <> -1 Then
-                    Dim levelTag = DirectCast(TreeViewLevels.SelectedNode.Tag, Dictionary(Of String, Object))
-                    productTypeID = CInt(levelTag("ProductTypeID"))
-                    FilterRawUnits(productTypeID)
+                If ImportRawUnitsWithMapping(ofd.FileName, productTypeID) Then
+                    LblStatus.Text = "Status: Raw units imported successfully for version " & selectedVersionID & "."
+                    If selectedLevelID <> -1 Then
+                        FilterRawUnits(productTypeID)
+                        RecalculateAllActualUnits(selectedVersionID, productTypeID)
+                        FilterActualUnits(productTypeID)
+                        LoadAssignedUnits()
+                    End If
+                Else
+                    LblStatus.Text = "Status: Import cancelled for version " & selectedVersionID & "."
                 End If
             Catch ex As Exception
                 LblStatus.Text = "Status: Import failed for version " & selectedVersionID & ": " & ex.Message
@@ -739,6 +750,215 @@ Public Class FrmPSE
                 isImporting = False
             End Try
         End If
+    End Sub
+
+    ' Add in frmPSE.vb: New subroutine to handle CSV parsing and user-driven mapping, empowering users (servant leadership) while standardizing updates to prevent defects (Deming).
+    ' Revised ImportRawUnitsWithMapping in frmPSE.vb: Use case-insensitive key access by storing keys in upper case, change raw unit name key to "Elevation", and validate required headers accordingly. This resolves the "key not present" error by handling the actual CSV structure.
+    Private Function ImportRawUnitsWithMapping(filePath As String, productTypeID As Integer) As Boolean
+        Dim newRawData As New List(Of Dictionary(Of String, String))
+        Const NAME_KEY As String = "ELEVATION" ' Use "Elevation" as the key for RawUnitName based on CSV structure
+        Dim requiredHeaders As String() = {NAME_KEY, "PRODUCT", "BF", "LF", "EWPLF", "SQFT", "FCAREA", "LUMBERCOST", "PLATECOST", "MANUFLABORCOST", "DESIGNLABOR", "MGMTLABOR", "JOBSUPPLIESCOST", "MANHOURS", "ITEMCOST", "OVERALLCOST", "DELIVERYCOST", "TOTALSELLPRICE", "AVGSPFNO2"}
+        Dim skippedHeaders As New HashSet(Of String) From {"JOBNUMBER", "PROJECT", "CUSTOMERNAME", "JOBNAME", "STRUCTURENAME", "PLAN"}
+
+        ' Parse CSV and validate headers
+        Using parser As New TextFieldParser(filePath)
+            parser.Delimiters = New String() {","}
+            parser.HasFieldsEnclosedInQuotes = True
+            parser.TrimWhiteSpace = True
+            If parser.EndOfData Then
+                Throw New Exception("CSV file is empty.")
+            End If
+            Dim headers() As String = parser.ReadFields()
+            Dim headerDict As New Dictionary(Of String, String)
+            For Each h In headers
+                Dim trimmedHeader = h.Trim()
+                headerDict(trimmedHeader.ToUpper()) = trimmedHeader
+            Next
+
+            ' Validate required headers (case-insensitive)
+            Dim missingHeaders As New List(Of String)
+            For Each reqHeader In requiredHeaders
+                If Not headerDict.ContainsKey(reqHeader.ToUpper()) Then
+                    missingHeaders.Add(reqHeader)
+                End If
+            Next
+            If missingHeaders.Any() Then
+                Throw New Exception("Missing required CSV headers: " & String.Join(", ", missingHeaders) & ". Please ensure the CSV includes columns like 'Elevation' for unit names and 'Product' for type.")
+            End If
+
+            ' Parse rows with uppercased keys
+            While Not parser.EndOfData
+                Dim fields() As String = parser.ReadFields()
+                If fields.Length <> headers.Length Then Continue While ' Skip malformed rows
+                Dim rowDict As New Dictionary(Of String, String)
+                For i As Integer = 0 To headers.Length - 1
+                    rowDict(headers(i).Trim().ToUpper()) = fields(i).Trim()
+                Next
+                If String.IsNullOrEmpty(rowDict(NAME_KEY.ToUpper())) Then Continue While ' Skip rows with empty unit name
+                newRawData.Add(rowDict)
+            End While
+        End Using
+
+        ' Fetch all RawUnits for the version
+        Dim allRawUnits As List(Of RawUnitModel) = dataAccess.GetRawUnitsByVersionID(selectedVersionID)
+
+        ' Mapping dialog
+        Dim mappingForm As New Form With {
+            .Text = "Map Imported Raw Units",
+            .Size = New Size(600, 400)
+        }
+        Dim dgv As New DataGridView With {
+            .Dock = DockStyle.Fill
+        }
+        dgv.Columns.Add("NewName", "New RawUnit Name")
+        Dim cmbCol As New DataGridViewComboBoxColumn With {
+            .Name = "MapTo",
+            .HeaderText = "Map To Existing or Create New"
+        }
+        cmbCol.Items.Add("Create New")
+        For Each ex In allRawUnits
+            cmbCol.Items.Add(ex.RawUnitName)
+        Next
+        dgv.Columns.Add(cmbCol)
+
+        For Each nr In newRawData
+            Dim rowIdx As Integer = dgv.Rows.Add()
+            Dim csvUnitName As String = nr(NAME_KEY.ToUpper()).Trim()
+            dgv.Rows(rowIdx).Cells("NewName").Value = csvUnitName ' Display trimmed CSV value
+            Dim matchingUnit As RawUnitModel = allRawUnits.FirstOrDefault(Function(r) r.RawUnitName.Trim().ToUpper() = csvUnitName.ToUpper())
+            If matchingUnit Is Nothing Then
+                Dim duplicates As List(Of RawUnitModel) = allRawUnits.Where(Function(r) r.RawUnitName.Trim().ToUpper() = csvUnitName.ToUpper()).ToList()
+                If duplicates.Count > 1 Then
+                    MessageBox.Show("Multiple existing units found with name '" & csvUnitName & "'. Selecting first match.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    matchingUnit = duplicates.First()
+                End If
+            End If
+            Dim matchName As String = If(matchingUnit IsNot Nothing, matchingUnit.RawUnitName, "Create New")
+            dgv.Rows(rowIdx).Cells("MapTo").Value = matchName
+        Next
+
+        Dim wasConfirmed As Boolean = False
+        Dim buttonPanel As New Panel With {
+            .Dock = DockStyle.Bottom,
+            .Height = 40,
+            .BackColor = Color.LightGray
+        }
+
+        Dim btnConfirm As New Button With {
+            .Text = "Confirm Mapping",
+            .Width = 100,
+            .Location = New Point(10, 5) ' Position within panel
+            }
+        AddHandler btnConfirm.Click, Sub(s, args)
+                                         For Each r As DataGridViewRow In dgv.Rows
+                                             If r.IsNewRow Then Continue For
+                                             Dim newName As String = CStr(r.Cells("NewName").Value)
+                                             Dim mapTo As String = CStr(r.Cells("MapTo").Value)
+                                             Dim rowData As Dictionary(Of String, String) = newRawData.FirstOrDefault(Function(d) d(NAME_KEY.ToUpper()).Trim() = newName)
+                                             If rowData Is Nothing Then
+                                                 MessageBox.Show("No matching row data found for " & newName, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                                 Continue For
+                                             End If
+                                             Dim productType As String = rowData("PRODUCT".ToUpper())
+                                             Dim mappedProductTypeID As Integer
+                                             Select Case productType.ToUpper()
+                                                 Case "FLOOR"
+                                                     mappedProductTypeID = 1
+                                                 Case "ROOF"
+                                                     mappedProductTypeID = 2
+                                                 Case Else
+                                                     MessageBox.Show("Invalid Product type '" & productType & "' for unit " & newName & ". Defaulting to ProductTypeID 1 (Floor).", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                                                     mappedProductTypeID = 1
+                                             End Select
+                                             Dim model As New RawUnitModel With {
+                                             .VersionID = selectedVersionID,
+                                             .ProductTypeID = mappedProductTypeID,
+                                             .RawUnitName = newName ' Use the displayed name
+                                         }
+                                             Dim decVal As Decimal
+                                             Dim upperKey As String
+                                             upperKey = "BF".ToUpper()
+                                             model.BF = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "LF".ToUpper()
+                                             model.LF = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "EWPLF".ToUpper()
+                                             model.EWPLF = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "SQFT".ToUpper()
+                                             model.SqFt = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "FCAREA".ToUpper()
+                                             model.FCArea = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "LUMBERCOST".ToUpper()
+                                             model.LumberCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "PLATECOST".ToUpper()
+                                             model.PlateCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "MANUFLABORCOST".ToUpper()
+                                             model.ManufLaborCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "DESIGNLABOR".ToUpper()
+                                             model.DesignLabor = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "MGMTLABOR".ToUpper()
+                                             model.MGMTLabor = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "JOBSUPPLIESCOST".ToUpper()
+                                             model.JobSuppliesCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "MANHOURS".ToUpper()
+                                             model.ManHours = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "ITEMCOST".ToUpper()
+                                             model.ItemCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "OVERALLCOST".ToUpper()
+                                             model.OverallCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "DELIVERYCOST".ToUpper()
+                                             model.DeliveryCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "TOTALSELLPRICE".ToUpper()
+                                             model.TotalSellPrice = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "AVGSPFNO2".ToUpper()
+                                             model.AvgSPFNo2 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             Try
+                                                 If mapTo = "Create New" Then
+                                                     dataAccess.InsertRawUnit(model)
+                                                 Else
+                                                     Dim existing As RawUnitModel = allRawUnits.FirstOrDefault(Function(ru) ru.RawUnitName.Trim().ToUpper() = mapTo.Trim().ToUpper())
+                                                     If existing Is Nothing Then
+                                                         MessageBox.Show("Selected existing unit '" & mapTo & "' not found. Creating new unit.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                                                         dataAccess.InsertRawUnit(model)
+                                                     Else
+                                                         model.RawUnitID = existing.RawUnitID
+                                                         dataAccess.UpdateRawUnit(model)
+                                                     End If
+                                                 End If
+                                             Catch ex As Exception
+                                                 MessageBox.Show("Error processing unit '" & newName & "': " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                             End Try
+                                         Next
+                                         wasConfirmed = True
+                                         mappingForm.Close()
+                                     End Sub
+
+        Dim btnCancel As New Button With {
+            .Text = "Cancel",
+            .Width = 100
+        }
+        btnCancel.Location = New Point(buttonPanel.Width - btnCancel.Width + 50, 5) ' Anchor to right within panel
+        AddHandler btnCancel.Click, Sub(s, args)
+                                        wasConfirmed = False
+                                        mappingForm.Close()
+                                    End Sub
+
+        buttonPanel.Controls.Add(btnConfirm)
+        buttonPanel.Controls.Add(btnCancel)
+        mappingForm.Controls.Add(dgv)
+        mappingForm.Controls.Add(buttonPanel)
+        mappingForm.ShowDialog()
+        Return wasConfirmed
+    End Function
+    ' Add in frmPSE.vb: New subroutine to recalculate components for all affected ActualUnits post-import, ensuring data consistency across versions.
+    Private Sub RecalculateAllActualUnits(versionID As Integer, productTypeID As Integer)
+        Dim actualUnits As List(Of ActualUnitModel) = dataAccess.GetActualUnitsByVersion(versionID).Where(Function(u) u.ProductTypeID = productTypeID).ToList()
+        For Each actual In actualUnits
+            Dim rawUnit As RawUnitModel = dataAccess.GetRawUnitByID(actual.RawUnitID)
+            If rawUnit IsNot Nothing Then
+                actual.CalculatedComponents = CalculateComponentsFromRaw(rawUnit)
+                dataAccess.SaveCalculatedComponents(actual)
+            End If
+        Next
     End Sub
 
     Private Sub BtnConvertToActualUnit_Click(sender As Object, e As EventArgs) Handles BtnConvertToActualUnit.Click

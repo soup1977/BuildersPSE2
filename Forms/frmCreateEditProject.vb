@@ -9,6 +9,7 @@ Public Class frmCreateEditProject
     Private currentVersionID As Integer
     Private copiedLevels As List(Of LevelModel)
     Private isNewProject As Boolean = True
+    Private isChangingVersion As Boolean = False
 
     Public Sub New(Optional selectedProj As ProjectModel = Nothing, Optional versionID As Integer = 0)
         InitializeComponent()
@@ -64,23 +65,30 @@ Public Class frmCreateEditProject
         Try
             If currentProject.ProjectID = 0 Then
                 cboVersion.DataSource = New List(Of ProjectVersionModel)()
-                LblStatus.Text = "Status: Save the project to create a version."
+                lblStatus.Text = "Status: Save the project to create a version."
+                tvProjectTree.Nodes.Clear()
+                tvProjectTree.Nodes.Add(New TreeNode(currentProject.ProjectName & "-No Version") With {.Tag = currentProject})
                 Return
             End If
             Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(currentProject.ProjectID)
+            isChangingVersion = True
             cboVersion.DataSource = versions
+            cboVersion.DisplayMember = "VersionName"
+            cboVersion.ValueMember = "VersionID"
             If currentVersionID > 0 Then
                 cboVersion.SelectedValue = currentVersionID
             ElseIf versions.Any() Then
                 cboVersion.SelectedIndex = 0
                 currentVersionID = CInt(cboVersion.SelectedValue)
             Else
-                currentVersionID = 0 ' No version created yet
-                LblStatus.Text = "Status: No versions found. Save the project to create a base version."
+                currentVersionID = 0
+                lblStatus.Text = "Status: No versions found. Save the project to create a base version."
             End If
+            isChangingVersion = False
             LoadVersionSpecificData()
         Catch ex As Exception
-            LblStatus.Text = "Status: Error loading versions: " & ex.Message
+            isChangingVersion = False
+            lblStatus.Text = "Status: Error loading versions: " & ex.Message
             MessageBox.Show("Error loading versions: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -104,34 +112,45 @@ Public Class frmCreateEditProject
     End Sub
 
     Private Sub LoadVersionSpecificData()
-        currentProject.Settings = da.GetProjectProductSettings(currentVersionID)
-        LoadOverrides(currentProject.Settings)
-        currentProject.Buildings = da.GetBuildingsByVersionID(currentVersionID)
-        tvProjectTree.Nodes.Clear()
-        Dim root As New TreeNode(currentProject.ProjectName) With {.Tag = currentProject}
-        tvProjectTree.Nodes.Add(root)
-        For Each bldg In currentProject.Buildings
-            Dim bldgNode As New TreeNode(bldg.BuildingName) With {.Tag = bldg}
-            root.Nodes.Add(bldgNode)
-            For Each level In bldg.Levels
-                Dim levelNode As New TreeNode(String.Format("{0} ({1})", level.LevelName, level.ProductTypeName)) With {.Tag = level}
-                bldgNode.Nodes.Add(levelNode)
+        Try
+            lblStatus.Text = "Loading version..."
+            currentProject.Settings = da.GetProjectProductSettings(currentVersionID)
+            LoadOverrides(currentProject.Settings)
+            currentProject.Buildings = da.GetBuildingsByVersionID(currentVersionID)
+            tvProjectTree.Nodes.Clear()
+            Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, da.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
+            Dim rootText As String = If(selectedVersion IsNot Nothing, $"{currentProject.ProjectName}-{selectedVersion.VersionName}", currentProject.ProjectName & "-No Version")
+            Dim root As New TreeNode(rootText) With {.Tag = currentProject}
+            tvProjectTree.Nodes.Add(root)
+            For Each bldg In currentProject.Buildings
+                Dim bldgNode As New TreeNode(bldg.BuildingName) With {.Tag = bldg}
+                root.Nodes.Add(bldgNode)
+                For Each level In bldg.Levels
+                    Dim levelNode As New TreeNode(String.Format("{0} ({1})", level.LevelName, level.ProductTypeName)) With {.Tag = level}
+                    bldgNode.Nodes.Add(levelNode)
+                Next
             Next
-        Next
-        tvProjectTree.ExpandAll()
-        tvProjectTree.SelectedNode = root
-        Dim selectedVersion As ProjectVersionModel = da.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID)
-        If selectedVersion IsNot Nothing Then
-            cboCustomer.SelectedValue = If(selectedVersion.CustomerID, 0)
-            cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
-        End If
-        LoadRollup(currentProject)
+            tvProjectTree.ExpandAll()
+            tvProjectTree.SelectedNode = root
+            If selectedVersion IsNot Nothing Then
+                cboCustomer.SelectedValue = If(selectedVersion.CustomerID, 0)
+                cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
+                cboVersion.SelectedValue = currentVersionID
+            End If
+            LoadRollup(currentProject)
+            lblStatus.Text = "Status: Loaded version " & If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version")
+        Catch ex As Exception
+            lblStatus.Text = "Status: Error loading version-specific data: " & ex.Message
+            MessageBox.Show("Error loading version-specific data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cboVersion_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboVersion.SelectedIndexChanged
-        If cboVersion.SelectedValue IsNot Nothing Then
+        If cboVersion.SelectedValue IsNot Nothing AndAlso Not isChangingVersion Then
+            isChangingVersion = True ' Prevent recursive calls
             currentVersionID = CInt(cboVersion.SelectedValue)
             LoadVersionSpecificData()
+            isChangingVersion = False
         End If
     End Sub
 
@@ -583,8 +602,18 @@ Public Class frmCreateEditProject
 
     Private Sub EditPSEToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditPSEToolStripMenuItem.Click
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
-            Dim pseForm As New FrmPSE(currentProject.ProjectID)
-            pseForm.ShowDialog()
+            Try
+                ' Ensure a valid version is selected
+                If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
+                    MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    Return
+                End If
+                ' Open frmPSE with projectID and currentVersionID
+                Dim pseForm As New FrmPSE(currentProject.ProjectID, currentVersionID)
+                pseForm.ShowDialog()
+            Catch ex As Exception
+                MessageBox.Show("Error opening PSE form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         Else
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
@@ -600,7 +629,12 @@ Public Class frmCreateEditProject
                 Try
                     Dim newVersionID As Integer = da.CreateProjectVersion(currentProject.ProjectID, frm.VersionName, frm.Description, Nothing, Nothing)
                     currentVersionID = newVersionID
-                    LoadVersions()
+                    Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(currentProject.ProjectID)
+                    cboVersion.DataSource = versions
+                    cboVersion.DisplayMember = "VersionName"
+                    cboVersion.ValueMember = "VersionID"
+                    cboVersion.SelectedValue = currentVersionID
+                    LoadVersionSpecificData()
                     MessageBox.Show("Version created.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 Catch ex As Exception
                     MessageBox.Show("Error creating version: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -614,12 +648,39 @@ Public Class frmCreateEditProject
             If frm.ShowDialog() = DialogResult.OK Then
                 Try
                     da.DuplicateProjectVersion(currentVersionID, frm.VersionName, frm.Description, currentProject.ProjectID)
-                    LoadVersions()
+                    Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(currentProject.ProjectID)
+                    currentVersionID = CInt((versions.FirstOrDefault(Function(v) v.VersionName = frm.VersionName)?.VersionID))
+                    cboVersion.DataSource = versions
+                    cboVersion.DisplayMember = "VersionName"
+                    cboVersion.ValueMember = "VersionID"
+                    cboVersion.SelectedValue = currentVersionID
+                    LoadVersionSpecificData()
                     MessageBox.Show("Version duplicated.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Catch ex As ArgumentException
+                    MessageBox.Show($"Cannot duplicate version: {ex.Message}", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Catch ex As Exception
-                    MessageBox.Show("Error duplicating version: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    MessageBox.Show($"Error duplicating version: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 End Try
             End If
         End Using
+    End Sub
+
+    Private Sub btnOpenPSE_Click(sender As Object, e As EventArgs) Handles btnOpenPSE.Click
+        If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
+            Try
+                ' Ensure a valid version is selected
+                If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
+                    MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    Return
+                End If
+                ' Open frmPSE with projectID and currentVersionID
+                Dim pseForm As New FrmPSE(currentProject.ProjectID, currentVersionID)
+                pseForm.ShowDialog()
+            Catch ex As Exception
+                MessageBox.Show("Error opening PSE form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        Else
+            MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
     End Sub
 End Class

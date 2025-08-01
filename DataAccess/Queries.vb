@@ -41,6 +41,7 @@
         Public Const SelectRawUnitsByVersion As String = "SELECT * FROM RawUnits WHERE VersionID = @VersionID"
         Public Const InsertRawUnit As String = "INSERT INTO RawUnits (RawUnitName, VersionID, ProductTypeID, BF, LF, EWPLF, SqFt, FCArea, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, DeliveryCost, TotalSellPrice, AvgSPFNo2) OUTPUT INSERTED.RawUnitID VALUES (@RawUnitName, @VersionID, @ProductTypeID, @BF, @LF, @EWPLF, @SqFt, @FCArea, @LumberCost, @PlateCost, @ManufLaborCost, @DesignLabor, @MGMTLabor, @JobSuppliesCost, @ManHours, @ItemCost, @OverallCost, @DeliveryCost, @TotalSellPrice, @AvgSPFNo2)"
         Public Const SelectRawUnitByID As String = "SELECT * FROM RawUnits WHERE RawUnitID = @RawUnitID"
+        Public Const UpdateRawUnit As String = "UPDATE RawUnits SET RawUnitName = @RawUnitName, BF = @BF, LF = @LF, EWPLF = @EWPLF, SqFt = @SqFt, FCArea = @FCArea, LumberCost = @LumberCost, PlateCost = @PlateCost, ManufLaborCost = @ManufLaborCost, DesignLabor = @DesignLabor, MGMTLabor = @MGMTLabor, JobSuppliesCost = @JobSuppliesCost, ManHours = @ManHours, ItemCost = @ItemCost, OverallCost = @OverallCost, DeliveryCost = @DeliveryCost, TotalSellPrice = @TotalSellPrice, AvgSPFNo2 = @AvgSPFNo2 WHERE RawUnitID = @RawUnitID"
 
         ' ActualUnits (updated to use VersionID)
         Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder)"
@@ -51,6 +52,7 @@
         Public Const CountMappingsByActualUnitID As String = "SELECT COUNT(*) FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitByID As String = "SELECT au.*, ru.RawUnitName AS ReferencedRawUnitName FROM ActualUnits au JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID WHERE au.ActualUnitID = @ActualUnitID"
         Public Const SelectActualToLevelMappingsByActualUnitID As String = "SELECT * FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID"
+
 
         ' ActualToLevelMapping (updated to use VersionID)
         Public Const InsertActualToLevelMapping As String = "INSERT INTO ActualToLevelMapping (VersionID, ActualUnitID, LevelID, Quantity) OUTPUT INSERTED.MappingID VALUES (@VersionID, @ActualUnitID, @LevelID, @Quantity)"

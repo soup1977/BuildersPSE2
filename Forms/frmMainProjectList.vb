@@ -81,10 +81,27 @@ Public Class frmMainProjectList
 
     Private Sub BtnOpenPSE_Click(sender As Object, e As EventArgs) Handles btnOpenPSE.Click
         If DataGridViewProjects.CurrentRow IsNot Nothing Then
-            Dim projectID As Integer = CInt(DataGridViewProjects.CurrentRow.Cells("ProjectID").Value)
-            Using frm As New FrmPSE(projectID) ' Pass ID as Integer
-                frm.ShowDialog() ' Modal for focus
-            End Using
+            Try
+                Dim projectID As Integer = CInt(DataGridViewProjects.CurrentRow.Cells("ProjectID").Value)
+                Dim versionID As Integer = CInt(DataGridViewProjects.CurrentRow.Cells("VersionID").Value)
+
+                ' Validate versionID
+                If versionID <= 0 Then
+                    Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(projectID)
+                    If Not versions.Any() Then
+                        MessageBox.Show("No versions exist for this project. Create a version in the project editor.", "No Versions", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                        Return
+                    End If
+                    versionID = versions.OrderByDescending(Function(v) v.VersionDate).First().VersionID
+                End If
+
+                ' Open frmPSE with projectID and versionID
+                Using frm As New FrmPSE(projectID, versionID)
+                    frm.ShowDialog()
+                End Using
+            Catch ex As Exception
+                MessageBox.Show("Error opening PSE form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         Else
             MessageBox.Show("Select a project to open PSE.", "Truss Tip", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End If

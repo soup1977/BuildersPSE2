@@ -117,6 +117,7 @@ Partial Class frmCreateEditProject
         Me.lblLevelNumber = New System.Windows.Forms.Label()
         Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.btnOpenPSE = New System.Windows.Forms.Button()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -205,6 +206,7 @@ Partial Class frmCreateEditProject
         '
         'tabProjectInfo
         '
+        Me.tabProjectInfo.Controls.Add(Me.btnOpenPSE)
         Me.tabProjectInfo.Controls.Add(Me.pnlProjectInfo)
         Me.tabProjectInfo.Controls.Add(Me.btnSaveProjectInfo)
         Me.tabProjectInfo.Location = New System.Drawing.Point(4, 22)
@@ -269,7 +271,7 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Controls.Add(Me.lblVersion)
         Me.pnlProjectInfo.Controls.Add(Me.lblVersionDate)
         Me.pnlProjectInfo.Controls.Add(Me.dtpCreatedDate)
-        Me.pnlProjectInfo.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.pnlProjectInfo.Dock = System.Windows.Forms.DockStyle.Top
         Me.pnlProjectInfo.Location = New System.Drawing.Point(0, 0)
         Me.pnlProjectInfo.Name = "pnlProjectInfo"
         Me.pnlProjectInfo.Size = New System.Drawing.Size(562, 544)
@@ -345,7 +347,7 @@ Partial Class frmCreateEditProject
         Me.cboProjectEngineer.Location = New System.Drawing.Point(100, 337)
         Me.cboProjectEngineer.Name = "cboProjectEngineer"
         Me.cboProjectEngineer.Size = New System.Drawing.Size(359, 21)
-        Me.cboProjectEngineer.TabIndex = 48
+        Me.cboProjectEngineer.TabIndex = 18
         '
         'cboProjectArchitect
         '
@@ -354,7 +356,7 @@ Partial Class frmCreateEditProject
         Me.cboProjectArchitect.Location = New System.Drawing.Point(100, 312)
         Me.cboProjectArchitect.Name = "cboProjectArchitect"
         Me.cboProjectArchitect.Size = New System.Drawing.Size(359, 21)
-        Me.cboProjectArchitect.TabIndex = 47
+        Me.cboProjectArchitect.TabIndex = 17
         '
         'lblStatus
         '
@@ -386,6 +388,7 @@ Partial Class frmCreateEditProject
         '
         'cboVersion
         '
+        Me.cboVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboVersion.FormattingEnabled = True
         Me.cboVersion.Location = New System.Drawing.Point(100, 48)
         Me.cboVersion.Name = "cboVersion"
@@ -427,7 +430,7 @@ Partial Class frmCreateEditProject
         Me.cboSalesman.Location = New System.Drawing.Point(100, 258)
         Me.cboSalesman.Name = "cboSalesman"
         Me.cboSalesman.Size = New System.Drawing.Size(180, 21)
-        Me.cboSalesman.TabIndex = 15
+        Me.cboSalesman.TabIndex = 13
         '
         'cboCustomer
         '
@@ -436,7 +439,7 @@ Partial Class frmCreateEditProject
         Me.cboCustomer.Location = New System.Drawing.Point(100, 285)
         Me.cboCustomer.Name = "cboCustomer"
         Me.cboCustomer.Size = New System.Drawing.Size(359, 21)
-        Me.cboCustomer.TabIndex = 13
+        Me.cboCustomer.TabIndex = 16
         '
         'dtpLastModified
         '
@@ -578,7 +581,7 @@ Partial Class frmCreateEditProject
         Me.dtpBidDate.Location = New System.Drawing.Point(100, 179)
         Me.dtpBidDate.Name = "dtpBidDate"
         Me.dtpBidDate.Size = New System.Drawing.Size(100, 20)
-        Me.dtpBidDate.TabIndex = 10
+        Me.dtpBidDate.TabIndex = 8
         '
         'lblArchPlansDated
         '
@@ -595,7 +598,7 @@ Partial Class frmCreateEditProject
         Me.dtpArchPlansDated.Location = New System.Drawing.Point(439, 179)
         Me.dtpArchPlansDated.Name = "dtpArchPlansDated"
         Me.dtpArchPlansDated.Size = New System.Drawing.Size(100, 20)
-        Me.dtpArchPlansDated.TabIndex = 8
+        Me.dtpArchPlansDated.TabIndex = 10
         '
         'lblEngPlansDated
         '
@@ -612,7 +615,7 @@ Partial Class frmCreateEditProject
         Me.dtpEngPlansDated.Location = New System.Drawing.Point(439, 204)
         Me.dtpEngPlansDated.Name = "dtpEngPlansDated"
         Me.dtpEngPlansDated.Size = New System.Drawing.Size(100, 20)
-        Me.dtpEngPlansDated.TabIndex = 9
+        Me.dtpEngPlansDated.TabIndex = 11
         '
         'lblCustomerName
         '
@@ -638,7 +641,7 @@ Partial Class frmCreateEditProject
         Me.nudMilesToJobSite.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudMilesToJobSite.Name = "nudMilesToJobSite"
         Me.nudMilesToJobSite.Size = New System.Drawing.Size(100, 20)
-        Me.nudMilesToJobSite.TabIndex = 11
+        Me.nudMilesToJobSite.TabIndex = 9
         '
         'lblTotalNetSqft
         '
@@ -655,7 +658,7 @@ Partial Class frmCreateEditProject
         Me.nudTotalNetSqft.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudTotalNetSqft.Name = "nudTotalNetSqft"
         Me.nudTotalNetSqft.Size = New System.Drawing.Size(160, 20)
-        Me.nudTotalNetSqft.TabIndex = 17
+        Me.nudTotalNetSqft.TabIndex = 14
         '
         'lblTotalGrossSqft
         '
@@ -672,7 +675,7 @@ Partial Class frmCreateEditProject
         Me.nudTotalGrossSqft.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudTotalGrossSqft.Name = "nudTotalGrossSqft"
         Me.nudTotalGrossSqft.Size = New System.Drawing.Size(160, 20)
-        Me.nudTotalGrossSqft.TabIndex = 18
+        Me.nudTotalGrossSqft.TabIndex = 15
         '
         'lblProjectArchitect
         '
@@ -707,7 +710,7 @@ Partial Class frmCreateEditProject
         Me.txtProjectNotes.Multiline = True
         Me.txtProjectNotes.Name = "txtProjectNotes"
         Me.txtProjectNotes.Size = New System.Drawing.Size(440, 147)
-        Me.txtProjectNotes.TabIndex = 21
+        Me.txtProjectNotes.TabIndex = 19
         '
         'lblVersion
         '
@@ -738,11 +741,10 @@ Partial Class frmCreateEditProject
         '
         'btnSaveProjectInfo
         '
-        Me.btnSaveProjectInfo.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(0, 544)
+        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(153, 544)
         Me.btnSaveProjectInfo.Name = "btnSaveProjectInfo"
-        Me.btnSaveProjectInfo.Size = New System.Drawing.Size(562, 30)
-        Me.btnSaveProjectInfo.TabIndex = 22
+        Me.btnSaveProjectInfo.Size = New System.Drawing.Size(200, 30)
+        Me.btnSaveProjectInfo.TabIndex = 20
         Me.btnSaveProjectInfo.Text = "Save Project Info"
         '
         'tabOverrides
@@ -968,7 +970,7 @@ Partial Class frmCreateEditProject
         '
         Me.txtLevelName.Location = New System.Drawing.Point(100, 10)
         Me.txtLevelName.Name = "txtLevelName"
-        Me.txtLevelName.Size = New System.Drawing.Size(440, 20)
+        Me.txtLevelName.Size = New System.Drawing.Size(126, 20)
         Me.txtLevelName.TabIndex = 1
         '
         'lblLevelType
@@ -985,7 +987,7 @@ Partial Class frmCreateEditProject
         Me.cmbLevelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cmbLevelType.Location = New System.Drawing.Point(100, 40)
         Me.cmbLevelType.Name = "cmbLevelType"
-        Me.cmbLevelType.Size = New System.Drawing.Size(79, 21)
+        Me.cmbLevelType.Size = New System.Drawing.Size(126, 21)
         Me.cmbLevelType.TabIndex = 3
         '
         'lblLevelNumber
@@ -1005,6 +1007,14 @@ Partial Class frmCreateEditProject
         Me.btnSaveLevelInfo.Size = New System.Drawing.Size(562, 30)
         Me.btnSaveLevelInfo.TabIndex = 6
         Me.btnSaveLevelInfo.Text = "Save Level Info"
+        '
+        'btnOpenPSE
+        '
+        Me.btnOpenPSE.Location = New System.Drawing.Point(359, 544)
+        Me.btnOpenPSE.Name = "btnOpenPSE"
+        Me.btnOpenPSE.Size = New System.Drawing.Size(200, 30)
+        Me.btnOpenPSE.TabIndex = 21
+        Me.btnOpenPSE.Text = "Open PSE"
         '
         'frmCreateEditProject
         '
@@ -1134,4 +1144,5 @@ Partial Class frmCreateEditProject
     Friend WithEvents Label1 As Label
     Friend WithEvents btnEditEngineer As Button
     Friend WithEvents btnAddEngineer As Button
+    Friend WithEvents btnOpenPSE As Button
 End Class

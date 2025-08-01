@@ -43,62 +43,185 @@ Namespace BuildersPSE.DataAccess
         End Function
 
         ' Duplicate an existing project version
+        ' Duplicate an existing project version
+        ' Duplicate an existing project version
+        ' Duplicate an existing project version
         Public Sub DuplicateProjectVersion(originalVersionID As Integer, newVersionName As String, description As String, projectID As Integer)
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       ' Pre-fetch all data from the original version before starting the transaction
+                                                                       Dim origBuildings As List(Of BuildingModel) = GetBuildingsByVersionID(originalVersionID)
+                                                                       For Each bldg In origBuildings
+                                                                           For Each level In bldg.Levels
+                                                                               level.ActualUnitMappings = GetActualToLevelMappingsByLevelID(level.LevelID)
+                                                                           Next
+                                                                       Next
+
+                                                                       ' Collect unique RawUnits
+                                                                       Dim rawUnitSet As New HashSet(Of Integer)
+                                                                       Dim uniqueRawUnits As New List(Of RawUnitModel)
+                                                                       For Each bldg In origBuildings
+                                                                           For Each level In bldg.Levels
+                                                                               For Each mapping In level.ActualUnitMappings
+                                                                                   Dim rawID As Integer = mapping.ActualUnit.RawUnitID
+                                                                                   If Not rawUnitSet.Contains(rawID) Then
+                                                                                       rawUnitSet.Add(rawID)
+                                                                                       Dim rawUnit As RawUnitModel = GetRawUnitByID(rawID)
+                                                                                       If rawUnit IsNot Nothing Then
+                                                                                           uniqueRawUnits.Add(rawUnit)
+                                                                                       Else
+                                                                                           Debug.WriteLine($"Warning: RawUnitID {rawID} not found.")
+                                                                                       End If
+                                                                                   End If
+                                                                               Next
+                                                                           Next
+                                                                       Next
+
+                                                                       ' Validate RawUnitName for all RawUnits
+                                                                       For Each rawUnit In uniqueRawUnits
+                                                                           If String.IsNullOrEmpty(rawUnit.RawUnitName) Then
+                                                                               Throw New ArgumentException($"RawUnitID {rawUnit.RawUnitID} has a null or empty RawUnitName.")
+                                                                           End If
+                                                                       Next
+
+                                                                       ' Collect unique ActualUnits
+                                                                       Dim actualUnitSet As New HashSet(Of Integer)
+                                                                       Dim uniqueActualUnits As New List(Of ActualUnitModel)
+                                                                       For Each bldg In origBuildings
+                                                                           For Each level In bldg.Levels
+                                                                               For Each mapping In level.ActualUnitMappings
+                                                                                   Dim actualID As Integer = mapping.ActualUnit.ActualUnitID
+                                                                                   If Not actualUnitSet.Contains(actualID) Then
+                                                                                       actualUnitSet.Add(actualID)
+                                                                                       uniqueActualUnits.Add(mapping.ActualUnit)
+                                                                                   End If
+                                                                               Next
+                                                                           Next
+                                                                       Next
+
                                                                        Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
                                                                            conn.Open()
                                                                            Using transaction As SqlTransaction = conn.BeginTransaction()
                                                                                Try
                                                                                    ' Create new version
                                                                                    Dim params As New Dictionary(Of String, Object) From {
-                                                                                      {"@ProjectID", projectID},
-                                                                                      {"@VersionName", newVersionName},
-                                                                                      {"@VersionDate", Date.Now},
-                                                                                      {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
-                                                                                      {"@CustomerID", DBNull.Value},
-                                                                                      {"@SalesID", DBNull.Value}
-                                                                                  }
+                        {"@ProjectID", projectID},
+                        {"@VersionName", newVersionName},
+                        {"@VersionDate", Date.Now},
+                        {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
+                        {"@CustomerID", DBNull.Value},
+                        {"@SalesID", DBNull.Value}
+                    }
                                                                                    Dim newVersionID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectVersion, BuildParameters(params), conn, transaction)
 
                                                                                    ' Duplicate ProjectProductSettings
-                                                                                   params = New Dictionary(Of String, Object) From {{"@OriginalVersionID", originalVersionID}, {"@NewVersionID", newVersionID}}
+                                                                                   params = New Dictionary(Of String, Object) From {
+                        {"@OriginalVersionID", originalVersionID},
+                        {"@NewVersionID", newVersionID}
+                    }
                                                                                    SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DuplicateProjectProductSettings, BuildParameters(params), conn, transaction)
 
-                                                                                   ' Duplicate Buildings
-                                                                                   Dim origBuildings As List(Of BuildingModel) = GetBuildingsByVersionID(originalVersionID)
+                                                                                   ' Duplicate RawUnits and create map
+                                                                                   Dim rawIdMap As New Dictionary(Of Integer, Integer)
+                                                                                   For Each raw In uniqueRawUnits
+                                                                                       params = New Dictionary(Of String, Object) From {
+                            {"@RawUnitName", raw.RawUnitName},
+                            {"@VersionID", newVersionID},
+                            {"@ProductTypeID", raw.ProductTypeID},
+                            {"@BF", If(raw.BF.HasValue, CType(raw.BF.Value, Object), DBNull.Value)},
+                            {"@LF", If(raw.LF.HasValue, CType(raw.LF.Value, Object), DBNull.Value)},
+                            {"@EWPLF", If(raw.EWPLF.HasValue, CType(raw.EWPLF.Value, Object), DBNull.Value)},
+                            {"@SqFt", If(raw.SqFt.HasValue, CType(raw.SqFt.Value, Object), DBNull.Value)},
+                            {"@FCArea", If(raw.FCArea.HasValue, CType(raw.FCArea.Value, Object), DBNull.Value)},
+                            {"@LumberCost", If(raw.LumberCost.HasValue, CType(raw.LumberCost.Value, Object), DBNull.Value)},
+                            {"@PlateCost", If(raw.PlateCost.HasValue, CType(raw.PlateCost.Value, Object), DBNull.Value)},
+                            {"@ManufLaborCost", If(raw.ManufLaborCost.HasValue, CType(raw.ManufLaborCost.Value, Object), DBNull.Value)},
+                            {"@DesignLabor", If(raw.DesignLabor.HasValue, CType(raw.DesignLabor.Value, Object), DBNull.Value)},
+                            {"@MGMTLabor", If(raw.MGMTLabor.HasValue, CType(raw.MGMTLabor.Value, Object), DBNull.Value)},
+                            {"@JobSuppliesCost", If(raw.JobSuppliesCost.HasValue, CType(raw.JobSuppliesCost.Value, Object), DBNull.Value)},
+                            {"@ManHours", If(raw.ManHours.HasValue, CType(raw.ManHours.Value, Object), DBNull.Value)},
+                            {"@ItemCost", If(raw.ItemCost.HasValue, CType(raw.ItemCost.Value, Object), DBNull.Value)},
+                            {"@OverallCost", If(raw.OverallCost.HasValue, CType(raw.OverallCost.Value, Object), DBNull.Value)},
+                            {"@DeliveryCost", If(raw.DeliveryCost.HasValue, CType(raw.DeliveryCost.Value, Object), DBNull.Value)},
+                            {"@TotalSellPrice", If(raw.TotalSellPrice.HasValue, CType(raw.TotalSellPrice.Value, Object), DBNull.Value)},
+                            {"@AvgSPFNo2", If(raw.AvgSPFNo2.HasValue, CType(raw.AvgSPFNo2.Value, Object), DBNull.Value)}
+                        }
+                                                                                       Dim newRawUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertRawUnit, BuildParameters(params), conn, transaction)
+                                                                                       rawIdMap.Add(raw.RawUnitID, newRawUnitID)
+                                                                                   Next
+
+                                                                                   ' Duplicate ActualUnits and create map
+                                                                                   Dim actualIdMap As New Dictionary(Of Integer, Integer)
+                                                                                   For Each actual In uniqueActualUnits
+                                                                                       params = New Dictionary(Of String, Object) From {
+                            {"@VersionID", newVersionID},
+                            {"@RawUnitID", rawIdMap(actual.RawUnitID)},
+                            {"@ProductTypeID", actual.ProductTypeID},
+                            {"@UnitName", actual.UnitName},
+                            {"@PlanSQFT", actual.PlanSQFT},
+                            {"@UnitType", actual.UnitType},
+                            {"@OptionalAdder", actual.OptionalAdder}
+                        }
+                                                                                       Dim newActualUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertActualUnit, BuildParameters(params), conn, transaction)
+                                                                                       actualIdMap.Add(actual.ActualUnitID, newActualUnitID)
+                                                                                   Next
+
+                                                                                   ' Duplicate CalculatedComponents
+                                                                                   For Each actual In uniqueActualUnits
+                                                                                       Dim newActualUnitID As Integer = actualIdMap(actual.ActualUnitID)
+                                                                                       For Each comp In actual.CalculatedComponents
+                                                                                           params = New Dictionary(Of String, Object) From {
+                                {"@VersionID", newVersionID},
+                                {"@ActualUnitID", newActualUnitID},
+                                {"@ComponentType", comp.ComponentType},
+                                {"@Value", comp.Value}
+                            }
+                                                                                           SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.InsertCalculatedComponent, BuildParameters(params), conn, transaction)
+                                                                                       Next
+                                                                                   Next
+
+                                                                                   ' Duplicate Buildings and create map
                                                                                    Dim buildingIdMap As New Dictionary(Of Integer, Integer)
                                                                                    For Each origBldg In origBuildings
-                                                                                       params = New Dictionary(Of String, Object) From {{"@OriginalVersionID", originalVersionID}, {"@NewVersionID", newVersionID}}
-                                                                                       Dim newBldgID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.DuplicateBuildings, BuildParameters(params), conn, transaction)
+                                                                                       params = New Dictionary(Of String, Object) From {
+                            {"@BuildingName", If(String.IsNullOrEmpty(origBldg.BuildingName), DBNull.Value, CType(origBldg.BuildingName, Object))},
+                            {"@BuildingType", If(origBldg.BuildingType.HasValue, CType(origBldg.BuildingType.Value, Object), DBNull.Value)},
+                            {"@ResUnits", If(origBldg.ResUnits.HasValue, CType(origBldg.ResUnits.Value, Object), DBNull.Value)},
+                            {"@BldgQty", origBldg.BldgQty},
+                            {"@VersionID", newVersionID}
+                        }
+                                                                                       Dim newBldgID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertBuilding, BuildParameters(params), conn, transaction)
                                                                                        buildingIdMap.Add(origBldg.BuildingID, newBldgID)
+                                                                                   Next
 
-                                                                                       ' Duplicate Levels
-                                                                                       Dim origLevels As List(Of LevelModel) = GetLevelsByBuildingID(origBldg.BuildingID)
-                                                                                       Dim levelIdMap As New Dictionary(Of Integer, Integer)
-                                                                                       For Each origLevel In origLevels
-                                                                                           params = New Dictionary(Of String, Object) From {{"@OriginalVersionID", originalVersionID}, {"@NewVersionID", newVersionID}, {"@NewBuildingID", newBldgID}, {"@OriginalBuildingID", origLevel.BuildingID}}
-                                                                                           Dim newLevelID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.DuplicateLevels, BuildParameters(params), conn, transaction)
+                                                                                   ' Duplicate Levels and create map
+                                                                                   Dim levelIdMap As New Dictionary(Of Integer, Integer)
+                                                                                   For Each origBldg In origBuildings
+                                                                                       Dim newBldgID As Integer = buildingIdMap(origBldg.BuildingID)
+                                                                                       For Each origLevel In origBldg.Levels
+                                                                                           params = New Dictionary(Of String, Object) From {
+                                {"@VersionID", newVersionID},
+                                {"@BuildingID", newBldgID},
+                                {"@ProductTypeID", origLevel.ProductTypeID},
+                                {"@LevelNumber", origLevel.LevelNumber},
+                                {"@LevelName", origLevel.LevelName}
+                            }
+                                                                                           Dim newLevelID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertLevel, BuildParameters(params), conn, transaction)
                                                                                            levelIdMap.Add(origLevel.LevelID, newLevelID)
+                                                                                       Next
+                                                                                   Next
 
-                                                                                           ' Duplicate ActualToLevelMapping
-                                                                                           Dim origMappings As List(Of ActualToLevelMappingModel) = GetActualToLevelMappingsByLevelID(origLevel.LevelID)
-                                                                                           For Each origMapping In origMappings
-                                                                                               ' Duplicate RawUnit
-                                                                                               Dim origRawUnit As RawUnitModel = GetRawUnitByID(origMapping.ActualUnit.RawUnitID)
-                                                                                               params = New Dictionary(Of String, Object) From {{"@OriginalVersionID", originalVersionID}, {"@NewVersionID", newVersionID}}
-                                                                                               Dim newRawUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.DuplicateRawUnits, BuildParameters(params), conn, transaction)
-
-                                                                                               ' Duplicate ActualUnit
-                                                                                               params = New Dictionary(Of String, Object) From {{"@OriginalVersionID", originalVersionID}, {"@NewVersionID", newVersionID}, {"@NewRawUnitID", newRawUnitID}, {"@OriginalRawUnitID", origMapping.ActualUnit.RawUnitID}}
-                                                                                               Dim newActualUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.DuplicateActualUnits, BuildParameters(params), conn, transaction)
-
-                                                                                               ' Duplicate CalculatedComponents
-                                                                                               params = New Dictionary(Of String, Object) From {{"@OriginalVersionID", originalVersionID}, {"@NewVersionID", newVersionID}, {"@NewActualUnitID", newActualUnitID}, {"@OriginalActualUnitID", origMapping.ActualUnitID}}
-                                                                                               SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DuplicateCalculatedComponents, BuildParameters(params), conn, transaction)
-
-                                                                                               ' Duplicate Mapping
-                                                                                               params = New Dictionary(Of String, Object) From {{"@OriginalVersionID", originalVersionID}, {"@NewVersionID", newVersionID}, {"@NewActualUnitID", newActualUnitID}, {"@OriginalActualUnitID", origMapping.ActualUnitID}, {"@NewLevelID", newLevelID}, {"@OriginalLevelID", origMapping.LevelID}}
-                                                                                               SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DuplicateActualToLevelMapping, BuildParameters(params), conn, transaction)
+                                                                                   ' Duplicate ActualToLevelMappings
+                                                                                   For Each origBldg In origBuildings
+                                                                                       For Each origLevel In origBldg.Levels
+                                                                                           Dim newLevelID As Integer = levelIdMap(origLevel.LevelID)
+                                                                                           For Each origMapping In origLevel.ActualUnitMappings
+                                                                                               params = New Dictionary(Of String, Object) From {
+                                    {"@VersionID", newVersionID},
+                                    {"@ActualUnitID", actualIdMap(origMapping.ActualUnitID)},
+                                    {"@LevelID", newLevelID},
+                                    {"@Quantity", origMapping.Quantity}
+                                }
+                                                                                               SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.InsertActualToLevelMapping, BuildParameters(params), conn, transaction)
                                                                                            Next
                                                                                        Next
                                                                                    Next
@@ -430,6 +553,67 @@ Namespace BuildersPSE.DataAccess
                                                                            End If
                                                                        End Using
                                                                    End Sub, "RawUnits import failed for version " & versionID)
+        End Sub
+        ' Add to DataAccess.vb
+        Public Function InsertRawUnit(rawUnit As RawUnitModel) As Integer
+            Dim params As New Dictionary(Of String, Object) From {
+        {"@RawUnitName", If(String.IsNullOrEmpty(rawUnit.RawUnitName), DBNull.Value, CType(rawUnit.RawUnitName, Object))},
+        {"@VersionID", rawUnit.VersionID},
+        {"@ProductTypeID", rawUnit.ProductTypeID},
+        {"@BF", If(rawUnit.BF.HasValue, CType(rawUnit.BF.Value, Object), DBNull.Value)},
+        {"@LF", If(rawUnit.LF.HasValue, CType(rawUnit.LF.Value, Object), DBNull.Value)},
+        {"@EWPLF", If(rawUnit.EWPLF.HasValue, CType(rawUnit.EWPLF.Value, Object), DBNull.Value)},
+        {"@SqFt", If(rawUnit.SqFt.HasValue, CType(rawUnit.SqFt.Value, Object), DBNull.Value)},
+        {"@FCArea", If(rawUnit.FCArea.HasValue, CType(rawUnit.FCArea.Value, Object), DBNull.Value)},
+        {"@LumberCost", If(rawUnit.LumberCost.HasValue, CType(rawUnit.LumberCost.Value, Object), DBNull.Value)},
+        {"@PlateCost", If(rawUnit.PlateCost.HasValue, CType(rawUnit.PlateCost.Value, Object), DBNull.Value)},
+        {"@ManufLaborCost", If(rawUnit.ManufLaborCost.HasValue, CType(rawUnit.ManufLaborCost.Value, Object), DBNull.Value)},
+        {"@DesignLabor", If(rawUnit.DesignLabor.HasValue, CType(rawUnit.DesignLabor.Value, Object), DBNull.Value)},
+        {"@MGMTLabor", If(rawUnit.MGMTLabor.HasValue, CType(rawUnit.MGMTLabor.Value, Object), DBNull.Value)},
+        {"@JobSuppliesCost", If(rawUnit.JobSuppliesCost.HasValue, CType(rawUnit.JobSuppliesCost.Value, Object), DBNull.Value)},
+        {"@ManHours", If(rawUnit.ManHours.HasValue, CType(rawUnit.ManHours.Value, Object), DBNull.Value)},
+        {"@ItemCost", If(rawUnit.ItemCost.HasValue, CType(rawUnit.ItemCost.Value, Object), DBNull.Value)},
+        {"@OverallCost", If(rawUnit.OverallCost.HasValue, CType(rawUnit.OverallCost.Value, Object), DBNull.Value)},
+        {"@DeliveryCost", If(rawUnit.DeliveryCost.HasValue, CType(rawUnit.DeliveryCost.Value, Object), DBNull.Value)},
+        {"@TotalSellPrice", If(rawUnit.TotalSellPrice.HasValue, CType(rawUnit.TotalSellPrice.Value, Object), DBNull.Value)},
+        {"@AvgSPFNo2", If(rawUnit.AvgSPFNo2.HasValue, CType(rawUnit.AvgSPFNo2.Value, Object), DBNull.Value)}
+    }
+            Dim newID As Integer
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Dim newIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertRawUnit, BuildParameters(params))
+                                                                       If newIDObj Is DBNull.Value OrElse newIDObj Is Nothing Then
+                                                                           Throw New Exception("Failed to insert RawUnit for " & rawUnit.RawUnitName)
+                                                                       End If
+                                                                       newID = CInt(newIDObj)
+                                                                   End Sub, "Error inserting raw unit for version " & rawUnit.VersionID)
+            Return newID
+        End Function
+
+        Public Sub UpdateRawUnit(rawUnit As RawUnitModel)
+            Dim params As New Dictionary(Of String, Object) From {
+        {"@RawUnitID", rawUnit.RawUnitID},
+        {"@RawUnitName", If(String.IsNullOrEmpty(rawUnit.RawUnitName), DBNull.Value, CType(rawUnit.RawUnitName, Object))},
+        {"@BF", If(rawUnit.BF.HasValue, CType(rawUnit.BF.Value, Object), DBNull.Value)},
+        {"@LF", If(rawUnit.LF.HasValue, CType(rawUnit.LF.Value, Object), DBNull.Value)},
+        {"@EWPLF", If(rawUnit.EWPLF.HasValue, CType(rawUnit.EWPLF.Value, Object), DBNull.Value)},
+        {"@SqFt", If(rawUnit.SqFt.HasValue, CType(rawUnit.SqFt.Value, Object), DBNull.Value)},
+        {"@FCArea", If(rawUnit.FCArea.HasValue, CType(rawUnit.FCArea.Value, Object), DBNull.Value)},
+        {"@LumberCost", If(rawUnit.LumberCost.HasValue, CType(rawUnit.LumberCost.Value, Object), DBNull.Value)},
+        {"@PlateCost", If(rawUnit.PlateCost.HasValue, CType(rawUnit.PlateCost.Value, Object), DBNull.Value)},
+        {"@ManufLaborCost", If(rawUnit.ManufLaborCost.HasValue, CType(rawUnit.ManufLaborCost.Value, Object), DBNull.Value)},
+        {"@DesignLabor", If(rawUnit.DesignLabor.HasValue, CType(rawUnit.DesignLabor.Value, Object), DBNull.Value)},
+        {"@MGMTLabor", If(rawUnit.MGMTLabor.HasValue, CType(rawUnit.MGMTLabor.Value, Object), DBNull.Value)},
+        {"@JobSuppliesCost", If(rawUnit.JobSuppliesCost.HasValue, CType(rawUnit.JobSuppliesCost.Value, Object), DBNull.Value)},
+        {"@ManHours", If(rawUnit.ManHours.HasValue, CType(rawUnit.ManHours.Value, Object), DBNull.Value)},
+        {"@ItemCost", If(rawUnit.ItemCost.HasValue, CType(rawUnit.ItemCost.Value, Object), DBNull.Value)},
+        {"@OverallCost", If(rawUnit.OverallCost.HasValue, CType(rawUnit.OverallCost.Value, Object), DBNull.Value)},
+        {"@DeliveryCost", If(rawUnit.DeliveryCost.HasValue, CType(rawUnit.DeliveryCost.Value, Object), DBNull.Value)},
+        {"@TotalSellPrice", If(rawUnit.TotalSellPrice.HasValue, CType(rawUnit.TotalSellPrice.Value, Object), DBNull.Value)},
+        {"@AvgSPFNo2", If(rawUnit.AvgSPFNo2.HasValue, CType(rawUnit.AvgSPFNo2.Value, Object), DBNull.Value)}
+    }
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateRawUnit, BuildParameters(params))
+                                                                   End Sub, "Error updating raw unit " & rawUnit.RawUnitID)
         End Sub
 
         ' GetLevelsByBuildingID (unchanged, uses BuildingID)
@@ -1253,20 +1437,41 @@ Namespace BuildersPSE.DataAccess
         End Function
 
         ' GetRawUnitByID (unchanged)
+        ' GetRawUnitByID (updated to retrieve all fields)
         Public Function GetRawUnitByID(rawUnitID As Integer) As RawUnitModel
             Dim raw As RawUnitModel = Nothing
             Dim params As SqlParameter() = {New SqlParameter("@RawUnitID", rawUnitID)}
+
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
                                                                        Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectRawUnitByID, params)
                                                                            If reader.Read() Then
                                                                                raw = New RawUnitModel With {
-                                                    .RawUnitID = rawUnitID,
-                                                    .OverallCost = If(Not reader.IsDBNull(reader.GetOrdinal("OverallCost")), reader.GetDecimal(reader.GetOrdinal("OverallCost")), 0D),
-                                                    .TotalSellPrice = If(Not reader.IsDBNull(reader.GetOrdinal("TotalSellPrice")), reader.GetDecimal(reader.GetOrdinal("TotalSellPrice")), 0D)
-                                                }
+                                                                                        .RawUnitID = rawUnitID,
+                                                                                        .RawUnitName = If(Not reader.IsDBNull(reader.GetOrdinal("RawUnitName")), reader.GetString(reader.GetOrdinal("RawUnitName")), String.Empty),
+                                                                                        .ProductTypeID = reader.GetInt32(reader.GetOrdinal("ProductTypeID")),
+                                                                                        .BF = If(Not reader.IsDBNull(reader.GetOrdinal("BF")), reader.GetDecimal(reader.GetOrdinal("BF")), Nothing),
+                                                                                        .LF = If(Not reader.IsDBNull(reader.GetOrdinal("LF")), reader.GetDecimal(reader.GetOrdinal("LF")), Nothing),
+                                                                                        .EWPLF = If(Not reader.IsDBNull(reader.GetOrdinal("EWPLF")), reader.GetDecimal(reader.GetOrdinal("EWPLF")), Nothing),
+                                                                                        .SqFt = If(Not reader.IsDBNull(reader.GetOrdinal("SqFt")), reader.GetDecimal(reader.GetOrdinal("SqFt")), Nothing),
+                                                                                        .FCArea = If(Not reader.IsDBNull(reader.GetOrdinal("FCArea")), reader.GetDecimal(reader.GetOrdinal("FCArea")), Nothing),
+                                                                                        .LumberCost = If(Not reader.IsDBNull(reader.GetOrdinal("LumberCost")), reader.GetDecimal(reader.GetOrdinal("LumberCost")), Nothing),
+                                                                                        .PlateCost = If(Not reader.IsDBNull(reader.GetOrdinal("PlateCost")), reader.GetDecimal(reader.GetOrdinal("PlateCost")), Nothing),
+                                                                                        .ManufLaborCost = If(Not reader.IsDBNull(reader.GetOrdinal("ManufLaborCost")), reader.GetDecimal(reader.GetOrdinal("ManufLaborCost")), Nothing),
+                                                                                        .DesignLabor = If(Not reader.IsDBNull(reader.GetOrdinal("DesignLabor")), reader.GetDecimal(reader.GetOrdinal("DesignLabor")), Nothing),
+                                                                                        .MGMTLabor = If(Not reader.IsDBNull(reader.GetOrdinal("MGMTLabor")), reader.GetDecimal(reader.GetOrdinal("MGMTLabor")), Nothing),
+                                                                                        .JobSuppliesCost = If(Not reader.IsDBNull(reader.GetOrdinal("JobSuppliesCost")), reader.GetDecimal(reader.GetOrdinal("JobSuppliesCost")), Nothing),
+                                                                                        .ManHours = If(Not reader.IsDBNull(reader.GetOrdinal("ManHours")), reader.GetDecimal(reader.GetOrdinal("ManHours")), Nothing),
+                                                                                        .ItemCost = If(Not reader.IsDBNull(reader.GetOrdinal("ItemCost")), reader.GetDecimal(reader.GetOrdinal("ItemCost")), Nothing),
+                                                                                        .OverallCost = If(Not reader.IsDBNull(reader.GetOrdinal("OverallCost")), reader.GetDecimal(reader.GetOrdinal("OverallCost")), Nothing),
+                                                                                        .DeliveryCost = If(Not reader.IsDBNull(reader.GetOrdinal("DeliveryCost")), reader.GetDecimal(reader.GetOrdinal("DeliveryCost")), Nothing),
+                                                                                        .TotalSellPrice = If(Not reader.IsDBNull(reader.GetOrdinal("TotalSellPrice")), reader.GetDecimal(reader.GetOrdinal("TotalSellPrice")), Nothing),
+                                                                                        .AvgSPFNo2 = If(Not reader.IsDBNull(reader.GetOrdinal("AvgSPFNo2")), reader.GetDecimal(reader.GetOrdinal("AvgSPFNo2")), Nothing),
+                                                                                        .VersionID = reader.GetInt32(reader.GetOrdinal("VersionID"))
+                                                                                    }
                                                                            End If
                                                                        End Using
                                                                    End Sub, "Error loading raw unit " & rawUnitID)
+
             Return raw
         End Function
 

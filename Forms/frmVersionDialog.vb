@@ -2,10 +2,6 @@
 Imports System.Windows.Forms
 
 Public Class frmVersionDialog
-    'Private txtVersionName As New TextBox()
-    'Private txtDescription As New TextBox()
-    'Private btnOK As New Button()
-    'Private btnCancel As New Button()
 
     Public Property VersionName As String
     Public Property Description As String
@@ -14,7 +10,7 @@ Public Class frmVersionDialog
         InitializeComponent()
     End Sub
 
-    Private Sub btnOK_Click(sender As Object, e As EventArgs)
+    Private Sub btnOK_Click(sender As Object, e As EventArgs) Handles btnOk.Click
         If String.IsNullOrWhiteSpace(txtVersionName.Text) Then
             MessageBox.Show("Version name is required.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
@@ -25,8 +21,9 @@ Public Class frmVersionDialog
         Close()
     End Sub
 
-    Private Sub btnCancel_Click(sender As Object, e As EventArgs)
+    Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
         DialogResult = DialogResult.Cancel
         Close()
     End Sub
+
 End Class
