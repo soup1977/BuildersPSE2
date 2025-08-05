@@ -34,6 +34,9 @@ Partial Class FrmPSE
         Me.ChkDetailedView = New System.Windows.Forms.CheckBox()
         Me.btnReuseActualUnit = New System.Windows.Forms.Button()
         Me.ListboxExistingActualUnits = New System.Windows.Forms.ListBox()
+        Me.ContextMenuActualUnits = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DeleteActualUnitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.BtnImportLevelData = New System.Windows.Forms.Button()
         Me.LblTotalMargin = New System.Windows.Forms.Label()
         Me.TxtTotalMargin = New System.Windows.Forms.TextBox()
@@ -41,7 +44,6 @@ Partial Class FrmPSE
         Me.BtnRecalculate = New System.Windows.Forms.Button()
         Me.BtnFinish = New System.Windows.Forms.Button()
         Me.TxtTotalSellPrice = New System.Windows.Forms.TextBox()
-        Me.LblStatus = New System.Windows.Forms.Label()
         Me.LblTotalOverallCost = New System.Windows.Forms.Label()
         Me.TxtTotalOverallCost = New System.Windows.Forms.TextBox()
         Me.LblTotalItemCost = New System.Windows.Forms.Label()
@@ -113,15 +115,12 @@ Partial Class FrmPSE
         Me.BtnCancel = New System.Windows.Forms.Button()
         Me.LblReferencedRawUnit = New System.Windows.Forms.Label()
         Me.TxtReferencedRawUnit = New System.Windows.Forms.TextBox()
-        Me.ContextMenuActualUnits = New System.Windows.Forms.ContextMenuStrip(Me.components)
-        Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.DeleteActualUnitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContextMenuLevels.SuspendLayout()
         Me.TabControlData.SuspendLayout()
         Me.TabUnitBased.SuspendLayout()
+        Me.ContextMenuActualUnits.SuspendLayout()
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.PanelDetails.SuspendLayout()
-        Me.ContextMenuActualUnits.SuspendLayout()
         Me.SuspendLayout()
         '
         'TreeViewLevels
@@ -131,7 +130,7 @@ Partial Class FrmPSE
         Me.TreeViewLevels.HideSelection = False
         Me.TreeViewLevels.Location = New System.Drawing.Point(0, 0)
         Me.TreeViewLevels.Name = "TreeViewLevels"
-        Me.TreeViewLevels.Size = New System.Drawing.Size(278, 707)
+        Me.TreeViewLevels.Size = New System.Drawing.Size(230, 647)
         Me.TreeViewLevels.TabIndex = 0
         '
         'ContextMenuLevels
@@ -156,10 +155,10 @@ Partial Class FrmPSE
         '
         Me.TabControlData.Controls.Add(Me.TabUnitBased)
         Me.TabControlData.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.TabControlData.Location = New System.Drawing.Point(278, 0)
+        Me.TabControlData.Location = New System.Drawing.Point(230, 0)
         Me.TabControlData.Name = "TabControlData"
         Me.TabControlData.SelectedIndex = 0
-        Me.TabControlData.Size = New System.Drawing.Size(812, 707)
+        Me.TabControlData.Size = New System.Drawing.Size(860, 647)
         Me.TabControlData.TabIndex = 1
         '
         'TabUnitBased
@@ -176,7 +175,6 @@ Partial Class FrmPSE
         Me.TabUnitBased.Controls.Add(Me.BtnRecalculate)
         Me.TabUnitBased.Controls.Add(Me.BtnFinish)
         Me.TabUnitBased.Controls.Add(Me.TxtTotalSellPrice)
-        Me.TabUnitBased.Controls.Add(Me.LblStatus)
         Me.TabUnitBased.Controls.Add(Me.LblTotalOverallCost)
         Me.TabUnitBased.Controls.Add(Me.TxtTotalOverallCost)
         Me.TabUnitBased.Controls.Add(Me.LblTotalItemCost)
@@ -208,7 +206,7 @@ Partial Class FrmPSE
         Me.TabUnitBased.Controls.Add(Me.DataGridViewAssigned)
         Me.TabUnitBased.Location = New System.Drawing.Point(4, 22)
         Me.TabUnitBased.Name = "TabUnitBased"
-        Me.TabUnitBased.Size = New System.Drawing.Size(804, 681)
+        Me.TabUnitBased.Size = New System.Drawing.Size(852, 621)
         Me.TabUnitBased.TabIndex = 0
         Me.TabUnitBased.Text = "Units"
         '
@@ -232,7 +230,7 @@ Partial Class FrmPSE
         '
         Me.ChkDetailedView.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ChkDetailedView.AutoSize = True
-        Me.ChkDetailedView.Location = New System.Drawing.Point(701, 238)
+        Me.ChkDetailedView.Location = New System.Drawing.Point(749, 238)
         Me.ChkDetailedView.Name = "ChkDetailedView"
         Me.ChkDetailedView.Size = New System.Drawing.Size(91, 17)
         Me.ChkDetailedView.TabIndex = 54
@@ -256,6 +254,24 @@ Partial Class FrmPSE
         Me.ListboxExistingActualUnits.Name = "ListboxExistingActualUnits"
         Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(149, 199)
         Me.ListboxExistingActualUnits.TabIndex = 52
+        '
+        'ContextMenuActualUnits
+        '
+        Me.ContextMenuActualUnits.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EditToolStripMenuItem, Me.DeleteActualUnitToolStripMenuItem})
+        Me.ContextMenuActualUnits.Name = "ContextMenuActualUnits"
+        Me.ContextMenuActualUnits.Size = New System.Drawing.Size(170, 48)
+        '
+        'EditToolStripMenuItem
+        '
+        Me.EditToolStripMenuItem.Name = "EditToolStripMenuItem"
+        Me.EditToolStripMenuItem.Size = New System.Drawing.Size(169, 22)
+        Me.EditToolStripMenuItem.Text = "Edit Actual Unit"
+        '
+        'DeleteActualUnitToolStripMenuItem
+        '
+        Me.DeleteActualUnitToolStripMenuItem.Name = "DeleteActualUnitToolStripMenuItem"
+        Me.DeleteActualUnitToolStripMenuItem.Size = New System.Drawing.Size(169, 22)
+        Me.DeleteActualUnitToolStripMenuItem.Text = "Delete Actual Unit"
         '
         'BtnImportLevelData
         '
@@ -291,7 +307,8 @@ Partial Class FrmPSE
         '
         'BtnRecalculate
         '
-        Me.BtnRecalculate.Location = New System.Drawing.Point(10, 630)
+        Me.BtnRecalculate.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.BtnRecalculate.Location = New System.Drawing.Point(634, 566)
         Me.BtnRecalculate.Name = "BtnRecalculate"
         Me.BtnRecalculate.Size = New System.Drawing.Size(100, 30)
         Me.BtnRecalculate.TabIndex = 3
@@ -299,7 +316,8 @@ Partial Class FrmPSE
         '
         'BtnFinish
         '
-        Me.BtnFinish.Location = New System.Drawing.Point(120, 630)
+        Me.BtnFinish.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.BtnFinish.Location = New System.Drawing.Point(740, 566)
         Me.BtnFinish.Name = "BtnFinish"
         Me.BtnFinish.Size = New System.Drawing.Size(100, 30)
         Me.BtnFinish.TabIndex = 4
@@ -312,14 +330,6 @@ Partial Class FrmPSE
         Me.TxtTotalSellPrice.ReadOnly = True
         Me.TxtTotalSellPrice.Size = New System.Drawing.Size(100, 20)
         Me.TxtTotalSellPrice.TabIndex = 48
-        '
-        'LblStatus
-        '
-        Me.LblStatus.Location = New System.Drawing.Point(230, 635)
-        Me.LblStatus.Name = "LblStatus"
-        Me.LblStatus.Size = New System.Drawing.Size(528, 23)
-        Me.LblStatus.TabIndex = 5
-        Me.LblStatus.Text = "Status: Ready"
         '
         'LblTotalOverallCost
         '
@@ -547,13 +557,14 @@ Partial Class FrmPSE
         '
         'DataGridViewAssigned
         '
-        Me.DataGridViewAssigned.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.DataGridViewAssigned.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DataGridViewAssigned.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DataGridViewAssigned.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DataGridViewAssigned.Location = New System.Drawing.Point(10, 260)
         Me.DataGridViewAssigned.Name = "DataGridViewAssigned"
-        Me.DataGridViewAssigned.Size = New System.Drawing.Size(782, 350)
+        Me.DataGridViewAssigned.Size = New System.Drawing.Size(830, 300)
         Me.DataGridViewAssigned.TabIndex = 2
         '
         'PanelDetails
@@ -603,13 +614,13 @@ Partial Class FrmPSE
         Me.PanelDetails.Dock = System.Windows.Forms.DockStyle.Right
         Me.PanelDetails.Location = New System.Drawing.Point(1090, 0)
         Me.PanelDetails.Name = "PanelDetails"
-        Me.PanelDetails.Size = New System.Drawing.Size(280, 707)
+        Me.PanelDetails.Size = New System.Drawing.Size(280, 647)
         Me.PanelDetails.TabIndex = 2
         Me.PanelDetails.Visible = False
         '
         'btnDeleteUnit
         '
-        Me.btnDeleteUnit.Location = New System.Drawing.Point(8, 664)
+        Me.btnDeleteUnit.Location = New System.Drawing.Point(5, 588)
         Me.btnDeleteUnit.Name = "btnDeleteUnit"
         Me.btnDeleteUnit.Size = New System.Drawing.Size(78, 29)
         Me.btnDeleteUnit.TabIndex = 48
@@ -618,7 +629,7 @@ Partial Class FrmPSE
         '
         'btnSaveNewOnly
         '
-        Me.btnSaveNewOnly.Location = New System.Drawing.Point(92, 629)
+        Me.btnSaveNewOnly.Location = New System.Drawing.Point(89, 553)
         Me.btnSaveNewOnly.Name = "btnSaveNewOnly"
         Me.btnSaveNewOnly.Size = New System.Drawing.Size(183, 29)
         Me.btnSaveNewOnly.TabIndex = 47
@@ -903,7 +914,7 @@ Partial Class FrmPSE
         '
         'BtnSaveAndAttach
         '
-        Me.BtnSaveAndAttach.Location = New System.Drawing.Point(92, 664)
+        Me.BtnSaveAndAttach.Location = New System.Drawing.Point(89, 588)
         Me.BtnSaveAndAttach.Name = "BtnSaveAndAttach"
         Me.BtnSaveAndAttach.Size = New System.Drawing.Size(97, 30)
         Me.BtnSaveAndAttach.TabIndex = 8
@@ -911,7 +922,7 @@ Partial Class FrmPSE
         '
         'BtnCancel
         '
-        Me.BtnCancel.Location = New System.Drawing.Point(195, 664)
+        Me.BtnCancel.Location = New System.Drawing.Point(192, 588)
         Me.BtnCancel.Name = "BtnCancel"
         Me.BtnCancel.Size = New System.Drawing.Size(80, 30)
         Me.BtnCancel.TabIndex = 13
@@ -933,28 +944,10 @@ Partial Class FrmPSE
         Me.TxtReferencedRawUnit.Size = New System.Drawing.Size(150, 20)
         Me.TxtReferencedRawUnit.TabIndex = 15
         '
-        'ContextMenuActualUnits
-        '
-        Me.ContextMenuActualUnits.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EditToolStripMenuItem, Me.DeleteActualUnitToolStripMenuItem})
-        Me.ContextMenuActualUnits.Name = "ContextMenuActualUnits"
-        Me.ContextMenuActualUnits.Size = New System.Drawing.Size(170, 48)
-        '
-        'EditToolStripMenuItem
-        '
-        Me.EditToolStripMenuItem.Name = "EditToolStripMenuItem"
-        Me.EditToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.EditToolStripMenuItem.Text = "Edit Actual Unit"
-        '
-        'DeleteActualUnitToolStripMenuItem
-        '
-        Me.DeleteActualUnitToolStripMenuItem.Name = "DeleteActualUnitToolStripMenuItem"
-        Me.DeleteActualUnitToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.DeleteActualUnitToolStripMenuItem.Text = "Delete Actual Unit"
-        '
         'FrmPSE
         '
         Me.BackColor = System.Drawing.Color.LightGray
-        Me.ClientSize = New System.Drawing.Size(1370, 707)
+        Me.ClientSize = New System.Drawing.Size(1370, 647)
         Me.Controls.Add(Me.TabControlData)
         Me.Controls.Add(Me.TreeViewLevels)
         Me.Controls.Add(Me.PanelDetails)
@@ -964,10 +957,10 @@ Partial Class FrmPSE
         Me.TabControlData.ResumeLayout(False)
         Me.TabUnitBased.ResumeLayout(False)
         Me.TabUnitBased.PerformLayout()
+        Me.ContextMenuActualUnits.ResumeLayout(False)
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).EndInit()
         Me.PanelDetails.ResumeLayout(False)
         Me.PanelDetails.PerformLayout()
-        Me.ContextMenuActualUnits.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
@@ -994,7 +987,6 @@ Partial Class FrmPSE
     Private WithEvents BtnCancel As Button
     Private WithEvents BtnRecalculate As Button
     Private WithEvents BtnFinish As Button
-    Private WithEvents LblStatus As Label
     Private WithEvents LblReferencedRawUnit As Label
     Private WithEvents TxtReferencedRawUnit As TextBox
     Private WithEvents LblLumberPerSQFT As Label

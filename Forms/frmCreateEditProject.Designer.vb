@@ -33,6 +33,8 @@ Partial Class frmCreateEditProject
         Me.mnuPasteLevels = New System.Windows.Forms.ToolStripMenuItem()
         Me.tabControlRight = New System.Windows.Forms.TabControl()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
+        Me.btnClose = New System.Windows.Forms.Button()
+        Me.btnOpenPSE = New System.Windows.Forms.Button()
         Me.pnlProjectInfo = New System.Windows.Forms.Panel()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnEditEngineer = New System.Windows.Forms.Button()
@@ -43,7 +45,6 @@ Partial Class frmCreateEditProject
         Me.btnAddCustomer = New System.Windows.Forms.Button()
         Me.cboProjectEngineer = New System.Windows.Forms.ComboBox()
         Me.cboProjectArchitect = New System.Windows.Forms.ComboBox()
-        Me.lblStatus = New System.Windows.Forms.Label()
         Me.btnDuplicateVersion = New System.Windows.Forms.Button()
         Me.btnCreateVersion = New System.Windows.Forms.Button()
         Me.cboVersion = New System.Windows.Forms.ComboBox()
@@ -117,7 +118,7 @@ Partial Class frmCreateEditProject
         Me.lblLevelNumber = New System.Windows.Forms.Label()
         Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
-        Me.btnOpenPSE = New System.Windows.Forms.Button()
+        Me.btnIEOpen = New System.Windows.Forms.Button()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -145,7 +146,7 @@ Partial Class frmCreateEditProject
         Me.tvProjectTree.HideSelection = False
         Me.tvProjectTree.Location = New System.Drawing.Point(0, 0)
         Me.tvProjectTree.Name = "tvProjectTree"
-        Me.tvProjectTree.Size = New System.Drawing.Size(230, 600)
+        Me.tvProjectTree.Size = New System.Drawing.Size(230, 577)
         Me.tvProjectTree.TabIndex = 0
         '
         'cmsTreeMenu
@@ -201,19 +202,38 @@ Partial Class frmCreateEditProject
         Me.tabControlRight.Location = New System.Drawing.Point(230, 0)
         Me.tabControlRight.Name = "tabControlRight"
         Me.tabControlRight.SelectedIndex = 0
-        Me.tabControlRight.Size = New System.Drawing.Size(570, 600)
+        Me.tabControlRight.Size = New System.Drawing.Size(570, 577)
         Me.tabControlRight.TabIndex = 1
         '
         'tabProjectInfo
         '
+        Me.tabProjectInfo.Controls.Add(Me.btnIEOpen)
+        Me.tabProjectInfo.Controls.Add(Me.btnClose)
         Me.tabProjectInfo.Controls.Add(Me.btnOpenPSE)
         Me.tabProjectInfo.Controls.Add(Me.pnlProjectInfo)
         Me.tabProjectInfo.Controls.Add(Me.btnSaveProjectInfo)
         Me.tabProjectInfo.Location = New System.Drawing.Point(4, 22)
         Me.tabProjectInfo.Name = "tabProjectInfo"
-        Me.tabProjectInfo.Size = New System.Drawing.Size(562, 574)
+        Me.tabProjectInfo.Size = New System.Drawing.Size(562, 551)
         Me.tabProjectInfo.TabIndex = 0
         Me.tabProjectInfo.Text = "Project Info"
+        '
+        'btnClose
+        '
+        Me.btnClose.Location = New System.Drawing.Point(453, 515)
+        Me.btnClose.Name = "btnClose"
+        Me.btnClose.Size = New System.Drawing.Size(101, 27)
+        Me.btnClose.TabIndex = 22
+        Me.btnClose.Text = "Close"
+        Me.btnClose.UseVisualStyleBackColor = True
+        '
+        'btnOpenPSE
+        '
+        Me.btnOpenPSE.Location = New System.Drawing.Point(347, 516)
+        Me.btnOpenPSE.Name = "btnOpenPSE"
+        Me.btnOpenPSE.Size = New System.Drawing.Size(100, 27)
+        Me.btnOpenPSE.TabIndex = 21
+        Me.btnOpenPSE.Text = "Open PSE"
         '
         'pnlProjectInfo
         '
@@ -227,7 +247,6 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Controls.Add(Me.btnAddCustomer)
         Me.pnlProjectInfo.Controls.Add(Me.cboProjectEngineer)
         Me.pnlProjectInfo.Controls.Add(Me.cboProjectArchitect)
-        Me.pnlProjectInfo.Controls.Add(Me.lblStatus)
         Me.pnlProjectInfo.Controls.Add(Me.btnDuplicateVersion)
         Me.pnlProjectInfo.Controls.Add(Me.btnCreateVersion)
         Me.pnlProjectInfo.Controls.Add(Me.cboVersion)
@@ -274,13 +293,13 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Dock = System.Windows.Forms.DockStyle.Top
         Me.pnlProjectInfo.Location = New System.Drawing.Point(0, 0)
         Me.pnlProjectInfo.Name = "pnlProjectInfo"
-        Me.pnlProjectInfo.Size = New System.Drawing.Size(562, 544)
+        Me.pnlProjectInfo.Size = New System.Drawing.Size(562, 509)
         Me.pnlProjectInfo.TabIndex = 0
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(11, 54)
+        Me.Label1.Location = New System.Drawing.Point(9, 19)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(81, 13)
         Me.Label1.TabIndex = 55
@@ -288,7 +307,7 @@ Partial Class frmCreateEditProject
         '
         'btnEditEngineer
         '
-        Me.btnEditEngineer.Location = New System.Drawing.Point(505, 339)
+        Me.btnEditEngineer.Location = New System.Drawing.Point(503, 304)
         Me.btnEditEngineer.Name = "btnEditEngineer"
         Me.btnEditEngineer.Size = New System.Drawing.Size(34, 20)
         Me.btnEditEngineer.TabIndex = 54
@@ -297,7 +316,7 @@ Partial Class frmCreateEditProject
         '
         'btnAddEngineer
         '
-        Me.btnAddEngineer.Location = New System.Drawing.Point(465, 339)
+        Me.btnAddEngineer.Location = New System.Drawing.Point(463, 304)
         Me.btnAddEngineer.Name = "btnAddEngineer"
         Me.btnAddEngineer.Size = New System.Drawing.Size(34, 20)
         Me.btnAddEngineer.TabIndex = 53
@@ -306,7 +325,7 @@ Partial Class frmCreateEditProject
         '
         'btnEditArchitect
         '
-        Me.btnEditArchitect.Location = New System.Drawing.Point(505, 313)
+        Me.btnEditArchitect.Location = New System.Drawing.Point(503, 278)
         Me.btnEditArchitect.Name = "btnEditArchitect"
         Me.btnEditArchitect.Size = New System.Drawing.Size(34, 20)
         Me.btnEditArchitect.TabIndex = 52
@@ -315,7 +334,7 @@ Partial Class frmCreateEditProject
         '
         'btnAddArchitect
         '
-        Me.btnAddArchitect.Location = New System.Drawing.Point(465, 313)
+        Me.btnAddArchitect.Location = New System.Drawing.Point(463, 278)
         Me.btnAddArchitect.Name = "btnAddArchitect"
         Me.btnAddArchitect.Size = New System.Drawing.Size(34, 20)
         Me.btnAddArchitect.TabIndex = 51
@@ -324,7 +343,7 @@ Partial Class frmCreateEditProject
         '
         'btnEditCustomer
         '
-        Me.btnEditCustomer.Location = New System.Drawing.Point(505, 285)
+        Me.btnEditCustomer.Location = New System.Drawing.Point(503, 250)
         Me.btnEditCustomer.Name = "btnEditCustomer"
         Me.btnEditCustomer.Size = New System.Drawing.Size(34, 20)
         Me.btnEditCustomer.TabIndex = 50
@@ -333,7 +352,7 @@ Partial Class frmCreateEditProject
         '
         'btnAddCustomer
         '
-        Me.btnAddCustomer.Location = New System.Drawing.Point(465, 286)
+        Me.btnAddCustomer.Location = New System.Drawing.Point(463, 251)
         Me.btnAddCustomer.Name = "btnAddCustomer"
         Me.btnAddCustomer.Size = New System.Drawing.Size(34, 20)
         Me.btnAddCustomer.TabIndex = 49
@@ -344,7 +363,7 @@ Partial Class frmCreateEditProject
         '
         Me.cboProjectEngineer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboProjectEngineer.FormattingEnabled = True
-        Me.cboProjectEngineer.Location = New System.Drawing.Point(100, 337)
+        Me.cboProjectEngineer.Location = New System.Drawing.Point(98, 302)
         Me.cboProjectEngineer.Name = "cboProjectEngineer"
         Me.cboProjectEngineer.Size = New System.Drawing.Size(359, 21)
         Me.cboProjectEngineer.TabIndex = 18
@@ -353,24 +372,14 @@ Partial Class frmCreateEditProject
         '
         Me.cboProjectArchitect.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboProjectArchitect.FormattingEnabled = True
-        Me.cboProjectArchitect.Location = New System.Drawing.Point(100, 312)
+        Me.cboProjectArchitect.Location = New System.Drawing.Point(98, 277)
         Me.cboProjectArchitect.Name = "cboProjectArchitect"
         Me.cboProjectArchitect.Size = New System.Drawing.Size(359, 21)
         Me.cboProjectArchitect.TabIndex = 17
         '
-        'lblStatus
-        '
-        Me.lblStatus.AutoSize = True
-        Me.lblStatus.Location = New System.Drawing.Point(50, 10)
-        Me.lblStatus.Name = "lblStatus"
-        Me.lblStatus.Size = New System.Drawing.Size(40, 13)
-        Me.lblStatus.TabIndex = 46
-        Me.lblStatus.Tag = ""
-        Me.lblStatus.Text = "Status:"
-        '
         'btnDuplicateVersion
         '
-        Me.btnDuplicateVersion.Location = New System.Drawing.Point(442, 47)
+        Me.btnDuplicateVersion.Location = New System.Drawing.Point(440, 12)
         Me.btnDuplicateVersion.Name = "btnDuplicateVersion"
         Me.btnDuplicateVersion.Size = New System.Drawing.Size(98, 21)
         Me.btnDuplicateVersion.TabIndex = 45
@@ -379,7 +388,7 @@ Partial Class frmCreateEditProject
         '
         'btnCreateVersion
         '
-        Me.btnCreateVersion.Location = New System.Drawing.Point(338, 47)
+        Me.btnCreateVersion.Location = New System.Drawing.Point(336, 12)
         Me.btnCreateVersion.Name = "btnCreateVersion"
         Me.btnCreateVersion.Size = New System.Drawing.Size(98, 20)
         Me.btnCreateVersion.TabIndex = 44
@@ -390,7 +399,7 @@ Partial Class frmCreateEditProject
         '
         Me.cboVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboVersion.FormattingEnabled = True
-        Me.cboVersion.Location = New System.Drawing.Point(100, 48)
+        Me.cboVersion.Location = New System.Drawing.Point(98, 13)
         Me.cboVersion.Name = "cboVersion"
         Me.cboVersion.Size = New System.Drawing.Size(180, 21)
         Me.cboVersion.TabIndex = 43
@@ -400,7 +409,7 @@ Partial Class frmCreateEditProject
         Me.cboState.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboState.FormattingEnabled = True
         Me.cboState.Items.AddRange(New Object() {"AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"})
-        Me.cboState.Location = New System.Drawing.Point(375, 153)
+        Me.cboState.Location = New System.Drawing.Point(373, 118)
         Me.cboState.Name = "cboState"
         Me.cboState.Size = New System.Drawing.Size(51, 21)
         Me.cboState.TabIndex = 6
@@ -409,7 +418,7 @@ Partial Class frmCreateEditProject
         '
         Me.cboEstimator.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboEstimator.FormattingEnabled = True
-        Me.cboEstimator.Location = New System.Drawing.Point(100, 231)
+        Me.cboEstimator.Location = New System.Drawing.Point(98, 196)
         Me.cboEstimator.Name = "cboEstimator"
         Me.cboEstimator.Size = New System.Drawing.Size(180, 21)
         Me.cboEstimator.TabIndex = 12
@@ -418,7 +427,7 @@ Partial Class frmCreateEditProject
         '
         Me.cboProjectType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboProjectType.FormattingEnabled = True
-        Me.cboProjectType.Location = New System.Drawing.Point(375, 74)
+        Me.cboProjectType.Location = New System.Drawing.Point(373, 39)
         Me.cboProjectType.Name = "cboProjectType"
         Me.cboProjectType.Size = New System.Drawing.Size(164, 21)
         Me.cboProjectType.TabIndex = 2
@@ -427,7 +436,7 @@ Partial Class frmCreateEditProject
         '
         Me.cboSalesman.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboSalesman.FormattingEnabled = True
-        Me.cboSalesman.Location = New System.Drawing.Point(100, 258)
+        Me.cboSalesman.Location = New System.Drawing.Point(98, 223)
         Me.cboSalesman.Name = "cboSalesman"
         Me.cboSalesman.Size = New System.Drawing.Size(180, 21)
         Me.cboSalesman.TabIndex = 13
@@ -436,7 +445,7 @@ Partial Class frmCreateEditProject
         '
         Me.cboCustomer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboCustomer.FormattingEnabled = True
-        Me.cboCustomer.Location = New System.Drawing.Point(100, 285)
+        Me.cboCustomer.Location = New System.Drawing.Point(98, 250)
         Me.cboCustomer.Name = "cboCustomer"
         Me.cboCustomer.Size = New System.Drawing.Size(359, 21)
         Me.cboCustomer.TabIndex = 16
@@ -444,7 +453,7 @@ Partial Class frmCreateEditProject
         'dtpLastModified
         '
         Me.dtpLastModified.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpLastModified.Location = New System.Drawing.Point(100, 518)
+        Me.dtpLastModified.Location = New System.Drawing.Point(98, 483)
         Me.dtpLastModified.Name = "dtpLastModified"
         Me.dtpLastModified.Size = New System.Drawing.Size(160, 20)
         Me.dtpLastModified.TabIndex = 42
@@ -453,7 +462,7 @@ Partial Class frmCreateEditProject
         'lblJBID
         '
         Me.lblJBID.AutoSize = True
-        Me.lblJBID.Location = New System.Drawing.Point(11, 78)
+        Me.lblJBID.Location = New System.Drawing.Point(9, 43)
         Me.lblJBID.Name = "lblJBID"
         Me.lblJBID.Size = New System.Drawing.Size(83, 13)
         Me.lblJBID.TabIndex = 0
@@ -461,7 +470,7 @@ Partial Class frmCreateEditProject
         '
         'txtJBID
         '
-        Me.txtJBID.Location = New System.Drawing.Point(100, 75)
+        Me.txtJBID.Location = New System.Drawing.Point(98, 40)
         Me.txtJBID.Name = "txtJBID"
         Me.txtJBID.Size = New System.Drawing.Size(180, 20)
         Me.txtJBID.TabIndex = 1
@@ -469,7 +478,7 @@ Partial Class frmCreateEditProject
         'lblProjectType
         '
         Me.lblProjectType.AutoSize = True
-        Me.lblProjectType.Location = New System.Drawing.Point(299, 77)
+        Me.lblProjectType.Location = New System.Drawing.Point(297, 42)
         Me.lblProjectType.Name = "lblProjectType"
         Me.lblProjectType.Size = New System.Drawing.Size(70, 13)
         Me.lblProjectType.TabIndex = 2
@@ -478,7 +487,7 @@ Partial Class frmCreateEditProject
         'lblSalesman
         '
         Me.lblSalesman.AutoSize = True
-        Me.lblSalesman.Location = New System.Drawing.Point(38, 261)
+        Me.lblSalesman.Location = New System.Drawing.Point(36, 226)
         Me.lblSalesman.Name = "lblSalesman"
         Me.lblSalesman.Size = New System.Drawing.Size(56, 13)
         Me.lblSalesman.TabIndex = 4
@@ -487,7 +496,7 @@ Partial Class frmCreateEditProject
         'lblProjectName
         '
         Me.lblProjectName.AutoSize = True
-        Me.lblProjectName.Location = New System.Drawing.Point(20, 104)
+        Me.lblProjectName.Location = New System.Drawing.Point(18, 69)
         Me.lblProjectName.Name = "lblProjectName"
         Me.lblProjectName.Size = New System.Drawing.Size(74, 13)
         Me.lblProjectName.TabIndex = 6
@@ -495,7 +504,7 @@ Partial Class frmCreateEditProject
         '
         'txtProjectName
         '
-        Me.txtProjectName.Location = New System.Drawing.Point(100, 101)
+        Me.txtProjectName.Location = New System.Drawing.Point(98, 66)
         Me.txtProjectName.Name = "txtProjectName"
         Me.txtProjectName.Size = New System.Drawing.Size(439, 20)
         Me.txtProjectName.TabIndex = 3
@@ -503,7 +512,7 @@ Partial Class frmCreateEditProject
         'lblEstimator
         '
         Me.lblEstimator.AutoSize = True
-        Me.lblEstimator.Location = New System.Drawing.Point(41, 234)
+        Me.lblEstimator.Location = New System.Drawing.Point(39, 199)
         Me.lblEstimator.Name = "lblEstimator"
         Me.lblEstimator.Size = New System.Drawing.Size(53, 13)
         Me.lblEstimator.TabIndex = 8
@@ -512,7 +521,7 @@ Partial Class frmCreateEditProject
         'lblAddress
         '
         Me.lblAddress.AutoSize = True
-        Me.lblAddress.Location = New System.Drawing.Point(46, 130)
+        Me.lblAddress.Location = New System.Drawing.Point(44, 95)
         Me.lblAddress.Name = "lblAddress"
         Me.lblAddress.Size = New System.Drawing.Size(48, 13)
         Me.lblAddress.TabIndex = 10
@@ -520,7 +529,7 @@ Partial Class frmCreateEditProject
         '
         'txtAddress
         '
-        Me.txtAddress.Location = New System.Drawing.Point(100, 127)
+        Me.txtAddress.Location = New System.Drawing.Point(98, 92)
         Me.txtAddress.Name = "txtAddress"
         Me.txtAddress.Size = New System.Drawing.Size(439, 20)
         Me.txtAddress.TabIndex = 4
@@ -528,7 +537,7 @@ Partial Class frmCreateEditProject
         'lblCity
         '
         Me.lblCity.AutoSize = True
-        Me.lblCity.Location = New System.Drawing.Point(67, 156)
+        Me.lblCity.Location = New System.Drawing.Point(65, 121)
         Me.lblCity.Name = "lblCity"
         Me.lblCity.Size = New System.Drawing.Size(27, 13)
         Me.lblCity.TabIndex = 12
@@ -536,7 +545,7 @@ Partial Class frmCreateEditProject
         '
         'txtCity
         '
-        Me.txtCity.Location = New System.Drawing.Point(100, 153)
+        Me.txtCity.Location = New System.Drawing.Point(98, 118)
         Me.txtCity.Name = "txtCity"
         Me.txtCity.Size = New System.Drawing.Size(228, 20)
         Me.txtCity.TabIndex = 5
@@ -544,7 +553,7 @@ Partial Class frmCreateEditProject
         'lblState
         '
         Me.lblState.AutoSize = True
-        Me.lblState.Location = New System.Drawing.Point(334, 158)
+        Me.lblState.Location = New System.Drawing.Point(332, 123)
         Me.lblState.Name = "lblState"
         Me.lblState.Size = New System.Drawing.Size(35, 13)
         Me.lblState.TabIndex = 14
@@ -553,7 +562,7 @@ Partial Class frmCreateEditProject
         'lblZip
         '
         Me.lblZip.AutoSize = True
-        Me.lblZip.Location = New System.Drawing.Point(434, 158)
+        Me.lblZip.Location = New System.Drawing.Point(432, 123)
         Me.lblZip.Name = "lblZip"
         Me.lblZip.Size = New System.Drawing.Size(25, 13)
         Me.lblZip.TabIndex = 16
@@ -561,7 +570,7 @@ Partial Class frmCreateEditProject
         '
         'txtZip
         '
-        Me.txtZip.Location = New System.Drawing.Point(465, 153)
+        Me.txtZip.Location = New System.Drawing.Point(463, 118)
         Me.txtZip.Name = "txtZip"
         Me.txtZip.Size = New System.Drawing.Size(74, 20)
         Me.txtZip.TabIndex = 7
@@ -569,7 +578,7 @@ Partial Class frmCreateEditProject
         'lblBidDate
         '
         Me.lblBidDate.AutoSize = True
-        Me.lblBidDate.Location = New System.Drawing.Point(43, 185)
+        Me.lblBidDate.Location = New System.Drawing.Point(41, 150)
         Me.lblBidDate.Name = "lblBidDate"
         Me.lblBidDate.Size = New System.Drawing.Size(51, 13)
         Me.lblBidDate.TabIndex = 18
@@ -578,7 +587,7 @@ Partial Class frmCreateEditProject
         'dtpBidDate
         '
         Me.dtpBidDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpBidDate.Location = New System.Drawing.Point(100, 179)
+        Me.dtpBidDate.Location = New System.Drawing.Point(98, 144)
         Me.dtpBidDate.Name = "dtpBidDate"
         Me.dtpBidDate.Size = New System.Drawing.Size(100, 20)
         Me.dtpBidDate.TabIndex = 8
@@ -586,7 +595,7 @@ Partial Class frmCreateEditProject
         'lblArchPlansDated
         '
         Me.lblArchPlansDated.AutoSize = True
-        Me.lblArchPlansDated.Location = New System.Drawing.Point(340, 185)
+        Me.lblArchPlansDated.Location = New System.Drawing.Point(338, 150)
         Me.lblArchPlansDated.Name = "lblArchPlansDated"
         Me.lblArchPlansDated.Size = New System.Drawing.Size(93, 13)
         Me.lblArchPlansDated.TabIndex = 20
@@ -595,7 +604,7 @@ Partial Class frmCreateEditProject
         'dtpArchPlansDated
         '
         Me.dtpArchPlansDated.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpArchPlansDated.Location = New System.Drawing.Point(439, 179)
+        Me.dtpArchPlansDated.Location = New System.Drawing.Point(437, 144)
         Me.dtpArchPlansDated.Name = "dtpArchPlansDated"
         Me.dtpArchPlansDated.Size = New System.Drawing.Size(100, 20)
         Me.dtpArchPlansDated.TabIndex = 10
@@ -603,7 +612,7 @@ Partial Class frmCreateEditProject
         'lblEngPlansDated
         '
         Me.lblEngPlansDated.AutoSize = True
-        Me.lblEngPlansDated.Location = New System.Drawing.Point(343, 210)
+        Me.lblEngPlansDated.Location = New System.Drawing.Point(341, 175)
         Me.lblEngPlansDated.Name = "lblEngPlansDated"
         Me.lblEngPlansDated.Size = New System.Drawing.Size(90, 13)
         Me.lblEngPlansDated.TabIndex = 22
@@ -612,7 +621,7 @@ Partial Class frmCreateEditProject
         'dtpEngPlansDated
         '
         Me.dtpEngPlansDated.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpEngPlansDated.Location = New System.Drawing.Point(439, 204)
+        Me.dtpEngPlansDated.Location = New System.Drawing.Point(437, 169)
         Me.dtpEngPlansDated.Name = "dtpEngPlansDated"
         Me.dtpEngPlansDated.Size = New System.Drawing.Size(100, 20)
         Me.dtpEngPlansDated.TabIndex = 11
@@ -620,7 +629,7 @@ Partial Class frmCreateEditProject
         'lblCustomerName
         '
         Me.lblCustomerName.AutoSize = True
-        Me.lblCustomerName.Location = New System.Drawing.Point(40, 289)
+        Me.lblCustomerName.Location = New System.Drawing.Point(38, 254)
         Me.lblCustomerName.Name = "lblCustomerName"
         Me.lblCustomerName.Size = New System.Drawing.Size(54, 13)
         Me.lblCustomerName.TabIndex = 24
@@ -629,7 +638,7 @@ Partial Class frmCreateEditProject
         'lblMilesToJobSite
         '
         Me.lblMilesToJobSite.AutoSize = True
-        Me.lblMilesToJobSite.Location = New System.Drawing.Point(6, 211)
+        Me.lblMilesToJobSite.Location = New System.Drawing.Point(4, 176)
         Me.lblMilesToJobSite.Name = "lblMilesToJobSite"
         Me.lblMilesToJobSite.Size = New System.Drawing.Size(88, 13)
         Me.lblMilesToJobSite.TabIndex = 26
@@ -637,7 +646,7 @@ Partial Class frmCreateEditProject
         '
         'nudMilesToJobSite
         '
-        Me.nudMilesToJobSite.Location = New System.Drawing.Point(100, 205)
+        Me.nudMilesToJobSite.Location = New System.Drawing.Point(98, 170)
         Me.nudMilesToJobSite.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudMilesToJobSite.Name = "nudMilesToJobSite"
         Me.nudMilesToJobSite.Size = New System.Drawing.Size(100, 20)
@@ -646,7 +655,7 @@ Partial Class frmCreateEditProject
         'lblTotalNetSqft
         '
         Me.lblTotalNetSqft.AutoSize = True
-        Me.lblTotalNetSqft.Location = New System.Drawing.Point(297, 234)
+        Me.lblTotalNetSqft.Location = New System.Drawing.Point(295, 199)
         Me.lblTotalNetSqft.Name = "lblTotalNetSqft"
         Me.lblTotalNetSqft.Size = New System.Drawing.Size(76, 13)
         Me.lblTotalNetSqft.TabIndex = 28
@@ -654,7 +663,7 @@ Partial Class frmCreateEditProject
         '
         'nudTotalNetSqft
         '
-        Me.nudTotalNetSqft.Location = New System.Drawing.Point(379, 232)
+        Me.nudTotalNetSqft.Location = New System.Drawing.Point(377, 197)
         Me.nudTotalNetSqft.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudTotalNetSqft.Name = "nudTotalNetSqft"
         Me.nudTotalNetSqft.Size = New System.Drawing.Size(160, 20)
@@ -663,7 +672,7 @@ Partial Class frmCreateEditProject
         'lblTotalGrossSqft
         '
         Me.lblTotalGrossSqft.AutoSize = True
-        Me.lblTotalGrossSqft.Location = New System.Drawing.Point(287, 261)
+        Me.lblTotalGrossSqft.Location = New System.Drawing.Point(285, 226)
         Me.lblTotalGrossSqft.Name = "lblTotalGrossSqft"
         Me.lblTotalGrossSqft.Size = New System.Drawing.Size(86, 13)
         Me.lblTotalGrossSqft.TabIndex = 30
@@ -671,7 +680,7 @@ Partial Class frmCreateEditProject
         '
         'nudTotalGrossSqft
         '
-        Me.nudTotalGrossSqft.Location = New System.Drawing.Point(379, 258)
+        Me.nudTotalGrossSqft.Location = New System.Drawing.Point(377, 223)
         Me.nudTotalGrossSqft.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudTotalGrossSqft.Name = "nudTotalGrossSqft"
         Me.nudTotalGrossSqft.Size = New System.Drawing.Size(160, 20)
@@ -680,7 +689,7 @@ Partial Class frmCreateEditProject
         'lblProjectArchitect
         '
         Me.lblProjectArchitect.AutoSize = True
-        Me.lblProjectArchitect.Location = New System.Drawing.Point(6, 317)
+        Me.lblProjectArchitect.Location = New System.Drawing.Point(4, 282)
         Me.lblProjectArchitect.Name = "lblProjectArchitect"
         Me.lblProjectArchitect.Size = New System.Drawing.Size(88, 13)
         Me.lblProjectArchitect.TabIndex = 32
@@ -689,7 +698,7 @@ Partial Class frmCreateEditProject
         'lblProjectEngineer
         '
         Me.lblProjectEngineer.AutoSize = True
-        Me.lblProjectEngineer.Location = New System.Drawing.Point(6, 343)
+        Me.lblProjectEngineer.Location = New System.Drawing.Point(4, 308)
         Me.lblProjectEngineer.Name = "lblProjectEngineer"
         Me.lblProjectEngineer.Size = New System.Drawing.Size(88, 13)
         Me.lblProjectEngineer.TabIndex = 34
@@ -698,7 +707,7 @@ Partial Class frmCreateEditProject
         'lblProjectNotes
         '
         Me.lblProjectNotes.AutoSize = True
-        Me.lblProjectNotes.Location = New System.Drawing.Point(20, 368)
+        Me.lblProjectNotes.Location = New System.Drawing.Point(18, 333)
         Me.lblProjectNotes.Name = "lblProjectNotes"
         Me.lblProjectNotes.Size = New System.Drawing.Size(74, 13)
         Me.lblProjectNotes.TabIndex = 36
@@ -706,7 +715,7 @@ Partial Class frmCreateEditProject
         '
         'txtProjectNotes
         '
-        Me.txtProjectNotes.Location = New System.Drawing.Point(100, 365)
+        Me.txtProjectNotes.Location = New System.Drawing.Point(98, 330)
         Me.txtProjectNotes.Multiline = True
         Me.txtProjectNotes.Name = "txtProjectNotes"
         Me.txtProjectNotes.Size = New System.Drawing.Size(440, 147)
@@ -715,7 +724,7 @@ Partial Class frmCreateEditProject
         'lblVersion
         '
         Me.lblVersion.AutoSize = True
-        Me.lblVersion.Location = New System.Drawing.Point(21, 524)
+        Me.lblVersion.Location = New System.Drawing.Point(19, 489)
         Me.lblVersion.Name = "lblVersion"
         Me.lblVersion.Size = New System.Drawing.Size(73, 13)
         Me.lblVersion.TabIndex = 38
@@ -724,7 +733,7 @@ Partial Class frmCreateEditProject
         'lblVersionDate
         '
         Me.lblVersionDate.AutoSize = True
-        Me.lblVersionDate.Location = New System.Drawing.Point(300, 524)
+        Me.lblVersionDate.Location = New System.Drawing.Point(298, 489)
         Me.lblVersionDate.Name = "lblVersionDate"
         Me.lblVersionDate.Size = New System.Drawing.Size(73, 13)
         Me.lblVersionDate.TabIndex = 40
@@ -733,7 +742,7 @@ Partial Class frmCreateEditProject
         'dtpCreatedDate
         '
         Me.dtpCreatedDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpCreatedDate.Location = New System.Drawing.Point(379, 518)
+        Me.dtpCreatedDate.Location = New System.Drawing.Point(377, 483)
         Me.dtpCreatedDate.Name = "dtpCreatedDate"
         Me.dtpCreatedDate.Size = New System.Drawing.Size(160, 20)
         Me.dtpCreatedDate.TabIndex = 41
@@ -741,9 +750,9 @@ Partial Class frmCreateEditProject
         '
         'btnSaveProjectInfo
         '
-        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(153, 544)
+        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(214, 516)
         Me.btnSaveProjectInfo.Name = "btnSaveProjectInfo"
-        Me.btnSaveProjectInfo.Size = New System.Drawing.Size(200, 30)
+        Me.btnSaveProjectInfo.Size = New System.Drawing.Size(127, 27)
         Me.btnSaveProjectInfo.TabIndex = 20
         Me.btnSaveProjectInfo.Text = "Save Project Info"
         '
@@ -1008,19 +1017,20 @@ Partial Class frmCreateEditProject
         Me.btnSaveLevelInfo.TabIndex = 6
         Me.btnSaveLevelInfo.Text = "Save Level Info"
         '
-        'btnOpenPSE
+        'btnIEOpen
         '
-        Me.btnOpenPSE.Location = New System.Drawing.Point(359, 544)
-        Me.btnOpenPSE.Name = "btnOpenPSE"
-        Me.btnOpenPSE.Size = New System.Drawing.Size(200, 30)
-        Me.btnOpenPSE.TabIndex = 21
-        Me.btnOpenPSE.Text = "Open PSE"
+        Me.btnIEOpen.Location = New System.Drawing.Point(88, 520)
+        Me.btnIEOpen.Name = "btnIEOpen"
+        Me.btnIEOpen.Size = New System.Drawing.Size(93, 21)
+        Me.btnIEOpen.TabIndex = 23
+        Me.btnIEOpen.Text = "Open IE"
+        Me.btnIEOpen.UseVisualStyleBackColor = True
         '
         'frmCreateEditProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(800, 600)
+        Me.ClientSize = New System.Drawing.Size(800, 577)
         Me.Controls.Add(Me.tabControlRight)
         Me.Controls.Add(Me.tvProjectTree)
         Me.Name = "frmCreateEditProject"
@@ -1134,7 +1144,6 @@ Partial Class frmCreateEditProject
     Friend WithEvents btnDuplicateVersion As Button
     Friend WithEvents btnCreateVersion As Button
     Friend WithEvents cboVersion As ComboBox
-    Friend WithEvents lblStatus As Label
     Friend WithEvents cboProjectEngineer As ComboBox
     Friend WithEvents cboProjectArchitect As ComboBox
     Friend WithEvents btnEditArchitect As Button
@@ -1145,4 +1154,6 @@ Partial Class frmCreateEditProject
     Friend WithEvents btnEditEngineer As Button
     Friend WithEvents btnAddEngineer As Button
     Friend WithEvents btnOpenPSE As Button
+    Friend WithEvents btnClose As Button
+    Friend WithEvents btnIEOpen As Button
 End Class

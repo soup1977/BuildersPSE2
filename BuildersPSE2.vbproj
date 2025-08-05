@@ -88,6 +88,18 @@
     <Compile Include="Forms\frmCustomerDialog.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\frmInclusionsExclusions.Designer.vb">
+      <DependentUpon>frmInclusionsExclusions.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmInclusionsExclusions.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmMain.Designer.vb">
+      <DependentUpon>frmMain.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmMain.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\frmMainProjectList.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -117,6 +129,11 @@
     <Compile Include="Models\EstimatorModel.vb" />
     <Compile Include="Models\LevelModel.vb" />
     <Compile Include="Models\ProductTypeModel.vb" />
+    <Compile Include="Models\ProjectBearingStylesModel.vb" />
+    <Compile Include="Models\ProjectDesignInfoModel.vb" />
+    <Compile Include="Models\ProjectGeneralNotesModel.vb" />
+    <Compile Include="Models\ProjectItemModel.vb" />
+    <Compile Include="Models\ProjectLoadModel.vb" />
     <Compile Include="Models\ProjectModel.vb" />
     <Compile Include="Models\ProjectProductSettingsModel.vb" />
     <Compile Include="Models\ProjectTypeModel.vb" />
@@ -139,11 +156,18 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Utilities\modDialogs.vb" />
     <Compile Include="Utilities\SqlConnectionManager.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\frmCreateEditProject.resx">
       <DependentUpon>frmCreateEditProject.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmInclusionsExclusions.resx">
+      <DependentUpon>frmInclusionsExclusions.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmMain.resx">
+      <DependentUpon>frmMain.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmMainProjectList.resx">
       <DependentUpon>frmMainProjectList.vb</DependentUpon>

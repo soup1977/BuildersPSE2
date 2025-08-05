@@ -28,18 +28,22 @@ Partial Class frmMainProjectList
         Me.btnEditProject = New System.Windows.Forms.Button()
         Me.btnOpenPSE = New System.Windows.Forms.Button()
         Me.btnRefreshGrid = New System.Windows.Forms.Button()
+        Me.btnClose = New System.Windows.Forms.Button()
         CType(Me.DataGridViewProjects, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'DataGridViewProjects
         '
+        Me.DataGridViewProjects.AllowUserToAddRows = False
+        Me.DataGridViewProjects.AllowUserToDeleteRows = False
         Me.DataGridViewProjects.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DataGridViewProjects.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DataGridViewProjects.Location = New System.Drawing.Point(12, 40)
         Me.DataGridViewProjects.Name = "DataGridViewProjects"
-        Me.DataGridViewProjects.Size = New System.Drawing.Size(776, 337)
+        Me.DataGridViewProjects.ReadOnly = True
+        Me.DataGridViewProjects.Size = New System.Drawing.Size(776, 348)
         Me.DataGridViewProjects.TabIndex = 0
         '
         'txtSearch
@@ -52,47 +56,62 @@ Partial Class frmMainProjectList
         'btnNewProject
         '
         Me.btnNewProject.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnNewProject.Location = New System.Drawing.Point(549, 417)
+        Me.btnNewProject.Location = New System.Drawing.Point(337, 398)
         Me.btnNewProject.Name = "btnNewProject"
         Me.btnNewProject.Size = New System.Drawing.Size(75, 23)
         Me.btnNewProject.TabIndex = 2
         Me.btnNewProject.Text = "New Project"
         Me.btnNewProject.UseVisualStyleBackColor = True
+        Me.btnNewProject.Visible = False
         '
         'btnEditProject
         '
         Me.btnEditProject.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnEditProject.Location = New System.Drawing.Point(631, 416)
+        Me.btnEditProject.Location = New System.Drawing.Point(419, 397)
         Me.btnEditProject.Name = "btnEditProject"
         Me.btnEditProject.Size = New System.Drawing.Size(75, 23)
         Me.btnEditProject.TabIndex = 3
         Me.btnEditProject.Text = "Edit Project"
         Me.btnEditProject.UseVisualStyleBackColor = True
+        Me.btnEditProject.Visible = False
         '
         'btnOpenPSE
         '
         Me.btnOpenPSE.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnOpenPSE.Location = New System.Drawing.Point(713, 415)
+        Me.btnOpenPSE.Location = New System.Drawing.Point(501, 396)
         Me.btnOpenPSE.Name = "btnOpenPSE"
         Me.btnOpenPSE.Size = New System.Drawing.Size(75, 23)
         Me.btnOpenPSE.TabIndex = 4
         Me.btnOpenPSE.Text = "Open PSE"
         Me.btnOpenPSE.UseVisualStyleBackColor = True
+        Me.btnOpenPSE.Visible = False
         '
         'btnRefreshGrid
         '
-        Me.btnRefreshGrid.Location = New System.Drawing.Point(439, 418)
+        Me.btnRefreshGrid.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnRefreshGrid.Location = New System.Drawing.Point(596, 394)
         Me.btnRefreshGrid.Name = "btnRefreshGrid"
-        Me.btnRefreshGrid.Size = New System.Drawing.Size(99, 21)
+        Me.btnRefreshGrid.Size = New System.Drawing.Size(99, 27)
         Me.btnRefreshGrid.TabIndex = 5
         Me.btnRefreshGrid.Text = "Refresh Projects"
         Me.btnRefreshGrid.UseVisualStyleBackColor = True
+        '
+        'btnClose
+        '
+        Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnClose.Location = New System.Drawing.Point(701, 394)
+        Me.btnClose.Name = "btnClose"
+        Me.btnClose.Size = New System.Drawing.Size(87, 27)
+        Me.btnClose.TabIndex = 6
+        Me.btnClose.Text = "Close"
+        Me.btnClose.UseVisualStyleBackColor = True
         '
         'frmMainProjectList
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(800, 450)
+        Me.Controls.Add(Me.btnClose)
         Me.Controls.Add(Me.btnRefreshGrid)
         Me.Controls.Add(Me.btnOpenPSE)
         Me.Controls.Add(Me.btnEditProject)
@@ -113,4 +132,5 @@ Partial Class frmMainProjectList
     Friend WithEvents btnEditProject As Button
     Friend WithEvents btnOpenPSE As Button
     Friend WithEvents btnRefreshGrid As Button
+    Friend WithEvents btnClose As Button
 End Class

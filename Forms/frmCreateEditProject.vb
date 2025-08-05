@@ -60,12 +60,17 @@ Public Class frmCreateEditProject
         LoadVersions()
         LoadProjectData()
     End Sub
-
+    Private Sub UpdateStatus(message As String)
+        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
+        If mdiParent IsNot Nothing Then
+            mdiParent.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
+        End If
+    End Sub
     Private Sub LoadVersions()
         Try
             If currentProject.ProjectID = 0 Then
                 cboVersion.DataSource = New List(Of ProjectVersionModel)()
-                lblStatus.Text = "Status: Save the project to create a version."
+                UpdateStatus("Status: Save the project to create a version.")
                 tvProjectTree.Nodes.Clear()
                 tvProjectTree.Nodes.Add(New TreeNode(currentProject.ProjectName & "-No Version") With {.Tag = currentProject})
                 Return
@@ -82,13 +87,13 @@ Public Class frmCreateEditProject
                 currentVersionID = CInt(cboVersion.SelectedValue)
             Else
                 currentVersionID = 0
-                lblStatus.Text = "Status: No versions found. Save the project to create a base version."
+                UpdateStatus("Status: No versions found. Save the project to create a base version.")
             End If
             isChangingVersion = False
             LoadVersionSpecificData()
         Catch ex As Exception
             isChangingVersion = False
-            lblStatus.Text = "Status: Error loading versions: " & ex.Message
+            UpdateStatus("Status: Error loading versions: " & ex.Message)
             MessageBox.Show("Error loading versions: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -104,16 +109,16 @@ Public Class frmCreateEditProject
             End If
             LoadProjectInfo(currentProject)
             LoadVersionSpecificData()
-            lblStatus.Text = "Status: Loaded " & tabControlRight.TabPages.Count & " tab(s) for " & If(isNewProject, "new project", "project ID " & currentProject.ProjectID) & "."
+            UpdateStatus($"Loaded {tabControlRight.TabPages.Count} tab(s) for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
         Catch ex As Exception
-            lblStatus.Text = "Status: Error loading project data: " & ex.Message
+            UpdateStatus($"Error loading project data: {ex.Message}")
             MessageBox.Show("Error loading project data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub LoadVersionSpecificData()
         Try
-            lblStatus.Text = "Loading version..."
+            UpdateStatus("Loading version...")
             currentProject.Settings = da.GetProjectProductSettings(currentVersionID)
             LoadOverrides(currentProject.Settings)
             currentProject.Buildings = da.GetBuildingsByVersionID(currentVersionID)
@@ -138,9 +143,9 @@ Public Class frmCreateEditProject
                 cboVersion.SelectedValue = currentVersionID
             End If
             LoadRollup(currentProject)
-            lblStatus.Text = "Status: Loaded version " & If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version")
+            UpdateStatus($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
         Catch ex As Exception
-            lblStatus.Text = "Status: Error loading version-specific data: " & ex.Message
+            UpdateStatus($"Error loading version-specific data: {ex.Message}")
             MessageBox.Show("Error loading version-specific data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -304,73 +309,94 @@ Public Class frmCreateEditProject
     End Sub
     ' Add handlers for Add/Edit buttons
     Private Sub btnAddCustomer_Click(sender As Object, e As EventArgs) Handles btnAddCustomer.Click
+        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         Using frm As New FrmCustomerDialog(defaultTypeID:=1)
+            UpdateStatus("Opened customer dialog for new customer")
             If frm.ShowDialog() = DialogResult.OK Then
                 RefreshCustomerComboboxes()
+                UpdateStatus("Customer added")
             End If
         End Using
     End Sub
 
     Private Sub btnEditCustomer_Click(sender As Object, e As EventArgs) Handles btnEditCustomer.Click
+        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         If cboCustomer.SelectedValue IsNot Nothing AndAlso cboCustomer.SelectedValue IsNot DBNull.Value Then
             Dim selectedCustomerID As Integer = CInt(cboCustomer.SelectedValue)
             Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=1).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
             If selectedCustomer IsNot Nothing Then
                 Using frm As New FrmCustomerDialog(selectedCustomer)
+                    UpdateStatus($"Opened customer dialog for CustomerID {selectedCustomerID}")
                     If frm.ShowDialog() = DialogResult.OK Then
                         RefreshCustomerComboboxes()
+                        UpdateStatus("Customer updated")
                     End If
                 End Using
             End If
         Else
+            UpdateStatus("No customer selected for editing")
             MessageBox.Show("Select a customer to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
         End If
     End Sub
 
     Private Sub btnAddArchitect_Click(sender As Object, e As EventArgs) Handles btnAddArchitect.Click
+        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         Using frm As New FrmCustomerDialog(defaultTypeID:=2)
+            UpdateStatus("Opened architect dialog for new architect")
             If frm.ShowDialog() = DialogResult.OK Then
                 RefreshCustomerComboboxes()
+                UpdateStatus("Architect added")
             End If
         End Using
     End Sub
 
     Private Sub btnEditArchitect_Click(sender As Object, e As EventArgs) Handles btnEditArchitect.Click
+        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         If cboProjectArchitect.SelectedValue IsNot Nothing AndAlso cboProjectArchitect.SelectedValue IsNot DBNull.Value Then
             Dim selectedCustomerID As Integer = CInt(cboProjectArchitect.SelectedValue)
             Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=2).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
             If selectedCustomer IsNot Nothing Then
                 Using frm As New FrmCustomerDialog(selectedCustomer)
+                    UpdateStatus($"Opened architect dialog for CustomerID {selectedCustomerID}")
                     If frm.ShowDialog() = DialogResult.OK Then
                         RefreshCustomerComboboxes()
+                        UpdateStatus("Architect updated")
                     End If
                 End Using
             End If
         Else
+            UpdateStatus("No architect selected for editing")
             MessageBox.Show("Select an architect to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
         End If
     End Sub
 
     Private Sub btnAddEngineer_Click(sender As Object, e As EventArgs) Handles btnAddEngineer.Click
+        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         Using frm As New FrmCustomerDialog(defaultTypeID:=3)
+            UpdateStatus("Opened engineer dialog for new engineer")
             If frm.ShowDialog() = DialogResult.OK Then
                 RefreshCustomerComboboxes()
+                UpdateStatus("Engineer added")
             End If
         End Using
     End Sub
 
     Private Sub btnEditEngineer_Click(sender As Object, e As EventArgs) Handles btnEditEngineer.Click
+        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         If cboProjectEngineer.SelectedValue IsNot Nothing AndAlso cboProjectEngineer.SelectedValue IsNot DBNull.Value Then
             Dim selectedCustomerID As Integer = CInt(cboProjectEngineer.SelectedValue)
             Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=3).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
             If selectedCustomer IsNot Nothing Then
                 Using frm As New FrmCustomerDialog(selectedCustomer)
+                    UpdateStatus($"Opened engineer dialog for CustomerID {selectedCustomerID}")
                     If frm.ShowDialog() = DialogResult.OK Then
                         RefreshCustomerComboboxes()
+                        UpdateStatus("Engineer updated")
                     End If
                 End Using
             End If
         Else
+            UpdateStatus("No engineer selected for editing")
             MessageBox.Show("Select an engineer to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
         End If
     End Sub
@@ -603,24 +629,32 @@ Public Class frmCreateEditProject
     Private Sub EditPSEToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditPSEToolStripMenuItem.Click
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
             Try
-                ' Ensure a valid version is selected
                 If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
+                    UpdateStatus($"No version selected for ProjectID {currentProject.ProjectID}")
                     MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                    Return
+                    Exit Sub
                 End If
-                ' Open frmPSE with projectID and currentVersionID
-                Dim pseForm As New FrmPSE(currentProject.ProjectID, currentVersionID)
-                pseForm.ShowDialog()
+                AddFormToTabControl(GetType(FrmPSE), $"PSE_{currentProject.ProjectID}_{currentVersionID}", New Object() {currentProject.ProjectID, currentVersionID})
+                UpdateStatus($"Opened PSE form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
             Catch ex As Exception
+                UpdateStatus($"Error opening PSE form: {ex.Message}")
                 MessageBox.Show("Error opening PSE form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Try
         Else
+            UpdateStatus("No valid project selected for PSE")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
 
-    Private Sub btnRecalcRollup_Click(sender As Object, e As EventArgs) Handles btnRecalcRollup.Click
 
+    Private Sub btnRecalcRollup_Click(sender As Object, e As EventArgs) Handles btnRecalcRollup.Click
+        Try
+            LoadRollup(currentProject)
+            UpdateStatus("Rollup recalculated")
+        Catch ex As Exception
+            UpdateStatus($"Error recalculating rollup: {ex.Message}")
+            MessageBox.Show($"Error recalculating rollup: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub btnCreateVersion_Click(sender As Object, e As EventArgs) Handles btnCreateVersion.Click
@@ -668,18 +702,47 @@ Public Class frmCreateEditProject
     Private Sub btnOpenPSE_Click(sender As Object, e As EventArgs) Handles btnOpenPSE.Click
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
             Try
-                ' Ensure a valid version is selected
                 If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
+                    UpdateStatus($"No version selected for ProjectID {currentProject.ProjectID}")
                     MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                    Return
+                    Exit Sub
                 End If
-                ' Open frmPSE with projectID and currentVersionID
-                Dim pseForm As New FrmPSE(currentProject.ProjectID, currentVersionID)
-                pseForm.ShowDialog()
+                AddFormToTabControl(GetType(FrmPSE), $"PSE_{currentProject.ProjectID}_{currentVersionID}", New Object() {currentProject.ProjectID, currentVersionID})
+                UpdateStatus($"Opened PSE form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
             Catch ex As Exception
+                UpdateStatus($"Error opening PSE form: {ex.Message}")
                 MessageBox.Show("Error opening PSE form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Try
         Else
+            UpdateStatus("No valid project selected for PSE")
+            MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
+    End Sub
+    Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
+        Try
+            Dim tagValue As String = Me.Tag?.ToString()
+            If String.IsNullOrEmpty(tagValue) Then
+                Throw New Exception("Tab tag not found.")
+            End If
+            RemoveTabFromTabControl(tagValue)
+            UpdateStatus($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
+        Catch ex As Exception
+            UpdateStatus($"Error closing tab: {ex.Message} at {DateTime.Now:HH:mm:ss}")
+            MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub btnIEOpen_Click(sender As Object, e As EventArgs) Handles btnIEOpen.Click
+        If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
+            Try
+                AddFormToTabControl(GetType(frmInclusionsExclusions), $"IE_{currentProject.ProjectID}", New Object() {currentProject.ProjectID})
+                UpdateStatus($"Opened Inclusions/Exclusions form for ProjectID {currentProject.ProjectID}")
+            Catch ex As Exception
+                UpdateStatus($"Error opening Inclusions/Exclusions form: {ex.Message}")
+                MessageBox.Show("Error opening Inclusions/Exclusions form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        Else
+            UpdateStatus("No valid project selected for Inclusions/Exclusions")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub

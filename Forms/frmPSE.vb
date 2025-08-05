@@ -320,7 +320,7 @@ Public Class FrmPSE
         colMargin.Visible = isDetailedView
         colDeliveryCost.Visible = isDetailedView
         DataGridViewAssigned.Refresh()
-        LblStatus.Text = $"Grid view switched to {(If(isDetailedView, "Detailed", "Base"))} mode."
+        UpdateStatus($"Grid view switched to {(If(isDetailedView, "Detailed", "Base"))} mode.")
     End Sub
 
     Private Sub ChkDetailedView_CheckedChanged(sender As Object, e As EventArgs) Handles ChkDetailedView.CheckedChanged
@@ -332,7 +332,7 @@ Public Class FrmPSE
         Try
             Dim project = dataAccess.GetProjectByID(selectedProjectID)
             If project Is Nothing Then
-                LblStatus.Text = "Status: Project not found."
+                UpdateStatus("Status: Project not found.")
                 Return
             End If
             Dim versions As List(Of ProjectVersionModel) = dataAccess.GetProjectVersions(selectedProjectID)
@@ -342,7 +342,7 @@ Public Class FrmPSE
             projectNode.Tag = New Dictionary(Of String, Object) From {{"Type", "Project"}, {"ID", selectedProjectID}}
             Dim buildings = dataAccess.GetBuildingsByVersionID(selectedVersionID)
             If Not buildings.Any() Then
-                LblStatus.Text = "Status: No buildings found for this version."
+                UpdateStatus("Status: No buildings found for this version.")
                 Return
             End If
             For Each bldg In buildings
@@ -355,9 +355,9 @@ Public Class FrmPSE
                 Next
             Next
             projectNode.Expand()
-            LblStatus.Text = "Status: Project hierarchy loaded for version " & selectedVersionID & "."
+            UpdateStatus("Status: Project hierarchy loaded for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error loading hierarchy: " & ex.Message
+            UpdateStatus("Status: Error loading hierarchy: " & ex.Message)
             MessageBox.Show("Error loading project hierarchy: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -386,16 +386,16 @@ Public Class FrmPSE
         Try
             rawUnits = dataAccess.GetRawUnitsByVersionID(selectedVersionID).Where(Function(r) r.ProductTypeID = productTypeID).ToList()
             If Not rawUnits.Any() Then
-                LblStatus.Text = "Status: No raw units found for this version and product type."
+                UpdateStatus("Status: No raw units found for this version and product type.")
                 Return
             End If
             For Each rawUnit In rawUnits
                 ListBoxAvailableUnits.Items.Add(rawUnit.RawUnitName)
             Next
-            LblStatus.Text = "Status: Raw units loaded for version " & selectedVersionID & " and product type " & productTypeID & "."
+            UpdateStatus("Status: Raw units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
             UpdateSelectedRawPreview()
         Catch ex As Exception
-            LblStatus.Text = "Status: Error loading raw units: " & ex.Message
+            UpdateStatus("Status: Error loading raw units: " & ex.Message)
             MessageBox.Show("Error loading raw units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -404,15 +404,15 @@ Public Class FrmPSE
         Try
             existingActualUnits = dataAccess.GetActualUnitsByVersion(selectedVersionID).Where(Function(u) u.ProductTypeID = productTypeID).ToList()
             If Not existingActualUnits.Any() Then
-                LblStatus.Text = "Status: No actual units found for this version and product type."
+                UpdateStatus("Status: No actual units found for this version and product type.")
                 Return
             End If
             For Each unit In existingActualUnits
                 ListboxExistingActualUnits.Items.Add(unit.UnitName)
             Next
-            LblStatus.Text = "Status: Actual units loaded for version " & selectedVersionID & " and product type " & productTypeID & "."
+            UpdateStatus("Status: Actual units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error loading actual units: " & ex.Message
+            UpdateStatus("Status: Error loading actual units: " & ex.Message)
             MessageBox.Show("Error loading actual units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -470,7 +470,7 @@ Public Class FrmPSE
     Private Sub ProrateDeliveryCosts(levelID As Integer, ByRef displayUnitsList As List(Of DisplayUnitData))
         Try
             If Not displayUnitsList.Any() Then
-                LblStatus.Text = "Status: No units to prorate delivery costs."
+                UpdateStatus("Status: No units to prorate delivery costs.")
                 Return
             End If
             Dim totalBDFT As Decimal = displayUnitsList.Sum(Function(u) u.BDFT)
@@ -498,9 +498,9 @@ Public Class FrmPSE
                 unit.SellPrice = If(marginPercent >= 1D, unit.OverallCost + unit.DeliveryCost, unit.OverallCost / (1D - marginPercent) + unit.DeliveryCost)
                 unit.Margin = unit.SellPrice - unit.OverallCost - unit.DeliveryCost
             Next
-            LblStatus.Text = "Status: Delivery costs prorated for version " & selectedVersionID & "."
+            UpdateStatus("Status: Delivery costs prorated for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error prorating delivery costs: " & ex.Message
+            UpdateStatus("Status: Error prorating delivery costs: " & ex.Message)
             MessageBox.Show("Error prorating delivery costs: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -516,7 +516,7 @@ Public Class FrmPSE
             End If
             If margin <= 0D Then
                 margin = dataAccess.GetConfigValue("DefaultMarginPercent") ' Fallback to config (e.g., 0.1D); Deming: standardize to prevent defects
-                LblStatus.Text = $"Warning: Zero margin detected for version {selectedVersionID} and RawUnitID {rawUnitID}. Using default {margin}."
+                UpdateStatus($"Warning: Zero margin detected for version {selectedVersionID} and RawUnitID {rawUnitID}. Using default {margin}.")
             End If
         End If
 
@@ -542,7 +542,7 @@ Public Class FrmPSE
         TxtTotalSellPrice.Text = displayUnits.Sum(Function(u) u.SellPrice).ToString("F2")
         TxtTotalMargin.Text = displayUnits.Sum(Function(u) u.Margin).ToString("F2")
         txtTotalDeliveryCost.Text = displayUnits.Sum(Function(u) u.DeliveryCost).ToString("F2")
-        LblStatus.Text = $"Total Adjusted SQFT: {totalSQFT} - Recalc complete. No variations detected... yet."
+        UpdateStatus($"Total Adjusted SQFT: {totalSQFT} - Recalc complete. No variations detected... yet.")
     End Sub
 
     Private Sub UpdateSelectedRawPreview()
@@ -561,7 +561,7 @@ Public Class FrmPSE
                 TxtOverallCostPerSQFT.Text = "0.00"
                 TxtDeliveryCostPerSQFT.Text = "0.00"
                 TxtTotalSellPricePerSQFT.Text = "0.00"
-                LblStatus.Text = $"Status: No valid raw unit or zero SQFT for version {selectedVersionID}."
+                UpdateStatus($"Status: No valid raw unit or zero SQFT for version {selectedVersionID}.")
                 Return
             End If
             TxtLumberPerSQFT.Text = (currentRawUnit.LumberCost.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
@@ -576,9 +576,9 @@ Public Class FrmPSE
             TxtOverallCostPerSQFT.Text = (currentRawUnit.OverallCost.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
             TxtDeliveryCostPerSQFT.Text = (currentRawUnit.DeliveryCost.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
             TxtTotalSellPricePerSQFT.Text = (currentRawUnit.TotalSellPrice.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
-            LblStatus.Text = $"Status: Preview updated for raw unit {currentRawUnit.RawUnitName} in version {selectedVersionID}."
+            UpdateStatus($"Status: Preview updated for raw unit {currentRawUnit.RawUnitName} in version {selectedVersionID}.")
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating raw unit preview: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -588,7 +588,7 @@ Public Class FrmPSE
             marginCache.Clear()
             Dim productTypes = dataAccess.GetProductTypes()
             If Not productTypes.Any() Then
-                LblStatus.Text = "Status: No product types found for version " & selectedVersionID & "."
+                UpdateStatus("Status: No product types found for version " & selectedVersionID & ".")
                 Return
             End If
             For Each pt In productTypes
@@ -597,14 +597,14 @@ Public Class FrmPSE
             If TreeViewLevels.Nodes.Count > 0 AndAlso TreeViewLevels.Nodes(0).Nodes.Count > 0 AndAlso TreeViewLevels.Nodes(0).Nodes(0).Nodes.Count > 0 Then
                 TreeViewLevels.SelectedNode = TreeViewLevels.Nodes(0).Nodes(0).Nodes(0) ' Assume first level
             Else
-                LblStatus.Text = "Status: No levels available for version " & selectedVersionID & "."
+                UpdateStatus("Status: No levels available for version " & selectedVersionID & ".")
             End If
             UpdateLevelTotals()
             UpdateSelectedRawPreview()
             TreeViewLevels.ExpandAll()
-            LblStatus.Text = "Status: Form loaded for version " & selectedVersionID & "."
+            UpdateStatus("Status: Form loaded for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error initializing form for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error initializing form for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error initializing form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -615,14 +615,14 @@ Public Class FrmPSE
             Dim adder As Decimal
             If String.IsNullOrEmpty(TxtUnitName.Text) OrElse Not Decimal.TryParse(TxtPlanSQFT.Text, sqft) OrElse sqft <= 0 OrElse
                Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
-                LblStatus.Text = "Status: Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid."
+                UpdateStatus("Status: Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.")
                 MessageBox.Show("Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return Nothing
             End If
 
             Dim rawUnit As RawUnitModel = rawUnits.FirstOrDefault(Function(r) r.RawUnitID = selectedRawUnitID)
             If rawUnit Is Nothing Then
-                LblStatus.Text = "Status: Referenced Raw Unit not found."
+                UpdateStatus("Status: Referenced Raw Unit not found.")
                 MessageBox.Show("Referenced Raw Unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return Nothing
             End If
@@ -642,10 +642,10 @@ Public Class FrmPSE
             actualUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnit)
             dataAccess.SaveCalculatedComponents(actualUnit)
 
-            LblStatus.Text = "Status: Actual unit created for version " & selectedVersionID & "."
+            UpdateStatus("Status: Actual unit created for version " & selectedVersionID & ".")
             Return actualUnit
         Catch ex As Exception
-            LblStatus.Text = "Status: Error creating actual unit for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error creating actual unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error creating actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return Nothing
         End Try
@@ -692,7 +692,7 @@ Public Class FrmPSE
 
             Return components
         Catch ex As Exception
-            LblStatus.Text = "Status: Error calculating components for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error calculating components for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error calculating components: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return components
         End Try
@@ -733,7 +733,7 @@ Public Class FrmPSE
             End If
             Try
                 If ImportRawUnitsWithMapping(ofd.FileName, productTypeID) Then
-                    LblStatus.Text = "Status: Raw units imported successfully for version " & selectedVersionID & "."
+                    UpdateStatus("Status: Raw units imported successfully for version " & selectedVersionID & ".")
                     If selectedLevelID <> -1 Then
                         FilterRawUnits(productTypeID)
                         RecalculateAllActualUnits(selectedVersionID, productTypeID)
@@ -741,10 +741,10 @@ Public Class FrmPSE
                         LoadAssignedUnits()
                     End If
                 Else
-                    LblStatus.Text = "Status: Import cancelled for version " & selectedVersionID & "."
+                    UpdateStatus("Status: Import cancelled for version " & selectedVersionID & ".")
                 End If
             Catch ex As Exception
-                LblStatus.Text = "Status: Import failed for version " & selectedVersionID & ": " & ex.Message
+                UpdateStatus("Status: Import failed for version " & selectedVersionID & ": " & ex.Message)
                 MessageBox.Show("Import failed: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Finally
                 isImporting = False
@@ -966,14 +966,14 @@ Public Class FrmPSE
         btnSaveNewOnly.Visible = True
         Try
             If ListBoxAvailableUnits.SelectedIndex < 0 Then
-                LblStatus.Text = "Status: Please select a raw unit for version " & selectedVersionID & "."
+                UpdateStatus("Status: Please select a raw unit for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select a raw unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             Dim selectedRawUnitName As String = ListBoxAvailableUnits.SelectedItem.ToString()
             Dim selectedRawUnit As RawUnitModel = rawUnits.FirstOrDefault(Function(r) r.RawUnitName = selectedRawUnitName)
             If selectedRawUnit Is Nothing Then
-                LblStatus.Text = "Status: Selected raw unit not found for version " & selectedVersionID & "."
+                UpdateStatus("Status: Selected raw unit not found for version " & selectedVersionID & ".")
                 MessageBox.Show("Selected raw unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -984,10 +984,10 @@ Public Class FrmPSE
                 .OptionalAdder = 1D,
                 .UnitType = "Res"
             }, False, False)
-            LblStatus.Text = $"Status: Ready to create new actual unit from {selectedRawUnit.RawUnitName} for version {selectedVersionID}."
+            UpdateStatus($"Status: Ready to create new actual unit from {selectedRawUnit.RawUnitName} for version {selectedVersionID}.")
             TxtUnitName.Focus()
         Catch ex As Exception
-            LblStatus.Text = "Status: Error preparing new actual unit for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error preparing new actual unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error preparing new actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -995,7 +995,7 @@ Public Class FrmPSE
     Private Sub BtnReuseActualUnit_Click(sender As Object, e As EventArgs) Handles btnReuseActualUnit.Click
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                LblStatus.Text = "Status: Please select an existing actual unit for version " & selectedVersionID & "."
+                UpdateStatus("Status: Please select an existing actual unit for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1003,14 +1003,14 @@ Public Class FrmPSE
             btnSaveNewOnly.Visible = False
             Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
             If selectedActual Is Nothing Then
-                LblStatus.Text = "Status: Selected actual unit not found for version " & selectedVersionID & "."
+                UpdateStatus("Status: Selected actual unit not found for version " & selectedVersionID & ".")
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             PopulateDetailsPane(selectedActual, True, True)
-            LblStatus.Text = $"Status: Ready to reuse {selectedActual.UnitName} for version {selectedVersionID}."
+            UpdateStatus($"Status: Ready to reuse {selectedActual.UnitName} for version {selectedVersionID}.")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error preparing reuse of actual unit for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error preparing reuse of actual unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error preparing reuse of actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1091,20 +1091,20 @@ Public Class FrmPSE
 
     Private Sub BtnSaveAndAttach_Click(sender As Object, e As EventArgs) Handles BtnSaveAndAttach.Click
         If selectedLevelID <= 0 Then
-            LblStatus.Text = "Status: Please select a level for version " & selectedVersionID & " before saving."
+            UpdateStatus("Status: Please select a level for version " & selectedVersionID & " before saving.")
             MessageBox.Show("Please select a level before saving and attaching a unit.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
 
         If String.IsNullOrEmpty(TxtUnitName.Text) Then
-            LblStatus.Text = "Status: Actual Unit Name must be valid for version " & selectedVersionID & "."
+            UpdateStatus("Status: Actual Unit Name must be valid for version " & selectedVersionID & ".")
             MessageBox.Show("Actual Unit Name must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
 
         Dim qty As Integer
         If Not Integer.TryParse(TxtActualUnitQuantity.Text, qty) OrElse qty <= 0 Then
-            LblStatus.Text = "Status: Invalid quantity for version " & selectedVersionID & "—must be a positive integer."
+            UpdateStatus("Status: Invalid quantity for version " & selectedVersionID & "—must be a positive integer.")
             MessageBox.Show("Invalid quantity—must be a positive integer.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
@@ -1121,16 +1121,16 @@ Public Class FrmPSE
             dataAccess.UpdateLevelRollups(selectedLevelID)
             If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
             ResetDetailsPane()
-            LblStatus.Text = "Status: Unit saved and attached successfully for version " & selectedVersionID & "."
+            UpdateStatus("Status: Unit saved and attached successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error saving unit for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error saving unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error saving unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
     Private Sub HandleGlobalUnitEdit()
         Try
             If selectedActualUnitID <= 0 Then
-                LblStatus.Text = $"Status: Invalid unit selection for version {selectedVersionID}."
+                UpdateStatus($"Status: Invalid unit selection for version {selectedVersionID}.")
                 MessageBox.Show("Invalid unit selection for edit.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1139,14 +1139,14 @@ Public Class FrmPSE
             Dim adder As Decimal
             If Not Decimal.TryParse(TxtPlanSQFT.Text, sqft) OrElse sqft <= 0 OrElse
                Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
-                LblStatus.Text = $"Status: Invalid input for version {selectedVersionID}—SQFT (>0) and Adder (≥1) must be valid."
+                UpdateStatus($"Status: Invalid input for version {selectedVersionID}—SQFT (>0) and Adder (≥1) must be valid.")
                 MessageBox.Show("Invalid input—SQFT (>0) and Adder (≥1) must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
 
             Dim updatedUnit As ActualUnitModel = dataAccess.GetActualUnitByID(selectedActualUnitID)
             If updatedUnit Is Nothing Then
-                LblStatus.Text = $"Status: Actual unit not found for version {selectedVersionID}."
+                UpdateStatus($"Status: Actual unit not found for version {selectedVersionID}.")
                 MessageBox.Show("Actual unit not found for update.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1165,9 +1165,9 @@ Public Class FrmPSE
             End If
 
             LoadExistingActualUnits()
-            LblStatus.Text = $"Status: Actual unit {updatedUnit.UnitName} updated successfully for version {selectedVersionID}."
+            UpdateStatus($"Status: Actual unit {updatedUnit.UnitName} updated successfully for version {selectedVersionID}.")
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error updating actual unit for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error updating actual unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1185,7 +1185,7 @@ Public Class FrmPSE
             .Quantity = qty
         }
         dataAccess.SaveActualToLevelMapping(mapping)
-        LblStatus.Text = "Unit quantity updated successfully for version " & selectedVersionID & "."
+        UpdateStatus("Unit quantity updated successfully for version " & selectedVersionID & ".")
     End Sub
 
     Private Sub HandleNewUnit(qty As Integer)
@@ -1199,7 +1199,7 @@ Public Class FrmPSE
             .Quantity = qty
         }
         dataAccess.SaveActualToLevelMapping(mapping)
-        LblStatus.Text = "Unit saved and attached successfully for version " & selectedVersionID & "."
+        UpdateStatus("Unit saved and attached successfully for version " & selectedVersionID & ".")
     End Sub
 
     Private Sub HandleReuseMapping(qty As Integer)
@@ -1210,13 +1210,13 @@ Public Class FrmPSE
             .Quantity = qty
         }
         dataAccess.SaveActualToLevelMapping(mapping)
-        LblStatus.Text = "Existing unit reused and mapped successfully for version " & selectedVersionID & "."
+        UpdateStatus("Existing unit reused and mapped successfully for version " & selectedVersionID & ".")
     End Sub
 
     Private Sub BtnDeleteUnit_Click(sender As Object, e As EventArgs) Handles btnDeleteUnit.Click
         Try
             If DataGridViewAssigned.CurrentRow Is Nothing OrElse DataGridViewAssigned.CurrentRow.Index < 0 OrElse DataGridViewAssigned.CurrentRow.Index >= displayUnits.Count Then
-                LblStatus.Text = "Status: Please select a valid unit mapping for version " & selectedVersionID & "."
+                UpdateStatus("Status: Please select a valid unit mapping for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select a valid unit mapping to remove.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1229,10 +1229,10 @@ Public Class FrmPSE
                 dataAccess.UpdateLevelRollups(selectedLevelID)
                 If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
                 ResetDetailsPane()
-                LblStatus.Text = "Status: Unit mapping removed successfully for version " & selectedVersionID & "."
+                UpdateStatus("Status: Unit mapping removed successfully for version " & selectedVersionID & ".")
             End If
         Catch ex As Exception
-            LblStatus.Text = "Status: Error removing unit mapping for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error removing unit mapping for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error removing unit mapping: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1250,7 +1250,7 @@ Public Class FrmPSE
     Private Sub BtnRecalculate_Click(sender As Object, e As EventArgs) Handles BtnRecalculate.Click
         Try
             If selectedLevelID <= 0 Then
-                LblStatus.Text = "Status: Please select a level to recalculate for version " & selectedVersionID & "."
+                UpdateStatus("Status: Please select a level to recalculate for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select a level before recalculating.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1260,10 +1260,10 @@ Public Class FrmPSE
             If MsgBox("Recalculate entire project for version " & selectedVersionID & "?", MsgBoxStyle.YesNo, "Confirm") = MsgBoxResult.Yes Then
                 RecalculateProject()
             End If
-            LblStatus.Text = "Status: Recalculated totals successfully for version " & selectedVersionID & "."
+            UpdateStatus("Status: Recalculated totals successfully for version " & selectedVersionID & ".")
             MessageBox.Show("Recalculated totals successfully for version " & selectedVersionID & ".", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
-            LblStatus.Text = "Status: Error recalculating for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error recalculating for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error recalculating: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1271,14 +1271,14 @@ Public Class FrmPSE
         Try
             Dim buildings = dataAccess.GetBuildingsByVersionID(selectedVersionID)
             If Not buildings.Any() Then
-                LblStatus.Text = "Status: No buildings found for version " & selectedVersionID & "."
+                UpdateStatus("Status: No buildings found for version " & selectedVersionID & ".")
                 Return
             End If
             Dim originalLevelID As Integer = selectedLevelID ' Preserve current level
             For Each bldg In buildings
                 Dim levels = dataAccess.GetLevelsByBuildingID(bldg.BuildingID)
                 If Not levels.Any() Then
-                    LblStatus.Text = "Status: No levels found for building " & bldg.BuildingName & " in version " & selectedVersionID & "."
+                    UpdateStatus("Status: No levels found for building " & bldg.BuildingName & " in version " & selectedVersionID & ".")
                     Continue For
                 End If
                 For Each lvl In levels
@@ -1290,9 +1290,9 @@ Public Class FrmPSE
             Next
             selectedLevelID = originalLevelID ' Restore original level
             UpdateLevelTotals() ' Refresh UI for current level
-            LblStatus.Text = "Status: Project recalculated successfully for version " & selectedVersionID & "."
+            UpdateStatus("Status: Project recalculated successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error recalculating project for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error recalculating project for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error recalculating project: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1300,21 +1300,21 @@ Public Class FrmPSE
         Try
             If e.ColumnIndex = colActions.Index AndAlso e.RowIndex >= 0 Then
                 If e.RowIndex >= displayUnits.Count Then
-                    LblStatus.Text = "Status: Invalid unit selection for version " & selectedVersionID & "."
+                    UpdateStatus("Status: Invalid unit selection for version " & selectedVersionID & ".")
                     MessageBox.Show("Invalid unit selection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return
                 End If
                 Dim displayUnit = displayUnits(e.RowIndex)
                 If displayUnit Is Nothing Then
-                    LblStatus.Text = "Status: Selected unit data not found for version " & selectedVersionID & "."
+                    UpdateStatus("Status: Selected unit data not found for version " & selectedVersionID & ".")
                     MessageBox.Show("Selected unit data not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return
                 End If
                 PopulateDetailsPane(displayUnit.ActualUnit, True, False, displayUnit.ActualUnitQuantity, displayUnit.MappingID)
-                LblStatus.Text = $"Status: Editing unit {displayUnit.UnitName} for version {selectedVersionID}."
+                UpdateStatus($"Status: Editing unit {displayUnit.UnitName} for version {selectedVersionID}.")
             End If
         Catch ex As Exception
-            LblStatus.Text = "Status: Error editing unit for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error editing unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error editing unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1324,15 +1324,15 @@ Public Class FrmPSE
         Try
             existingActualUnits = dataAccess.GetActualUnitsByVersion(selectedVersionID)
             If Not existingActualUnits.Any() Then
-                LblStatus.Text = "Status: No actual units found for version " & selectedVersionID & "."
+                UpdateStatus("Status: No actual units found for version " & selectedVersionID & ".")
                 Return
             End If
             For Each actual In existingActualUnits
                 ListboxExistingActualUnits.Items.Add(actual.UnitName & " (" & actual.UnitType & ")")
             Next
-            LblStatus.Text = "Status: Actual units loaded for version " & selectedVersionID & "."
+            UpdateStatus("Status: Actual units loaded for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error loading actual units for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error loading actual units for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error loading actual units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1340,20 +1340,20 @@ Public Class FrmPSE
     Private Sub ListBoxAvailableUnits_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBoxAvailableUnits.SelectedIndexChanged
         Try
             If ListBoxAvailableUnits.SelectedIndex < 0 Then
-                LblStatus.Text = $"Status: No raw unit selected for version {selectedVersionID}."
+                UpdateStatus($"Status: No raw unit selected for version {selectedVersionID}.")
                 UpdateSelectedRawPreview()
                 Return
             End If
             UpdateSelectedRawPreview()
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating raw unit preview: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub mnuCopyUnits_Click(sender As Object, e As EventArgs) Handles mnuCopyUnits.Click
         If selectedLevelID <= 0 Then
-            LblStatus.Text = "Status: Please select a level to copy units for version " & selectedVersionID & "."
+            UpdateStatus("Status: Please select a level to copy units for version " & selectedVersionID & ".")
             MessageBox.Show("Please select a level to copy units.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
@@ -1366,21 +1366,21 @@ Public Class FrmPSE
             Next
             Dim levelTag = DirectCast(TreeViewLevels.SelectedNode.Tag, Dictionary(Of String, Object))
             sourceProductTypeID = CInt(levelTag("ProductTypeID"))
-            LblStatus.Text = $"Status: Copied {copiedMappings.Count} units from level for version {selectedVersionID}. Ready to paste."
+            UpdateStatus($"Status: Copied {copiedMappings.Count} units from level for version {selectedVersionID}. Ready to paste.")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error copying units for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error copying units for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error copying units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub mnuPasteUnits_Click(sender As Object, e As EventArgs) Handles mnuPasteUnits.Click
         If selectedLevelID <= 0 Then
-            LblStatus.Text = "Status: Please select a target level for version " & selectedVersionID & "."
+            UpdateStatus("Status: Please select a target level for version " & selectedVersionID & ".")
             MessageBox.Show("Please select a target level to paste units.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
         If copiedMappings.Count = 0 Then
-            LblStatus.Text = "Status: No units copied for version " & selectedVersionID & "."
+            UpdateStatus("Status: No units copied for version " & selectedVersionID & ".")
             MessageBox.Show("No units copied to paste.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
@@ -1389,7 +1389,7 @@ Public Class FrmPSE
             Dim levelTag = DirectCast(TreeViewLevels.SelectedNode.Tag, Dictionary(Of String, Object))
             Dim targetProductTypeID As Integer = CInt(levelTag("ProductTypeID"))
             If targetProductTypeID <> sourceProductTypeID Then
-                LblStatus.Text = "Status: Source and target levels must have the same Product Type for version " & selectedVersionID & "."
+                UpdateStatus("Status: Source and target levels must have the same Product Type for version " & selectedVersionID & ".")
                 MessageBox.Show("Cannot paste: Source and target levels must have the same Product Type.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1418,9 +1418,9 @@ Public Class FrmPSE
             dataAccess.UpdateLevelRollups(selectedLevelID)
             If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
             copiedMappings.Clear()
-            LblStatus.Text = "Status: Units pasted successfully for version " & selectedVersionID & "."
+            UpdateStatus("Status: Units pasted successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error pasting units for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error pasting units for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error pasting units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1429,9 +1429,9 @@ Public Class FrmPSE
         Try
             PanelDetails.Visible = Not PanelDetails.Visible
             BtnToggleDetails.Text = If(PanelDetails.Visible, "Hide Details", "Show Details")
-            LblStatus.Text = $"Status: Details panel {(If(PanelDetails.Visible, "shown", "hidden"))} for version {selectedVersionID}."
+            UpdateStatus($"Status: Details panel {(If(PanelDetails.Visible, "shown", "hidden"))} for version {selectedVersionID}.")
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error toggling details panel for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error toggling details panel for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error toggling details panel: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1440,19 +1440,19 @@ Public Class FrmPSE
         Try
             ResetDetailsPane()
             btnDeleteUnit.Visible = False
-            LblStatus.Text = $"Status: Details pane reset for version {selectedVersionID}."
+            UpdateStatus($"Status: Details pane reset for version {selectedVersionID}.")
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error resetting details pane for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error resetting details pane for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error resetting details pane: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub BtnFinish_Click(sender As Object, e As EventArgs) Handles BtnFinish.Click
         Try
-            LblStatus.Text = $"Status: Session complete for version {selectedVersionID} at {DateTime.Now}."
-            Me.Close()
+            UpdateStatus($"Status: Session complete for version {selectedVersionID} at {DateTime.Now:HH:mm:ss}.")
+            RemoveTabFromTabControl($"PSE_{selectedProjectID}_{selectedVersionID}")
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error closing form for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error closing form for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error closing form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1477,7 +1477,7 @@ Public Class FrmPSE
                 ' Refresh existing units for reuse
                 existingActualUnits.Add(actualUnit)
                 ListboxExistingActualUnits.Items.Add(actualUnit.UnitName & " (" & actualUnit.UnitType & ")")
-                LblStatus.Text = "New unit saved successfully—available for reuse."
+                UpdateStatus("New unit saved successfully—available for reuse.")
             End If
 
             ResetDetailsPane()
@@ -1491,18 +1491,18 @@ Public Class FrmPSE
         Try
             If e.Button = MouseButtons.Right AndAlso ListboxExistingActualUnits.SelectedIndex >= 0 Then
                 If ListboxExistingActualUnits.ContextMenuStrip Is Nothing Then
-                    LblStatus.Text = $"Status: Context menu not configured for version {selectedVersionID}."
+                    UpdateStatus($"Status: Context menu not configured for version {selectedVersionID}.")
                     MessageBox.Show("Context menu not configured.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return
                 End If
                 ListboxExistingActualUnits.ContextMenuStrip.Show(ListboxExistingActualUnits, e.Location)
-                LblStatus.Text = $"Status: Context menu opened for version {selectedVersionID}."
+                UpdateStatus($"Status: Context menu opened for version {selectedVersionID}.")
             ElseIf e.Button = MouseButtons.Right Then
-                LblStatus.Text = $"Status: Please select an actual unit for version {selectedVersionID} to show context menu."
+                UpdateStatus($"Status: Please select an actual unit for version {selectedVersionID} to show context menu.")
                 MessageBox.Show("Please select an actual unit to show the context menu.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error opening context menu for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error opening context menu for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error opening context menu: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1510,22 +1510,22 @@ Public Class FrmPSE
     Private Sub EditToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditToolStripMenuItem.Click
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                LblStatus.Text = "Status: Please select an actual unit to edit for version " & selectedVersionID & "."
+                UpdateStatus("Status: Please select an actual unit to edit for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             selectedActualUnitID = existingActualUnits(ListboxExistingActualUnits.SelectedIndex).ActualUnitID
             Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
             If selectedActual Is Nothing Then
-                LblStatus.Text = "Status: Selected actual unit not found for version " & selectedVersionID & "."
+                UpdateStatus("Status: Selected actual unit not found for version " & selectedVersionID & ".")
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             isGlobalEdit = True ' Set flag for global edit mode
             PopulateDetailsPane(selectedActual, True, False, quantity:=0, mappingID:=0) ' Quantity/mapping not relevant for global edit
-            LblStatus.Text = "Status: Editing actual unit " & selectedActual.UnitName & " for version " & selectedVersionID & "."
+            UpdateStatus("Status: Editing actual unit " & selectedActual.UnitName & " for version " & selectedVersionID & ".")
         Catch ex As Exception
-            LblStatus.Text = "Status: Error editing actual unit for version " & selectedVersionID & ": " & ex.Message
+            UpdateStatus("Status: Error editing actual unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error editing actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1533,14 +1533,14 @@ Public Class FrmPSE
     Private Sub DeleteActualUnitToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DeleteActualUnitToolStripMenuItem.Click
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                LblStatus.Text = "Status: Please select an actual unit to delete for version " & selectedVersionID & "."
+                UpdateStatus("Status: Please select an actual unit to delete for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
 
             Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
             If selectedActual Is Nothing Then
-                LblStatus.Text = "Status: Selected actual unit not found for version " & selectedVersionID & "."
+                UpdateStatus("Status: Selected actual unit not found for version " & selectedVersionID & ".")
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1555,13 +1555,23 @@ Public Class FrmPSE
             existingActualUnits.RemoveAt(ListboxExistingActualUnits.SelectedIndex)
             ListboxExistingActualUnits.Items.RemoveAt(ListboxExistingActualUnits.SelectedIndex)
             If selectedLevelID > 0 Then LoadAssignedUnits() ' Refresh grid if unit was mapped
-            LblStatus.Text = $"Status: Actual unit '{selectedActual.UnitName}' deleted successfully for version {selectedVersionID}."
+            UpdateStatus($"Status: Actual unit '{selectedActual.UnitName}' deleted successfully for version {selectedVersionID}.")
         Catch ex As ApplicationException
-            LblStatus.Text = $"Status: Deletion blocked for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Deletion blocked for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show(ex.Message, "Deletion Blocked", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Catch ex As Exception
-            LblStatus.Text = $"Status: Error deleting unit for version {selectedVersionID}: {ex.Message}"
+            UpdateStatus($"Status: Error deleting unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error deleting unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub UpdateStatus(message As String)
+        Dim parent As frmMain = TryCast(Me.MdiParent, frmMain)
+        If parent IsNot Nothing Then
+            parent.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
+        Else
+            ' UpdateStatus($"{message} at {Date.Now:HH:mm:ss}")
+        End If
+    End Sub
+
 End Class

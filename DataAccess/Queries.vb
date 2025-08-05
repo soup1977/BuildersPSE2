@@ -127,6 +127,32 @@
         Public Const DuplicateActualToLevelMapping As String = "INSERT INTO ActualToLevelMapping (VersionID, ActualUnitID, LevelID, Quantity) OUTPUT INSERTED.MappingID SELECT @NewVersionID, @NewActualUnitID, @NewLevelID, Quantity FROM ActualToLevelMapping WHERE VersionID = @OriginalVersionID AND ActualUnitID = @OriginalActualUnitID AND LevelID = @OriginalLevelID"
         Public Const DuplicateProjectProductSettings As String = "INSERT INTO ProjectProductSettings (VersionID, ProductTypeID, MarginPercent, LumberAdder) OUTPUT INSERTED.SettingID SELECT @NewVersionID, ProductTypeID, MarginPercent, LumberAdder FROM ProjectProductSettings WHERE VersionID = @OriginalVersionID"
 
+        ' Add to Queries.vb (in BuildersPSE.DataAccess namespace)
+        ' ProjectDesignInfo
+        Public Const SelectProjectDesignInfo As String = "SELECT * FROM ProjectDesignInfo WHERE ProjectID = @ProjectID"
+        Public Const InsertProjectDesignInfo As String = "INSERT INTO ProjectDesignInfo (ProjectID,  BuildingCode, Importance, ExposureCategory, WindSpeed, SnowLoadType, OccupancyCategory, RoofPitches, FloorDepths, WallHeights) OUTPUT INSERTED.InfoID VALUES (@ProjectID, @BuildingCode, @Importance, @ExposureCategory, @WindSpeed, @SnowLoadType, @OccupancyCategory, @RoofPitches, @FloorDepths, @WallHeights)"
+        Public Const UpdateProjectDesignInfo As String = "UPDATE ProjectDesignInfo SET BuildingCode = @BuildingCode, Importance = @Importance, ExposureCategory = @ExposureCategory, WindSpeed = @WindSpeed, SnowLoadType = @SnowLoadType, OccupancyCategory = @OccupancyCategory, RoofPitches = @RoofPitches, FloorDepths = @FloorDepths, WallHeights = @WallHeights WHERE InfoID = @InfoID"
+
+        ' ProjectLoads
+        Public Const SelectProjectLoads As String = "SELECT * FROM ProjectLoads WHERE ProjectID = @ProjectID ORDER BY Category"
+        Public Const DeleteProjectLoads As String = "DELETE FROM ProjectLoads WHERE ProjectID = @ProjectID"
+        Public Const InsertProjectLoad As String = "INSERT INTO ProjectLoads (ProjectID,  Category, TCLL, TCDL, BCLL, BCDL, OCSpacing, LiveLoadDeflection, TotalLoadDeflection, Absolute, Deflection) OUTPUT INSERTED.LoadID VALUES (@ProjectID,  @Category, @TCLL, @TCDL, @BCLL, @BCDL, @OCSpacing, @LiveLoadDeflection, @TotalLoadDeflection, @Absolute, @Deflection)"
+
+        ' ProjectBearingStyles
+        Public Const SelectProjectBearingStyles As String = "SELECT * FROM ProjectBearingStyles WHERE ProjectID = @ProjectID "
+        Public Const InsertProjectBearingStyles As String = "INSERT INTO ProjectBearingStyles (ProjectID,  ExtWallStyle, ExtRimRibbon, IntWallStyle, IntRimRibbon, CorridorWallStyle, CorridorRimRibbon) OUTPUT INSERTED.BearingID VALUES (@ProjectID,  @ExtWallStyle, @ExtRimRibbon, @IntWallStyle, @IntRimRibbon, @CorridorWallStyle, @CorridorRimRibbon)"
+        Public Const UpdateProjectBearingStyles As String = "UPDATE ProjectBearingStyles SET ExtWallStyle = @ExtWallStyle, ExtRimRibbon = @ExtRimRibbon, IntWallStyle = @IntWallStyle, IntRimRibbon = @IntRimRibbon, CorridorWallStyle = @CorridorWallStyle, CorridorRimRibbon = @CorridorRimRibbon WHERE BearingID = @BearingID"
+
+        ' ProjectGeneralNotes
+        Public Const SelectProjectGeneralNotes As String = "SELECT * FROM ProjectGeneralNotes WHERE ProjectID = @ProjectID"
+        Public Const InsertProjectGeneralNotes As String = "INSERT INTO ProjectGeneralNotes (ProjectID,  Notes) OUTPUT INSERTED.NoteID VALUES (@ProjectID,  @Notes)"
+        Public Const UpdateProjectGeneralNotes As String = "UPDATE ProjectGeneralNotes SET Notes = @Notes WHERE NoteID = @NoteID"
+
+        ' ProjectItems
+        Public Const SelectProjectItems As String = "SELECT * FROM ProjectItems WHERE ProjectID = @ProjectID "
+        Public Const DeleteProjectItems As String = "DELETE FROM ProjectItems WHERE ProjectID = @ProjectID "
+        Public Const InsertProjectItem As String = "INSERT INTO ProjectItems (ProjectID,  Section, KN, Description, Status) OUTPUT INSERTED.ItemID VALUES (@ProjectID,  @Section, @KN, @Description, @Status)"
+
 
     End Module
 End Namespace
