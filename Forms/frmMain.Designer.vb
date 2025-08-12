@@ -31,6 +31,8 @@ Partial Class frmMain
         Me.ToolStripStatusLabel = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.Button2 = New System.Windows.Forms.Button()
+        Me.Button1 = New System.Windows.Forms.Button()
         Me.frmCreateProject = New System.Windows.Forms.Button()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.MenuStrip.SuspendLayout()
@@ -46,7 +48,7 @@ Partial Class frmMain
         Me.MenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileMenu})
         Me.MenuStrip.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip.Name = "MenuStrip"
-        Me.MenuStrip.Size = New System.Drawing.Size(1136, 24)
+        Me.MenuStrip.Size = New System.Drawing.Size(1384, 24)
         Me.MenuStrip.TabIndex = 5
         Me.MenuStrip.Text = "MenuStrip"
         '
@@ -61,15 +63,15 @@ Partial Class frmMain
         'ExitToolStripMenuItem
         '
         Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(92, 22)
         Me.ExitToolStripMenuItem.Text = "E&xit"
         '
         'StatusStrip
         '
         Me.StatusStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel})
-        Me.StatusStrip.Location = New System.Drawing.Point(0, 625)
+        Me.StatusStrip.Location = New System.Drawing.Point(0, 689)
         Me.StatusStrip.Name = "StatusStrip"
-        Me.StatusStrip.Size = New System.Drawing.Size(1136, 22)
+        Me.StatusStrip.Size = New System.Drawing.Size(1384, 22)
         Me.StatusStrip.TabIndex = 7
         Me.StatusStrip.Text = "StatusStrip"
         '
@@ -87,14 +89,34 @@ Partial Class frmMain
         '
         'SplitContainer1.Panel1
         '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.Button2)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.Button1)
         Me.SplitContainer1.Panel1.Controls.Add(Me.frmCreateProject)
         '
         'SplitContainer1.Panel2
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.TabControl1)
-        Me.SplitContainer1.Size = New System.Drawing.Size(1136, 601)
-        Me.SplitContainer1.SplitterDistance = 178
+        Me.SplitContainer1.Size = New System.Drawing.Size(1384, 665)
+        Me.SplitContainer1.SplitterDistance = 157
         Me.SplitContainer1.TabIndex = 8
+        '
+        'Button2
+        '
+        Me.Button2.Location = New System.Drawing.Point(19, 176)
+        Me.Button2.Name = "Button2"
+        Me.Button2.Size = New System.Drawing.Size(127, 31)
+        Me.Button2.TabIndex = 2
+        Me.Button2.Text = "Monday List"
+        Me.Button2.UseVisualStyleBackColor = True
+        '
+        'Button1
+        '
+        Me.Button1.Location = New System.Drawing.Point(19, 139)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(127, 31)
+        Me.Button1.TabIndex = 1
+        Me.Button1.Text = "Import PSE"
+        Me.Button1.UseVisualStyleBackColor = True
         '
         'frmCreateProject
         '
@@ -111,14 +133,14 @@ Partial Class frmMain
         Me.TabControl1.Location = New System.Drawing.Point(0, 0)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(954, 601)
+        Me.TabControl1.Size = New System.Drawing.Size(1223, 665)
         Me.TabControl1.TabIndex = 0
         '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1136, 647)
+        Me.ClientSize = New System.Drawing.Size(1384, 711)
         Me.Controls.Add(Me.SplitContainer1)
         Me.Controls.Add(Me.MenuStrip)
         Me.Controls.Add(Me.StatusStrip)
@@ -146,4 +168,6 @@ Partial Class frmMain
     Friend WithEvents SplitContainer1 As SplitContainer
     Friend WithEvents frmCreateProject As Button
     Friend WithEvents TabControl1 As TabControl
+    Friend WithEvents Button1 As Button
+    Friend WithEvents Button2 As Button
 End Class

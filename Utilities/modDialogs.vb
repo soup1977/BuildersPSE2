@@ -1,6 +1,5 @@
 ﻿Imports System.Reflection
 Module modDialogs
-    Private m_ChildFormNumber As Integer = 0 ' Shared counter for unique form titles
 
     Public Sub AddFormToTabControl(formType As Type, tagValue As String, Optional constructorArgs As Object() = Nothing)
         Try
@@ -29,9 +28,7 @@ Module modDialogs
             End If
 
             ' Configure the form for embedding
-            m_ChildFormNumber += 1
             mdiForm.Tag = tagValue
-            mdiForm.Text = $"{mdiForm.Text} {m_ChildFormNumber}"
             mdiForm.TopLevel = False
             mdiForm.FormBorderStyle = FormBorderStyle.None
             mdiForm.Dock = DockStyle.Fill
@@ -78,6 +75,7 @@ Module modDialogs
             Next
 
             If tabToRemove IsNot Nothing Then
+                Dim index As Integer = mainForm.TabControl1.TabPages.IndexOf(tabToRemove)
                 ' Dispose of the form in the tab if it exists
                 If tabToRemove.Controls.Count > 0 AndAlso TypeOf tabToRemove.Controls(0) Is Form Then
                     CType(tabToRemove.Controls(0), Form).Dispose()
@@ -86,6 +84,15 @@ Module modDialogs
                 ' Remove the tab
                 mainForm.TabControl1.TabPages.Remove(tabToRemove)
                 tabToRemove.Dispose()
+
+                ' Select the next tab if exists, else the last
+                If mainForm.TabControl1.TabPages.Count > 0 Then
+                    If index < mainForm.TabControl1.TabPages.Count Then
+                        mainForm.TabControl1.SelectedIndex = index
+                    Else
+                        mainForm.TabControl1.SelectedIndex = mainForm.TabControl1.TabPages.Count - 1
+                    End If
+                End If
 
                 ' Update status
                 mainForm.ToolStripStatusLabel.Text = $"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}"

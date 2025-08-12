@@ -83,6 +83,15 @@ Namespace BuildersPSE.Utilities
             Return cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection) ' Auto-closes conn on reader close
         End Function
 
+        ' Added: Execute reader within a transaction
+        ' Execute reader within a transaction
+        Public Function ExecuteReaderTransactional(sql As String, parameters As SqlParameter(), conn As SqlConnection, Optional transaction As SqlTransaction = Nothing) As SqlDataReader
+            Dim cmd As New SqlCommand(sql, conn)
+            If transaction IsNot Nothing Then cmd.Transaction = transaction
+            If parameters IsNot Nothing Then cmd.Parameters.AddRange(parameters)
+            Return cmd.ExecuteReader() ' Remove CommandBehavior.CloseConnection to keep connection open
+        End Function
+
         ' Added: Helper method for executing queries with error handling (moved from DataAccess.vb)
         Public Sub ExecuteWithErrorHandling(action As Action, errorMessage As String)
             Try

@@ -8,6 +8,7 @@ Public Class frmCreateEditProject
     Private currentProject As ProjectModel
     Private currentVersionID As Integer
     Private copiedLevels As List(Of LevelModel)
+    Private copiedBuilding As BuildingModel
     Private isNewProject As Boolean = True
     Private isChangingVersion As Boolean = False
 
@@ -57,15 +58,48 @@ Public Class frmCreateEditProject
             Next
         End If
         currentVersionID = versionID
+        InitializeTabControl() ' Initialize tabs once
         LoadVersions()
         LoadProjectData()
-    End Sub
-    Private Sub UpdateStatus(message As String)
-        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
-        If mdiParent IsNot Nothing Then
-            mdiParent.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
+        If isNewProject Then
+            Me.Text = "Create Project"
+        Else
+            Me.Text = $"Edit Project - {currentProject.JBID}"
         End If
     End Sub
+    ' In frmCreateEditProject.vb: Update UpdateStatus for robustness
+    Private Sub UpdateStatus(message As String)
+        Try
+            Dim parentForm As frmMain = TryCast(Me.ParentForm, frmMain)
+            If parentForm IsNot Nothing AndAlso parentForm.StatusLabel IsNot Nothing Then
+                parentForm.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
+            Else
+                Debug.WriteLine($"Status update skipped: Parent form or StatusLabel is null. Message: {message}")
+            End If
+        Catch ex As Exception
+            Debug.WriteLine($"Error updating status: {ex.Message}")
+        End Try
+    End Sub
+    ' In frmCreateEditProject.vb: Add new method for tab initialization
+    Private Sub InitializeTabControl()
+        Try
+            tabControlRight.TabPages.Clear()
+            tabControlRight.TabPages.Add(tabProjectInfo)
+            tabControlRight.TabPages.Add(tabRollup)
+            If Not isNewProject Then
+                tabControlRight.TabPages.Add(tabOverrides)
+                tabControlRight.TabPages.Add(tabBuildingInfo)
+                tabControlRight.TabPages.Add(tabLevelInfo)
+            End If
+            UpdateStatus($"Initialized {tabControlRight.TabPages.Count} tab(s) for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
+        Catch ex As Exception
+            UpdateStatus($"Error initializing tab control: {ex.Message}")
+            MessageBox.Show($"Error initializing tab control: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+
+
     Private Sub LoadVersions()
         Try
             If currentProject.ProjectID = 0 Then
@@ -97,22 +131,20 @@ Public Class frmCreateEditProject
             MessageBox.Show("Error loading versions: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+    ' In frmCreateEditProject.vb: Modify LoadProjectData to avoid tab manipulation
     Private Sub LoadProjectData()
         Try
-            tabControlRight.TabPages.Clear()
-            tabControlRight.TabPages.Add(tabProjectInfo)
-            If Not isNewProject Then
-                tabControlRight.TabPages.Add(tabOverrides)
-                tabControlRight.TabPages.Add(tabRollup)
-                tabControlRight.TabPages.Add(tabBuildingInfo)
-                tabControlRight.TabPages.Add(tabLevelInfo)
-            End If
             LoadProjectInfo(currentProject)
             LoadVersionSpecificData()
-            UpdateStatus($"Loaded {tabControlRight.TabPages.Count} tab(s) for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
+            If tvProjectTree.SelectedNode IsNot Nothing Then
+                LoadRollup(tvProjectTree.SelectedNode.Tag)
+            Else
+                LoadRollup(currentProject)
+            End If
+            UpdateStatus($"Loaded data for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
         Catch ex As Exception
             UpdateStatus($"Error loading project data: {ex.Message}")
-            MessageBox.Show("Error loading project data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            MessageBox.Show($"Error loading project data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -142,6 +174,10 @@ Public Class frmCreateEditProject
                 cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
                 cboVersion.SelectedValue = currentVersionID
             End If
+            ' Load average SPFNo2 prices for floors and roofs
+            txtRawFloorSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Floor").ToString("F2"), "0.00")
+            txtRawRoofSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Roof").ToString("F2"), "0.00")
+
             LoadRollup(currentProject)
             UpdateStatus($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
         Catch ex As Exception
@@ -202,9 +238,10 @@ Public Class frmCreateEditProject
                     col.DefaultCellStyle.Format = "P2"
                     col.Visible = True
                 Case "LumberAdder"
-                    col.HeaderText = "Lumber Adder"
+                    col.HeaderText = "Lumber Adder/MBF"
                     col.DefaultCellStyle.Format = "C2"
                     col.Visible = True
+                    col.Width = 150
                 Case "ProductTypeName"
                     col.Visible = True
                 Case Else
@@ -458,7 +495,10 @@ Public Class frmCreateEditProject
     Private Sub btnSaveOverrides_Click(sender As Object, e As EventArgs) Handles btnSaveOverrides.Click
         Try
             currentProject.Settings = CType(dgvOverrides.DataSource, List(Of ProjectProductSettingsModel))
-            da.SaveProject(currentProject)
+            For Each setting In currentProject.Settings
+                setting.VersionID = currentVersionID
+                da.SaveProjectProductSetting(setting, currentVersionID)
+            Next
             MessageBox.Show("Overrides saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
             LoadOverrides(currentProject.Settings)
         Catch ex As Exception
@@ -538,12 +578,15 @@ Public Class frmCreateEditProject
     Private Sub cmsTreeMenu_Opening(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles cmsTreeMenu.Opening
         mnuAddBuilding.Visible = TypeOf tvProjectTree.SelectedNode.Tag Is ProjectModel
         mnuAddLevel.Visible = TypeOf tvProjectTree.SelectedNode.Tag Is BuildingModel
+        mnuCopyBuilding.Visible = TypeOf tvProjectTree.SelectedNode.Tag Is BuildingModel
+        mnuPasteBuilding.Visible = (TypeOf tvProjectTree.SelectedNode.Tag Is ProjectModel) AndAlso (copiedBuilding IsNot Nothing)
         mnuDelete.Visible = True
         EditPSEToolStripMenuItem.Visible = True
         mnuCopyLevels.Visible = False
         mnuPasteLevels.Visible = False
         If TypeOf tvProjectTree.SelectedNode.Tag Is BuildingModel Then
             Dim selectedBldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
+
             If selectedBldg.Levels.Count > 0 Then
                 mnuCopyLevels.Visible = True
             ElseIf copiedLevels IsNot Nothing AndAlso copiedLevels.Count > 0 Then
@@ -646,14 +689,53 @@ Public Class frmCreateEditProject
         End If
     End Sub
 
-
+    ' In frmCreateEditProject.vb: Modify RefreshRollupData to update SPF prices
+    Private Sub RefreshRollupData()
+        Try
+            Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, da.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
+            currentProject.Settings = da.GetProjectProductSettings(currentVersionID)
+            LoadOverrides(currentProject.Settings)
+            currentProject.Buildings = da.GetBuildingsByVersionID(currentVersionID)
+            If selectedVersion IsNot Nothing Then
+                cboCustomer.SelectedValue = If(selectedVersion.CustomerID, 0)
+                cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
+                cboVersion.SelectedValue = currentVersionID
+            End If
+            ' Update average SPFNo2 prices for floors and roofs
+            txtRawFloorSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Floor").ToString("F2"), "0.00")
+            txtRawRoofSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Roof").ToString("F2"), "0.00")
+        Catch ex As Exception
+            UpdateStatus($"Error refreshing rollup data: {ex.Message}")
+            MessageBox.Show($"Error refreshing rollup data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
     Private Sub btnRecalcRollup_Click(sender As Object, e As EventArgs) Handles btnRecalcRollup.Click
         Try
-            LoadRollup(currentProject)
-            UpdateStatus("Rollup recalculated")
+            Dim currentTab As TabPage = tabControlRight.SelectedTab ' Store current tab
+            Dim selectedNode As TreeNode = tvProjectTree.SelectedNode ' Store selected node
+            UpdateStatus("Recalculating rollup...")
+            Me.Cursor = Cursors.WaitCursor
+            currentProject.Settings = CType(dgvOverrides.DataSource, List(Of ProjectProductSettingsModel))
+            For Each setting In currentProject.Settings
+                setting.VersionID = currentVersionID
+                da.SaveProjectProductSetting(setting, currentVersionID)
+            Next
+            da.RecalculateVersion(currentVersionID) ' Recalculate all rollups
+            RefreshRollupData() ' Refresh only necessary data
+            dgvRollup.DataSource = Nothing ' Clear grid to force refresh
+            If selectedNode IsNot Nothing Then
+                tvProjectTree.SelectedNode = selectedNode ' Restore selected node
+                LoadRollup(selectedNode.Tag) ' Load rollup for selected node
+            Else
+                LoadRollup(currentProject) ' Default to project
+            End If
+            tabControlRight.SelectedTab = currentTab ' Restore original tab
+            UpdateStatus("Rollup recalculated successfully")
         Catch ex As Exception
             UpdateStatus($"Error recalculating rollup: {ex.Message}")
             MessageBox.Show($"Error recalculating rollup: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            Me.Cursor = Cursors.Default
         End Try
     End Sub
 
@@ -744,6 +826,76 @@ Public Class frmCreateEditProject
         Else
             UpdateStatus("No valid project selected for Inclusions/Exclusions")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
+    End Sub
+
+    Private Sub mnuCopyBuilding_Click(sender As Object, e As EventArgs) Handles mnuCopyBuilding.Click
+        Dim selectedBldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
+        copiedBuilding = New BuildingModel With {
+            .BuildingName = selectedBldg.BuildingName & " Copy",  ' Append "Copy" to avoid name conflicts
+        .BuildingType = selectedBldg.BuildingType,
+        .BldgQty = selectedBldg.BldgQty,
+        .ResUnits = selectedBldg.ResUnits,
+            .Levels = New List(Of LevelModel)
+        }
+        For Each level In selectedBldg.Levels
+            Dim clonedLevel As New LevelModel With {
+            .LevelName = level.LevelName,
+            .LevelNumber = level.LevelNumber,
+            .ProductTypeID = level.ProductTypeID,
+            .ProductTypeName = level.ProductTypeName
+        }
+            copiedBuilding.Levels.Add(clonedLevel)
+        Next
+    End Sub
+    Private Sub mnuPasteBuilding_Click(sender As Object, e As EventArgs) Handles mnuPasteBuilding.Click
+        If copiedBuilding Is Nothing Then
+            MessageBox.Show("No building copied.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+        Dim newBldg As New BuildingModel With {
+            .BuildingName = copiedBuilding.BuildingName,
+            .BuildingType = copiedBuilding.BuildingType,
+            .BldgQty = copiedBuilding.BldgQty,
+            .ResUnits = copiedBuilding.ResUnits
+        }
+        currentProject.Buildings.Add(newBldg)
+        da.SaveBuilding(newBldg, currentVersionID)
+        newBldg.Levels = New List(Of LevelModel)
+        For Each clonedLevel In copiedBuilding.Levels
+            Dim newLevel As New LevelModel With {
+                .LevelName = clonedLevel.LevelName,
+                .LevelNumber = clonedLevel.LevelNumber,
+                .ProductTypeID = clonedLevel.ProductTypeID,
+                .ProductTypeName = clonedLevel.ProductTypeName
+            }
+            newBldg.Levels.Add(newLevel)
+            da.SaveLevel(newLevel, newBldg.BuildingID, currentVersionID)
+        Next
+        LoadProjectData()  ' Refresh tree and data
+    End Sub
+
+    Private Sub tvProjectTree_MouseDown(sender As Object, e As MouseEventArgs) Handles tvProjectTree.MouseDown
+        If e.Button = MouseButtons.Right Then
+            Dim node As TreeNode = tvProjectTree.GetNodeAt(e.X, e.Y)
+            If node IsNot Nothing Then
+                tvProjectTree.SelectedNode = node
+            End If
+        End If
+    End Sub
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles btnDeleteProject.Click
+        Dim result As DialogResult = MessageBox.Show("Are you really sure you want to delete this project? This action cannot be undone.", "Confirm Deletion", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+        If result = DialogResult.Yes Then
+            Dim notification As String = String.Empty
+            Try
+                da.DeleteProject(currentProject.ProjectID, notification)
+                If Not String.IsNullOrEmpty(notification) Then
+                    MessageBox.Show(notification, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                End If
+            Catch ex As Exception
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         End If
     End Sub
 End Class

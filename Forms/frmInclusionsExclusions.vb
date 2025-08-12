@@ -1,7 +1,7 @@
 ﻿Option Strict On
-Imports System.Windows.Forms
+
 Imports BuildersPSE2.BuildersPSE.DataAccess
-Imports BuildersPSE2.BuildersPSE.Models
+
 
 
 
@@ -12,100 +12,154 @@ Public Class frmInclusionsExclusions
     Public Sub New(projID As Integer)
         InitializeComponent() ' Call designer-generated setup
         ProjectID = projID
-        LoadData()
+        Dim project = da.GetProjectByID(ProjectID)
+        Me.Text = $"Inclusions/Exclusions - Project {Project.jbid}"
     End Sub
 
+    ' In frmCreateEditProject.vb: Update UpdateStatus for robustness
     Private Sub UpdateStatus(message As String)
-        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
-        If mdiParent IsNot Nothing Then
-            mdiParent.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
-        Else
-            Debug.WriteLine($"{message} at {DateTime.Now:HH:mm:ss}")
-        End If
+        Try
+            Dim parentForm As frmMain = TryCast(Me.ParentForm, frmMain)
+            If parentForm IsNot Nothing AndAlso parentForm.StatusLabel IsNot Nothing Then
+                parentForm.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
+            Else
+                Debug.WriteLine($"Status update skipped: Parent form or StatusLabel is null. Message: {message}")
+            End If
+        Catch ex As Exception
+            Debug.WriteLine($"Error updating status: {ex.Message}")
+        End Try
     End Sub
     Private Sub frmInclusionsExclusions_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Me.dgvLoads.Rows.Add("Roof")
-        Me.dgvLoads.Rows.Add("Floor")
-        Me.dgvLoads.Rows.Add("Corridor")
 
-        Me.dgvRoofItems.Rows.Add(1, "Wood Roof Trusses", False, False, False)
-        Me.dgvRoofItems.Rows.Add(2, "Valleys", False, False, False)
-        Me.dgvRoofItems.Rows.Add(3, "End Gables", False, False, False)
-        Me.dgvRoofItems.Rows.Add(4, "Party Wall Gables", False, False, False)
-        Me.dgvRoofItems.Rows.Add(5, "Draftstop Gables", False, False, False)
-        Me.dgvRoofItems.Rows.Add(6, "Shear Gables", False, False, False)
-        Me.dgvRoofItems.Rows.Add(7, "Lay-in Gables", False, False, False)
-        Me.dgvRoofItems.Rows.Add(8, "Drag Trusses", False, False, False)
-        Me.dgvRoofItems.Rows.Add(9, "Integrated Truss Parapets", False, False, False)
-        Me.dgvRoofItems.Rows.Add(10, "Exterior Blocking Panels", False, False, False)
-        Me.dgvRoofItems.Rows.Add(11, "Interior Blocking Panels", False, False, False)
-        Me.dgvRoofItems.Rows.Add(12, "Drag Blocking Panels", False, False, False)
-        Me.dgvRoofItems.Rows.Add(13, "", False, False, False)
-        Me.dgvRoofItems.Rows.Add(14, "Truss-to-Truss Connectors", False, False, False)
-        Me.dgvRoofItems.Rows.Add(15, "Truss-to-Beam Connectors", False, False, False)
-        Me.dgvRoofItems.Rows.Add(16, "Truss-to-Wall Connectors", False, False, False)
-        Me.dgvRoofItems.Rows.Add(17, "Fire Treated Truss Materials", False, False, False)
-        Me.dgvRoofItems.Rows.Add(18, "Treated Truss Materials", False, False, False)
-        Me.dgvRoofItems.Rows.Add(19, "Stainless Steel Plates", False, False, False)
-        Me.dgvRoofItems.Rows.Add(20, "Snow Drifts", False, False, False)
-        Me.dgvRoofItems.Rows.Add(21, "Sprinkler Loads", False, False, False)
-        Me.dgvRoofItems.Rows.Add(22, "Mechanical Loads", False, False, False)
-        Me.dgvRoofItems.Rows.Add(23, "Solar Loads", False, False, False)
-        Me.dgvRoofItems.Rows.Add(24, "Ceiling Vault/Tray/Other", False, False, False)
 
-        Me.dgvFloorItems.Rows.Add(27, "Wood Floor Trusses", False, False, False)
-        Me.dgvFloorItems.Rows.Add(28, "End Gables", False, False, False)
-        Me.dgvFloorItems.Rows.Add(29, "Party Wall Gables", False, False, False)
-        Me.dgvFloorItems.Rows.Add(30, "Draftstop Gables", False, False, False)
-        Me.dgvFloorItems.Rows.Add(31, "Shear Gables", False, False, False)
-        Me.dgvFloorItems.Rows.Add(32, "Exterior Blocking Panels", False, False, False)
-        Me.dgvFloorItems.Rows.Add(33, "Interior Blocking Panels", False, False, False)
-        Me.dgvFloorItems.Rows.Add(34, "Drag Blocking Panels", False, False, False)
-        Me.dgvFloorItems.Rows.Add(35, "Corridor Trusses", False, False, False)
-        Me.dgvFloorItems.Rows.Add(36, "Balcony Trusses", False, False, False)
-        Me.dgvFloorItems.Rows.Add(37, "", False, False, False)
-        Me.dgvFloorItems.Rows.Add(38, "", False, False, False)
-        Me.dgvFloorItems.Rows.Add(39, "", False, False, False)
-        Me.dgvFloorItems.Rows.Add(40, "Truss-to-Truss Connectors", False, False, False)
-        Me.dgvFloorItems.Rows.Add(41, "Truss-to-Beam Connectors", False, False, False)
-        Me.dgvFloorItems.Rows.Add(42, "Truss-to-Wall Connectors", False, False, False)
-        Me.dgvFloorItems.Rows.Add(43, "Fire Treated Truss Materials", False, False, False)
-        Me.dgvFloorItems.Rows.Add(44, "Firewall Hangers", False, False, False)
-        Me.dgvFloorItems.Rows.Add(45, "Treated Truss Materials", False, False, False)
-        Me.dgvFloorItems.Rows.Add(46, "Stainless Steel Plates", False, False, False)
-        Me.dgvFloorItems.Rows.Add(47, "Snow Drifts", False, False, False)
-        Me.dgvFloorItems.Rows.Add(48, "Sprinkler Loads", False, False, False)
-        Me.dgvFloorItems.Rows.Add(49, "Mechanical Loads", False, False, False)
-        Me.dgvFloorItems.Rows.Add(50, "On Edge Floors (Roof Style)", False, False, False)
-        Me.dgvFloorItems.Rows.Add(51, "Stacked TC/BC Trusses", False, False, False)
+        ' Load combo options from DB
+        cmbBuildingCode.Items.AddRange(da.GetComboOptions("BuildingCode").ToArray())
+        cmbImportance.Items.AddRange(da.GetComboOptions("Importance").ToArray())
+        cmbExposure.Items.AddRange(da.GetComboOptions("Exposure").ToArray())
+        cmbWindSpeed.Items.AddRange(da.GetComboOptions("WindSpeed").ToArray())
+        cmbSnowLoad.Items.AddRange(da.GetComboOptions("SnowLoad").ToArray())
+        cmbOccupancy.Items.AddRange(da.GetComboOptions("Occupancy").ToArray())
+        cmbExtWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
+        cmbIntWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
+        cmbCorridorWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
 
-        Me.dgvWallItems.Rows.Add(53, "Wood Wall Panels", False, False, False)
-        Me.dgvWallItems.Rows.Add(54, "Wood Panels Below Grade", False, False, False)
-        Me.dgvWallItems.Rows.Add(55, "Metal/Steel Framed Walls", False, False, False)
-        Me.dgvWallItems.Rows.Add(56, "CMU Walls", False, False, False)
-        Me.dgvWallItems.Rows.Add(57, "Round/Radius Walls", False, False, False)
-        Me.dgvWallItems.Rows.Add(58, "Raked Walls", False, False, False)
-        Me.dgvWallItems.Rows.Add(59, "Wood Sheathing", False, False, False)
-        Me.dgvWallItems.Rows.Add(60, "Non-wood Sheathing", False, False, False)
-        Me.dgvWallItems.Rows.Add(61, "Horizontal Seam Blocking", False, False, False)
-        Me.dgvWallItems.Rows.Add(62, "Any other Blocking", False, False, False)
-        Me.dgvWallItems.Rows.Add(63, "Loose VTP - Install on Site", False, False, False)
-        Me.dgvWallItems.Rows.Add(64, "Loose VBP - Install on Site", False, False, False)
-        Me.dgvWallItems.Rows.Add(65, "", False, False, False)
-        Me.dgvWallItems.Rows.Add(66, "Treated Bottom Plate", False, False, False)
-        Me.dgvWallItems.Rows.Add(67, "Anchor Hardware", False, False, False)
-        Me.dgvWallItems.Rows.Add(68, "Panels over 10' Tall", False, False, False)
-        Me.dgvWallItems.Rows.Add(69, "LSL Wall Material", False, False, False)
-        Me.dgvWallItems.Rows.Add(70, "Wood Headers within Wall", False, False, False)
-        Me.dgvWallItems.Rows.Add(71, "Wood Columns within Wall", False, False, False)
-        Me.dgvWallItems.Rows.Add(72, "Walls outside Ext. Envelope", False, False, False)
+        ' Load combo options from DB
+        cmbBuildingCode.Items.AddRange(da.GetComboOptions("BuildingCode").ToArray())
+        cmbImportance.Items.AddRange(da.GetComboOptions("Importance").ToArray())
+        cmbExposure.Items.AddRange(da.GetComboOptions("Exposure").ToArray())
+        cmbWindSpeed.Items.AddRange(da.GetComboOptions("WindSpeed").ToArray())
+        cmbSnowLoad.Items.AddRange(da.GetComboOptions("SnowLoad").ToArray())
+        cmbOccupancy.Items.AddRange(da.GetComboOptions("Occupancy").ToArray())
+        cmbExtWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
+        cmbIntWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
+        cmbCorridorWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
+
+        ' Load loads combo options from DB to individual ComboBoxes
+        Dim tcllOptions = da.GetComboOptions("TCLL").ToArray()
+        cmbTCLL_Roof.Items.AddRange(tcllOptions)
+        cmbTCLL_Floor.Items.AddRange(tcllOptions)
+        cmbTCLL_Corridor.Items.AddRange(tcllOptions)
+
+        Dim tcdlOptions = da.GetComboOptions("TCDL").ToArray()
+        cmbTCDL_Roof.Items.AddRange(tcdlOptions)
+        cmbTCDL_Floor.Items.AddRange(tcdlOptions)
+        cmbTCDL_Corridor.Items.AddRange(tcdlOptions)
+
+        Dim bcllOptions = da.GetComboOptions("BCLL").ToArray()
+        cmbBCLL_Roof.Items.AddRange(bcllOptions)
+        cmbBCLL_Floor.Items.AddRange(bcllOptions)
+        cmbBCLL_Corridor.Items.AddRange(bcllOptions)
+
+        Dim bcdlOptions = da.GetComboOptions("BCDL").ToArray()
+        cmbBCDL_Roof.Items.AddRange(bcdlOptions)
+        cmbBCDL_Floor.Items.AddRange(bcdlOptions)
+        cmbBCDL_Corridor.Items.AddRange(bcdlOptions)
+
+        Dim ocSpacingOptions = da.GetComboOptions("OCSpacing").ToArray()
+        cmbOCSpacing_Roof.Items.AddRange(ocSpacingOptions)
+        cmbOCSpacing_Floor.Items.AddRange(ocSpacingOptions)
+        cmbOCSpacing_Corridor.Items.AddRange(ocSpacingOptions)
+
+        Dim liveDeflOptions = da.GetComboOptions("LiveDefl").ToArray()
+        cmbLiveLoadDeflection_Roof.Items.AddRange(liveDeflOptions)
+        cmbLiveLoadDeflection_Floor.Items.AddRange(liveDeflOptions)
+        cmbLiveLoadDeflection_Corridor.Items.AddRange(liveDeflOptions)
+
+        Dim totalDeflOptions = da.GetComboOptions("TotalDefl").ToArray()
+        cmbTotalLoadDeflection_Roof.Items.AddRange(totalDeflOptions)
+        cmbTotalLoadDeflection_Floor.Items.AddRange(totalDeflOptions)
+        cmbTotalLoadDeflection_Corridor.Items.AddRange(totalDeflOptions)
+
+        Dim absoluteOptions = da.GetComboOptions("Absolute").ToArray()
+        cmbAbsolute_Roof.Items.AddRange(absoluteOptions)
+        cmbAbsolute_Floor.Items.AddRange(absoluteOptions)
+        cmbAbsolute_Corridor.Items.AddRange(absoluteOptions)
+
+        Dim deflectionOptions = da.GetComboOptions("Deflection").ToArray()
+        cmbDeflection_Roof.Items.AddRange(deflectionOptions)
+        cmbDeflection_Floor.Items.AddRange(deflectionOptions)
+        cmbDeflection_Corridor.Items.AddRange(deflectionOptions)
+
+
+
+        ' Add Note columns to DGVs
+        For Each dgv In {dgvRoofItems, dgvFloorItems, dgvWallItems}
+            Dim section As String = If(dgv Is dgvRoofItems, "Roof", If(dgv Is dgvFloorItems, "Floor", "Wall"))
+            Dim colNote As New DataGridViewTextBoxColumn With {
+            .Name = "col" & section & "Note",
+            .HeaderText = "Note",
+            .AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+        }
+            dgv.Columns.Add(colNote)
+        Next
+
+        ' Load item options from DB
+        For Each item In da.GetItemOptions("Roof")
+            Me.dgvRoofItems.Rows.Add(item.Item1, item.Item2, False, False, False, String.Empty)
+        Next
+        For Each item In da.GetItemOptions("Floor")
+            Me.dgvFloorItems.Rows.Add(item.Item1, item.Item2, False, False, False, String.Empty)
+        Next
+        For Each item In da.GetItemOptions("Wall")
+            Me.dgvWallItems.Rows.Add(item.Item1, item.Item2, False, False, False, String.Empty)
+        Next
+
+        ' Set default Excluded on all item rows
+        For Each dgv In {dgvRoofItems, dgvFloorItems, dgvWallItems}
+            Dim section As String = If(dgv Is dgvRoofItems, "Roof", If(dgv Is dgvFloorItems, "Floor", "Wall"))
+            Dim colExcluded As String = "col" & section & "Excluded"
+            For Each row As DataGridViewRow In dgv.Rows
+                row.Cells(colExcluded).Value = True
+            Next
+        Next
+
+
+        LoadData()
 
     End Sub
+
+    Private Sub dgvItems_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvRoofItems.CellValueChanged, dgvFloorItems.CellValueChanged, dgvWallItems.CellValueChanged
+        If e.RowIndex >= 0 AndAlso e.ColumnIndex >= 2 AndAlso e.ColumnIndex <= 4 Then ' Columns 2=Included, 3=Excluded, 4=Optional
+            Dim dgv As DataGridView = DirectCast(sender, DataGridView)
+            Dim row As DataGridViewRow = dgv.Rows(e.RowIndex)
+            If CBool(row.Cells(e.ColumnIndex).Value) Then
+                For col As Integer = 2 To 4
+                    If col <> e.ColumnIndex Then
+                        row.Cells(col).Value = False
+                    End If
+                Next
+            End If
+        End If
+    End Sub
+    Private Sub dgvItems_CurrentCellDirtyStateChanged(sender As Object, e As EventArgs) Handles dgvRoofItems.CurrentCellDirtyStateChanged, dgvFloorItems.CurrentCellDirtyStateChanged, dgvWallItems.CurrentCellDirtyStateChanged
+        Dim dgv As DataGridView = DirectCast(sender, DataGridView)
+        If dgv.CurrentCell IsNot Nothing AndAlso TypeOf dgv.CurrentCell Is DataGridViewCheckBoxCell Then
+            dgv.CommitEdit(DataGridViewDataErrorContexts.Commit)
+        End If
+    End Sub
+
     Private Sub LoadData()
         Try
-
-
-
 
             UpdateStatus("Loading Inclusions/Exclusions data...")
             ' Load Design Info
@@ -122,37 +176,58 @@ Public Class frmInclusionsExclusions
                 txtWallHeights.Text = info.WallHeights
             End If
 
-            ' Load Loads
-            Dim loads = da.GetProjectLoads(ProjectID)
-            Dim rowIdx As Integer = 0
-            For Each loadItem In loads
-                If rowIdx < dgvLoads.Rows.Count Then
-                    With dgvLoads.Rows(rowIdx)
-                        .Cells(0).Value = loadItem.Category
-                        .Cells(1).Value = loadItem.TCLL
-                        .Cells(2).Value = loadItem.TCDL
-                        .Cells(3).Value = loadItem.BCLL
-                        .Cells(4).Value = loadItem.BCDL
-                        .Cells(5).Value = loadItem.OCSpacing
-                        .Cells(6).Value = loadItem.LiveLoadDeflection
-                        .Cells(7).Value = loadItem.TotalLoadDeflection
-                        .Cells(8).Value = loadItem.Absolute
-                        .Cells(9).Value = loadItem.Deflection
-                    End With
-                    rowIdx += 1
-                End If
-            Next
+
 
             ' Load Bearing Styles
             Dim bearing = da.GetProjectBearingStyles(ProjectID)
             If bearing IsNot Nothing Then
                 cmbExtWall.SelectedItem = bearing.ExtWallStyle
-                txtExtRim.Text = bearing.ExtRimRibbon
+                cboExtRimRibbon.Text = bearing.ExtRimRibbon
                 cmbIntWall.SelectedItem = bearing.IntWallStyle
-                txtIntRim.Text = bearing.IntRimRibbon
+                cboIntRimRibbon.Text = bearing.IntRimRibbon
                 cmbCorridorWall.SelectedItem = bearing.CorridorWallStyle
-                txtCorridorRim.Text = bearing.CorridorRimRibbon
+                cboCorridorRimRibbon.Text = bearing.CorridorRimRibbon
             End If
+
+            ' Load Loads
+            Dim loads = da.GetProjectLoads(ProjectID)
+            If loads IsNot Nothing AndAlso loads.Count = 3 Then
+                ' Assume order: Roof (0), Floor (1), Corridor (2) from ORDER BY Category in query
+                With loads(0) ' Roof
+                    cmbTCLL_Roof.Text = .TCLL
+                    cmbTCDL_Roof.Text = .TCDL
+                    cmbBCLL_Roof.Text = .BCLL
+                    cmbBCDL_Roof.Text = .BCDL
+                    cmbOCSpacing_Roof.Text = .OCSpacing
+                    cmbLiveLoadDeflection_Roof.Text = .LiveLoadDeflection
+                    cmbTotalLoadDeflection_Roof.Text = .TotalLoadDeflection
+                    cmbAbsolute_Roof.Text = .Absolute
+                    cmbDeflection_Roof.Text = .Deflection
+                End With
+                With loads(1) ' Floor
+                    cmbTCLL_Floor.Text = .TCLL
+                    cmbTCDL_Floor.Text = .TCDL
+                    cmbBCLL_Floor.Text = .BCLL
+                    cmbBCDL_Floor.Text = .BCDL
+                    cmbOCSpacing_Floor.Text = .OCSpacing
+                    cmbLiveLoadDeflection_Floor.Text = .LiveLoadDeflection
+                    cmbTotalLoadDeflection_Floor.Text = .TotalLoadDeflection
+                    cmbAbsolute_Floor.Text = .Absolute
+                    cmbDeflection_Floor.Text = .Deflection
+                End With
+                With loads(2) ' Corridor
+                    cmbTCLL_Corridor.Text = .TCLL
+                    cmbTCDL_Corridor.Text = .TCDL
+                    cmbBCLL_Corridor.Text = .BCLL
+                    cmbBCDL_Corridor.Text = .BCDL
+                    cmbOCSpacing_Corridor.Text = .OCSpacing
+                    cmbLiveLoadDeflection_Corridor.Text = .LiveLoadDeflection
+                    cmbTotalLoadDeflection_Corridor.Text = .TotalLoadDeflection
+                    cmbAbsolute_Corridor.Text = .Absolute
+                    cmbDeflection_Corridor.Text = .Deflection
+                End With
+            End If
+
 
             ' Load Notes
             Dim note = da.GetProjectGeneralNotes(ProjectID)
@@ -162,14 +237,22 @@ Public Class frmInclusionsExclusions
 
             ' Load Items (Roof, Floor, Wall)
             Dim items = da.GetProjectItems(ProjectID)
-            For Each item In items
-                Dim dgv As DataGridView = If(item.Section = "Roof", dgvRoofItems, If(item.Section = "Floor", dgvFloorItems, dgvWallItems))
-                Dim row = dgv.Rows.Cast(Of DataGridViewRow).FirstOrDefault(Function(r) CInt(r.Cells("KN").Value) = item.KN)
-                If row IsNot Nothing Then
-                    row.Cells("Included").Value = item.Status = "y"
-                    row.Cells("Excluded").Value = item.Status = "x"
-                    row.Cells("Optional").Value = item.Status = "o"
-                End If
+            For Each dgv In {dgvRoofItems, dgvFloorItems, dgvWallItems}
+                Dim section As String = If(dgv Is dgvRoofItems, "Roof", If(dgv Is dgvFloorItems, "Floor", "Wall"))
+                Dim colKN As String = "col" & section & "KN"
+                Dim colIncluded As String = "col" & section & "Included"
+                Dim colExcluded As String = "col" & section & "Excluded"
+                Dim colOptional As String = "col" & section & "Optional"
+                Dim colNote As String = "col" & section & "Note"
+                For Each item In items.Where(Function(i) i.Section = section)
+                    Dim row = dgv.Rows.Cast(Of DataGridViewRow).FirstOrDefault(Function(r) CInt(r.Cells(colKN).Value) = item.KN)
+                    If row IsNot Nothing Then
+                        row.Cells(colIncluded).Value = item.Status = "y"
+                        row.Cells(colExcluded).Value = item.Status = "x"
+                        row.Cells(colOptional).Value = item.Status = "o"
+                        row.Cells(colNote).Value = item.Note
+                    End If
+                Next
             Next
             UpdateStatus("Inclusions/Exclusions data loaded successfully.")
         Catch ex As Exception
@@ -199,33 +282,59 @@ Public Class frmInclusionsExclusions
             da.SaveProjectDesignInfo(info)
 
             ' Save Loads
-            Dim loads As New List(Of ProjectLoadModel)
-            For Each row As DataGridViewRow In dgvLoads.Rows
-                loads.Add(New ProjectLoadModel With {
-                .ProjectID = ProjectID,
-                .Category = If(row.Cells("Category").Value Is Nothing, String.Empty, CStr(row.Cells("Category").Value)),
-                .TCLL = If(row.Cells("TCLL").Value Is Nothing, String.Empty, CStr(row.Cells("TCLL").Value)),
-                .TCDL = If(row.Cells("TCDL").Value Is Nothing, String.Empty, CStr(row.Cells("TCDL").Value)),
-                .BCLL = If(row.Cells("BCLL").Value Is Nothing, String.Empty, CStr(row.Cells("BCLL").Value)),
-                .BCDL = If(row.Cells("BCDL").Value Is Nothing, String.Empty, CStr(row.Cells("BCDL").Value)),
-                .OCSpacing = If(row.Cells("OCSpacing").Value Is Nothing, String.Empty, CStr(row.Cells("OCSpacing").Value)),
-                .LiveLoadDeflection = If(row.Cells("LiveDefl").Value Is Nothing, String.Empty, CStr(row.Cells("LiveDefl").Value)),
-                .TotalLoadDeflection = If(row.Cells("TotalDefl").Value Is Nothing, String.Empty, CStr(row.Cells("TotalDefl").Value)),
-                .Absolute = If(row.Cells("Absolute").Value Is Nothing, String.Empty, CStr(row.Cells("Absolute").Value)),
-                .Deflection = If(row.Cells("Deflection").Value Is Nothing, String.Empty, CStr(row.Cells("Deflection").Value))
-            })
-            Next
+            Dim loads As New List(Of ProjectLoadModel) From {
+                New ProjectLoadModel With {
+    .ProjectID = ProjectID,
+    .Category = "Roof",
+    .TCLL = cmbTCLL_Roof.Text,
+    .TCDL = cmbTCDL_Roof.Text,
+    .BCLL = cmbBCLL_Roof.Text,
+    .BCDL = cmbBCDL_Roof.Text,
+    .OCSpacing = cmbOCSpacing_Roof.Text,
+    .LiveLoadDeflection = cmbLiveLoadDeflection_Roof.Text,
+    .TotalLoadDeflection = cmbTotalLoadDeflection_Roof.Text,
+    .Absolute = cmbAbsolute_Roof.Text,
+    .Deflection = cmbDeflection_Roof.Text
+},
+                New ProjectLoadModel With {
+    .ProjectID = ProjectID,
+    .Category = "Floor",
+    .TCLL = cmbTCLL_Floor.Text,
+    .TCDL = cmbTCDL_Floor.Text,
+    .BCLL = cmbBCLL_Floor.Text,
+    .BCDL = cmbBCDL_Floor.Text,
+    .OCSpacing = cmbOCSpacing_Floor.Text,
+    .LiveLoadDeflection = cmbLiveLoadDeflection_Floor.Text,
+    .TotalLoadDeflection = cmbTotalLoadDeflection_Floor.Text,
+    .Absolute = cmbAbsolute_Floor.Text,
+    .Deflection = cmbDeflection_Floor.Text
+},
+                New ProjectLoadModel With {
+    .ProjectID = ProjectID,
+    .Category = "Corridor",
+    .TCLL = cmbTCLL_Corridor.Text,
+    .TCDL = cmbTCDL_Corridor.Text,
+    .BCLL = cmbBCLL_Corridor.Text,
+    .BCDL = cmbBCDL_Corridor.Text,
+    .OCSpacing = cmbOCSpacing_Corridor.Text,
+    .LiveLoadDeflection = cmbLiveLoadDeflection_Corridor.Text,
+    .TotalLoadDeflection = cmbTotalLoadDeflection_Corridor.Text,
+    .Absolute = cmbAbsolute_Corridor.Text,
+    .Deflection = cmbDeflection_Corridor.Text
+}
+            }
             da.SaveProjectLoads(ProjectID, loads)
+
 
             ' Save Bearing Styles
             Dim bearing As New ProjectBearingStylesModel With {
             .ProjectID = ProjectID,
             .ExtWallStyle = If(cmbExtWall.SelectedItem Is Nothing, String.Empty, CStr(cmbExtWall.SelectedItem)),
-            .ExtRimRibbon = txtExtRim.Text,
+            .ExtRimRibbon = cboExtRimRibbon.Text,
             .IntWallStyle = If(cmbIntWall.SelectedItem Is Nothing, String.Empty, CStr(cmbIntWall.SelectedItem)),
-            .IntRimRibbon = txtIntRim.Text,
+            .IntRimRibbon = cboIntRimRibbon.Text,
             .CorridorWallStyle = If(cmbCorridorWall.SelectedItem Is Nothing, String.Empty, CStr(cmbCorridorWall.SelectedItem)),
-            .CorridorRimRibbon = txtCorridorRim.Text
+            .CorridorRimRibbon = cboCorridorRimRibbon.Text
         }
             Dim existingBearing = da.GetProjectBearingStyles(ProjectID)
             If existingBearing IsNot Nothing Then bearing.BearingID = existingBearing.BearingID
@@ -241,18 +350,27 @@ Public Class frmInclusionsExclusions
             da.SaveProjectGeneralNotes(note)
 
             ' Save Items
+
+            ' Save Items
             Dim items As New List(Of ProjectItemModel)
             For Each dgv In {dgvRoofItems, dgvFloorItems, dgvWallItems}
                 Dim section As String = If(dgv Is dgvRoofItems, "Roof", If(dgv Is dgvFloorItems, "Floor", "Wall"))
+                Dim colIncluded As String = "col" & section & "Included"
+                Dim colExcluded As String = "col" & section & "Excluded"
+                Dim colOptional As String = "col" & section & "Optional"
+                Dim colKN As String = "col" & section & "KN"
+                Dim colDesc As String = "col" & section & "Desc"
+                Dim colNote As String = "col" & section & "Note"
                 For Each row As DataGridViewRow In dgv.Rows
-                    Dim status As String = If(CBool(row.Cells("Included").Value), "y", If(CBool(row.Cells("Excluded").Value), "x", If(CBool(row.Cells("Optional").Value), "o", "")))
+                    Dim status As String = If(CBool(row.Cells(colIncluded).Value), "y", If(CBool(row.Cells(colExcluded).Value), "x", If(CBool(row.Cells(colOptional).Value), "o", "")))
                     items.Add(New ProjectItemModel With {
-                    .ProjectID = ProjectID,
-                    .Section = section,
-                    .KN = CInt(row.Cells("KN").Value),
-                    .Description = CStr(row.Cells("Desc").Value),
-                    .Status = status
-                })
+                .ProjectID = ProjectID,
+                .Section = section,
+                .KN = CInt(row.Cells(colKN).Value),
+                .Description = CStr(row.Cells(colDesc).Value),
+                .Status = status,
+                .Note = CStr(row.Cells(colNote).Value)
+            })
                 Next
             Next
             da.SaveProjectItems(ProjectID, items)
@@ -265,5 +383,7 @@ Public Class frmInclusionsExclusions
         End Try
     End Sub
 
-
+    Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
+        RemoveTabFromTabControl(CStr(Me.Tag))
+    End Sub
 End Class

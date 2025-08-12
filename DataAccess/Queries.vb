@@ -134,7 +134,7 @@
         Public Const UpdateProjectDesignInfo As String = "UPDATE ProjectDesignInfo SET BuildingCode = @BuildingCode, Importance = @Importance, ExposureCategory = @ExposureCategory, WindSpeed = @WindSpeed, SnowLoadType = @SnowLoadType, OccupancyCategory = @OccupancyCategory, RoofPitches = @RoofPitches, FloorDepths = @FloorDepths, WallHeights = @WallHeights WHERE InfoID = @InfoID"
 
         ' ProjectLoads
-        Public Const SelectProjectLoads As String = "SELECT * FROM ProjectLoads WHERE ProjectID = @ProjectID ORDER BY Category"
+        Public Const SelectProjectLoads As String = "SELECT * FROM ProjectLoads WHERE ProjectID = @ProjectID ORDER BY Category desc"
         Public Const DeleteProjectLoads As String = "DELETE FROM ProjectLoads WHERE ProjectID = @ProjectID"
         Public Const InsertProjectLoad As String = "INSERT INTO ProjectLoads (ProjectID,  Category, TCLL, TCDL, BCLL, BCDL, OCSpacing, LiveLoadDeflection, TotalLoadDeflection, Absolute, Deflection) OUTPUT INSERTED.LoadID VALUES (@ProjectID,  @Category, @TCLL, @TCDL, @BCLL, @BCDL, @OCSpacing, @LiveLoadDeflection, @TotalLoadDeflection, @Absolute, @Deflection)"
 
@@ -149,9 +149,28 @@
         Public Const UpdateProjectGeneralNotes As String = "UPDATE ProjectGeneralNotes SET Notes = @Notes WHERE NoteID = @NoteID"
 
         ' ProjectItems
-        Public Const SelectProjectItems As String = "SELECT * FROM ProjectItems WHERE ProjectID = @ProjectID "
+        Public Const SelectProjectItems As String = "SELECT ItemID, ProjectID, Section, KN, Description, Status, Note FROM ProjectItems WHERE ProjectID = @ProjectID"
         Public Const DeleteProjectItems As String = "DELETE FROM ProjectItems WHERE ProjectID = @ProjectID "
-        Public Const InsertProjectItem As String = "INSERT INTO ProjectItems (ProjectID,  Section, KN, Description, Status) OUTPUT INSERTED.ItemID VALUES (@ProjectID,  @Section, @KN, @Description, @Status)"
+        Public Const InsertProjectItem As String = "INSERT INTO ProjectItems (ProjectID, Section, KN, Description, Status, Note) OUTPUT INSERTED.ItemID VALUES (@ProjectID, @Section, @KN, @Description, @Status, @Note)"
+
+        Public Const SelectComboOptions As String = "SELECT Value FROM ComboOptions WHERE Category = @Category ORDER BY DisplayOrder, Value"
+        Public Const SelectItemOptions As String = "SELECT KN, Description FROM ItemOptions WHERE Section = @Section ORDER BY DisplayOrder"
+
+        ' Deletion Queries for Project Cleanup
+        Public Const DeleteActualToLevelMappingsByVersion As String = "DELETE FROM ActualToLevelMapping WHERE VersionID = @VersionID"
+        Public Const DeleteCalculatedComponentsByVersion As String = "DELETE FROM CalculatedComponents WHERE VersionID = @VersionID"
+        Public Const DeleteActualUnitsByVersion As String = "DELETE FROM ActualUnits WHERE VersionID = @VersionID"
+        Public Const DeleteRawUnitsByVersion As String = "DELETE FROM RawUnits WHERE VersionID = @VersionID"
+        Public Const DeleteLevelsByVersion As String = "DELETE FROM Levels WHERE VersionID = @VersionID"
+        Public Const DeleteBuildingsByVersion As String = "DELETE FROM Buildings WHERE VersionID = @VersionID"
+        Public Const DeleteProjectProductSettingsByVersion As String = "DELETE FROM ProjectProductSettings WHERE VersionID = @VersionID"
+        Public Const DeleteProjectVersionsByProject As String = "DELETE FROM ProjectVersions WHERE ProjectID = @ProjectID"
+        Public Const DeleteProjectDesignInfoByProject As String = "DELETE FROM ProjectDesignInfo WHERE ProjectID = @ProjectID"
+        Public Const DeleteProjectLoadsByProject As String = "DELETE FROM ProjectLoads WHERE ProjectID = @ProjectID"
+        Public Const DeleteProjectBearingStylesByProject As String = "DELETE FROM ProjectBearingStyles WHERE ProjectID = @ProjectID"
+        Public Const DeleteProjectGeneralNotesByProject As String = "DELETE FROM ProjectGeneralNotes WHERE ProjectID = @ProjectID"
+        Public Const DeleteProjectItemsByProject As String = "DELETE FROM ProjectItems WHERE ProjectID = @ProjectID"
+        Public Const DeleteProjectByID As String = "DELETE FROM Projects WHERE ProjectID = @ProjectID"
 
 
     End Module

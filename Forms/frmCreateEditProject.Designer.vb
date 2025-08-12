@@ -31,8 +31,43 @@ Partial Class frmCreateEditProject
         Me.EditPSEToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.mnuCopyLevels = New System.Windows.Forms.ToolStripMenuItem()
         Me.mnuPasteLevels = New System.Windows.Forms.ToolStripMenuItem()
+        Me.mnuCopyBuilding = New System.Windows.Forms.ToolStripMenuItem()
+        Me.mnuPasteBuilding = New System.Windows.Forms.ToolStripMenuItem()
         Me.tabControlRight = New System.Windows.Forms.TabControl()
+        Me.tabOverrides = New System.Windows.Forms.TabPage()
+        Me.Label3 = New System.Windows.Forms.Label()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.txtRawRoofSPFPrice = New System.Windows.Forms.TextBox()
+        Me.txtRawFloorSPFPrice = New System.Windows.Forms.TextBox()
+        Me.dgvOverrides = New System.Windows.Forms.DataGridView()
+        Me.btnSaveOverrides = New System.Windows.Forms.Button()
+        Me.tabRollup = New System.Windows.Forms.TabPage()
+        Me.dgvRollup = New System.Windows.Forms.DataGridView()
+        Me.btnRecalcRollup = New System.Windows.Forms.Button()
+        Me.tabBuildingInfo = New System.Windows.Forms.TabPage()
+        Me.pnlBuildingInfo = New System.Windows.Forms.Panel()
+        Me.lblPlanUnits = New System.Windows.Forms.Label()
+        Me.txtResUnits = New System.Windows.Forms.TextBox()
+        Me.lblBuildingName = New System.Windows.Forms.Label()
+        Me.txtBuildingName = New System.Windows.Forms.TextBox()
+        Me.lblBldgQty = New System.Windows.Forms.Label()
+        Me.nudBldgQty = New System.Windows.Forms.NumericUpDown()
+        Me.lblBuildingType = New System.Windows.Forms.Label()
+        Me.txtBuildingType = New System.Windows.Forms.TextBox()
+        Me.lblNbrUnits = New System.Windows.Forms.Label()
+        Me.nudNbrUnits = New System.Windows.Forms.NumericUpDown()
+        Me.btnSaveBuildingInfo = New System.Windows.Forms.Button()
+        Me.tabLevelInfo = New System.Windows.Forms.TabPage()
+        Me.pnlLevelInfo = New System.Windows.Forms.Panel()
+        Me.nudLevelNumber = New System.Windows.Forms.NumericUpDown()
+        Me.lblLevelName = New System.Windows.Forms.Label()
+        Me.txtLevelName = New System.Windows.Forms.TextBox()
+        Me.lblLevelType = New System.Windows.Forms.Label()
+        Me.cmbLevelType = New System.Windows.Forms.ComboBox()
+        Me.lblLevelNumber = New System.Windows.Forms.Label()
+        Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
+        Me.btnIEOpen = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
         Me.btnOpenPSE = New System.Windows.Forms.Button()
         Me.pnlProjectInfo = New System.Windows.Forms.Panel()
@@ -89,43 +124,11 @@ Partial Class frmCreateEditProject
         Me.lblVersionDate = New System.Windows.Forms.Label()
         Me.dtpCreatedDate = New System.Windows.Forms.DateTimePicker()
         Me.btnSaveProjectInfo = New System.Windows.Forms.Button()
-        Me.tabOverrides = New System.Windows.Forms.TabPage()
-        Me.dgvOverrides = New System.Windows.Forms.DataGridView()
-        Me.btnSaveOverrides = New System.Windows.Forms.Button()
-        Me.tabRollup = New System.Windows.Forms.TabPage()
-        Me.dgvRollup = New System.Windows.Forms.DataGridView()
-        Me.btnRecalcRollup = New System.Windows.Forms.Button()
-        Me.tabBuildingInfo = New System.Windows.Forms.TabPage()
-        Me.pnlBuildingInfo = New System.Windows.Forms.Panel()
-        Me.lblPlanUnits = New System.Windows.Forms.Label()
-        Me.txtResUnits = New System.Windows.Forms.TextBox()
-        Me.lblBuildingName = New System.Windows.Forms.Label()
-        Me.txtBuildingName = New System.Windows.Forms.TextBox()
-        Me.lblBldgQty = New System.Windows.Forms.Label()
-        Me.nudBldgQty = New System.Windows.Forms.NumericUpDown()
-        Me.lblBuildingType = New System.Windows.Forms.Label()
-        Me.txtBuildingType = New System.Windows.Forms.TextBox()
-        Me.lblNbrUnits = New System.Windows.Forms.Label()
-        Me.nudNbrUnits = New System.Windows.Forms.NumericUpDown()
-        Me.btnSaveBuildingInfo = New System.Windows.Forms.Button()
-        Me.tabLevelInfo = New System.Windows.Forms.TabPage()
-        Me.pnlLevelInfo = New System.Windows.Forms.Panel()
-        Me.nudLevelNumber = New System.Windows.Forms.NumericUpDown()
-        Me.lblLevelName = New System.Windows.Forms.Label()
-        Me.txtLevelName = New System.Windows.Forms.TextBox()
-        Me.lblLevelType = New System.Windows.Forms.Label()
-        Me.cmbLevelType = New System.Windows.Forms.ComboBox()
-        Me.lblLevelNumber = New System.Windows.Forms.Label()
-        Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
-        Me.btnIEOpen = New System.Windows.Forms.Button()
+        Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.btnDeleteProject = New System.Windows.Forms.Button()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
-        Me.tabProjectInfo.SuspendLayout()
-        Me.pnlProjectInfo.SuspendLayout()
-        CType(Me.nudMilesToJobSite, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.nudTotalNetSqft, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.nudTotalGrossSqft, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.tabOverrides.SuspendLayout()
         CType(Me.dgvOverrides, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.tabRollup.SuspendLayout()
@@ -137,59 +140,81 @@ Partial Class frmCreateEditProject
         Me.tabLevelInfo.SuspendLayout()
         Me.pnlLevelInfo.SuspendLayout()
         CType(Me.nudLevelNumber, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.tabProjectInfo.SuspendLayout()
+        Me.pnlProjectInfo.SuspendLayout()
+        CType(Me.nudMilesToJobSite, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.nudTotalNetSqft, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.nudTotalGrossSqft, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.SplitContainer1.Panel1.SuspendLayout()
+        Me.SplitContainer1.Panel2.SuspendLayout()
+        Me.SplitContainer1.SuspendLayout()
         Me.SuspendLayout()
         '
         'tvProjectTree
         '
+        Me.tvProjectTree.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.tvProjectTree.ContextMenuStrip = Me.cmsTreeMenu
-        Me.tvProjectTree.Dock = System.Windows.Forms.DockStyle.Left
         Me.tvProjectTree.HideSelection = False
-        Me.tvProjectTree.Location = New System.Drawing.Point(0, 0)
+        Me.tvProjectTree.Location = New System.Drawing.Point(3, 3)
         Me.tvProjectTree.Name = "tvProjectTree"
-        Me.tvProjectTree.Size = New System.Drawing.Size(230, 577)
+        Me.tvProjectTree.Size = New System.Drawing.Size(194, 531)
         Me.tvProjectTree.TabIndex = 0
         '
         'cmsTreeMenu
         '
-        Me.cmsTreeMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAddBuilding, Me.mnuAddLevel, Me.mnuDelete, Me.EditPSEToolStripMenuItem, Me.mnuCopyLevels, Me.mnuPasteLevels})
+        Me.cmsTreeMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAddBuilding, Me.mnuAddLevel, Me.mnuDelete, Me.EditPSEToolStripMenuItem, Me.mnuCopyLevels, Me.mnuPasteLevels, Me.mnuCopyBuilding, Me.mnuPasteBuilding})
         Me.cmsTreeMenu.Name = "cmsTreeMenu"
-        Me.cmsTreeMenu.Size = New System.Drawing.Size(144, 136)
+        Me.cmsTreeMenu.Size = New System.Drawing.Size(150, 180)
         '
         'mnuAddBuilding
         '
         Me.mnuAddBuilding.Name = "mnuAddBuilding"
-        Me.mnuAddBuilding.Size = New System.Drawing.Size(143, 22)
+        Me.mnuAddBuilding.Size = New System.Drawing.Size(149, 22)
         Me.mnuAddBuilding.Text = "Add Building"
         '
         'mnuAddLevel
         '
         Me.mnuAddLevel.Name = "mnuAddLevel"
-        Me.mnuAddLevel.Size = New System.Drawing.Size(143, 22)
+        Me.mnuAddLevel.Size = New System.Drawing.Size(149, 22)
         Me.mnuAddLevel.Text = "Add Level"
         '
         'mnuDelete
         '
         Me.mnuDelete.Name = "mnuDelete"
-        Me.mnuDelete.Size = New System.Drawing.Size(143, 22)
+        Me.mnuDelete.Size = New System.Drawing.Size(149, 22)
         Me.mnuDelete.Text = "Delete"
         '
         'EditPSEToolStripMenuItem
         '
         Me.EditPSEToolStripMenuItem.Name = "EditPSEToolStripMenuItem"
-        Me.EditPSEToolStripMenuItem.Size = New System.Drawing.Size(143, 22)
+        Me.EditPSEToolStripMenuItem.Size = New System.Drawing.Size(149, 22)
         Me.EditPSEToolStripMenuItem.Text = "Edit PSE"
         '
         'mnuCopyLevels
         '
         Me.mnuCopyLevels.Name = "mnuCopyLevels"
-        Me.mnuCopyLevels.Size = New System.Drawing.Size(143, 22)
+        Me.mnuCopyLevels.Size = New System.Drawing.Size(149, 22)
         Me.mnuCopyLevels.Text = "Copy Levels"
         '
         'mnuPasteLevels
         '
         Me.mnuPasteLevels.Name = "mnuPasteLevels"
-        Me.mnuPasteLevels.Size = New System.Drawing.Size(143, 22)
+        Me.mnuPasteLevels.Size = New System.Drawing.Size(149, 22)
         Me.mnuPasteLevels.Text = "Paste Levels"
+        '
+        'mnuCopyBuilding
+        '
+        Me.mnuCopyBuilding.Name = "mnuCopyBuilding"
+        Me.mnuCopyBuilding.Size = New System.Drawing.Size(149, 22)
+        Me.mnuCopyBuilding.Text = "Copy Building"
+        '
+        'mnuPasteBuilding
+        '
+        Me.mnuPasteBuilding.Name = "mnuPasteBuilding"
+        Me.mnuPasteBuilding.Size = New System.Drawing.Size(149, 22)
+        Me.mnuPasteBuilding.Text = "Paste Building"
         '
         'tabControlRight
         '
@@ -199,14 +224,310 @@ Partial Class frmCreateEditProject
         Me.tabControlRight.Controls.Add(Me.tabBuildingInfo)
         Me.tabControlRight.Controls.Add(Me.tabLevelInfo)
         Me.tabControlRight.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.tabControlRight.Location = New System.Drawing.Point(230, 0)
+        Me.tabControlRight.Location = New System.Drawing.Point(0, 0)
         Me.tabControlRight.Name = "tabControlRight"
         Me.tabControlRight.SelectedIndex = 0
-        Me.tabControlRight.Size = New System.Drawing.Size(570, 577)
+        Me.tabControlRight.Size = New System.Drawing.Size(719, 577)
         Me.tabControlRight.TabIndex = 1
+        '
+        'tabOverrides
+        '
+        Me.tabOverrides.Controls.Add(Me.Label3)
+        Me.tabOverrides.Controls.Add(Me.Label2)
+        Me.tabOverrides.Controls.Add(Me.txtRawRoofSPFPrice)
+        Me.tabOverrides.Controls.Add(Me.txtRawFloorSPFPrice)
+        Me.tabOverrides.Controls.Add(Me.dgvOverrides)
+        Me.tabOverrides.Controls.Add(Me.btnSaveOverrides)
+        Me.tabOverrides.Location = New System.Drawing.Point(4, 22)
+        Me.tabOverrides.Name = "tabOverrides"
+        Me.tabOverrides.Size = New System.Drawing.Size(711, 551)
+        Me.tabOverrides.TabIndex = 0
+        Me.tabOverrides.Text = "Overrides"
+        '
+        'Label3
+        '
+        Me.Label3.AutoSize = True
+        Me.Label3.Location = New System.Drawing.Point(30, 206)
+        Me.Label3.Name = "Label3"
+        Me.Label3.Size = New System.Drawing.Size(149, 13)
+        Me.Label3.TabIndex = 48
+        Me.Label3.Text = "Original SPF2 Roof Avg Price:"
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(30, 177)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(149, 13)
+        Me.Label2.TabIndex = 47
+        Me.Label2.Text = "Original SPF2 Floor Avg Price:"
+        '
+        'txtRawRoofSPFPrice
+        '
+        Me.txtRawRoofSPFPrice.Location = New System.Drawing.Point(185, 203)
+        Me.txtRawRoofSPFPrice.Name = "txtRawRoofSPFPrice"
+        Me.txtRawRoofSPFPrice.ReadOnly = True
+        Me.txtRawRoofSPFPrice.Size = New System.Drawing.Size(68, 20)
+        Me.txtRawRoofSPFPrice.TabIndex = 46
+        '
+        'txtRawFloorSPFPrice
+        '
+        Me.txtRawFloorSPFPrice.Location = New System.Drawing.Point(185, 174)
+        Me.txtRawFloorSPFPrice.Name = "txtRawFloorSPFPrice"
+        Me.txtRawFloorSPFPrice.ReadOnly = True
+        Me.txtRawFloorSPFPrice.Size = New System.Drawing.Size(68, 20)
+        Me.txtRawFloorSPFPrice.TabIndex = 45
+        '
+        'dgvOverrides
+        '
+        Me.dgvOverrides.Dock = System.Windows.Forms.DockStyle.Top
+        Me.dgvOverrides.Location = New System.Drawing.Point(0, 0)
+        Me.dgvOverrides.Name = "dgvOverrides"
+        Me.dgvOverrides.Size = New System.Drawing.Size(711, 145)
+        Me.dgvOverrides.TabIndex = 43
+        '
+        'btnSaveOverrides
+        '
+        Me.btnSaveOverrides.Location = New System.Drawing.Point(0, 483)
+        Me.btnSaveOverrides.Name = "btnSaveOverrides"
+        Me.btnSaveOverrides.Size = New System.Drawing.Size(562, 30)
+        Me.btnSaveOverrides.TabIndex = 44
+        Me.btnSaveOverrides.Text = "Save Overrides"
+        '
+        'tabRollup
+        '
+        Me.tabRollup.Controls.Add(Me.dgvRollup)
+        Me.tabRollup.Controls.Add(Me.btnRecalcRollup)
+        Me.tabRollup.Location = New System.Drawing.Point(4, 22)
+        Me.tabRollup.Name = "tabRollup"
+        Me.tabRollup.Size = New System.Drawing.Size(711, 551)
+        Me.tabRollup.TabIndex = 0
+        Me.tabRollup.Text = "Rollup Data"
+        '
+        'dgvRollup
+        '
+        Me.dgvRollup.Dock = System.Windows.Forms.DockStyle.Top
+        Me.dgvRollup.Location = New System.Drawing.Point(0, 0)
+        Me.dgvRollup.Name = "dgvRollup"
+        Me.dgvRollup.Size = New System.Drawing.Size(711, 490)
+        Me.dgvRollup.TabIndex = 45
+        '
+        'btnRecalcRollup
+        '
+        Me.btnRecalcRollup.Location = New System.Drawing.Point(0, 496)
+        Me.btnRecalcRollup.Name = "btnRecalcRollup"
+        Me.btnRecalcRollup.Size = New System.Drawing.Size(562, 30)
+        Me.btnRecalcRollup.TabIndex = 46
+        Me.btnRecalcRollup.Text = "Recalculate Rollup"
+        '
+        'tabBuildingInfo
+        '
+        Me.tabBuildingInfo.Controls.Add(Me.pnlBuildingInfo)
+        Me.tabBuildingInfo.Controls.Add(Me.btnSaveBuildingInfo)
+        Me.tabBuildingInfo.Location = New System.Drawing.Point(4, 22)
+        Me.tabBuildingInfo.Name = "tabBuildingInfo"
+        Me.tabBuildingInfo.Size = New System.Drawing.Size(711, 551)
+        Me.tabBuildingInfo.TabIndex = 0
+        Me.tabBuildingInfo.Text = "Building Info"
+        '
+        'pnlBuildingInfo
+        '
+        Me.pnlBuildingInfo.AutoScroll = True
+        Me.pnlBuildingInfo.Controls.Add(Me.lblPlanUnits)
+        Me.pnlBuildingInfo.Controls.Add(Me.txtResUnits)
+        Me.pnlBuildingInfo.Controls.Add(Me.lblBuildingName)
+        Me.pnlBuildingInfo.Controls.Add(Me.txtBuildingName)
+        Me.pnlBuildingInfo.Controls.Add(Me.lblBldgQty)
+        Me.pnlBuildingInfo.Controls.Add(Me.nudBldgQty)
+        Me.pnlBuildingInfo.Controls.Add(Me.lblBuildingType)
+        Me.pnlBuildingInfo.Controls.Add(Me.txtBuildingType)
+        Me.pnlBuildingInfo.Controls.Add(Me.lblNbrUnits)
+        Me.pnlBuildingInfo.Controls.Add(Me.nudNbrUnits)
+        Me.pnlBuildingInfo.Dock = System.Windows.Forms.DockStyle.Top
+        Me.pnlBuildingInfo.Location = New System.Drawing.Point(0, 0)
+        Me.pnlBuildingInfo.Name = "pnlBuildingInfo"
+        Me.pnlBuildingInfo.Size = New System.Drawing.Size(711, 489)
+        Me.pnlBuildingInfo.TabIndex = 0
+        '
+        'lblPlanUnits
+        '
+        Me.lblPlanUnits.AutoSize = True
+        Me.lblPlanUnits.Location = New System.Drawing.Point(36, 99)
+        Me.lblPlanUnits.Name = "lblPlanUnits"
+        Me.lblPlanUnits.Size = New System.Drawing.Size(58, 13)
+        Me.lblPlanUnits.TabIndex = 9
+        Me.lblPlanUnits.Text = "Plan Units:"
+        '
+        'txtResUnits
+        '
+        Me.txtResUnits.Location = New System.Drawing.Point(100, 96)
+        Me.txtResUnits.Name = "txtResUnits"
+        Me.txtResUnits.Size = New System.Drawing.Size(91, 20)
+        Me.txtResUnits.TabIndex = 4
+        '
+        'lblBuildingName
+        '
+        Me.lblBuildingName.AutoSize = True
+        Me.lblBuildingName.Location = New System.Drawing.Point(16, 13)
+        Me.lblBuildingName.Name = "lblBuildingName"
+        Me.lblBuildingName.Size = New System.Drawing.Size(78, 13)
+        Me.lblBuildingName.TabIndex = 0
+        Me.lblBuildingName.Text = "Building Name:"
+        '
+        'txtBuildingName
+        '
+        Me.txtBuildingName.Location = New System.Drawing.Point(100, 10)
+        Me.txtBuildingName.Name = "txtBuildingName"
+        Me.txtBuildingName.Size = New System.Drawing.Size(440, 20)
+        Me.txtBuildingName.TabIndex = 1
+        '
+        'lblBldgQty
+        '
+        Me.lblBldgQty.AutoSize = True
+        Me.lblBldgQty.Location = New System.Drawing.Point(44, 42)
+        Me.lblBldgQty.Name = "lblBldgQty"
+        Me.lblBldgQty.Size = New System.Drawing.Size(50, 13)
+        Me.lblBldgQty.TabIndex = 2
+        Me.lblBldgQty.Text = "Bldg Qty:"
+        '
+        'nudBldgQty
+        '
+        Me.nudBldgQty.Location = New System.Drawing.Point(100, 40)
+        Me.nudBldgQty.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
+        Me.nudBldgQty.Name = "nudBldgQty"
+        Me.nudBldgQty.Size = New System.Drawing.Size(91, 20)
+        Me.nudBldgQty.TabIndex = 2
+        '
+        'lblBuildingType
+        '
+        Me.lblBuildingType.AutoSize = True
+        Me.lblBuildingType.Location = New System.Drawing.Point(20, 73)
+        Me.lblBuildingType.Name = "lblBuildingType"
+        Me.lblBuildingType.Size = New System.Drawing.Size(74, 13)
+        Me.lblBuildingType.TabIndex = 4
+        Me.lblBuildingType.Text = "Building Type:"
+        Me.lblBuildingType.Visible = False
+        '
+        'txtBuildingType
+        '
+        Me.txtBuildingType.Location = New System.Drawing.Point(100, 70)
+        Me.txtBuildingType.Name = "txtBuildingType"
+        Me.txtBuildingType.Size = New System.Drawing.Size(440, 20)
+        Me.txtBuildingType.TabIndex = 3
+        Me.txtBuildingType.Visible = False
+        '
+        'lblNbrUnits
+        '
+        Me.lblNbrUnits.AutoSize = True
+        Me.lblNbrUnits.Location = New System.Drawing.Point(211, 101)
+        Me.lblNbrUnits.Name = "lblNbrUnits"
+        Me.lblNbrUnits.Size = New System.Drawing.Size(67, 13)
+        Me.lblNbrUnits.TabIndex = 6
+        Me.lblNbrUnits.Text = "Actual Units:"
+        '
+        'nudNbrUnits
+        '
+        Me.nudNbrUnits.Location = New System.Drawing.Point(284, 99)
+        Me.nudNbrUnits.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
+        Me.nudNbrUnits.Name = "nudNbrUnits"
+        Me.nudNbrUnits.Size = New System.Drawing.Size(91, 20)
+        Me.nudNbrUnits.TabIndex = 7
+        Me.nudNbrUnits.TabStop = False
+        '
+        'btnSaveBuildingInfo
+        '
+        Me.btnSaveBuildingInfo.Location = New System.Drawing.Point(0, 495)
+        Me.btnSaveBuildingInfo.Name = "btnSaveBuildingInfo"
+        Me.btnSaveBuildingInfo.Size = New System.Drawing.Size(562, 30)
+        Me.btnSaveBuildingInfo.TabIndex = 8
+        Me.btnSaveBuildingInfo.Text = "Save Building Info"
+        '
+        'tabLevelInfo
+        '
+        Me.tabLevelInfo.Controls.Add(Me.pnlLevelInfo)
+        Me.tabLevelInfo.Controls.Add(Me.btnSaveLevelInfo)
+        Me.tabLevelInfo.Location = New System.Drawing.Point(4, 22)
+        Me.tabLevelInfo.Name = "tabLevelInfo"
+        Me.tabLevelInfo.Size = New System.Drawing.Size(711, 551)
+        Me.tabLevelInfo.TabIndex = 0
+        Me.tabLevelInfo.Text = "Level Info"
+        '
+        'pnlLevelInfo
+        '
+        Me.pnlLevelInfo.AutoScroll = True
+        Me.pnlLevelInfo.Controls.Add(Me.nudLevelNumber)
+        Me.pnlLevelInfo.Controls.Add(Me.lblLevelName)
+        Me.pnlLevelInfo.Controls.Add(Me.txtLevelName)
+        Me.pnlLevelInfo.Controls.Add(Me.lblLevelType)
+        Me.pnlLevelInfo.Controls.Add(Me.cmbLevelType)
+        Me.pnlLevelInfo.Controls.Add(Me.lblLevelNumber)
+        Me.pnlLevelInfo.Dock = System.Windows.Forms.DockStyle.Top
+        Me.pnlLevelInfo.Location = New System.Drawing.Point(0, 0)
+        Me.pnlLevelInfo.Name = "pnlLevelInfo"
+        Me.pnlLevelInfo.Size = New System.Drawing.Size(711, 489)
+        Me.pnlLevelInfo.TabIndex = 0
+        '
+        'nudLevelNumber
+        '
+        Me.nudLevelNumber.Location = New System.Drawing.Point(100, 70)
+        Me.nudLevelNumber.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
+        Me.nudLevelNumber.Name = "nudLevelNumber"
+        Me.nudLevelNumber.Size = New System.Drawing.Size(79, 20)
+        Me.nudLevelNumber.TabIndex = 6
+        '
+        'lblLevelName
+        '
+        Me.lblLevelName.AutoSize = True
+        Me.lblLevelName.Location = New System.Drawing.Point(27, 13)
+        Me.lblLevelName.Name = "lblLevelName"
+        Me.lblLevelName.Size = New System.Drawing.Size(67, 13)
+        Me.lblLevelName.TabIndex = 0
+        Me.lblLevelName.Text = "Level Name:"
+        '
+        'txtLevelName
+        '
+        Me.txtLevelName.Location = New System.Drawing.Point(100, 10)
+        Me.txtLevelName.Name = "txtLevelName"
+        Me.txtLevelName.Size = New System.Drawing.Size(126, 20)
+        Me.txtLevelName.TabIndex = 1
+        '
+        'lblLevelType
+        '
+        Me.lblLevelType.AutoSize = True
+        Me.lblLevelType.Location = New System.Drawing.Point(31, 43)
+        Me.lblLevelType.Name = "lblLevelType"
+        Me.lblLevelType.Size = New System.Drawing.Size(63, 13)
+        Me.lblLevelType.TabIndex = 2
+        Me.lblLevelType.Text = "Level Type:"
+        '
+        'cmbLevelType
+        '
+        Me.cmbLevelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbLevelType.Location = New System.Drawing.Point(100, 40)
+        Me.cmbLevelType.Name = "cmbLevelType"
+        Me.cmbLevelType.Size = New System.Drawing.Size(126, 21)
+        Me.cmbLevelType.TabIndex = 3
+        '
+        'lblLevelNumber
+        '
+        Me.lblLevelNumber.AutoSize = True
+        Me.lblLevelNumber.Location = New System.Drawing.Point(18, 72)
+        Me.lblLevelNumber.Name = "lblLevelNumber"
+        Me.lblLevelNumber.Size = New System.Drawing.Size(76, 13)
+        Me.lblLevelNumber.TabIndex = 4
+        Me.lblLevelNumber.Text = "Level Number:"
+        '
+        'btnSaveLevelInfo
+        '
+        Me.btnSaveLevelInfo.Location = New System.Drawing.Point(0, 495)
+        Me.btnSaveLevelInfo.Name = "btnSaveLevelInfo"
+        Me.btnSaveLevelInfo.Size = New System.Drawing.Size(562, 30)
+        Me.btnSaveLevelInfo.TabIndex = 6
+        Me.btnSaveLevelInfo.Text = "Save Level Info"
         '
         'tabProjectInfo
         '
+        Me.tabProjectInfo.Controls.Add(Me.btnDeleteProject)
         Me.tabProjectInfo.Controls.Add(Me.btnIEOpen)
         Me.tabProjectInfo.Controls.Add(Me.btnClose)
         Me.tabProjectInfo.Controls.Add(Me.btnOpenPSE)
@@ -214,13 +535,22 @@ Partial Class frmCreateEditProject
         Me.tabProjectInfo.Controls.Add(Me.btnSaveProjectInfo)
         Me.tabProjectInfo.Location = New System.Drawing.Point(4, 22)
         Me.tabProjectInfo.Name = "tabProjectInfo"
-        Me.tabProjectInfo.Size = New System.Drawing.Size(562, 551)
+        Me.tabProjectInfo.Size = New System.Drawing.Size(711, 551)
         Me.tabProjectInfo.TabIndex = 0
         Me.tabProjectInfo.Text = "Project Info"
         '
+        'btnIEOpen
+        '
+        Me.btnIEOpen.Location = New System.Drawing.Point(255, 518)
+        Me.btnIEOpen.Name = "btnIEOpen"
+        Me.btnIEOpen.Size = New System.Drawing.Size(93, 27)
+        Me.btnIEOpen.TabIndex = 23
+        Me.btnIEOpen.Text = "Open IE"
+        Me.btnIEOpen.UseVisualStyleBackColor = True
+        '
         'btnClose
         '
-        Me.btnClose.Location = New System.Drawing.Point(453, 515)
+        Me.btnClose.Location = New System.Drawing.Point(487, 518)
         Me.btnClose.Name = "btnClose"
         Me.btnClose.Size = New System.Drawing.Size(101, 27)
         Me.btnClose.TabIndex = 22
@@ -229,7 +559,7 @@ Partial Class frmCreateEditProject
         '
         'btnOpenPSE
         '
-        Me.btnOpenPSE.Location = New System.Drawing.Point(347, 516)
+        Me.btnOpenPSE.Location = New System.Drawing.Point(146, 518)
         Me.btnOpenPSE.Name = "btnOpenPSE"
         Me.btnOpenPSE.Size = New System.Drawing.Size(100, 27)
         Me.btnOpenPSE.TabIndex = 21
@@ -290,10 +620,9 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Controls.Add(Me.lblVersion)
         Me.pnlProjectInfo.Controls.Add(Me.lblVersionDate)
         Me.pnlProjectInfo.Controls.Add(Me.dtpCreatedDate)
-        Me.pnlProjectInfo.Dock = System.Windows.Forms.DockStyle.Top
-        Me.pnlProjectInfo.Location = New System.Drawing.Point(0, 0)
+        Me.pnlProjectInfo.Location = New System.Drawing.Point(3, 3)
         Me.pnlProjectInfo.Name = "pnlProjectInfo"
-        Me.pnlProjectInfo.Size = New System.Drawing.Size(562, 509)
+        Me.pnlProjectInfo.Size = New System.Drawing.Size(593, 509)
         Me.pnlProjectInfo.TabIndex = 0
         '
         'Label1
@@ -750,300 +1079,51 @@ Partial Class frmCreateEditProject
         '
         'btnSaveProjectInfo
         '
-        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(214, 516)
+        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(354, 518)
         Me.btnSaveProjectInfo.Name = "btnSaveProjectInfo"
         Me.btnSaveProjectInfo.Size = New System.Drawing.Size(127, 27)
         Me.btnSaveProjectInfo.TabIndex = 20
         Me.btnSaveProjectInfo.Text = "Save Project Info"
         '
-        'tabOverrides
+        'SplitContainer1
         '
-        Me.tabOverrides.Controls.Add(Me.dgvOverrides)
-        Me.tabOverrides.Controls.Add(Me.btnSaveOverrides)
-        Me.tabOverrides.Location = New System.Drawing.Point(4, 22)
-        Me.tabOverrides.Name = "tabOverrides"
-        Me.tabOverrides.Size = New System.Drawing.Size(562, 574)
-        Me.tabOverrides.TabIndex = 0
-        Me.tabOverrides.Text = "Overrides"
+        Me.SplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.SplitContainer1.Location = New System.Drawing.Point(0, 0)
+        Me.SplitContainer1.Name = "SplitContainer1"
         '
-        'dgvOverrides
+        'SplitContainer1.Panel1
         '
-        Me.dgvOverrides.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.dgvOverrides.Location = New System.Drawing.Point(0, 0)
-        Me.dgvOverrides.Name = "dgvOverrides"
-        Me.dgvOverrides.Size = New System.Drawing.Size(562, 544)
-        Me.dgvOverrides.TabIndex = 43
+        Me.SplitContainer1.Panel1.Controls.Add(Me.tvProjectTree)
+        Me.SplitContainer1.Panel1MinSize = 200
         '
-        'btnSaveOverrides
+        'SplitContainer1.Panel2
         '
-        Me.btnSaveOverrides.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.btnSaveOverrides.Location = New System.Drawing.Point(0, 544)
-        Me.btnSaveOverrides.Name = "btnSaveOverrides"
-        Me.btnSaveOverrides.Size = New System.Drawing.Size(562, 30)
-        Me.btnSaveOverrides.TabIndex = 44
-        Me.btnSaveOverrides.Text = "Save Overrides"
+        Me.SplitContainer1.Panel2.Controls.Add(Me.tabControlRight)
+        Me.SplitContainer1.Size = New System.Drawing.Size(923, 577)
+        Me.SplitContainer1.SplitterDistance = 200
+        Me.SplitContainer1.TabIndex = 2
         '
-        'tabRollup
+        'btnDeleteProject
         '
-        Me.tabRollup.Controls.Add(Me.dgvRollup)
-        Me.tabRollup.Controls.Add(Me.btnRecalcRollup)
-        Me.tabRollup.Location = New System.Drawing.Point(4, 22)
-        Me.tabRollup.Name = "tabRollup"
-        Me.tabRollup.Size = New System.Drawing.Size(562, 574)
-        Me.tabRollup.TabIndex = 0
-        Me.tabRollup.Text = "Rollup Data"
-        '
-        'dgvRollup
-        '
-        Me.dgvRollup.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.dgvRollup.Location = New System.Drawing.Point(0, 0)
-        Me.dgvRollup.Name = "dgvRollup"
-        Me.dgvRollup.Size = New System.Drawing.Size(562, 544)
-        Me.dgvRollup.TabIndex = 45
-        '
-        'btnRecalcRollup
-        '
-        Me.btnRecalcRollup.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.btnRecalcRollup.Location = New System.Drawing.Point(0, 544)
-        Me.btnRecalcRollup.Name = "btnRecalcRollup"
-        Me.btnRecalcRollup.Size = New System.Drawing.Size(562, 30)
-        Me.btnRecalcRollup.TabIndex = 46
-        Me.btnRecalcRollup.Text = "Recalculate Rollup"
-        '
-        'tabBuildingInfo
-        '
-        Me.tabBuildingInfo.Controls.Add(Me.pnlBuildingInfo)
-        Me.tabBuildingInfo.Controls.Add(Me.btnSaveBuildingInfo)
-        Me.tabBuildingInfo.Location = New System.Drawing.Point(4, 22)
-        Me.tabBuildingInfo.Name = "tabBuildingInfo"
-        Me.tabBuildingInfo.Size = New System.Drawing.Size(562, 574)
-        Me.tabBuildingInfo.TabIndex = 0
-        Me.tabBuildingInfo.Text = "Building Info"
-        '
-        'pnlBuildingInfo
-        '
-        Me.pnlBuildingInfo.AutoScroll = True
-        Me.pnlBuildingInfo.Controls.Add(Me.lblPlanUnits)
-        Me.pnlBuildingInfo.Controls.Add(Me.txtResUnits)
-        Me.pnlBuildingInfo.Controls.Add(Me.lblBuildingName)
-        Me.pnlBuildingInfo.Controls.Add(Me.txtBuildingName)
-        Me.pnlBuildingInfo.Controls.Add(Me.lblBldgQty)
-        Me.pnlBuildingInfo.Controls.Add(Me.nudBldgQty)
-        Me.pnlBuildingInfo.Controls.Add(Me.lblBuildingType)
-        Me.pnlBuildingInfo.Controls.Add(Me.txtBuildingType)
-        Me.pnlBuildingInfo.Controls.Add(Me.lblNbrUnits)
-        Me.pnlBuildingInfo.Controls.Add(Me.nudNbrUnits)
-        Me.pnlBuildingInfo.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.pnlBuildingInfo.Location = New System.Drawing.Point(0, 0)
-        Me.pnlBuildingInfo.Name = "pnlBuildingInfo"
-        Me.pnlBuildingInfo.Size = New System.Drawing.Size(562, 544)
-        Me.pnlBuildingInfo.TabIndex = 0
-        '
-        'lblPlanUnits
-        '
-        Me.lblPlanUnits.AutoSize = True
-        Me.lblPlanUnits.Location = New System.Drawing.Point(36, 99)
-        Me.lblPlanUnits.Name = "lblPlanUnits"
-        Me.lblPlanUnits.Size = New System.Drawing.Size(58, 13)
-        Me.lblPlanUnits.TabIndex = 9
-        Me.lblPlanUnits.Text = "Plan Units:"
-        '
-        'txtResUnits
-        '
-        Me.txtResUnits.Location = New System.Drawing.Point(100, 96)
-        Me.txtResUnits.Name = "txtResUnits"
-        Me.txtResUnits.Size = New System.Drawing.Size(91, 20)
-        Me.txtResUnits.TabIndex = 4
-        '
-        'lblBuildingName
-        '
-        Me.lblBuildingName.AutoSize = True
-        Me.lblBuildingName.Location = New System.Drawing.Point(16, 13)
-        Me.lblBuildingName.Name = "lblBuildingName"
-        Me.lblBuildingName.Size = New System.Drawing.Size(78, 13)
-        Me.lblBuildingName.TabIndex = 0
-        Me.lblBuildingName.Text = "Building Name:"
-        '
-        'txtBuildingName
-        '
-        Me.txtBuildingName.Location = New System.Drawing.Point(100, 10)
-        Me.txtBuildingName.Name = "txtBuildingName"
-        Me.txtBuildingName.Size = New System.Drawing.Size(440, 20)
-        Me.txtBuildingName.TabIndex = 1
-        '
-        'lblBldgQty
-        '
-        Me.lblBldgQty.AutoSize = True
-        Me.lblBldgQty.Location = New System.Drawing.Point(44, 42)
-        Me.lblBldgQty.Name = "lblBldgQty"
-        Me.lblBldgQty.Size = New System.Drawing.Size(50, 13)
-        Me.lblBldgQty.TabIndex = 2
-        Me.lblBldgQty.Text = "Bldg Qty:"
-        '
-        'nudBldgQty
-        '
-        Me.nudBldgQty.Location = New System.Drawing.Point(100, 40)
-        Me.nudBldgQty.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
-        Me.nudBldgQty.Name = "nudBldgQty"
-        Me.nudBldgQty.Size = New System.Drawing.Size(91, 20)
-        Me.nudBldgQty.TabIndex = 2
-        '
-        'lblBuildingType
-        '
-        Me.lblBuildingType.AutoSize = True
-        Me.lblBuildingType.Location = New System.Drawing.Point(20, 73)
-        Me.lblBuildingType.Name = "lblBuildingType"
-        Me.lblBuildingType.Size = New System.Drawing.Size(74, 13)
-        Me.lblBuildingType.TabIndex = 4
-        Me.lblBuildingType.Text = "Building Type:"
-        Me.lblBuildingType.Visible = False
-        '
-        'txtBuildingType
-        '
-        Me.txtBuildingType.Location = New System.Drawing.Point(100, 70)
-        Me.txtBuildingType.Name = "txtBuildingType"
-        Me.txtBuildingType.Size = New System.Drawing.Size(440, 20)
-        Me.txtBuildingType.TabIndex = 3
-        Me.txtBuildingType.Visible = False
-        '
-        'lblNbrUnits
-        '
-        Me.lblNbrUnits.AutoSize = True
-        Me.lblNbrUnits.Location = New System.Drawing.Point(211, 101)
-        Me.lblNbrUnits.Name = "lblNbrUnits"
-        Me.lblNbrUnits.Size = New System.Drawing.Size(67, 13)
-        Me.lblNbrUnits.TabIndex = 6
-        Me.lblNbrUnits.Text = "Actual Units:"
-        '
-        'nudNbrUnits
-        '
-        Me.nudNbrUnits.Location = New System.Drawing.Point(284, 99)
-        Me.nudNbrUnits.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
-        Me.nudNbrUnits.Name = "nudNbrUnits"
-        Me.nudNbrUnits.Size = New System.Drawing.Size(91, 20)
-        Me.nudNbrUnits.TabIndex = 7
-        Me.nudNbrUnits.TabStop = False
-        '
-        'btnSaveBuildingInfo
-        '
-        Me.btnSaveBuildingInfo.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.btnSaveBuildingInfo.Location = New System.Drawing.Point(0, 544)
-        Me.btnSaveBuildingInfo.Name = "btnSaveBuildingInfo"
-        Me.btnSaveBuildingInfo.Size = New System.Drawing.Size(562, 30)
-        Me.btnSaveBuildingInfo.TabIndex = 8
-        Me.btnSaveBuildingInfo.Text = "Save Building Info"
-        '
-        'tabLevelInfo
-        '
-        Me.tabLevelInfo.Controls.Add(Me.pnlLevelInfo)
-        Me.tabLevelInfo.Controls.Add(Me.btnSaveLevelInfo)
-        Me.tabLevelInfo.Location = New System.Drawing.Point(4, 22)
-        Me.tabLevelInfo.Name = "tabLevelInfo"
-        Me.tabLevelInfo.Size = New System.Drawing.Size(562, 574)
-        Me.tabLevelInfo.TabIndex = 0
-        Me.tabLevelInfo.Text = "Level Info"
-        '
-        'pnlLevelInfo
-        '
-        Me.pnlLevelInfo.AutoScroll = True
-        Me.pnlLevelInfo.Controls.Add(Me.nudLevelNumber)
-        Me.pnlLevelInfo.Controls.Add(Me.lblLevelName)
-        Me.pnlLevelInfo.Controls.Add(Me.txtLevelName)
-        Me.pnlLevelInfo.Controls.Add(Me.lblLevelType)
-        Me.pnlLevelInfo.Controls.Add(Me.cmbLevelType)
-        Me.pnlLevelInfo.Controls.Add(Me.lblLevelNumber)
-        Me.pnlLevelInfo.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.pnlLevelInfo.Location = New System.Drawing.Point(0, 0)
-        Me.pnlLevelInfo.Name = "pnlLevelInfo"
-        Me.pnlLevelInfo.Size = New System.Drawing.Size(562, 544)
-        Me.pnlLevelInfo.TabIndex = 0
-        '
-        'nudLevelNumber
-        '
-        Me.nudLevelNumber.Location = New System.Drawing.Point(100, 70)
-        Me.nudLevelNumber.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
-        Me.nudLevelNumber.Name = "nudLevelNumber"
-        Me.nudLevelNumber.Size = New System.Drawing.Size(79, 20)
-        Me.nudLevelNumber.TabIndex = 6
-        '
-        'lblLevelName
-        '
-        Me.lblLevelName.AutoSize = True
-        Me.lblLevelName.Location = New System.Drawing.Point(27, 13)
-        Me.lblLevelName.Name = "lblLevelName"
-        Me.lblLevelName.Size = New System.Drawing.Size(67, 13)
-        Me.lblLevelName.TabIndex = 0
-        Me.lblLevelName.Text = "Level Name:"
-        '
-        'txtLevelName
-        '
-        Me.txtLevelName.Location = New System.Drawing.Point(100, 10)
-        Me.txtLevelName.Name = "txtLevelName"
-        Me.txtLevelName.Size = New System.Drawing.Size(126, 20)
-        Me.txtLevelName.TabIndex = 1
-        '
-        'lblLevelType
-        '
-        Me.lblLevelType.AutoSize = True
-        Me.lblLevelType.Location = New System.Drawing.Point(31, 43)
-        Me.lblLevelType.Name = "lblLevelType"
-        Me.lblLevelType.Size = New System.Drawing.Size(63, 13)
-        Me.lblLevelType.TabIndex = 2
-        Me.lblLevelType.Text = "Level Type:"
-        '
-        'cmbLevelType
-        '
-        Me.cmbLevelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.cmbLevelType.Location = New System.Drawing.Point(100, 40)
-        Me.cmbLevelType.Name = "cmbLevelType"
-        Me.cmbLevelType.Size = New System.Drawing.Size(126, 21)
-        Me.cmbLevelType.TabIndex = 3
-        '
-        'lblLevelNumber
-        '
-        Me.lblLevelNumber.AutoSize = True
-        Me.lblLevelNumber.Location = New System.Drawing.Point(18, 72)
-        Me.lblLevelNumber.Name = "lblLevelNumber"
-        Me.lblLevelNumber.Size = New System.Drawing.Size(76, 13)
-        Me.lblLevelNumber.TabIndex = 4
-        Me.lblLevelNumber.Text = "Level Number:"
-        '
-        'btnSaveLevelInfo
-        '
-        Me.btnSaveLevelInfo.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.btnSaveLevelInfo.Location = New System.Drawing.Point(0, 544)
-        Me.btnSaveLevelInfo.Name = "btnSaveLevelInfo"
-        Me.btnSaveLevelInfo.Size = New System.Drawing.Size(562, 30)
-        Me.btnSaveLevelInfo.TabIndex = 6
-        Me.btnSaveLevelInfo.Text = "Save Level Info"
-        '
-        'btnIEOpen
-        '
-        Me.btnIEOpen.Location = New System.Drawing.Point(88, 520)
-        Me.btnIEOpen.Name = "btnIEOpen"
-        Me.btnIEOpen.Size = New System.Drawing.Size(93, 21)
-        Me.btnIEOpen.TabIndex = 23
-        Me.btnIEOpen.Text = "Open IE"
-        Me.btnIEOpen.UseVisualStyleBackColor = True
+        Me.btnDeleteProject.Location = New System.Drawing.Point(39, 519)
+        Me.btnDeleteProject.Name = "btnDeleteProject"
+        Me.btnDeleteProject.Size = New System.Drawing.Size(89, 25)
+        Me.btnDeleteProject.TabIndex = 24
+        Me.btnDeleteProject.Text = "Delete Project"
+        Me.btnDeleteProject.UseVisualStyleBackColor = True
         '
         'frmCreateEditProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(800, 577)
-        Me.Controls.Add(Me.tabControlRight)
-        Me.Controls.Add(Me.tvProjectTree)
+        Me.ClientSize = New System.Drawing.Size(923, 577)
+        Me.Controls.Add(Me.SplitContainer1)
         Me.Name = "frmCreateEditProject"
         Me.Text = "Create/Edit Project"
         Me.cmsTreeMenu.ResumeLayout(False)
         Me.tabControlRight.ResumeLayout(False)
-        Me.tabProjectInfo.ResumeLayout(False)
-        Me.pnlProjectInfo.ResumeLayout(False)
-        Me.pnlProjectInfo.PerformLayout()
-        CType(Me.nudMilesToJobSite, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.nudTotalNetSqft, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.nudTotalGrossSqft, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabOverrides.ResumeLayout(False)
+        Me.tabOverrides.PerformLayout()
         CType(Me.dgvOverrides, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabRollup.ResumeLayout(False)
         CType(Me.dgvRollup, System.ComponentModel.ISupportInitialize).EndInit()
@@ -1056,6 +1136,16 @@ Partial Class frmCreateEditProject
         Me.pnlLevelInfo.ResumeLayout(False)
         Me.pnlLevelInfo.PerformLayout()
         CType(Me.nudLevelNumber, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.tabProjectInfo.ResumeLayout(False)
+        Me.pnlProjectInfo.ResumeLayout(False)
+        Me.pnlProjectInfo.PerformLayout()
+        CType(Me.nudMilesToJobSite, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.nudTotalNetSqft, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.nudTotalGrossSqft, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.SplitContainer1.Panel1.ResumeLayout(False)
+        Me.SplitContainer1.Panel2.ResumeLayout(False)
+        CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.SplitContainer1.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
@@ -1156,4 +1246,12 @@ Partial Class frmCreateEditProject
     Friend WithEvents btnOpenPSE As Button
     Friend WithEvents btnClose As Button
     Friend WithEvents btnIEOpen As Button
+    Friend WithEvents mnuCopyBuilding As ToolStripMenuItem
+    Friend WithEvents mnuPasteBuilding As ToolStripMenuItem
+    Friend WithEvents SplitContainer1 As SplitContainer
+    Friend WithEvents Label3 As Label
+    Friend WithEvents Label2 As Label
+    Friend WithEvents txtRawRoofSPFPrice As TextBox
+    Friend WithEvents txtRawFloorSPFPrice As TextBox
+    Friend WithEvents btnDeleteProject As Button
 End Class

@@ -8,6 +8,15 @@ Imports Microsoft.VisualBasic.FileIO
 
 Public Class FrmPSE
     Inherits Form
+    ' Enum for details pane modes
+    Private Enum DetailsMode
+        None
+        NewUnit
+        EditGlobalUnit
+        ReuseUnit
+        EditMappingQuantity
+    End Enum
+    Private currentdetailsMode As DetailsMode = DetailsMode.None
 
     ' Data Tracking
     Private selectedMappingID As Integer = -1
@@ -53,52 +62,6 @@ Public Class FrmPSE
     Private copiedMappings As New List(Of Tuple(Of Integer, Integer)) ' (ActualUnitID, Quantity)
     Private sourceProductTypeID As Integer = -1
 
-    ' Updated DisplayUnitData to include ActualUnit reference
-    Private Class DisplayUnitData
-        Public Property ActualUnit As ActualUnitModel ' Reference to full model
-        Public Property MappingID As Integer
-        Public Property ReferencedRawUnitName As String
-        Public Property ActualUnitQuantity As Integer
-        Public Property LF As Decimal
-        Public Property BDFT As Decimal
-        Public Property LumberCost As Decimal
-        Public Property PlateCost As Decimal
-        Public Property ManufLaborCost As Decimal
-        Public Property DesignLabor As Decimal
-        Public Property MGMTLabor As Decimal
-        Public Property JobSuppliesCost As Decimal
-        Public Property ManHours As Decimal
-        Public Property ItemCost As Decimal
-        Public Property OverallCost As Decimal
-        Public Property DeliveryCost As Decimal
-        Public Property SellPrice As Decimal
-        Public Property Margin As Decimal
-
-        ' Properties now proxy to ActualUnit where possible
-        Public ReadOnly Property ActualUnitID As Integer
-            Get
-                Return If(ActualUnit IsNot Nothing, ActualUnit.ActualUnitID, 0)
-            End Get
-        End Property
-
-        Public ReadOnly Property UnitName As String
-            Get
-                Return If(ActualUnit IsNot Nothing, ActualUnit.UnitName, String.Empty)
-            End Get
-        End Property
-
-        Public ReadOnly Property PlanSQFT As Decimal
-            Get
-                Return If(ActualUnit IsNot Nothing, ActualUnit.PlanSQFT, 0D)
-            End Get
-        End Property
-
-        Public ReadOnly Property OptionalAdder As Decimal
-            Get
-                Return If(ActualUnit IsNot Nothing, ActualUnit.OptionalAdder, 1D)
-            End Get
-        End Property
-    End Class
 
     Public Sub New(projectID As Integer, Optional versionID As Integer = 0)
         ' Check for versions before initializing
@@ -113,9 +76,11 @@ Public Class FrmPSE
         If versionID = 0 Then
             selectedVersionID = versions.First().VersionID
         Else
-            Dim selectedVersion As ProjectVersionModel = versions.FirstOrDefault(Function(v) v.VersionID = versionID)
-            selectedVersionID = If(selectedVersion IsNot Nothing, versionID, versions.First().VersionID)
+            selectedVersionID = If(versions.Any(Function(v) v.VersionID = versionID), versionID, versions.First().VersionID)
         End If
+        Dim project = dataAccess.GetProjectByID(projectID)
+        Dim selectedVersion As ProjectVersionModel = versions.FirstOrDefault(Function(v) v.VersionID = selectedVersionID)
+        Me.Text = $"Edit PSE - {project.JBID} - {selectedVersion.VersionName}"
         LoadLevelHierarchy()
         SetupUI()
         LoadExistingActualUnits()
@@ -408,7 +373,12 @@ Public Class FrmPSE
                 Return
             End If
             For Each unit In existingActualUnits
-                ListboxExistingActualUnits.Items.Add(unit.UnitName)
+                Dim sellPricePerSQFT As Decimal = 0D
+                Dim sellPriceComponent = unit.CalculatedComponents?.FirstOrDefault(Function(c) c.ComponentType = "SellPrice/SQFT")
+                If sellPriceComponent IsNot Nothing Then
+                    sellPricePerSQFT = sellPriceComponent.Value
+                End If
+                ListboxExistingActualUnits.Items.Add($"{unit.UnitName} ({unit.UnitType}) - {sellPricePerSQFT:C2}/SQFT")
             Next
             UpdateStatus("Status: Actual units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
         Catch ex As Exception
@@ -418,46 +388,7 @@ Public Class FrmPSE
     End Sub
     Private Sub LoadAssignedUnits()
         Try
-            displayUnits.Clear()
-            Dim mappings = dataAccess.GetActualToLevelMappingsByLevelID(selectedLevelID)
-            For Each mapping In mappings
-                Dim actualUnit = mapping.ActualUnit
-                Dim displayUnit As New DisplayUnitData With {
-                    .ActualUnit = actualUnit,
-                    .MappingID = mapping.MappingID,
-                    .ReferencedRawUnitName = actualUnit.ReferencedRawUnitName,
-                    .ActualUnitQuantity = mapping.Quantity
-                }
-
-                Dim components As List(Of CalculatedComponentModel) = actualUnit.CalculatedComponents
-                If components Is Nothing Then Continue For
-
-                CalculateDerivedFields(displayUnit, components)
-
-                Dim productTypeID As Integer = actualUnit.ProductTypeID
-                Dim rawUnit = rawUnits.FirstOrDefault(Function(r) r.RawUnitID = actualUnit.RawUnitID)
-                If rawUnit Is Nothing Then Continue For
-
-                Dim projectLumberAdder As Decimal = dataAccess.GetLumberAdder(selectedProjectID, productTypeID)
-                If projectLumberAdder > 0 Then
-                    Dim avgSPFNo2 As Decimal = rawUnit.AvgSPFNo2.GetValueOrDefault()
-                    Dim effectiveLumberAdder As Decimal = projectLumberAdder - avgSPFNo2
-                    If effectiveLumberAdder > 0 Then
-                        Dim adderAmount As Decimal = (displayUnit.BDFT / 1000D) * effectiveLumberAdder
-                        displayUnit.LumberCost += adderAmount
-                        displayUnit.OverallCost += adderAmount
-                    End If
-                End If
-
-                Dim marginPercent As Decimal = GetEffectiveMargin(productTypeID, actualUnit.RawUnitID)
-                displayUnit.SellPrice = If(marginPercent >= 1D, displayUnit.OverallCost, displayUnit.OverallCost / (1D - marginPercent))
-                displayUnit.Margin = displayUnit.SellPrice - displayUnit.OverallCost
-
-                displayUnits.Add(displayUnit)
-            Next
-
-            ProrateDeliveryCosts(selectedLevelID, displayUnits)
-
+            displayUnits = dataAccess.ComputeLevelUnits(selectedLevelID)
             bindingSource.DataSource = displayUnits
             bindingSource.ResetBindings(False)
             DataGridViewAssigned.Refresh()
@@ -467,62 +398,7 @@ Public Class FrmPSE
         End Try
     End Sub
 
-    Private Sub ProrateDeliveryCosts(levelID As Integer, ByRef displayUnitsList As List(Of DisplayUnitData))
-        Try
-            If Not displayUnitsList.Any() Then
-                UpdateStatus("Status: No units to prorate delivery costs.")
-                Return
-            End If
-            Dim totalBDFT As Decimal = displayUnitsList.Sum(Function(u) u.BDFT)
-            Dim mileageRate As Decimal = dataAccess.GetConfigValue("MileageRate")
-            Dim milesToJobSite As Integer = dataAccess.GetMilesToJobSite(selectedProjectID)
-            Dim deliveryTotal As Decimal = 0D
 
-            If totalBDFT > 0 Then
-                Dim numLoads As Decimal = Math.Ceiling(totalBDFT / 10000D)
-                deliveryTotal = numLoads * mileageRate * milesToJobSite
-                deliveryTotal = Math.Round(deliveryTotal, 0)
-                If deliveryTotal < 150 Then deliveryTotal = 150
-            End If
-
-            For Each unit In displayUnitsList
-                Dim productTypeID As Integer = unit.ActualUnit.ProductTypeID
-                Dim marginPercent As Decimal = GetEffectiveMargin(productTypeID, unit.ActualUnit.RawUnitID)
-
-                If totalBDFT > 0 Then
-                    unit.DeliveryCost = (unit.BDFT / totalBDFT) * deliveryTotal
-                Else
-                    unit.DeliveryCost = 0D
-                End If
-
-                unit.SellPrice = If(marginPercent >= 1D, unit.OverallCost + unit.DeliveryCost, unit.OverallCost / (1D - marginPercent) + unit.DeliveryCost)
-                unit.Margin = unit.SellPrice - unit.OverallCost - unit.DeliveryCost
-            Next
-            UpdateStatus("Status: Delivery costs prorated for version " & selectedVersionID & ".")
-        Catch ex As Exception
-            UpdateStatus("Status: Error prorating delivery costs: " & ex.Message)
-            MessageBox.Show("Error prorating delivery costs: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
-    End Sub
-
-    Private Function GetEffectiveMargin(productTypeID As Integer, rawUnitID As Integer) As Decimal
-        If marginCache.ContainsKey(rawUnitID) Then Return marginCache(rawUnitID) ' Cache per RawUnitID for precision
-
-        Dim margin As Decimal = dataAccess.GetMarginPercent(selectedVersionID, productTypeID)
-        If margin <= 0D Then
-            Dim rawUnit = dataAccess.GetRawUnitByID(rawUnitID)
-            If rawUnit IsNot Nothing AndAlso rawUnit.TotalSellPrice.GetValueOrDefault() > 0D AndAlso rawUnit.OverallCost.GetValueOrDefault() < rawUnit.TotalSellPrice.Value Then
-                margin = (rawUnit.TotalSellPrice.Value - rawUnit.OverallCost.GetValueOrDefault()) / rawUnit.TotalSellPrice.Value
-            End If
-            If margin <= 0D Then
-                margin = dataAccess.GetConfigValue("DefaultMarginPercent") ' Fallback to config (e.g., 0.1D); Deming: standardize to prevent defects
-                UpdateStatus($"Warning: Zero margin detected for version {selectedVersionID} and RawUnitID {rawUnitID}. Using default {margin}.")
-            End If
-        End If
-
-        marginCache(rawUnitID) = margin
-        Return margin
-    End Function
 
     Private Sub UpdateLevelTotals()
         Dim totalSQFT As Decimal = displayUnits.Sum(Function(u) u.PlanSQFT * u.ActualUnitQuantity)
@@ -530,18 +406,23 @@ Public Class FrmPSE
         TxtTotalQuantity.Text = displayUnits.Sum(Function(u) u.ActualUnitQuantity).ToString("F0")
         TxtTotalLF.Text = displayUnits.Sum(Function(u) u.LF).ToString("F2")
         TxtTotalBDFT.Text = displayUnits.Sum(Function(u) u.BDFT).ToString("F2")
-        TxtTotalLumberCost.Text = displayUnits.Sum(Function(u) u.LumberCost).ToString("F2")
-        TxtTotalPlateCost.Text = displayUnits.Sum(Function(u) u.PlateCost).ToString("F2")
-        TxtTotalManufLaborCost.Text = displayUnits.Sum(Function(u) u.ManufLaborCost).ToString("F2")
-        TxtTotalDesignLabor.Text = displayUnits.Sum(Function(u) u.DesignLabor).ToString("F2")
-        TxtTotalMGMTLabor.Text = displayUnits.Sum(Function(u) u.MGMTLabor).ToString("F2")
-        TxtTotalJobSuppliesCost.Text = displayUnits.Sum(Function(u) u.JobSuppliesCost).ToString("F2")
-        TxtTotalManHours.Text = displayUnits.Sum(Function(u) u.ManHours).ToString("F2")
-        TxtTotalItemCost.Text = displayUnits.Sum(Function(u) u.ItemCost).ToString("F2")
-        TxtTotalOverallCost.Text = displayUnits.Sum(Function(u) u.OverallCost).ToString("F2")
-        TxtTotalSellPrice.Text = displayUnits.Sum(Function(u) u.SellPrice).ToString("F2")
-        TxtTotalMargin.Text = displayUnits.Sum(Function(u) u.Margin).ToString("F2")
-        txtTotalDeliveryCost.Text = displayUnits.Sum(Function(u) u.DeliveryCost).ToString("F2")
+        TxtTotalLumberCost.Text = displayUnits.Sum(Function(u) u.LumberCost).ToString("C2")
+        TxtTotalPlateCost.Text = displayUnits.Sum(Function(u) u.PlateCost).ToString("C2")
+        TxtTotalManufLaborCost.Text = displayUnits.Sum(Function(u) u.ManufLaborCost).ToString("C2")
+        TxtTotalDesignLabor.Text = displayUnits.Sum(Function(u) u.DesignLabor).ToString("C2")
+        TxtTotalMGMTLabor.Text = displayUnits.Sum(Function(u) u.MGMTLabor).ToString("C2")
+        TxtTotalJobSuppliesCost.Text = displayUnits.Sum(Function(u) u.JobSuppliesCost).ToString("C2")
+        TxtTotalManHours.Text = displayUnits.Sum(Function(u) u.ManHours).ToString("C2")
+        TxtTotalItemCost.Text = displayUnits.Sum(Function(u) u.ItemCost).ToString("C2")
+        TxtTotalOverallCost.Text = displayUnits.Sum(Function(u) u.OverallCost).ToString("C2")
+        TxtTotalSellPrice.Text = displayUnits.Sum(Function(u) u.SellPrice).ToString("C2")
+        TxtTotalMargin.Text = displayUnits.Sum(Function(u) u.Margin).ToString("C2")
+        If CInt(TxtTotalSellPrice.Text) > 0 Then
+            txtTotMargin.Text = (CDec(TxtTotalMargin.Text) / CDec(TxtTotalSellPrice.Text)).ToString("P2")
+        Else
+            txtTotMargin.Text = "0.00"
+        End If
+        txtTotalDeliveryCost.Text = displayUnits.Sum(Function(u) u.DeliveryCost).ToString("C2")
         UpdateStatus($"Total Adjusted SQFT: {totalSQFT} - Recalc complete. No variations detected... yet.")
     End Sub
 
@@ -585,19 +466,23 @@ Public Class FrmPSE
 
     Private Sub FrmPSE_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
-            marginCache.Clear()
             Dim productTypes = dataAccess.GetProductTypes()
             If Not productTypes.Any() Then
                 UpdateStatus("Status: No product types found for version " & selectedVersionID & ".")
                 Return
             End If
-            For Each pt In productTypes
-                marginCache(pt.ProductTypeID) = GetEffectiveMargin(pt.ProductTypeID, -1) ' Pre-cache
-            Next
             If TreeViewLevels.Nodes.Count > 0 AndAlso TreeViewLevels.Nodes(0).Nodes.Count > 0 AndAlso TreeViewLevels.Nodes(0).Nodes(0).Nodes.Count > 0 Then
                 TreeViewLevels.SelectedNode = TreeViewLevels.Nodes(0).Nodes(0).Nodes(0) ' Assume first level
             Else
                 UpdateStatus("Status: No levels available for version " & selectedVersionID & ".")
+            End If
+            ' Populate DataGridView1 with RawUnits for the selected VersionID
+            Dim rawUnits As List(Of RawUnitModel) = dataAccess.GetRawUnitsByVersionID(selectedVersionID)
+            If rawUnits.Any() Then
+                DataGridView1.DataSource = rawUnits
+            Else
+                DataGridView1.DataSource = Nothing
+                UpdateStatus("Status: No raw units found for version " & selectedVersionID & ".")
             End If
             UpdateLevelTotals()
             UpdateSelectedRawPreview()
@@ -614,7 +499,7 @@ Public Class FrmPSE
             Dim sqft As Decimal
             Dim adder As Decimal
             If String.IsNullOrEmpty(TxtUnitName.Text) OrElse Not Decimal.TryParse(TxtPlanSQFT.Text, sqft) OrElse sqft <= 0 OrElse
-               Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
+           Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
                 UpdateStatus("Status: Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.")
                 MessageBox.Show("Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return Nothing
@@ -628,18 +513,18 @@ Public Class FrmPSE
             End If
 
             Dim actualUnit As New ActualUnitModel With {
-                .VersionID = selectedVersionID,
-                .RawUnitID = rawUnit.RawUnitID,
-                .ProductTypeID = rawUnit.ProductTypeID,
-                .UnitName = TxtUnitName.Text,
-                .PlanSQFT = sqft,
-                .UnitType = If(CmbUnitType.SelectedItem?.ToString(), "Res"),
-                .OptionalAdder = adder,
-                .MarginPercent = GetEffectiveMargin(rawUnit.ProductTypeID, rawUnit.RawUnitID)
-            }
+            .VersionID = selectedVersionID,
+            .RawUnitID = rawUnit.RawUnitID,
+            .ProductTypeID = rawUnit.ProductTypeID,
+            .UnitName = TxtUnitName.Text,
+            .PlanSQFT = sqft,
+            .UnitType = If(CmbUnitType.SelectedItem?.ToString(), "Res"),
+            .OptionalAdder = adder,
+            .MarginPercent = dataAccess.GetEffectiveMargin(Me.selectedVersionID, rawUnit.ProductTypeID, rawUnit.RawUnitID)
+        }
 
             dataAccess.SaveActualUnit(actualUnit)
-            actualUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnit)
+            actualUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnit, Me.selectedVersionID)
             dataAccess.SaveCalculatedComponents(actualUnit)
 
             UpdateStatus("Status: Actual unit created for version " & selectedVersionID & ".")
@@ -651,15 +536,15 @@ Public Class FrmPSE
         End Try
     End Function
 
-    Private Function CalculateComponentsFromRaw(rawUnit As RawUnitModel) As List(Of CalculatedComponentModel)
+    Private Function CalculateComponentsFromRaw(rawUnit As RawUnitModel, versionID As Integer) As List(Of CalculatedComponentModel)
         Dim components As New List(Of CalculatedComponentModel)
         Dim sqFt As Decimal = rawUnit.SqFt.GetValueOrDefault()
         If sqFt <= 0 Then Return components
 
         Try
             Dim productTypeID As Integer = rawUnit.ProductTypeID
-            Dim lumberAdder As Decimal = dataAccess.GetLumberAdder(selectedVersionID, productTypeID)
-            Dim marginPercent As Decimal = GetEffectiveMargin(productTypeID, rawUnit.RawUnitID)
+            Dim lumberAdder As Decimal = dataAccess.GetLumberAdder(versionID, productTypeID)
+            Dim marginPercent As Decimal = dataAccess.GetEffectiveMargin(versionID, productTypeID, rawUnit.RawUnitID)
 
             Dim lfPerSqft As Decimal = rawUnit.LF.GetValueOrDefault() / sqFt
             Dim bdftPerSqft As Decimal = rawUnit.BF.GetValueOrDefault() / sqFt
@@ -672,8 +557,9 @@ Public Class FrmPSE
             Dim manHoursPerSqft As Decimal = rawUnit.ManHours.GetValueOrDefault() / sqFt
             Dim itemCostPerSqft As Decimal = rawUnit.ItemCost.GetValueOrDefault() / sqFt
 
-            Dim overallCostPerSqft As Decimal = lumberPerSqft + platePerSqft + manufLaborPerSqft + designLaborPerSqft + mgmtLaborPerSqft + jobSuppliesPerSqft + itemCostPerSqft
-            Dim sellPerSqft As Decimal = If(marginPercent >= 1D, 0D, overallCostPerSqft / (1D - marginPercent))
+            Dim overallCostPerSqft As Decimal = rawUnit.OverallCost.GetValueOrDefault() / sqFt
+
+            Dim sellPerSqft As Decimal = rawUnit.TotalSellPrice.GetValueOrDefault() / sqFt
             Dim marginPerSqft As Decimal = sellPerSqft - overallCostPerSqft
 
             components.Add(New CalculatedComponentModel With {.ComponentType = "LF/SQFT", .Value = lfPerSqft})
@@ -692,33 +578,13 @@ Public Class FrmPSE
 
             Return components
         Catch ex As Exception
-            UpdateStatus("Status: Error calculating components for version " & selectedVersionID & ": " & ex.Message)
+            UpdateStatus("Status: Error calculating components for version " & versionID & ": " & ex.Message)
             MessageBox.Show("Error calculating components: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return components
         End Try
     End Function
 
-    Private Sub CalculateDerivedFields(displayUnit As DisplayUnitData, components As List(Of CalculatedComponentModel))
-        If components Is Nothing Then Return
 
-        Dim componentDict As New Dictionary(Of String, Decimal)
-        For Each comp In components
-            componentDict(comp.ComponentType) = comp.Value
-        Next
-
-        Dim value As Decimal
-        displayUnit.LF = If(componentDict.TryGetValue("LF/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.BDFT = If(componentDict.TryGetValue("BDFT/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.LumberCost = If(componentDict.TryGetValue("Lumber/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.PlateCost = If(componentDict.TryGetValue("Plate/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.ManufLaborCost = If(componentDict.TryGetValue("ManufLabor/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.DesignLabor = If(componentDict.TryGetValue("DesignLabor/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.MGMTLabor = If(componentDict.TryGetValue("MGMTLabor/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.JobSuppliesCost = If(componentDict.TryGetValue("JobSupplies/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.ManHours = If(componentDict.TryGetValue("ManHours/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.ItemCost = If(componentDict.TryGetValue("ItemCost/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-        displayUnit.OverallCost = If(componentDict.TryGetValue("OverallCost/SQFT", value), value, 0D) * displayUnit.PlanSQFT * displayUnit.ActualUnitQuantity * displayUnit.OptionalAdder
-    End Sub
 
     Private Sub BtnImportLevelData_Click(sender As Object, e As EventArgs) Handles BtnImportLevelData.Click
         Dim ofd As New OpenFileDialog With {
@@ -955,117 +821,124 @@ Public Class FrmPSE
         For Each actual In actualUnits
             Dim rawUnit As RawUnitModel = dataAccess.GetRawUnitByID(actual.RawUnitID)
             If rawUnit IsNot Nothing Then
-                actual.CalculatedComponents = CalculateComponentsFromRaw(rawUnit)
+                actual.CalculatedComponents = CalculateComponentsFromRaw(rawUnit, Me.selectedVersionID)
                 dataAccess.SaveCalculatedComponents(actual)
             End If
         Next
     End Sub
 
     Private Sub BtnConvertToActualUnit_Click(sender As Object, e As EventArgs) Handles BtnConvertToActualUnit.Click
-        isReusing = False
-        btnSaveNewOnly.Visible = True
         Try
             If ListBoxAvailableUnits.SelectedIndex < 0 Then
-                UpdateStatus("Status: Please select a raw unit for version " & selectedVersionID & ".")
-                MessageBox.Show("Please select a raw unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                UpdateStatus($"Status: No raw unit selected for conversion in version {selectedVersionID}.")
+                MessageBox.Show("Please select a raw unit to convert.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
-            Dim selectedRawUnitName As String = ListBoxAvailableUnits.SelectedItem.ToString()
-            Dim selectedRawUnit As RawUnitModel = rawUnits.FirstOrDefault(Function(r) r.RawUnitName = selectedRawUnitName)
-            If selectedRawUnit Is Nothing Then
-                UpdateStatus("Status: Selected raw unit not found for version " & selectedVersionID & ".")
-                MessageBox.Show("Selected raw unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
-            selectedRawUnitID = selectedRawUnit.RawUnitID
-            PopulateDetailsPane(New ActualUnitModel With {
-                .ReferencedRawUnitName = selectedRawUnit.RawUnitName,
-                .PlanSQFT = selectedRawUnit.SqFt.GetValueOrDefault(),
-                .OptionalAdder = 1D,
-                .UnitType = "Res"
-            }, False, False)
-            UpdateStatus($"Status: Ready to create new actual unit from {selectedRawUnit.RawUnitName} for version {selectedVersionID}.")
-            TxtUnitName.Focus()
+            selectedRawUnitID = rawUnits(ListBoxAvailableUnits.SelectedIndex).RawUnitID
+            Dim rawUnit As RawUnitModel = rawUnits(ListBoxAvailableUnits.SelectedIndex)
+            Dim newActualUnit As New ActualUnitModel With {
+            .RawUnitID = rawUnit.RawUnitID,
+            .ReferencedRawUnitName = rawUnit.RawUnitName,
+            .UnitName = rawUnit.RawUnitName,
+            .PlanSQFT = If(rawUnit.SqFt, 0D),
+            .UnitType = "Res",
+            .OptionalAdder = 1D,
+            .ProductTypeID = rawUnit.ProductTypeID
+        }
+            currentdetailsMode = DetailsMode.NewUnit
+            PopulateDetailsPane(newActualUnit, False, 1)
+            TxtUnitName.Text = String.Empty  ' Clear for user to enter actual unit name
+            TxtUnitName.Focus()  ' Set focus for immediate typing
+            UpdateStatus($"Status: Converting raw unit {rawUnit.RawUnitName} to actual unit for version {selectedVersionID}.")
         Catch ex As Exception
-            UpdateStatus("Status: Error preparing new actual unit for version " & selectedVersionID & ": " & ex.Message)
-            MessageBox.Show("Error preparing new actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateStatus($"Status: Error converting raw unit for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error converting raw unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
-    Private Sub BtnReuseActualUnit_Click(sender As Object, e As EventArgs) Handles btnReuseActualUnit.Click
+    Private Sub btnReuseActualUnit_Click(sender As Object, e As EventArgs) Handles btnReuseActualUnit.Click
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                UpdateStatus("Status: Please select an existing actual unit for version " & selectedVersionID & ".")
+                UpdateStatus($"Status: Please select an actual unit to reuse for version {selectedVersionID}.")
                 MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
-            isReusing = True
-            btnSaveNewOnly.Visible = False
+            selectedActualUnitID = existingActualUnits(ListboxExistingActualUnits.SelectedIndex).ActualUnitID
             Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
             If selectedActual Is Nothing Then
-                UpdateStatus("Status: Selected actual unit not found for version " & selectedVersionID & ".")
+                UpdateStatus($"Status: Selected actual unit not found for version {selectedVersionID}.")
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
-            PopulateDetailsPane(selectedActual, True, True)
-            UpdateStatus($"Status: Ready to reuse {selectedActual.UnitName} for version {selectedVersionID}.")
+            currentdetailsMode = DetailsMode.ReuseUnit
+            PopulateDetailsPane(selectedActual, False, 1)
+            UpdateStatus($"Status: Reusing actual unit {selectedActual.UnitName} for version {selectedVersionID}.")
         Catch ex As Exception
-            UpdateStatus("Status: Error preparing reuse of actual unit for version " & selectedVersionID & ": " & ex.Message)
-            MessageBox.Show("Error preparing reuse of actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateStatus($"Status: Error reusing unit for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error reusing unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
-    Private Sub PopulateDetailsPane(actualUnit As ActualUnitModel, isEdit As Boolean, isReuse As Boolean, Optional quantity As Integer = 1, Optional mappingID As Integer = -1)
-        PanelDetails.Visible = True
-        BtnToggleDetails.Text = "Hide Details"
+    Private Sub PopulateDetailsPane(actual As ActualUnitModel, isEdit As Boolean, quantity As Integer)
+        Try
+            ' Set mode based on entry point
+            If isEdit Then
+                currentdetailsMode = DetailsMode.EditGlobalUnit
+            ElseIf currentdetailsMode = DetailsMode.ReuseUnit Then
+                ' Already set in caller
+            ElseIf currentdetailsMode = DetailsMode.EditMappingQuantity Then
+                ' Already set in caller
+            Else
+                currentdetailsMode = DetailsMode.NewUnit
+            End If
 
-        TxtUnitName.Text = actualUnit.UnitName
-        TxtReferencedRawUnit.Text = actualUnit.ReferencedRawUnitName
-        TxtPlanSQFT.Text = actualUnit.PlanSQFT.ToString("F2")
-        TxtOptionalAdder.Text = actualUnit.OptionalAdder.ToString("F2")
-        CmbUnitType.SelectedItem = actualUnit.UnitType
-        ' Set quantity based on mode: edit uses provided quantity, reuse defaults to 1, new uses 1; hide for global edit
-        If isGlobalEdit Then
-            TxtActualUnitQuantity.Visible = False
-            LblActualUnitQuantity.Visible = False ' Assume label exists; hide if global edit
-        Else
-            TxtActualUnitQuantity.Visible = True
-            LblActualUnitQuantity.Visible = True
-            TxtActualUnitQuantity.Text = If(isEdit AndAlso Not isReuse, quantity.ToString(), "1")
-        End If
+            ' Configure UI based on mode
+            TxtUnitName.Text = actual.UnitName
+            TxtPlanSQFT.Text = actual.PlanSQFT.ToString()
+            TxtOptionalAdder.Text = actual.OptionalAdder.ToString()
+            CmbUnitType.SelectedItem = actual.UnitType
+            TxtReferencedRawUnit.Text = actual.ReferencedRawUnitName
+            TxtActualUnitQuantity.Text = quantity.ToString()
 
-        ' Store IDs for save operations
-        selectedActualUnitID = actualUnit.ActualUnitID
-        selectedMappingID = mappingID
+            ' Enable/disable fields based on mode
+            TxtUnitName.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
+            TxtPlanSQFT.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
+            TxtOptionalAdder.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
+            CmbUnitType.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
+            TxtReferencedRawUnit.Enabled = False
+            TxtActualUnitQuantity.Enabled = currentdetailsMode = DetailsMode.ReuseUnit OrElse currentdetailsMode = DetailsMode.EditMappingQuantity
 
-        ' Read-only controls based on mode; enable editing for global edit
-        Dim isReadOnly As Boolean = Not isGlobalEdit AndAlso (isReuse OrElse isEdit)
-        TxtUnitName.ReadOnly = isReadOnly
-        TxtPlanSQFT.ReadOnly = isReadOnly
-        TxtOptionalAdder.ReadOnly = isReadOnly
-        CmbUnitType.Enabled = Not isReadOnly
+            ' Explicit reset for delete button
+            btnDeleteUnit.Visible = False
+            btnDeleteUnit.Text = "Delete"
 
-        ' Show/hide buttons based on mode
-        If isGlobalEdit Then
-            btnSaveNewOnly.Visible = True
-            btnSaveNewOnly.Text = "Save Changes"
-            BtnSaveAndAttach.Visible = False
-        Else
-            btnSaveNewOnly.Visible = Not (isEdit OrElse isReuse)
-            btnSaveNewOnly.Text = "Save New Only"
-            BtnSaveAndAttach.Visible = True
-            BtnSaveAndAttach.Text = If(isEdit AndAlso Not isReuse, "Save Unit", "Save and Attach")
-        End If
+            chkAttachToLevel.Visible = False
+            chkAttachToLevel.Checked = False
 
-        ' Update per-SQFT from components or raw
-        If actualUnit.CalculatedComponents IsNot Nothing AndAlso actualUnit.CalculatedComponents.Any() Then
-            UpdatePerSQFTFields(actualUnit.CalculatedComponents)
-        ElseIf actualUnit.RawUnitID > 0 Then
-            Dim rawUnit = dataAccess.GetRawUnitByID(actualUnit.RawUnitID)
-            If rawUnit IsNot Nothing Then UpdatePerSQFTFields(CalculateComponentsFromRaw(rawUnit))
-        End If
+            ' Set button text
+            Select Case currentdetailsMode
+                Case DetailsMode.NewUnit
+                    btnSave.Text = "Save New Unit"
+                    chkAttachToLevel.Visible = True  ' Show option in NewUnit mode
+                Case DetailsMode.EditGlobalUnit
+                    btnSave.Text = "Save Unit Changes"
+                    btnDeleteUnit.Text = "Delete Unit"
+                    btnDeleteUnit.Visible = True
+                Case DetailsMode.ReuseUnit
+                    btnSave.Text = "Save and Attach"
+                Case DetailsMode.EditMappingQuantity
+                    btnSave.Text = "Save Quantity"
+                    btnDeleteUnit.Text = "Delete Mapping"
+                    btnDeleteUnit.Visible = True
+            End Select
 
-        btnDeleteUnit.Visible = isEdit AndAlso Not isGlobalEdit
+            PanelDetails.Visible = True
+            BtnToggleDetails.Text = "Hide Details"
+            UpdateStatus($"Status: Details pane opened in {currentdetailsMode} mode for version {selectedVersionID}.")
+        Catch ex As Exception
+            UpdateStatus($"Status: Error opening details pane for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error opening details pane: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub UpdatePerSQFTFields(components As List(Of CalculatedComponentModel))
@@ -1089,44 +962,7 @@ Public Class FrmPSE
         TxtTotalSellPricePerSQFT.Text = If(componentDict.TryGetValue("SellPrice/SQFT", value), value, 0D).ToString("F2")
     End Sub
 
-    Private Sub BtnSaveAndAttach_Click(sender As Object, e As EventArgs) Handles BtnSaveAndAttach.Click
-        If selectedLevelID <= 0 Then
-            UpdateStatus("Status: Please select a level for version " & selectedVersionID & " before saving.")
-            MessageBox.Show("Please select a level before saving and attaching a unit.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Return
-        End If
 
-        If String.IsNullOrEmpty(TxtUnitName.Text) Then
-            UpdateStatus("Status: Actual Unit Name must be valid for version " & selectedVersionID & ".")
-            MessageBox.Show("Actual Unit Name must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Return
-        End If
-
-        Dim qty As Integer
-        If Not Integer.TryParse(TxtActualUnitQuantity.Text, qty) OrElse qty <= 0 Then
-            UpdateStatus("Status: Invalid quantity for version " & selectedVersionID & "—must be a positive integer.")
-            MessageBox.Show("Invalid quantity—must be a positive integer.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Return
-        End If
-
-        Try
-            If isReusing Then
-                HandleReuseMapping(qty)
-            ElseIf btnDeleteUnit.Visible Then ' isEdit mode
-                HandleEditMapping(qty)
-            Else
-                HandleNewUnit(qty)
-            End If
-            LoadAssignedUnits()
-            dataAccess.UpdateLevelRollups(selectedLevelID)
-            If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
-            ResetDetailsPane()
-            UpdateStatus("Status: Unit saved and attached successfully for version " & selectedVersionID & ".")
-        Catch ex As Exception
-            UpdateStatus("Status: Error saving unit for version " & selectedVersionID & ": " & ex.Message)
-            MessageBox.Show("Error saving unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
-    End Sub
     Private Sub HandleGlobalUnitEdit()
         Try
             If selectedActualUnitID <= 0 Then
@@ -1160,7 +996,7 @@ Public Class FrmPSE
             dataAccess.SaveActualUnit(updatedUnit)
             Dim rawUnit = dataAccess.GetRawUnitByID(updatedUnit.RawUnitID)
             If rawUnit IsNot Nothing Then
-                updatedUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnit)
+                updatedUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnit, Me.selectedVersionID)
                 dataAccess.SaveCalculatedComponents(updatedUnit)
             End If
 
@@ -1171,6 +1007,31 @@ Public Class FrmPSE
             MessageBox.Show("Error updating actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+    Private Sub HandleEditMappingQuantity(quantity As Integer)
+        Try
+            If selectedMappingID <= 0 Then
+                UpdateStatus($"Status: Invalid mapping ID for version {selectedVersionID}.")
+                MessageBox.Show("Invalid mapping selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Return
+            End If
+            Dim mapping As ActualToLevelMappingModel = dataAccess.GetActualToLevelMappingsByLevelID(selectedLevelID).FirstOrDefault(Function(m) m.MappingID = selectedMappingID)
+            If mapping Is Nothing Then
+                UpdateStatus($"Status: Mapping not found for ID {selectedMappingID} in version {selectedVersionID}.")
+                MessageBox.Show("Mapping not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Return
+            End If
+            mapping.Quantity = quantity
+            dataAccess.SaveActualToLevelMapping(mapping)
+            LoadAssignedUnits()
+            dataAccess.UpdateLevelRollups(selectedLevelID)
+            If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
+            UpdateStatus($"Status: Mapping quantity updated for unit {mapping.ActualUnit.UnitName} in version {selectedVersionID}.")
+        Catch ex As Exception
+            UpdateStatus($"Status: Error updating mapping quantity for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error updating mapping quantity: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
     Private Sub HandleEditMapping(qty As Integer)
         If selectedMappingID <= 0 Then
             MessageBox.Show("Error: No valid mapping selected for update.")
@@ -1213,38 +1074,73 @@ Public Class FrmPSE
         UpdateStatus("Existing unit reused and mapped successfully for version " & selectedVersionID & ".")
     End Sub
 
-    Private Sub BtnDeleteUnit_Click(sender As Object, e As EventArgs) Handles btnDeleteUnit.Click
+    Private Sub btnDeleteUnit_Click(sender As Object, e As EventArgs) Handles btnDeleteUnit.Click
         Try
-            If DataGridViewAssigned.CurrentRow Is Nothing OrElse DataGridViewAssigned.CurrentRow.Index < 0 OrElse DataGridViewAssigned.CurrentRow.Index >= displayUnits.Count Then
-                UpdateStatus("Status: Please select a valid unit mapping for version " & selectedVersionID & ".")
-                MessageBox.Show("Please select a valid unit mapping to remove.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
+            Select Case currentdetailsMode
+                Case DetailsMode.EditGlobalUnit
+                    ' Existing global delete logic (assume from prior: dataAccess.DeleteActualUnit(selectedActualUnitID), remove from lists, refresh)
+                    Dim selectedActual As ActualUnitModel = dataAccess.GetActualUnitByID(selectedActualUnitID)
+                    If selectedActual Is Nothing Then Return
+                    Dim mappings = dataAccess.GetActualToLevelMappingsByActualUnitID(selectedActual.ActualUnitID)
+                    If mappings.Any() Then
+                        Dim result = MessageBox.Show($"The unit '{selectedActual.UnitName}' is used in {mappings.Count} level(s). Deleting it will remove it from all levels. Continue?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+                        If result <> DialogResult.Yes Then Return
+                    End If
+                    dataAccess.DeleteActualUnit(selectedActual.ActualUnitID)
+                    existingActualUnits.RemoveAll(Function(u) u.ActualUnitID = selectedActualUnitID)
+                    ListboxExistingActualUnits.Items.Clear()
+                    For Each unit In existingActualUnits
+                        ListboxExistingActualUnits.Items.Add(unit.UnitName & " (" & unit.UnitType & ")")
+                    Next
+                    If selectedLevelID > 0 Then LoadAssignedUnits()
+                    UpdateStatus($"Status: Actual unit deleted for version {selectedVersionID}.")
 
-            Dim index As Integer = DataGridViewAssigned.CurrentRow.Index
-            If MessageBox.Show("Remove this unit mapping from the level for version " & selectedVersionID & "?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-                Dim mappingID As Integer = displayUnits(index).MappingID
-                dataAccess.DeleteActualToLevelMapping(mappingID)
-                LoadAssignedUnits()
-                dataAccess.UpdateLevelRollups(selectedLevelID)
-                If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
-                ResetDetailsPane()
-                UpdateStatus("Status: Unit mapping removed successfully for version " & selectedVersionID & ".")
-            End If
+                Case DetailsMode.EditMappingQuantity
+                    If selectedMappingID <= 0 Then
+                        MessageBox.Show("Invalid mapping selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                        Return
+                    End If
+                    Dim result = MessageBox.Show("Delete this unit mapping from the level?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+                    If result <> DialogResult.Yes Then Return
+                    dataAccess.DeleteActualToLevelMapping(selectedMappingID)
+                    LoadAssignedUnits()
+                    dataAccess.UpdateLevelRollups(selectedLevelID)
+                    If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
+                    ResetDetailsPane()
+                    UpdateStatus($"Status: Mapping deleted for version {selectedVersionID}.")
+
+                Case Else
+                    MessageBox.Show("Delete not supported in this mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Select
         Catch ex As Exception
-            UpdateStatus("Status: Error removing unit mapping for version " & selectedVersionID & ": " & ex.Message)
-            MessageBox.Show("Error removing unit mapping: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateStatus($"Status: Error deleting for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error deleting: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub ResetDetailsPane()
-        TxtUnitName.Text = ""
-        TxtPlanSQFT.Text = ""
-        TxtActualUnitQuantity.Text = "1"
-        TxtOptionalAdder.Text = "1.0"
-        CmbUnitType.SelectedIndex = -1
-        PanelDetails.Visible = False
-        btnDeleteUnit.Visible = False
+        Try
+            chkAttachToLevel.Checked = False
+            chkAttachToLevel.Visible = False
+            TxtUnitName.Text = String.Empty
+            TxtPlanSQFT.Text = String.Empty
+            TxtOptionalAdder.Text = String.Empty
+            CmbUnitType.SelectedIndex = -1
+            TxtReferencedRawUnit.Text = String.Empty
+            TxtActualUnitQuantity.Text = String.Empty
+            btnDeleteUnit.Text = "Delete"
+            btnDeleteUnit.Visible = False
+            selectedActualUnitID = -1
+            selectedMappingID = -1
+            currentdetailsMode = DetailsMode.None
+            btnSave.Text = "Save"
+            PanelDetails.Visible = False
+            BtnToggleDetails.Text = "Show Details"
+            UpdateStatus($"Status: Details pane reset for version {selectedVersionID}.")
+        Catch ex As Exception
+            UpdateStatus($"Status: Error resetting details pane for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error resetting details pane: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub BtnRecalculate_Click(sender As Object, e As EventArgs) Handles BtnRecalculate.Click
@@ -1269,27 +1165,8 @@ Public Class FrmPSE
     End Sub
     Private Sub RecalculateProject()
         Try
-            Dim buildings = dataAccess.GetBuildingsByVersionID(selectedVersionID)
-            If Not buildings.Any() Then
-                UpdateStatus("Status: No buildings found for version " & selectedVersionID & ".")
-                Return
-            End If
-            Dim originalLevelID As Integer = selectedLevelID ' Preserve current level
-            For Each bldg In buildings
-                Dim levels = dataAccess.GetLevelsByBuildingID(bldg.BuildingID)
-                If Not levels.Any() Then
-                    UpdateStatus("Status: No levels found for building " & bldg.BuildingName & " in version " & selectedVersionID & ".")
-                    Continue For
-                End If
-                For Each lvl In levels
-                    selectedLevelID = lvl.LevelID
-                    LoadAssignedUnits() ' Reloads units with updated margins
-                    dataAccess.UpdateLevelRollups(selectedLevelID)
-                Next
-                dataAccess.UpdateBuildingRollups(bldg.BuildingID)
-            Next
-            selectedLevelID = originalLevelID ' Restore original level
-            UpdateLevelTotals() ' Refresh UI for current level
+            dataAccess.RecalculateVersion(selectedVersionID)
+            LoadAssignedUnits()
             UpdateStatus("Status: Project recalculated successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
             UpdateStatus("Status: Error recalculating project for version " & selectedVersionID & ": " & ex.Message)
@@ -1299,23 +1176,21 @@ Public Class FrmPSE
     Private Sub DataGridViewAssigned_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridViewAssigned.CellContentClick
         Try
             If e.ColumnIndex = colActions.Index AndAlso e.RowIndex >= 0 Then
-                If e.RowIndex >= displayUnits.Count Then
-                    UpdateStatus("Status: Invalid unit selection for version " & selectedVersionID & ".")
-                    MessageBox.Show("Invalid unit selection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Dim selectedUnit As DisplayUnitData = TryCast(bindingSource.Current, DisplayUnitData)
+                If selectedUnit Is Nothing Then
+                    UpdateStatus($"Status: No unit selected for editing in version {selectedVersionID}.")
+                    MessageBox.Show("No unit selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return
                 End If
-                Dim displayUnit = displayUnits(e.RowIndex)
-                If displayUnit Is Nothing Then
-                    UpdateStatus("Status: Selected unit data not found for version " & selectedVersionID & ".")
-                    MessageBox.Show("Selected unit data not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                    Return
-                End If
-                PopulateDetailsPane(displayUnit.ActualUnit, True, False, displayUnit.ActualUnitQuantity, displayUnit.MappingID)
-                UpdateStatus($"Status: Editing unit {displayUnit.UnitName} for version {selectedVersionID}.")
+                selectedMappingID = selectedUnit.MappingID
+                selectedActualUnitID = selectedUnit.ActualUnit.ActualUnitID
+                currentdetailsMode = DetailsMode.EditMappingQuantity
+                PopulateDetailsPane(selectedUnit.ActualUnit, False, selectedUnit.ActualUnitQuantity)
+                UpdateStatus($"Status: Editing mapping quantity for unit {selectedUnit.UnitName} in version {selectedVersionID}.")
             End If
         Catch ex As Exception
-            UpdateStatus("Status: Error editing unit for version " & selectedVersionID & ": " & ex.Message)
-            MessageBox.Show("Error editing unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateStatus($"Status: Error in cell click for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error in cell click: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -1328,7 +1203,12 @@ Public Class FrmPSE
                 Return
             End If
             For Each actual In existingActualUnits
-                ListboxExistingActualUnits.Items.Add(actual.UnitName & " (" & actual.UnitType & ")")
+                Dim sellPricePerSQFT As Decimal = 0D
+                Dim sellPriceComponent = actual.CalculatedComponents?.FirstOrDefault(Function(c) c.ComponentType = "SellPrice/SQFT")
+                If sellPriceComponent IsNot Nothing Then
+                    sellPricePerSQFT = sellPriceComponent.Value
+                End If
+                ListboxExistingActualUnits.Items.Add($"{actual.UnitName} ({actual.UnitType}) - {sellPricePerSQFT:C2}/SQFT")
             Next
             UpdateStatus("Status: Actual units loaded for version " & selectedVersionID & ".")
         Catch ex As Exception
@@ -1401,15 +1281,15 @@ Public Class FrmPSE
 
                 Dim existing = existingMappings.FirstOrDefault(Function(m) m.ActualUnitID = actualUnitID)
                 If existing IsNot Nothing Then
-                    existing.Quantity += quantity
+                    existing.Quantity = quantity  ' Changed from += to = for consistent paste behavior
                     dataAccess.SaveActualToLevelMapping(existing)
                 Else
                     Dim newMapping As New ActualToLevelMappingModel With {
-                        .VersionID = selectedVersionID,
-                        .ActualUnitID = actualUnitID,
-                        .LevelID = selectedLevelID,
-                        .Quantity = quantity
-                    }
+            .VersionID = selectedVersionID,
+            .ActualUnitID = actualUnitID,
+            .LevelID = selectedLevelID,
+            .Quantity = quantity
+        }
                     dataAccess.SaveActualToLevelMapping(newMapping)
                 End If
             Next
@@ -1461,29 +1341,49 @@ Public Class FrmPSE
         copiedMappings.Clear()
     End Sub
 
-    Private Sub BtnSaveNewOnly_Click(sender As Object, e As EventArgs) Handles btnSaveNewOnly.Click
-        If String.IsNullOrEmpty(TxtUnitName.Text) Then
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+        If String.IsNullOrEmpty(TxtUnitName.Text) AndAlso currentdetailsMode <> DetailsMode.EditMappingQuantity Then
             MessageBox.Show("Actual Unit Name must be valid.")
             Return
         End If
-
         Try
-            If isGlobalEdit Then
-                HandleGlobalUnitEdit()
-            Else
-                Dim actualUnit As ActualUnitModel = CreateAndSaveActualUnit()
-                If actualUnit Is Nothing Then Return
-
-                ' Refresh existing units for reuse
-                existingActualUnits.Add(actualUnit)
-                ListboxExistingActualUnits.Items.Add(actualUnit.UnitName & " (" & actualUnit.UnitType & ")")
-                UpdateStatus("New unit saved successfully—available for reuse.")
-            End If
-
+            Select Case currentdetailsMode
+                Case DetailsMode.EditGlobalUnit
+                    HandleGlobalUnitEdit()
+                Case DetailsMode.ReuseUnit
+                    HandleReuseMapping(CInt(TxtActualUnitQuantity.Text))
+                    LoadAssignedUnits()  ' Refresh grid after attaching to level
+                Case DetailsMode.EditMappingQuantity
+                    HandleEditMappingQuantity(CInt(TxtActualUnitQuantity.Text))
+                Case DetailsMode.NewUnit
+                    Dim actualUnit As ActualUnitModel = CreateAndSaveActualUnit()
+                    If actualUnit Is Nothing Then Return
+                    existingActualUnits.Add(actualUnit)
+                    ListboxExistingActualUnits.Items.Add(actualUnit.UnitName & " (" & actualUnit.UnitType & ")")
+                    UpdateStatus("New unit saved successfully—available for reuse.")
+                    ' Optional attach based on user choice
+                    If chkAttachToLevel.Checked AndAlso selectedLevelID > 0 AndAlso CInt(TxtActualUnitQuantity.Text) > 0 Then
+                        Dim newMapping As New ActualToLevelMappingModel With {
+                        .VersionID = selectedVersionID,
+                        .ActualUnitID = actualUnit.ActualUnitID,
+                        .LevelID = selectedLevelID,
+                        .Quantity = CInt(TxtActualUnitQuantity.Text)
+                    }
+                        dataAccess.SaveActualToLevelMapping(newMapping)
+                        LoadAssignedUnits()  ' Refresh grid if attached
+                        dataAccess.UpdateLevelRollups(selectedLevelID)
+                        If selectedBuildingID > 0 Then dataAccess.UpdateBuildingRollups(selectedBuildingID)
+                    End If
+                Case Else
+                    UpdateStatus($"Status: Invalid save mode for version {selectedVersionID}.")
+                    MessageBox.Show("Invalid operation mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    Return
+            End Select
             ResetDetailsPane()
-            isGlobalEdit = False ' Reset flag
+            currentdetailsMode = DetailsMode.None
         Catch ex As Exception
-            MessageBox.Show("Error saving new unit: " & ex.Message)
+            UpdateStatus($"Status: Error saving for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error saving: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -1521,8 +1421,8 @@ Public Class FrmPSE
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
-            isGlobalEdit = True ' Set flag for global edit mode
-            PopulateDetailsPane(selectedActual, True, False, quantity:=0, mappingID:=0) ' Quantity/mapping not relevant for global edit
+            currentdetailsMode = DetailsMode.EditGlobalUnit
+            PopulateDetailsPane(selectedActual, True, 0)
             UpdateStatus("Status: Editing actual unit " & selectedActual.UnitName & " for version " & selectedVersionID & ".")
         Catch ex As Exception
             UpdateStatus("Status: Error editing actual unit for version " & selectedVersionID & ": " & ex.Message)
@@ -1565,13 +1465,18 @@ Public Class FrmPSE
         End Try
     End Sub
 
+    ' In frmCreateEditProject.vb: Update UpdateStatus for robustness
     Private Sub UpdateStatus(message As String)
-        Dim parent As frmMain = TryCast(Me.MdiParent, frmMain)
-        If parent IsNot Nothing Then
-            parent.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
-        Else
-            ' UpdateStatus($"{message} at {Date.Now:HH:mm:ss}")
-        End If
+        Try
+            Dim parentForm As frmMain = TryCast(Me.ParentForm, frmMain)
+            If parentForm IsNot Nothing AndAlso parentForm.StatusLabel IsNot Nothing Then
+                parentForm.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
+            Else
+                Debug.WriteLine($"Status update skipped: Parent form or StatusLabel is null. Message: {message}")
+            End If
+        Catch ex As Exception
+            Debug.WriteLine($"Error updating status: {ex.Message}")
+        End Try
     End Sub
 
 End Class

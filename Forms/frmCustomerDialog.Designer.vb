@@ -22,7 +22,6 @@ Partial Class FrmCustomerDialog
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container()
         Me.lblCustomerName = New System.Windows.Forms.Label()
         Me.txtCustomerName = New System.Windows.Forms.TextBox()
         Me.lblCustomerType = New System.Windows.Forms.Label()
@@ -36,7 +35,7 @@ Partial Class FrmCustomerDialog
         Me.lblCustomerName.AutoSize = True
         Me.lblCustomerName.Location = New System.Drawing.Point(12, 15)
         Me.lblCustomerName.Name = "lblCustomerName"
-        Me.lblCustomerName.Size = New System.Drawing.Size(76, 13)
+        Me.lblCustomerName.Size = New System.Drawing.Size(85, 13)
         Me.lblCustomerName.TabIndex = 0
         Me.lblCustomerName.Text = "Customer Name:"
         '
@@ -52,7 +51,7 @@ Partial Class FrmCustomerDialog
         Me.lblCustomerType.AutoSize = True
         Me.lblCustomerType.Location = New System.Drawing.Point(12, 41)
         Me.lblCustomerType.Name = "lblCustomerType"
-        Me.lblCustomerType.Size = New System.Drawing.Size(74, 13)
+        Me.lblCustomerType.Size = New System.Drawing.Size(81, 13)
         Me.lblCustomerType.TabIndex = 2
         Me.lblCustomerType.Text = "Customer Type:"
         '
@@ -98,9 +97,11 @@ Partial Class FrmCustomerDialog
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "FrmCustomerDialog"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Add Customer"
         Me.ResumeLayout(False)
         Me.PerformLayout()
+
     End Sub
 
     Friend WithEvents lblCustomerName As Label

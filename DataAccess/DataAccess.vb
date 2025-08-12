@@ -469,31 +469,28 @@ Namespace BuildersPSE.DataAccess
                                                                            parser.Delimiters = New String() {","}
                                                                            parser.HasFieldsEnclosedInQuotes = True
                                                                            parser.TrimWhiteSpace = True
-
                                                                            If Not parser.EndOfData Then
                                                                                Dim headers As String() = parser.ReadFields()
                                                                                Dim skippedHeaders As New HashSet(Of String) From {"JOBNUMBER", "PROJECT", "CUSTOMER", "JOBNAME", "STRUCTURENAME", "PLAN"}
-
                                                                                While Not parser.EndOfData
                                                                                    Dim fields As String() = parser.ReadFields()
                                                                                    If fields.Length <> headers.Length Then Continue While
-
                                                                                    Dim rawUnit As New RawUnitModel With {
-                                                                                      .VersionID = versionID,
-                                                                                      .ProductTypeID = productTypeID
-                                                                                  }
-
+                                                                              .VersionID = versionID,
+                                                                              .ProductTypeID = productTypeID
+                                                                          }
+                                                                                   Dim elevation As String = String.Empty
+                                                                                   Dim productStr As String = String.Empty
                                                                                    For i As Integer = 0 To headers.Length - 1
                                                                                        Dim header As String = headers(i).Trim().ToUpper()
                                                                                        Dim valueStr As String = fields(i).Trim()
-
                                                                                        If skippedHeaders.Contains(header) Then Continue For
-
                                                                                        If header = "ELEVATION" Then
-                                                                                           rawUnit.RawUnitName = valueStr
+                                                                                           elevation = valueStr
                                                                                        ElseIf header = "PRODUCT" Then
-                                                                                           If String.Equals(valueStr, "Floor", StringComparison.OrdinalIgnoreCase) Then rawUnit.ProductTypeID = 1
-                                                                                           If String.Equals(valueStr, "Roof", StringComparison.OrdinalIgnoreCase) Then rawUnit.ProductTypeID = 2
+                                                                                           productStr = valueStr
+                                                                                           If String.Equals(productStr, "Floor", StringComparison.OrdinalIgnoreCase) Then rawUnit.ProductTypeID = 1
+                                                                                           If String.Equals(productStr, "Roof", StringComparison.OrdinalIgnoreCase) Then rawUnit.ProductTypeID = 2
                                                                                        Else
                                                                                            Dim tempVal As Decimal
                                                                                            If Decimal.TryParse(valueStr, tempVal) Then
@@ -520,30 +517,31 @@ Namespace BuildersPSE.DataAccess
                                                                                            End If
                                                                                        End If
                                                                                    Next
-
+                                                                                   If Not String.IsNullOrEmpty(elevation) Then
+                                                                                       rawUnit.RawUnitName = If(Not String.IsNullOrEmpty(productStr), elevation & " " & productStr, elevation)
+                                                                                   End If
                                                                                    Dim insertParams As New Dictionary(Of String, Object) From {
-                                                                                      {"@RawUnitName", If(String.IsNullOrEmpty(rawUnit.RawUnitName), DBNull.Value, CType(rawUnit.RawUnitName, Object))},
-                                                                                      {"@VersionID", rawUnit.VersionID},
-                                                                                      {"@ProductTypeID", rawUnit.ProductTypeID},
-                                                                                      {"@BF", If(rawUnit.BF.HasValue, CType(rawUnit.BF.Value, Object), DBNull.Value)},
-                                                                                      {"@LF", If(rawUnit.LF.HasValue, CType(rawUnit.LF.Value, Object), DBNull.Value)},
-                                                                                      {"@EWPLF", If(rawUnit.EWPLF.HasValue, CType(rawUnit.EWPLF.Value, Object), DBNull.Value)},
-                                                                                      {"@SqFt", If(rawUnit.SqFt.HasValue, CType(rawUnit.SqFt.Value, Object), DBNull.Value)},
-                                                                                      {"@FCArea", If(rawUnit.FCArea.HasValue, CType(rawUnit.FCArea.Value, Object), DBNull.Value)},
-                                                                                      {"@LumberCost", If(rawUnit.LumberCost.HasValue, CType(rawUnit.LumberCost.Value, Object), DBNull.Value)},
-                                                                                      {"@PlateCost", If(rawUnit.PlateCost.HasValue, CType(rawUnit.PlateCost.Value, Object), DBNull.Value)},
-                                                                                      {"@ManufLaborCost", If(rawUnit.ManufLaborCost.HasValue, CType(rawUnit.ManufLaborCost.Value, Object), DBNull.Value)},
-                                                                                      {"@DesignLabor", If(rawUnit.DesignLabor.HasValue, CType(rawUnit.DesignLabor.Value, Object), DBNull.Value)},
-                                                                                      {"@MGMTLabor", If(rawUnit.MGMTLabor.HasValue, CType(rawUnit.MGMTLabor.Value, Object), DBNull.Value)},
-                                                                                      {"@JobSuppliesCost", If(rawUnit.JobSuppliesCost.HasValue, CType(rawUnit.JobSuppliesCost.Value, Object), DBNull.Value)},
-                                                                                      {"@ManHours", If(rawUnit.ManHours.HasValue, CType(rawUnit.ManHours.Value, Object), DBNull.Value)},
-                                                                                      {"@ItemCost", If(rawUnit.ItemCost.HasValue, CType(rawUnit.ItemCost.Value, Object), DBNull.Value)},
-                                                                                      {"@OverallCost", If(rawUnit.OverallCost.HasValue, CType(rawUnit.OverallCost.Value, Object), DBNull.Value)},
-                                                                                      {"@DeliveryCost", If(rawUnit.DeliveryCost.HasValue, CType(rawUnit.DeliveryCost.Value, Object), DBNull.Value)},
-                                                                                      {"@TotalSellPrice", If(rawUnit.TotalSellPrice.HasValue, CType(rawUnit.TotalSellPrice.Value, Object), DBNull.Value)},
-                                                                                      {"@AvgSPFNo2", If(rawUnit.AvgSPFNo2.HasValue, CType(rawUnit.AvgSPFNo2.Value, Object), DBNull.Value)}
-                                                                                  }
-
+                                                                              {"@RawUnitName", If(String.IsNullOrEmpty(rawUnit.RawUnitName), DBNull.Value, CType(rawUnit.RawUnitName, Object))},
+                                                                              {"@VersionID", rawUnit.VersionID},
+                                                                              {"@ProductTypeID", rawUnit.ProductTypeID},
+                                                                              {"@BF", If(rawUnit.BF.HasValue, CType(rawUnit.BF.Value, Object), DBNull.Value)},
+                                                                              {"@LF", If(rawUnit.LF.HasValue, CType(rawUnit.LF.Value, Object), DBNull.Value)},
+                                                                              {"@EWPLF", If(rawUnit.EWPLF.HasValue, CType(rawUnit.EWPLF.Value, Object), DBNull.Value)},
+                                                                              {"@SqFt", If(rawUnit.SqFt.HasValue, CType(rawUnit.SqFt.Value, Object), DBNull.Value)},
+                                                                              {"@FCArea", If(rawUnit.FCArea.HasValue, CType(rawUnit.FCArea.Value, Object), DBNull.Value)},
+                                                                              {"@LumberCost", If(rawUnit.LumberCost.HasValue, CType(rawUnit.LumberCost.Value, Object), DBNull.Value)},
+                                                                              {"@PlateCost", If(rawUnit.PlateCost.HasValue, CType(rawUnit.PlateCost.Value, Object), DBNull.Value)},
+                                                                              {"@ManufLaborCost", If(rawUnit.ManufLaborCost.HasValue, CType(rawUnit.ManufLaborCost.Value, Object), DBNull.Value)},
+                                                                              {"@DesignLabor", If(rawUnit.DesignLabor.HasValue, CType(rawUnit.DesignLabor.Value, Object), DBNull.Value)},
+                                                                              {"@MGMTLabor", If(rawUnit.MGMTLabor.HasValue, CType(rawUnit.MGMTLabor.Value, Object), DBNull.Value)},
+                                                                              {"@JobSuppliesCost", If(rawUnit.JobSuppliesCost.HasValue, CType(rawUnit.JobSuppliesCost.Value, Object), DBNull.Value)},
+                                                                              {"@ManHours", If(rawUnit.ManHours.HasValue, CType(rawUnit.ManHours.Value, Object), DBNull.Value)},
+                                                                              {"@ItemCost", If(rawUnit.ItemCost.HasValue, CType(rawUnit.ItemCost.Value, Object), DBNull.Value)},
+                                                                              {"@OverallCost", If(rawUnit.OverallCost.HasValue, CType(rawUnit.OverallCost.Value, Object), DBNull.Value)},
+                                                                              {"@DeliveryCost", If(rawUnit.DeliveryCost.HasValue, CType(rawUnit.DeliveryCost.Value, Object), DBNull.Value)},
+                                                                              {"@TotalSellPrice", If(rawUnit.TotalSellPrice.HasValue, CType(rawUnit.TotalSellPrice.Value, Object), DBNull.Value)},
+                                                                              {"@AvgSPFNo2", If(rawUnit.AvgSPFNo2.HasValue, CType(rawUnit.AvgSPFNo2.Value, Object), DBNull.Value)}
+                                                                          }
                                                                                    Dim rawIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertRawUnit, BuildParameters(insertParams))
                                                                                    If rawIDObj Is DBNull.Value OrElse rawIDObj Is Nothing Then
                                                                                        Throw New Exception("Failed to insert RawUnit for " & rawUnit.RawUnitName)
@@ -1148,110 +1146,7 @@ Namespace BuildersPSE.DataAccess
             Return rawUnits
         End Function
 
-        ' Updated: UpdateLevelRollups (use VersionID)
-        Public Sub UpdateLevelRollups(levelID As Integer)
-            Dim versionID As Integer = 0
-            Dim productTypeID As Integer = 0
-            Dim params As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader("SELECT VersionID, ProductTypeID FROM Levels WHERE LevelID = @LevelID", params)
-                                                                           If reader.Read() Then
-                                                                               versionID = reader.GetInt32(0)
-                                                                               productTypeID = reader.GetInt32(1)
-                                                                           Else
-                                                                               Throw New ApplicationException("Level not found for ID " & levelID)
-                                                                           End If
-                                                                       End Using
 
-                                                                       Dim overallSqftParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim overallSqftObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallSQFT, overallSqftParams)
-                                                                       Dim overallSqft As Decimal = If(overallSqftObj Is DBNull.Value OrElse overallSqftObj Is Nothing, 0D, CDec(overallSqftObj))
-
-                                                                       Dim overallLFParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim overallLFObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallLF, overallLFParams)
-                                                                       Dim overallLF As Decimal = If(overallLFObj Is DBNull.Value OrElse overallLFObj Is Nothing, 0D, CDec(overallLFObj))
-
-                                                                       Dim overallBDFTParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim overallBDFTObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallBDFT, overallBDFTParams)
-                                                                       Dim overallBDFT As Decimal = If(overallBDFTObj Is DBNull.Value OrElse overallBDFTObj Is Nothing, 0D, CDec(overallBDFTObj))
-
-                                                                       Dim lumberCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim lumberCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLumberCost, lumberCostParams)
-                                                                       Dim lumberCost As Decimal = If(lumberCostObj Is DBNull.Value OrElse lumberCostObj Is Nothing, 0D, CDec(lumberCostObj))
-
-                                                                       Dim plateCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim plateCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculatePlateCost, plateCostParams)
-                                                                       Dim plateCost As Decimal = If(plateCostObj Is DBNull.Value OrElse plateCostObj Is Nothing, 0D, CDec(plateCostObj))
-
-                                                                       Dim laborCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim laborCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLaborCost, laborCostParams)
-                                                                       Dim laborCost As Decimal = If(laborCostObj Is DBNull.Value OrElse laborCostObj Is Nothing, 0D, CDec(laborCostObj))
-
-                                                                       Dim laborMHParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim laborMHObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateLaborMH, laborMHParams)
-                                                                       Dim laborMH As Decimal = If(laborMHObj Is DBNull.Value OrElse laborMHObj Is Nothing, 0D, CDec(laborMHObj))
-
-                                                                       Dim designCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim designCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateDesignCost, designCostParams)
-                                                                       Dim designCost As Decimal = If(designCostObj Is DBNull.Value OrElse designCostObj Is Nothing, 0D, CDec(designCostObj))
-
-                                                                       Dim mgmtCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim mgmtCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateMGMTCost, mgmtCostParams)
-                                                                       Dim mgmtCost As Decimal = If(mgmtCostObj Is DBNull.Value OrElse mgmtCostObj Is Nothing, 0D, CDec(mgmtCostObj))
-
-                                                                       Dim suppliesCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim suppliesCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateJobSuppliesCost, suppliesCostParams)
-                                                                       Dim suppliesCost As Decimal = If(suppliesCostObj Is DBNull.Value OrElse suppliesCostObj Is Nothing, 0D, CDec(suppliesCostObj))
-
-                                                                       Dim itemsCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim itemsCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateItemsCost, itemsCostParams)
-                                                                       Dim itemsCost As Decimal = If(itemsCostObj Is DBNull.Value OrElse itemsCostObj Is Nothing, 0D, CDec(itemsCostObj))
-
-                                                                       Dim deliveryCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim deliveryCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateDeliveryCost, deliveryCostParams)
-                                                                       Dim deliveryCost As Decimal = If(deliveryCostObj Is DBNull.Value OrElse deliveryCostObj Is Nothing, 0D, CDec(deliveryCostObj))
-
-                                                                       Dim overallCostParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                       Dim overallCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateOverallCost, overallCostParams)
-                                                                       Dim overallCost As Decimal = If(overallCostObj Is DBNull.Value OrElse overallCostObj Is Nothing, 0D, CDec(overallCostObj))
-
-                                                                       Dim marginPercent As Decimal = GetMarginPercent(versionID, productTypeID)
-                                                                       Dim overallPrice As Decimal
-                                                                       If marginPercent > 0D Then
-                                                                           overallPrice = If(marginPercent >= 1D, overallCost + deliveryCost, overallCost / (1D - marginPercent) + deliveryCost)
-                                                                       Else
-                                                                           Dim sumUnitSellNoDelParams As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
-                                                                           Dim sumUnitSellNoDelObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateSumUnitSellNoDelivery, sumUnitSellNoDelParams)
-                                                                           Dim sumUnitSellNoDel As Decimal = If(sumUnitSellNoDelObj Is DBNull.Value OrElse sumUnitSellNoDelObj Is Nothing, overallCost, CDec(sumUnitSellNoDelObj))
-                                                                           overallPrice = sumUnitSellNoDel + deliveryCost
-                                                                       End If
-
-                                                                       Dim commonSqft As Decimal = 0 ' Retrieve from Levels if applicable
-                                                                       Dim totalSqft As Decimal = overallSqft + commonSqft
-                                                                       Dim avgPricePerSqft As Decimal = If(totalSqft > 0D, overallPrice / totalSqft, 0D)
-
-                                                                       Dim updateParams As New Dictionary(Of String, Object) From {
-                                            {"@LevelID", levelID},
-                                            {"@OverallSQFT", overallSqft},
-                                            {"@OverallLF", overallLF},
-                                            {"@OverallBDFT", overallBDFT},
-                                            {"@LumberCost", lumberCost},
-                                            {"@PlateCost", plateCost},
-                                            {"@LaborCost", laborCost},
-                                            {"@LaborMH", laborMH},
-                                            {"@DesignCost", designCost},
-                                            {"@MGMTCost", mgmtCost},
-                                            {"@JobSuppliesCost", suppliesCost},
-                                            {"@ItemsCost", itemsCost},
-                                            {"@DeliveryCost", deliveryCost},
-                                            {"@OverallCost", overallCost},
-                                            {"@OverallPrice", overallPrice},
-                                            {"@TotalSQFT", totalSqft},
-                                            {"@AvgPricePerSQFT", avgPricePerSqft}
-                                        }
-                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateLevelRollupsSql, BuildParameters(updateParams))
-                                                                   End Sub, "Error updating level rollups for ID " & levelID)
-        End Sub
 
         ' Updated: UpdateBuildingRollups (use VersionID)
         Public Sub UpdateBuildingRollups(buildingID As Integer)
@@ -1709,8 +1604,9 @@ Namespace BuildersPSE.DataAccess
                                                                                    .ProjectID = projectID,
                                                                                    .Section = If(Not reader.IsDBNull(reader.GetOrdinal("Section")), reader.GetString(reader.GetOrdinal("Section")), String.Empty),
                                                                                    .KN = reader.GetInt32(reader.GetOrdinal("KN")),
-                                                                                   .Description = If(Not reader.IsDBNull(reader.GetOrdinal("Desc")), reader.GetString(reader.GetOrdinal("Desc")), String.Empty),
-                                                                                   .Status = If(Not reader.IsDBNull(reader.GetOrdinal("Status")), reader.GetString(reader.GetOrdinal("Status")), String.Empty)
+                                                                                   .Description = If(Not reader.IsDBNull(reader.GetOrdinal("Description")), reader.GetString(reader.GetOrdinal("Description")), String.Empty),
+                                                                                   .Status = If(Not reader.IsDBNull(reader.GetOrdinal("Status")), reader.GetString(reader.GetOrdinal("Status")), String.Empty),
+                                                                                   .Note = If(Not reader.IsDBNull(reader.GetOrdinal("Note")), reader.GetString(reader.GetOrdinal("Note")), String.Empty)
                                                                                }
                                                                                items.Add(item)
                                                                            End While
@@ -1726,18 +1622,19 @@ Namespace BuildersPSE.DataAccess
                     SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
                                                                                ' Delete existing items
                                                                                Dim deleteParams As SqlParameter() = {
-                                                                           New SqlParameter("@ProjectID", projectID)
-                                                                       }
+                                                                   New SqlParameter("@ProjectID", projectID)
+                                                               }
                                                                                SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectItems, deleteParams, conn, transaction)
                                                                                ' Insert new items
                                                                                For Each item In items
                                                                                    Dim paramsDict As New Dictionary(Of String, Object) From {
-                                                                               {"@ProjectID", projectID},
-                                                                               {"@Section", If(String.IsNullOrEmpty(item.Section), DBNull.Value, CObj(item.Section))},
-                                                                               {"@KN", item.KN},
-                                                                               {"@Description", If(String.IsNullOrEmpty(item.Description), DBNull.Value, CObj(item.Description))},
-                                                                               {"@Status", If(String.IsNullOrEmpty(item.Status), DBNull.Value, CObj(item.Status))}
-                                                                           }
+                                                                       {"@ProjectID", projectID},
+                                                                       {"@Section", If(String.IsNullOrEmpty(item.Section), DBNull.Value, CObj(item.Section))},
+                                                                       {"@KN", item.KN},
+                                                                       {"@Description", If(String.IsNullOrEmpty(item.Description), DBNull.Value, CObj(item.Description))},
+                                                                       {"@Status", If(String.IsNullOrEmpty(item.Status), DBNull.Value, CObj(item.Status))},
+                                                                       {"@Note", If(String.IsNullOrEmpty(item.Note), DBNull.Value, CObj(item.Note))}
+                                                                   }
                                                                                    Dim newIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)(Queries.InsertProjectItem, BuildParameters(paramsDict), conn, transaction)
                                                                                    item.ItemID = CInt(newIDObj)
                                                                                Next
@@ -1745,6 +1642,288 @@ Namespace BuildersPSE.DataAccess
                                                                            End Sub, "Error saving ProjectItems for ProjectID " & projectID)
                 End Using
             End Using
+        End Sub
+        Public Function GetComboOptions(category As String) As List(Of String)
+            Dim options As New List(Of String)
+            Dim params As SqlParameter() = {New SqlParameter("@Category", category)}
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectComboOptions, params)
+                                                                           While reader.Read()
+                                                                               options.Add(reader.GetString(reader.GetOrdinal("Value")))
+                                                                           End While
+                                                                       End Using
+                                                                   End Sub, "Error loading combo options for category " & category)
+            Return options
+        End Function
+
+        Public Function GetItemOptions(section As String) As List(Of Tuple(Of Integer, String))
+            Dim options As New List(Of Tuple(Of Integer, String))
+            Dim params As SqlParameter() = {New SqlParameter("@Section", section)}
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectItemOptions, params)
+                                                                           While reader.Read()
+                                                                               options.Add(Tuple.Create(reader.GetInt32(reader.GetOrdinal("KN")), reader.GetString(reader.GetOrdinal("Description"))))
+                                                                           End While
+                                                                       End Using
+                                                                   End Sub, "Error loading item options for section " & section)
+            Return options
+        End Function
+
+        ' In DataAccess.vb: Add these methods
+
+        Public Function GetProjectIDByVersionID(versionID As Integer) As Integer
+            Dim params As SqlParameter() = {New SqlParameter("@VersionID", versionID)}
+            Dim idObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)("SELECT ProjectID FROM ProjectVersions WHERE VersionID = @VersionID", params)
+            Return If(idObj Is DBNull.Value OrElse idObj Is Nothing, 0, CInt(idObj))
+        End Function
+
+        Private Function GetLevelInfo(levelID As Integer) As Tuple(Of Integer, Integer, Decimal)
+            Dim params As SqlParameter() = {New SqlParameter("@LevelID", levelID)}
+            Dim versionID As Integer = 0
+            Dim productTypeID As Integer = 0
+            Dim commonSQFT As Decimal = 0D
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader("SELECT VersionID, ProductTypeID, ISNULL(CommonSQFT, 0) FROM Levels WHERE LevelID = @LevelID", params)
+                                                                           If reader.Read() Then
+                                                                               versionID = reader.GetInt32(0)
+                                                                               productTypeID = reader.GetInt32(1)
+                                                                               commonSQFT = reader.GetDecimal(2)
+                                                                           Else
+                                                                               Throw New Exception("Level not found for ID " & levelID)
+                                                                           End If
+                                                                       End Using
+                                                                   End Sub, "Error fetching level info for " & levelID)
+            Return Tuple.Create(versionID, productTypeID, commonSQFT)
+        End Function
+
+        Public Function GetEffectiveMargin(versionID As Integer, productTypeID As Integer, rawUnitID As Integer) As Decimal
+            Dim margin As Decimal = GetMarginPercent(versionID, productTypeID)
+            If margin <= 0D Then
+                Dim rawUnit As RawUnitModel = GetRawUnitByID(rawUnitID)
+                If rawUnit IsNot Nothing AndAlso rawUnit.TotalSellPrice.HasValue AndAlso rawUnit.TotalSellPrice > 0D AndAlso rawUnit.OverallCost.HasValue AndAlso rawUnit.OverallCost < rawUnit.TotalSellPrice.Value Then
+                    margin = (rawUnit.TotalSellPrice.Value - rawUnit.OverallCost.Value) / rawUnit.TotalSellPrice.Value
+                End If
+            End If
+            If margin <= 0D Then
+                margin = GetConfigValue("DefaultMarginPercent")
+            End If
+            Return margin
+        End Function
+
+        Public Function ComputeLevelUnits(levelID As Integer) As List(Of DisplayUnitData)
+            Dim units As New List(Of DisplayUnitData)
+            Dim mappings As List(Of ActualToLevelMappingModel) = GetActualToLevelMappingsByLevelID(levelID)
+            If Not mappings.Any() Then Return units
+
+            Dim levelInfo As Tuple(Of Integer, Integer, Decimal) = GetLevelInfo(levelID)
+            Dim versionID As Integer = levelInfo.Item1
+            Dim productTypeID As Integer = levelInfo.Item2
+            ' commonSQFT = levelInfo.Item3 (not used here)
+
+            Dim projectID As Integer = GetProjectIDByVersionID(versionID)
+            Dim miles As Integer = GetMilesToJobSite(projectID)
+            Dim mileageRate As Decimal = GetConfigValue("MileageRate")
+
+            Dim totalBDFT As Decimal = 0D
+            Dim unitBDFTs As New List(Of Decimal)
+
+            For Each mapping As ActualToLevelMappingModel In mappings
+                Dim actual As ActualUnitModel = mapping.ActualUnit
+                Dim raw As RawUnitModel = GetRawUnitByID(actual.RawUnitID)
+                If raw Is Nothing OrElse raw.SqFt.GetValueOrDefault() <= 0D Then Continue For
+
+                Dim display As New DisplayUnitData With {
+                    .ActualUnit = actual,
+                    .MappingID = mapping.MappingID,
+                    .ReferencedRawUnitName = raw.RawUnitName,
+                    .ActualUnitQuantity = mapping.Quantity
+                }
+
+                Dim planSqft As Decimal = actual.PlanSQFT
+                Dim opt As Decimal = actual.OptionalAdder
+                Dim qty As Integer = mapping.Quantity
+                Dim extSqft As Decimal = planSqft * qty * opt
+
+                Dim lfPer As Decimal = raw.LF.GetValueOrDefault() / raw.SqFt.Value
+                display.LF = lfPer * extSqft
+
+                Dim bdftPer As Decimal = raw.BF.GetValueOrDefault() / raw.SqFt.Value
+                display.BDFT = bdftPer * extSqft
+
+                Dim lumberPer As Decimal = raw.LumberCost.GetValueOrDefault() / raw.SqFt.Value
+                display.LumberCost = lumberPer * extSqft
+
+                Dim effective As Decimal = GetLumberAdder(versionID, productTypeID)
+                If effective > 0D Then
+                    display.LumberCost += (display.BDFT / 1000D) * effective
+                End If
+
+                display.PlateCost = (raw.PlateCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                display.ManufLaborCost = (raw.ManufLaborCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                display.DesignLabor = (raw.DesignLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                display.MGMTLabor = (raw.MGMTLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                display.JobSuppliesCost = (raw.JobSuppliesCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                display.ManHours = (raw.ManHours.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                display.ItemCost = (raw.ItemCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+
+                display.OverallCost = display.LumberCost + display.PlateCost + display.ManufLaborCost + display.DesignLabor + display.MGMTLabor + display.JobSuppliesCost + display.ItemCost
+
+                Dim margin As Decimal = GetEffectiveMargin(versionID, productTypeID, raw.RawUnitID)
+                display.SellPrice = If(margin >= 1D, display.OverallCost, display.OverallCost / (1D - margin))
+                display.Margin = display.SellPrice - display.OverallCost
+
+                unitBDFTs.Add(display.BDFT)
+                totalBDFT += display.BDFT
+
+                units.Add(display)
+            Next
+
+            Dim deliveryTotal As Decimal = 0D
+            If totalBDFT > 0D Then
+                Dim numLoads As Decimal = Math.Ceiling(totalBDFT / 10000D)
+                deliveryTotal = numLoads * mileageRate * miles
+                If deliveryTotal < 150D Then deliveryTotal = 150D
+            End If
+
+            If totalBDFT > 0D Then
+                For i As Integer = 0 To units.Count - 1
+                    units(i).DeliveryCost = (unitBDFTs(i) / totalBDFT) * deliveryTotal
+                    Dim margin As Decimal = GetEffectiveMargin(versionID, units(i).ActualUnit.ProductTypeID, units(i).ActualUnit.RawUnitID)
+                    units(i).SellPrice = If(margin >= 1D, units(i).OverallCost + units(i).DeliveryCost, units(i).OverallCost / (1D - margin) + units(i).DeliveryCost)
+                    units(i).Margin = units(i).SellPrice - units(i).OverallCost - units(i).DeliveryCost
+                Next
+            End If
+
+            Return units
+        End Function
+
+        Public Sub RecalculateVersion(versionID As Integer)
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Dim buildings As List(Of BuildingModel) = GetBuildingsByVersionID(versionID)
+                                                                       For Each bldg As BuildingModel In buildings
+                                                                           Dim levels As List(Of LevelModel) = GetLevelsByBuildingID(bldg.BuildingID)
+                                                                           For Each lvl As LevelModel In levels
+                                                                               UpdateLevelRollups(lvl.LevelID)
+                                                                           Next
+                                                                           UpdateBuildingRollups(bldg.BuildingID)
+                                                                       Next
+                                                                   End Sub, "Error recalculating version " & versionID)
+        End Sub
+
+        ' Replace existing UpdateLevelRollups with this
+        Public Sub UpdateLevelRollups(levelID As Integer)
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Dim units As List(Of DisplayUnitData) = ComputeLevelUnits(levelID)
+                                                                       Dim overallSQFT As Decimal = units.Sum(Function(u) u.PlanSQFT * u.ActualUnitQuantity * u.OptionalAdder)
+                                                                       Dim overallLF As Decimal = units.Sum(Function(u) u.LF)
+                                                                       Dim overallBDFT As Decimal = units.Sum(Function(u) u.BDFT)
+                                                                       Dim lumberCost As Decimal = units.Sum(Function(u) u.LumberCost)
+                                                                       Dim plateCost As Decimal = units.Sum(Function(u) u.PlateCost)
+                                                                       Dim laborCost As Decimal = units.Sum(Function(u) u.ManufLaborCost)
+                                                                       Dim laborMH As Decimal = units.Sum(Function(u) u.ManHours)
+                                                                       Dim designCost As Decimal = units.Sum(Function(u) u.DesignLabor)
+                                                                       Dim mgmtCost As Decimal = units.Sum(Function(u) u.MGMTLabor)
+                                                                       Dim jobSuppliesCost As Decimal = units.Sum(Function(u) u.JobSuppliesCost)
+                                                                       Dim itemsCost As Decimal = units.Sum(Function(u) u.ItemCost)
+                                                                       Dim deliveryCost As Decimal = units.Sum(Function(u) u.DeliveryCost)
+                                                                       Dim overallCost As Decimal = units.Sum(Function(u) u.OverallCost)
+                                                                       Dim overallPrice As Decimal = units.Sum(Function(u) u.SellPrice)
+
+                                                                       Dim levelInfo As Tuple(Of Integer, Integer, Decimal) = GetLevelInfo(levelID)
+                                                                       Dim commonSQFT As Decimal = levelInfo.Item3
+                                                                       Dim totalSQFT As Decimal = overallSQFT + commonSQFT
+                                                                       Dim avgPricePerSqft As Decimal = If(totalSQFT > 0D, overallPrice / totalSQFT, 0D)
+
+                                                                       Dim paramsDict As New Dictionary(Of String, Object) From {
+                                                                           {"@LevelID", levelID},
+                                                                           {"@OverallSQFT", overallSQFT},
+                                                                           {"@OverallLF", overallLF},
+                                                                           {"@OverallBDFT", overallBDFT},
+                                                                           {"@LumberCost", lumberCost},
+                                                                           {"@PlateCost", plateCost},
+                                                                           {"@LaborCost", laborCost},
+                                                                           {"@LaborMH", laborMH},
+                                                                           {"@DesignCost", designCost},
+                                                                           {"@MGMTCost", mgmtCost},
+                                                                           {"@JobSuppliesCost", jobSuppliesCost},
+                                                                           {"@ItemsCost", itemsCost},
+                                                                           {"@DeliveryCost", deliveryCost},
+                                                                           {"@OverallCost", overallCost},
+                                                                           {"@OverallPrice", overallPrice},
+                                                                           {"@TotalSQFT", totalSQFT},
+                                                                           {"@AvgPricePerSQFT", avgPricePerSqft}
+                                                                       }
+                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateLevelRollupsSql, BuildParameters(paramsDict))
+                                                                   End Sub, "Error updating level rollups for " & levelID)
+        End Sub
+        ' In DataAccess.vb: Add method to get average AvgSPFNo2 for floors and roofs
+        Public Function GetAverageSPFNo2ByProductType(versionID As Integer, productTypeName As String) As Decimal
+            Dim avgSPFNo2 As Decimal = 0D
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Dim params As New Dictionary(Of String, Object) From {
+                                                                           {"@VersionID", versionID},
+                                                                           {"@ProductTypeName", productTypeName}
+                                                                       }
+                                                                       Dim query As String = "SELECT AVG(ru.AvgSPFNo2) FROM RawUnits ru INNER JOIN ProductType pt ON ru.ProductTypeID = pt.ProductTypeID WHERE ru.VersionID = @VersionID AND pt.ProductTypeName = @ProductTypeName AND ru.AvgSPFNo2 IS NOT NULL"
+                                                                       Dim result As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(query, BuildParameters(params))
+                                                                       If result IsNot DBNull.Value Then
+                                                                           avgSPFNo2 = CDec(result)
+                                                                       End If
+                                                                   End Sub, $"Error calculating average SPFNo2 for {productTypeName} in version {versionID}")
+            Return avgSPFNo2
+        End Function
+        ' Delete an entire project and all related data, respecting FK constraints
+        ' Delete an entire project and all related data, respecting FK constraints
+        Public Sub DeleteProject(projectID As Integer, ByRef notificationMessage As String)
+            Dim localNotification As String = String.Empty
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                           conn.Open()
+                                                                           Using transaction As SqlTransaction = conn.BeginTransaction()
+                                                                               Try
+                                                                                   ' Fetch all VersionIDs for the project
+                                                                                   Dim versionIDs As New List(Of Integer)
+                                                                                   Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReaderTransactional(Queries.SelectProjectVersions, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+                                                                                       While reader.Read()
+                                                                                           versionIDs.Add(reader.GetInt32(reader.GetOrdinal("VersionID")))
+                                                                                       End While
+                                                                                   End Using
+
+                                                                                   ' Delete version-related data in FK-safe order
+                                                                                   For Each vid As Integer In versionIDs
+                                                                                       SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteActualToLevelMappingsByVersion, New SqlParameter() {New SqlParameter("@VersionID", vid)}, conn, transaction)
+                                                                                       SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteCalculatedComponentsByVersion, New SqlParameter() {New SqlParameter("@VersionID", vid)}, conn, transaction)
+                                                                                       SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteActualUnitsByVersion, New SqlParameter() {New SqlParameter("@VersionID", vid)}, conn, transaction)
+                                                                                       SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteRawUnitsByVersion, New SqlParameter() {New SqlParameter("@VersionID", vid)}, conn, transaction)
+                                                                                       SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteLevelsByVersion, New SqlParameter() {New SqlParameter("@VersionID", vid)}, conn, transaction)
+                                                                                       SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteBuildingsByVersion, New SqlParameter() {New SqlParameter("@VersionID", vid)}, conn, transaction)
+                                                                                       SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectProductSettingsByVersion, New SqlParameter() {New SqlParameter("@VersionID", vid)}, conn, transaction)
+                                                                                   Next
+
+                                                                                   ' Delete project versions
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectVersionsByProject, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+
+                                                                                   ' Delete direct project-related data
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectDesignInfoByProject, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectLoadsByProject, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectBearingStylesByProject, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectGeneralNotesByProject, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectItemsByProject, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+
+                                                                                   ' Finally, delete the project
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DeleteProjectByID, New SqlParameter() {New SqlParameter("@ProjectID", projectID)}, conn, transaction)
+
+                                                                                   transaction.Commit()
+                                                                                   localNotification = $"Project {projectID} was successfully deleted."
+                                                                               Catch ex As Exception
+                                                                                   transaction.Rollback()
+                                                                                   localNotification = String.Empty ' Clear message on failure
+                                                                                   Throw
+                                                                               End Try
+                                                                           End Using
+                                                                       End Using
+                                                                   End Sub, "Error deleting project " & projectID)
+            notificationMessage = localNotification
         End Sub
 
     End Class

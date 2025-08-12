@@ -6,4 +6,6 @@
     Public Property KN As Integer
     Public Property Description As String
     Public Property Status As String
+    Public Property Note As String
+
 End Class
