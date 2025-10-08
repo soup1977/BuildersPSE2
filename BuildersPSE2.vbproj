@@ -210,6 +210,12 @@
     <Compile Include="Forms\frmVersionDialog.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\frmLumberManagement.Designer.vb">
+      <DependentUpon>frmLumberManagement.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmLumberManagement.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="IncExcDataSet.Designer.vb">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -228,6 +234,9 @@
     <Compile Include="Models\DisplayUnitData.vb" />
     <Compile Include="Models\EstimatorModel.vb" />
     <Compile Include="Models\LevelModel.vb" />
+    <Compile Include="Models\LumberCostEffectiveModel.vb" />
+    <Compile Include="Models\LumberCostModel.vb" />
+    <Compile Include="Models\LumberTypeModel.vb" />
     <Compile Include="Models\MondayBoardItem.vb" />
     <Compile Include="Models\ProductTypeModel.vb" />
     <Compile Include="Models\ProjectBearingStylesModel.vb" />
@@ -277,6 +286,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmInclusionsExclusions.resx">
       <DependentUpon>frmInclusionsExclusions.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmLumberManagement.resx">
+      <DependentUpon>frmLumberManagement.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmMain.resx">
       <DependentUpon>frmMain.vb</DependentUpon>

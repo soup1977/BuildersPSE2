@@ -553,65 +553,79 @@ Namespace BuildersPSE.DataAccess
                                                                    End Sub, "RawUnits import failed for version " & versionID)
         End Sub
         ' Add to DataAccess.vb
-        Public Function InsertRawUnit(rawUnit As RawUnitModel) As Integer
-            Dim params As New Dictionary(Of String, Object) From {
-        {"@RawUnitName", If(String.IsNullOrEmpty(rawUnit.RawUnitName), DBNull.Value, CType(rawUnit.RawUnitName, Object))},
-        {"@VersionID", rawUnit.VersionID},
-        {"@ProductTypeID", rawUnit.ProductTypeID},
-        {"@BF", If(rawUnit.BF.HasValue, CType(rawUnit.BF.Value, Object), DBNull.Value)},
-        {"@LF", If(rawUnit.LF.HasValue, CType(rawUnit.LF.Value, Object), DBNull.Value)},
-        {"@EWPLF", If(rawUnit.EWPLF.HasValue, CType(rawUnit.EWPLF.Value, Object), DBNull.Value)},
-        {"@SqFt", If(rawUnit.SqFt.HasValue, CType(rawUnit.SqFt.Value, Object), DBNull.Value)},
-        {"@FCArea", If(rawUnit.FCArea.HasValue, CType(rawUnit.FCArea.Value, Object), DBNull.Value)},
-        {"@LumberCost", If(rawUnit.LumberCost.HasValue, CType(rawUnit.LumberCost.Value, Object), DBNull.Value)},
-        {"@PlateCost", If(rawUnit.PlateCost.HasValue, CType(rawUnit.PlateCost.Value, Object), DBNull.Value)},
-        {"@ManufLaborCost", If(rawUnit.ManufLaborCost.HasValue, CType(rawUnit.ManufLaborCost.Value, Object), DBNull.Value)},
-        {"@DesignLabor", If(rawUnit.DesignLabor.HasValue, CType(rawUnit.DesignLabor.Value, Object), DBNull.Value)},
-        {"@MGMTLabor", If(rawUnit.MGMTLabor.HasValue, CType(rawUnit.MGMTLabor.Value, Object), DBNull.Value)},
-        {"@JobSuppliesCost", If(rawUnit.JobSuppliesCost.HasValue, CType(rawUnit.JobSuppliesCost.Value, Object), DBNull.Value)},
-        {"@ManHours", If(rawUnit.ManHours.HasValue, CType(rawUnit.ManHours.Value, Object), DBNull.Value)},
-        {"@ItemCost", If(rawUnit.ItemCost.HasValue, CType(rawUnit.ItemCost.Value, Object), DBNull.Value)},
-        {"@OverallCost", If(rawUnit.OverallCost.HasValue, CType(rawUnit.OverallCost.Value, Object), DBNull.Value)},
-        {"@DeliveryCost", If(rawUnit.DeliveryCost.HasValue, CType(rawUnit.DeliveryCost.Value, Object), DBNull.Value)},
-        {"@TotalSellPrice", If(rawUnit.TotalSellPrice.HasValue, CType(rawUnit.TotalSellPrice.Value, Object), DBNull.Value)},
-        {"@AvgSPFNo2", If(rawUnit.AvgSPFNo2.HasValue, CType(rawUnit.AvgSPFNo2.Value, Object), DBNull.Value)}
-    }
-            Dim newID As Integer
+        Public Function InsertRawUnit(model As RawUnitModel) As Integer
+            Dim newRawUnitID As Integer
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Dim newIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertRawUnit, BuildParameters(params))
-                                                                       If newIDObj Is DBNull.Value OrElse newIDObj Is Nothing Then
-                                                                           Throw New Exception("Failed to insert RawUnit for " & rawUnit.RawUnitName)
-                                                                       End If
-                                                                       newID = CInt(newIDObj)
-                                                                   End Sub, "Error inserting raw unit for version " & rawUnit.VersionID)
-            Return newID
+                                                                       Dim params As New Dictionary(Of String, Object) From {
+            {"@RawUnitName", model.RawUnitName},
+            {"@VersionID", model.VersionID},
+            {"@ProductTypeID", model.ProductTypeID},
+            {"@BF", If(model.BF.HasValue, CType(model.BF.Value, Object), DBNull.Value)},
+            {"@LF", If(model.LF.HasValue, CType(model.LF.Value, Object), DBNull.Value)},
+            {"@EWPLF", If(model.EWPLF.HasValue, CType(model.EWPLF.Value, Object), DBNull.Value)},
+            {"@SqFt", If(model.SqFt.HasValue, CType(model.SqFt.Value, Object), DBNull.Value)},
+            {"@FCArea", If(model.FCArea.HasValue, CType(model.FCArea.Value, Object), DBNull.Value)},
+            {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
+            {"@PlateCost", If(model.PlateCost.HasValue, CType(model.PlateCost.Value, Object), DBNull.Value)},
+            {"@ManufLaborCost", If(model.ManufLaborCost.HasValue, CType(model.ManufLaborCost.Value, Object), DBNull.Value)},
+            {"@DesignLabor", If(model.DesignLabor.HasValue, CType(model.DesignLabor.Value, Object), DBNull.Value)},
+            {"@MGMTLabor", If(model.MGMTLabor.HasValue, CType(model.MGMTLabor.Value, Object), DBNull.Value)},
+            {"@JobSuppliesCost", If(model.JobSuppliesCost.HasValue, CType(model.JobSuppliesCost.Value, Object), DBNull.Value)},
+            {"@ManHours", If(model.ManHours.HasValue, CType(model.ManHours.Value, Object), DBNull.Value)},
+            {"@ItemCost", If(model.ItemCost.HasValue, CType(model.ItemCost.Value, Object), DBNull.Value)},
+            {"@OverallCost", If(model.OverallCost.HasValue, CType(model.OverallCost.Value, Object), DBNull.Value)},
+            {"@DeliveryCost", If(model.DeliveryCost.HasValue, CType(model.DeliveryCost.Value, Object), DBNull.Value)},
+            {"@TotalSellPrice", If(model.TotalSellPrice.HasValue, CType(model.TotalSellPrice.Value, Object), DBNull.Value)},
+            {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
+            {"@SPFNo2BDFT", If(model.SPFNo2BDFT.HasValue, CType(model.SPFNo2BDFT.Value, Object), DBNull.Value)},
+            {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
+            {"@MSR241800BDFT", If(model.MSR241800BDFT.HasValue, CType(model.MSR241800BDFT.Value, Object), DBNull.Value)},
+            {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
+            {"@MSR242400BDFT", If(model.MSR242400BDFT.HasValue, CType(model.MSR242400BDFT.Value, Object), DBNull.Value)},
+            {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
+            {"@MSR261800BDFT", If(model.MSR261800BDFT.HasValue, CType(model.MSR261800BDFT.Value, Object), DBNull.Value)},
+            {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)},
+            {"@MSR262400BDFT", If(model.MSR262400BDFT.HasValue, CType(model.MSR262400BDFT.Value, Object), DBNull.Value)}
+        }
+                                                                       newRawUnitID = SqlConnectionManager.Instance.ExecuteScalar(Of Integer)(Queries.InsertRawUnit, BuildParameters(params))
+                                                                   End Sub, "Error inserting RawUnit " & model.RawUnitName)
+            Return newRawUnitID
         End Function
 
-        Public Sub UpdateRawUnit(rawUnit As RawUnitModel)
-            Dim params As New Dictionary(Of String, Object) From {
-        {"@RawUnitID", rawUnit.RawUnitID},
-        {"@RawUnitName", If(String.IsNullOrEmpty(rawUnit.RawUnitName), DBNull.Value, CType(rawUnit.RawUnitName, Object))},
-        {"@BF", If(rawUnit.BF.HasValue, CType(rawUnit.BF.Value, Object), DBNull.Value)},
-        {"@LF", If(rawUnit.LF.HasValue, CType(rawUnit.LF.Value, Object), DBNull.Value)},
-        {"@EWPLF", If(rawUnit.EWPLF.HasValue, CType(rawUnit.EWPLF.Value, Object), DBNull.Value)},
-        {"@SqFt", If(rawUnit.SqFt.HasValue, CType(rawUnit.SqFt.Value, Object), DBNull.Value)},
-        {"@FCArea", If(rawUnit.FCArea.HasValue, CType(rawUnit.FCArea.Value, Object), DBNull.Value)},
-        {"@LumberCost", If(rawUnit.LumberCost.HasValue, CType(rawUnit.LumberCost.Value, Object), DBNull.Value)},
-        {"@PlateCost", If(rawUnit.PlateCost.HasValue, CType(rawUnit.PlateCost.Value, Object), DBNull.Value)},
-        {"@ManufLaborCost", If(rawUnit.ManufLaborCost.HasValue, CType(rawUnit.ManufLaborCost.Value, Object), DBNull.Value)},
-        {"@DesignLabor", If(rawUnit.DesignLabor.HasValue, CType(rawUnit.DesignLabor.Value, Object), DBNull.Value)},
-        {"@MGMTLabor", If(rawUnit.MGMTLabor.HasValue, CType(rawUnit.MGMTLabor.Value, Object), DBNull.Value)},
-        {"@JobSuppliesCost", If(rawUnit.JobSuppliesCost.HasValue, CType(rawUnit.JobSuppliesCost.Value, Object), DBNull.Value)},
-        {"@ManHours", If(rawUnit.ManHours.HasValue, CType(rawUnit.ManHours.Value, Object), DBNull.Value)},
-        {"@ItemCost", If(rawUnit.ItemCost.HasValue, CType(rawUnit.ItemCost.Value, Object), DBNull.Value)},
-        {"@OverallCost", If(rawUnit.OverallCost.HasValue, CType(rawUnit.OverallCost.Value, Object), DBNull.Value)},
-        {"@DeliveryCost", If(rawUnit.DeliveryCost.HasValue, CType(rawUnit.DeliveryCost.Value, Object), DBNull.Value)},
-        {"@TotalSellPrice", If(rawUnit.TotalSellPrice.HasValue, CType(rawUnit.TotalSellPrice.Value, Object), DBNull.Value)},
-        {"@AvgSPFNo2", If(rawUnit.AvgSPFNo2.HasValue, CType(rawUnit.AvgSPFNo2.Value, Object), DBNull.Value)}
-    }
+        Public Sub UpdateRawUnit(model As RawUnitModel)
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Dim params As New Dictionary(Of String, Object) From {
+            {"@RawUnitID", model.RawUnitID},
+            {"@RawUnitName", model.RawUnitName},
+            {"@BF", If(model.BF.HasValue, CType(model.BF.Value, Object), DBNull.Value)},
+            {"@LF", If(model.LF.HasValue, CType(model.LF.Value, Object), DBNull.Value)},
+            {"@EWPLF", If(model.EWPLF.HasValue, CType(model.EWPLF.Value, Object), DBNull.Value)},
+            {"@SqFt", If(model.SqFt.HasValue, CType(model.SqFt.Value, Object), DBNull.Value)},
+            {"@FCArea", If(model.FCArea.HasValue, CType(model.FCArea.Value, Object), DBNull.Value)},
+            {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
+            {"@PlateCost", If(model.PlateCost.HasValue, CType(model.PlateCost.Value, Object), DBNull.Value)},
+            {"@ManufLaborCost", If(model.ManufLaborCost.HasValue, CType(model.ManufLaborCost.Value, Object), DBNull.Value)},
+            {"@DesignLabor", If(model.DesignLabor.HasValue, CType(model.DesignLabor.Value, Object), DBNull.Value)},
+            {"@MGMTLabor", If(model.MGMTLabor.HasValue, CType(model.MGMTLabor.Value, Object), DBNull.Value)},
+            {"@JobSuppliesCost", If(model.JobSuppliesCost.HasValue, CType(model.JobSuppliesCost.Value, Object), DBNull.Value)},
+            {"@ManHours", If(model.ManHours.HasValue, CType(model.ManHours.Value, Object), DBNull.Value)},
+            {"@ItemCost", If(model.ItemCost.HasValue, CType(model.ItemCost.Value, Object), DBNull.Value)},
+            {"@OverallCost", If(model.OverallCost.HasValue, CType(model.OverallCost.Value, Object), DBNull.Value)},
+            {"@DeliveryCost", If(model.DeliveryCost.HasValue, CType(model.DeliveryCost.Value, Object), DBNull.Value)},
+            {"@TotalSellPrice", If(model.TotalSellPrice.HasValue, CType(model.TotalSellPrice.Value, Object), DBNull.Value)},
+            {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
+            {"@SPFNo2BDFT", If(model.SPFNo2BDFT.HasValue, CType(model.SPFNo2BDFT.Value, Object), DBNull.Value)},
+            {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
+            {"@MSR241800BDFT", If(model.MSR241800BDFT.HasValue, CType(model.MSR241800BDFT.Value, Object), DBNull.Value)},
+            {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
+            {"@MSR242400BDFT", If(model.MSR242400BDFT.HasValue, CType(model.MSR242400BDFT.Value, Object), DBNull.Value)},
+            {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
+            {"@MSR261800BDFT", If(model.MSR261800BDFT.HasValue, CType(model.MSR261800BDFT.Value, Object), DBNull.Value)},
+            {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)},
+            {"@MSR262400BDFT", If(model.MSR262400BDFT.HasValue, CType(model.MSR262400BDFT.Value, Object), DBNull.Value)}
+        }
                                                                        SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateRawUnit, BuildParameters(params))
-                                                                   End Sub, "Error updating raw unit " & rawUnit.RawUnitID)
+                                                                   End Sub, "Error updating RawUnit " & model.RawUnitName)
         End Sub
 
         ' GetLevelsByBuildingID (unchanged, uses BuildingID)
@@ -2023,5 +2037,119 @@ Namespace BuildersPSE.DataAccess
 
             Return dt
         End Function
-    End Class
+
+
+        ' LumberType Methods
+        Public Function GetAllLumberTypes() As DataTable
+                Dim dt As New DataTable()
+                SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                           Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                               conn.Open()
+                                                                               Dim cmd As New SqlCommand(Queries.SelectLumberTypes, conn)
+                                                                               Dim da As New SqlDataAdapter(cmd)
+                                                                               da.Fill(dt)
+                                                                           End Using
+                                                                       End Sub, "Error fetching lumber types")
+                Return dt
+            End Function
+
+            Public Function CreateLumberType(lumberTypeDesc As String) As Integer
+                If String.IsNullOrWhiteSpace(lumberTypeDesc) Then
+                    Throw New ArgumentException("LumberTypeDesc cannot be null or empty.")
+                End If
+
+                Dim newLumberTypeID As Integer
+                SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                           Dim params As New Dictionary(Of String, Object) From {
+                                                                               {"@LumberTypeDesc", lumberTypeDesc}
+                                                                           }
+                                                                           Dim newIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertLumberType, BuildParameters(params))
+                                                                           newLumberTypeID = CInt(newIDObj)
+                                                                       End Sub, "Error creating lumber type: " & lumberTypeDesc)
+                Return newLumberTypeID
+            End Function
+
+            ' LumberCostEffective Methods
+            Public Function GetAllLumberCostEffective() As DataTable
+                Dim dt As New DataTable()
+                SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                           Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                               conn.Open()
+                                                                               Dim cmd As New SqlCommand(Queries.SelectLumberCostEffective, conn)
+                                                                               Dim da As New SqlDataAdapter(cmd)
+                                                                               da.Fill(dt)
+                                                                           End Using
+                                                                       End Sub, "Error fetching lumber cost effective dates")
+                Return dt
+            End Function
+
+            Public Function CreateLumberCostEffective(effectiveDate As Date) As Integer
+                Dim newCostEffectiveID As Integer
+                SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                           Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                               conn.Open()
+                                                                               Using transaction As SqlTransaction = conn.BeginTransaction()
+                                                                                   Try
+                                                                                       ' Insert new LumberCostEffective record
+                                                                                       Dim params As New Dictionary(Of String, Object) From {
+                                                                                           {"@CosteffectiveDate", effectiveDate}
+                                                                                       }
+                                                                                       Dim newIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)(Queries.InsertLumberCostEffective, BuildParameters(params), conn, transaction)
+                                                                                       newCostEffectiveID = CInt(newIDObj)
+
+                                                                                       ' Get all LumberType IDs
+                                                                                       Dim lumberTypes As DataTable = GetAllLumberTypes()
+                                                                                       For Each row As DataRow In lumberTypes.Rows
+                                                                                           Dim lumberTypeID As Integer = CInt(row("LumberTypeID"))
+                                                                                           ' Insert LumberCost record for each LumberType with default cost 0.00
+                                                                                           params = New Dictionary(Of String, Object) From {
+                                                                                               {"@LumberTypeID", lumberTypeID},
+                                                                                               {"@LumberCost", 0.00D},
+                                                                                               {"@CostEffectiveDateID", newCostEffectiveID}
+                                                                                           }
+                                                                                           SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.InsertLumberCost, BuildParameters(params), conn, transaction)
+                                                                                       Next
+
+                                                                                       transaction.Commit()
+                                                                                   Catch ex As Exception
+                                                                                       transaction.Rollback()
+                                                                                       Throw
+                                                                                   End Try
+                                                                               End Using
+                                                                           End Using
+                                                                       End Sub, "Error creating lumber cost effective date: " & effectiveDate.ToString("yyyy-MM-dd"))
+                Return newCostEffectiveID
+            End Function
+
+            ' LumberCost Methods
+            Public Function GetLumberCostsByEffectiveDate(costEffectiveDateID As Integer) As DataTable
+                Dim dt As New DataTable()
+                SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                           Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                               conn.Open()
+                                                                               Dim cmd As New SqlCommand(Queries.SelectLumberCostsByEffectiveDate, conn)
+                                                                               cmd.Parameters.Add(New SqlParameter("@CostEffectiveDateID", costEffectiveDateID))
+                                                                               Dim da As New SqlDataAdapter(cmd)
+                                                                               da.Fill(dt)
+                                                                           End Using
+                                                                       End Sub, "Error fetching lumber costs for CostEffectiveDateID: " & costEffectiveDateID)
+                Return dt
+            End Function
+
+            Public Sub UpdateLumberCost(lumberCostID As Integer, lumberCost As Decimal)
+                SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                           If lumberCost < 0 Then
+                                                                               Throw New ArgumentException("Lumber cost cannot be negative.")
+                                                                           End If
+                                                                           Dim params As New Dictionary(Of String, Object) From {
+                                                                               {"@LumberCostID", lumberCostID},
+                                                                               {"@LumberCost", lumberCost}
+                                                                           }
+                                                                           SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateLumberCost, BuildParameters(params))
+                                                                       End Sub, "Error updating lumber cost for LumberCostID: " & lumberCostID)
+            End Sub
+
+
+
+        End Class
 End Namespace

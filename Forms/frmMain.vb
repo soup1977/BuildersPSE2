@@ -130,6 +130,14 @@ Public Class frmMain
         End Try
     End Sub
 
-
-
+    Private Sub btnEditLumber_Click(sender As Object, e As EventArgs) Handles btnEditLumber.Click
+        Try
+            Dim tagValue As String = $"LumberManagement_{m_ChildFormNumber + 1}"
+            AddFormToTabControl(GetType(frmLumberManagement), tagValue)
+            ToolStripStatusLabel.Text = $"Opening Lumber Management form (Tab: {tagValue}) at {DateTime.Now:HH:mm:ss}"
+        Catch ex As Exception
+            ToolStripStatusLabel.Text = $"Error opening Lumber Management form: {ex.Message} at {DateTime.Now:HH:mm:ss}"
+            MessageBox.Show($"Error opening Lumber Management form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
 End Class

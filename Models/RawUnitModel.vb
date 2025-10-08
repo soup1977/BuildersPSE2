@@ -26,7 +26,15 @@ Namespace BuildersPSE.Models
         Public Property DeliveryCost As Decimal?
         Public Property TotalSellPrice As Decimal?
         Public Property AvgSPFNo2 As Decimal?
-
+        Public Property SPFNo2BDFT As Decimal?
+        Public Property Avg241800 As Decimal?
+        Public Property MSR241800BDFT As Decimal?
+        Public Property Avg242400 As Decimal?
+        Public Property MSR242400BDFT As Decimal?
+        Public Property Avg261800 As Decimal?
+        Public Property MSR261800BDFT As Decimal?
+        Public Property Avg262400 As Decimal?
+        Public Property MSR262400BDFT As Decimal?
         ' Optional: Keep Fields for extensibility during import (e.g., from CSV)
         Public Property Fields As New Dictionary(Of String, Decimal)
     End Class

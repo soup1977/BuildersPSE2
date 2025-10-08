@@ -624,6 +624,7 @@ Public Class FrmPSE
         Dim newRawData As New List(Of Dictionary(Of String, String))
         Const NAME_KEY As String = "ELEVATION" ' Use "Elevation" as the key for RawUnitName based on CSV structure
         Dim requiredHeaders As String() = {NAME_KEY, "PRODUCT", "BF", "LF", "EWPLF", "SQFT", "FCAREA", "LUMBERCOST", "PLATECOST", "MANUFLABORCOST", "DESIGNLABOR", "MGMTLABOR", "JOBSUPPLIESCOST", "MANHOURS", "ITEMCOST", "OVERALLCOST", "DELIVERYCOST", "TOTALSELLPRICE", "AVGSPFNO2"}
+        Dim optionalHeaders As String() = {"SPFNO2BDFT", "AVG2X4-1800", "2X4-1800BDFT", "AVG2X4-2400", "2X4-2400BDFT", "AVG2X6-1800", "2X6-1800BDFT", "AVG2X6-2400", "2X6-2400BDFT"}
         Dim skippedHeaders As New HashSet(Of String) From {"JOBNUMBER", "PROJECT", "CUSTOMERNAME", "JOBNAME", "STRUCTURENAME", "PLAN"}
 
         ' Parse CSV and validate headers
@@ -640,7 +641,6 @@ Public Class FrmPSE
                 Dim trimmedHeader = h.Trim()
                 headerDict(trimmedHeader.ToUpper()) = trimmedHeader
             Next
-
             ' Validate required headers (case-insensitive)
             Dim missingHeaders As New List(Of String)
             For Each reqHeader In requiredHeaders
@@ -651,42 +651,38 @@ Public Class FrmPSE
             If missingHeaders.Any() Then
                 Throw New Exception("Missing required CSV headers: " & String.Join(", ", missingHeaders) & ". Please ensure the CSV includes columns like 'Elevation' for unit names and 'Product' for type.")
             End If
-
             ' Parse rows with uppercased keys
             While Not parser.EndOfData
                 Dim fields() As String = parser.ReadFields()
-                If fields.Length <> headers.Length Then Continue While ' Skip malformed rows
+                If fields.Length < headers.Length Then Continue While ' Skip malformed rows
                 Dim rowDict As New Dictionary(Of String, String)
-                For i As Integer = 0 To headers.Length - 1
+                For i As Integer = 0 To Math.Min(fields.Length - 1, headers.Length - 1)
                     rowDict(headers(i).Trim().ToUpper()) = fields(i).Trim()
                 Next
                 If String.IsNullOrEmpty(rowDict(NAME_KEY.ToUpper())) Then Continue While ' Skip rows with empty unit name
                 newRawData.Add(rowDict)
             End While
         End Using
-
         ' Fetch all RawUnits for the version
         Dim allRawUnits As List(Of RawUnitModel) = dataAccess.GetRawUnitsByVersionID(selectedVersionID)
-
         ' Mapping dialog
         Dim mappingForm As New Form With {
-            .Text = "Map Imported Raw Units",
-            .Size = New Size(600, 400)
-        }
+        .Text = "Map Imported Raw Units",
+        .Size = New Size(600, 400)
+    }
         Dim dgv As New DataGridView With {
-            .Dock = DockStyle.Fill
-        }
+        .Dock = DockStyle.Fill
+    }
         dgv.Columns.Add("NewName", "New RawUnit Name")
         Dim cmbCol As New DataGridViewComboBoxColumn With {
-            .Name = "MapTo",
-            .HeaderText = "Map To Existing or Create New"
-        }
+        .Name = "MapTo",
+        .HeaderText = "Map To Existing or Create New"
+    }
         cmbCol.Items.Add("Create New")
         For Each ex In allRawUnits
             cmbCol.Items.Add(ex.RawUnitName)
         Next
         dgv.Columns.Add(cmbCol)
-
         For Each nr In newRawData
             Dim rowIdx As Integer = dgv.Rows.Add()
             Dim csvUnitName As String = nr(NAME_KEY.ToUpper()).Trim()
@@ -702,19 +698,17 @@ Public Class FrmPSE
             Dim matchName As String = If(matchingUnit IsNot Nothing, matchingUnit.RawUnitName, "Create New")
             dgv.Rows(rowIdx).Cells("MapTo").Value = matchName
         Next
-
         Dim wasConfirmed As Boolean = False
         Dim buttonPanel As New Panel With {
-            .Dock = DockStyle.Bottom,
-            .Height = 40,
-            .BackColor = Color.LightGray
-        }
-
+        .Dock = DockStyle.Bottom,
+        .Height = 40,
+        .BackColor = Color.LightGray
+    }
         Dim btnConfirm As New Button With {
-            .Text = "Confirm Mapping",
-            .Width = 100,
-            .Location = New Point(10, 5) ' Position within panel
-            }
+        .Text = "Confirm Mapping",
+        .Width = 100,
+        .Location = New Point(10, 5)
+    }
         AddHandler btnConfirm.Click, Sub(s, args)
                                          For Each r As DataGridViewRow In dgv.Rows
                                              If r.IsNewRow Then Continue For
@@ -737,12 +731,13 @@ Public Class FrmPSE
                                                      mappedProductTypeID = 1
                                              End Select
                                              Dim model As New RawUnitModel With {
-                                             .VersionID = selectedVersionID,
-                                             .ProductTypeID = mappedProductTypeID,
-                                             .RawUnitName = newName ' Use the displayed name
-                                         }
+                                            .VersionID = selectedVersionID,
+                                            .ProductTypeID = mappedProductTypeID,
+                                            .RawUnitName = newName
+                                        }
                                              Dim decVal As Decimal
                                              Dim upperKey As String
+                                             ' Required fields
                                              upperKey = "BF".ToUpper()
                                              model.BF = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
                                              upperKey = "LF".ToUpper()
@@ -777,6 +772,25 @@ Public Class FrmPSE
                                              model.TotalSellPrice = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
                                              upperKey = "AVGSPFNO2".ToUpper()
                                              model.AvgSPFNo2 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             ' Optional fields for Component Export
+                                             upperKey = "SPFNO2BDFT".ToUpper()
+                                             model.SPFNo2BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "AVG2X4-1800".ToUpper()
+                                             model.Avg241800 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "2X4-1800BDFT".ToUpper()
+                                             model.MSR241800BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "AVG2X4-2400".ToUpper()
+                                             model.Avg242400 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "2X4-2400BDFT".ToUpper()
+                                             model.MSR242400BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "AVG2X6-1800".ToUpper()
+                                             model.Avg261800 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "2X6-1800BDFT".ToUpper()
+                                             model.MSR261800BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "AVG2X6-2400".ToUpper()
+                                             model.Avg262400 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
+                                             upperKey = "2X6-2400BDFT".ToUpper()
+                                             model.MSR262400BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
                                              Try
                                                  If mapTo = "Create New" Then
                                                      dataAccess.InsertRawUnit(model)
@@ -797,17 +811,15 @@ Public Class FrmPSE
                                          wasConfirmed = True
                                          mappingForm.Close()
                                      End Sub
-
         Dim btnCancel As New Button With {
-            .Text = "Cancel",
-            .Width = 100
-        }
-        btnCancel.Location = New Point(buttonPanel.Width - btnCancel.Width + 50, 5) ' Anchor to right within panel
+        .Text = "Cancel",
+        .Width = 100
+    }
+        btnCancel.Location = New Point(buttonPanel.Width - btnCancel.Width + 50, 5)
         AddHandler btnCancel.Click, Sub(s, args)
                                         wasConfirmed = False
                                         mappingForm.Close()
                                     End Sub
-
         buttonPanel.Controls.Add(btnConfirm)
         buttonPanel.Controls.Add(btnCancel)
         mappingForm.Controls.Add(dgv)

@@ -78,6 +78,7 @@ Partial Class FrmPSE
         Me.tabRawUnit = New System.Windows.Forms.TabPage()
         Me.DataGridView1 = New System.Windows.Forms.DataGridView()
         Me.PanelDetails = New System.Windows.Forms.Panel()
+        Me.chkAttachToLevel = New System.Windows.Forms.CheckBox()
         Me.btnDeleteUnit = New System.Windows.Forms.Button()
         Me.btnSave = New System.Windows.Forms.Button()
         Me.LblActualUnitQuantity = New System.Windows.Forms.Label()
@@ -118,7 +119,9 @@ Partial Class FrmPSE
         Me.BtnCancel = New System.Windows.Forms.Button()
         Me.LblReferencedRawUnit = New System.Windows.Forms.Label()
         Me.TxtReferencedRawUnit = New System.Windows.Forms.TextBox()
-        Me.chkAttachToLevel = New System.Windows.Forms.CheckBox()
+        Me.Label3 = New System.Windows.Forms.Label()
+        Me.Label4 = New System.Windows.Forms.Label()
+        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.ContextMenuLevels.SuspendLayout()
         Me.TabControlData.SuspendLayout()
         Me.TabUnitBased.SuspendLayout()
@@ -127,6 +130,7 @@ Partial Class FrmPSE
         Me.tabRawUnit.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.PanelDetails.SuspendLayout()
+        Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
         'TreeViewLevels
@@ -170,46 +174,15 @@ Partial Class FrmPSE
         '
         'TabUnitBased
         '
-        Me.TabUnitBased.Controls.Add(Me.Label2)
-        Me.TabUnitBased.Controls.Add(Me.txtTotMargin)
-        Me.TabUnitBased.Controls.Add(Me.Label1)
-        Me.TabUnitBased.Controls.Add(Me.txtTotalDeliveryCost)
+        Me.TabUnitBased.Controls.Add(Me.GroupBox1)
+        Me.TabUnitBased.Controls.Add(Me.Label4)
+        Me.TabUnitBased.Controls.Add(Me.Label3)
         Me.TabUnitBased.Controls.Add(Me.ChkDetailedView)
         Me.TabUnitBased.Controls.Add(Me.btnReuseActualUnit)
         Me.TabUnitBased.Controls.Add(Me.ListboxExistingActualUnits)
         Me.TabUnitBased.Controls.Add(Me.BtnImportLevelData)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalMargin)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalMargin)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalSellPrice)
         Me.TabUnitBased.Controls.Add(Me.BtnRecalculate)
         Me.TabUnitBased.Controls.Add(Me.BtnFinish)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalSellPrice)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalOverallCost)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalOverallCost)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalItemCost)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalItemCost)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalManHours)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalManHours)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalJobSuppliesCost)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalJobSuppliesCost)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalMGMTLabor)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalMGMTLabor)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalDesignLabor)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalDesignLabor)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalManufLaborCost)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalManufLaborCost)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalPlateCost)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalPlateCost)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalLumberCost)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalLumberCost)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalBDFT)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalBDFT)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalLF)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalLF)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalQuantity)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalQuantity)
-        Me.TabUnitBased.Controls.Add(Me.LblTotalPlanSQFT)
-        Me.TabUnitBased.Controls.Add(Me.TxtTotalPlanSQFT)
         Me.TabUnitBased.Controls.Add(Me.ListBoxAvailableUnits)
         Me.TabUnitBased.Controls.Add(Me.BtnConvertToActualUnit)
         Me.TabUnitBased.Controls.Add(Me.DataGridViewAssigned)
@@ -221,7 +194,7 @@ Partial Class FrmPSE
         '
         'Label2
         '
-        Me.Label2.Location = New System.Drawing.Point(325, 195)
+        Me.Label2.Location = New System.Drawing.Point(10, 220)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(82, 20)
         Me.Label2.TabIndex = 58
@@ -229,7 +202,7 @@ Partial Class FrmPSE
         '
         'txtTotMargin
         '
-        Me.txtTotMargin.Location = New System.Drawing.Point(413, 192)
+        Me.txtTotMargin.Location = New System.Drawing.Point(98, 217)
         Me.txtTotMargin.Name = "txtTotMargin"
         Me.txtTotMargin.ReadOnly = True
         Me.txtTotMargin.Size = New System.Drawing.Size(100, 20)
@@ -237,7 +210,7 @@ Partial Class FrmPSE
         '
         'Label1
         '
-        Me.Label1.Location = New System.Drawing.Point(520, 221)
+        Me.Label1.Location = New System.Drawing.Point(204, 220)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(67, 20)
         Me.Label1.TabIndex = 56
@@ -245,7 +218,7 @@ Partial Class FrmPSE
         '
         'txtTotalDeliveryCost
         '
-        Me.txtTotalDeliveryCost.Location = New System.Drawing.Point(612, 218)
+        Me.txtTotalDeliveryCost.Location = New System.Drawing.Point(296, 217)
         Me.txtTotalDeliveryCost.Name = "txtTotalDeliveryCost"
         Me.txtTotalDeliveryCost.ReadOnly = True
         Me.txtTotalDeliveryCost.Size = New System.Drawing.Size(100, 20)
@@ -274,9 +247,9 @@ Partial Class FrmPSE
         '
         Me.ListboxExistingActualUnits.ContextMenuStrip = Me.ContextMenuActualUnits
         Me.ListboxExistingActualUnits.FormattingEnabled = True
-        Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(156, 10)
+        Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(156, 23)
         Me.ListboxExistingActualUnits.Name = "ListboxExistingActualUnits"
-        Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(163, 199)
+        Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(163, 186)
         Me.ListboxExistingActualUnits.TabIndex = 52
         '
         'ContextMenuActualUnits
@@ -299,7 +272,8 @@ Partial Class FrmPSE
         '
         'BtnImportLevelData
         '
-        Me.BtnImportLevelData.Location = New System.Drawing.Point(340, 215)
+        Me.BtnImportLevelData.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.BtnImportLevelData.Location = New System.Drawing.Point(505, 566)
         Me.BtnImportLevelData.Name = "BtnImportLevelData"
         Me.BtnImportLevelData.Size = New System.Drawing.Size(150, 30)
         Me.BtnImportLevelData.TabIndex = 0
@@ -307,7 +281,7 @@ Partial Class FrmPSE
         '
         'LblTotalMargin
         '
-        Me.LblTotalMargin.Location = New System.Drawing.Point(325, 65)
+        Me.LblTotalMargin.Location = New System.Drawing.Point(10, 89)
         Me.LblTotalMargin.Name = "LblTotalMargin"
         Me.LblTotalMargin.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalMargin.TabIndex = 51
@@ -315,7 +289,7 @@ Partial Class FrmPSE
         '
         'TxtTotalMargin
         '
-        Me.TxtTotalMargin.Location = New System.Drawing.Point(413, 62)
+        Me.TxtTotalMargin.Location = New System.Drawing.Point(98, 86)
         Me.TxtTotalMargin.Name = "TxtTotalMargin"
         Me.TxtTotalMargin.ReadOnly = True
         Me.TxtTotalMargin.Size = New System.Drawing.Size(100, 20)
@@ -323,7 +297,7 @@ Partial Class FrmPSE
         '
         'LblTotalSellPrice
         '
-        Me.LblTotalSellPrice.Location = New System.Drawing.Point(325, 13)
+        Me.LblTotalSellPrice.Location = New System.Drawing.Point(10, 37)
         Me.LblTotalSellPrice.Name = "LblTotalSellPrice"
         Me.LblTotalSellPrice.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalSellPrice.TabIndex = 49
@@ -349,7 +323,7 @@ Partial Class FrmPSE
         '
         'TxtTotalSellPrice
         '
-        Me.TxtTotalSellPrice.Location = New System.Drawing.Point(413, 10)
+        Me.TxtTotalSellPrice.Location = New System.Drawing.Point(98, 34)
         Me.TxtTotalSellPrice.Name = "TxtTotalSellPrice"
         Me.TxtTotalSellPrice.ReadOnly = True
         Me.TxtTotalSellPrice.Size = New System.Drawing.Size(100, 20)
@@ -357,7 +331,7 @@ Partial Class FrmPSE
         '
         'LblTotalOverallCost
         '
-        Me.LblTotalOverallCost.Location = New System.Drawing.Point(325, 39)
+        Me.LblTotalOverallCost.Location = New System.Drawing.Point(10, 63)
         Me.LblTotalOverallCost.Name = "LblTotalOverallCost"
         Me.LblTotalOverallCost.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalOverallCost.TabIndex = 47
@@ -365,7 +339,7 @@ Partial Class FrmPSE
         '
         'TxtTotalOverallCost
         '
-        Me.TxtTotalOverallCost.Location = New System.Drawing.Point(413, 36)
+        Me.TxtTotalOverallCost.Location = New System.Drawing.Point(98, 60)
         Me.TxtTotalOverallCost.Name = "TxtTotalOverallCost"
         Me.TxtTotalOverallCost.ReadOnly = True
         Me.TxtTotalOverallCost.Size = New System.Drawing.Size(100, 20)
@@ -373,7 +347,7 @@ Partial Class FrmPSE
         '
         'LblTotalItemCost
         '
-        Me.LblTotalItemCost.Location = New System.Drawing.Point(520, 195)
+        Me.LblTotalItemCost.Location = New System.Drawing.Point(204, 194)
         Me.LblTotalItemCost.Name = "LblTotalItemCost"
         Me.LblTotalItemCost.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalItemCost.TabIndex = 45
@@ -381,7 +355,7 @@ Partial Class FrmPSE
         '
         'TxtTotalItemCost
         '
-        Me.TxtTotalItemCost.Location = New System.Drawing.Point(612, 192)
+        Me.TxtTotalItemCost.Location = New System.Drawing.Point(296, 191)
         Me.TxtTotalItemCost.Name = "TxtTotalItemCost"
         Me.TxtTotalItemCost.ReadOnly = True
         Me.TxtTotalItemCost.Size = New System.Drawing.Size(100, 20)
@@ -389,7 +363,7 @@ Partial Class FrmPSE
         '
         'LblTotalManHours
         '
-        Me.LblTotalManHours.Location = New System.Drawing.Point(520, 91)
+        Me.LblTotalManHours.Location = New System.Drawing.Point(204, 90)
         Me.LblTotalManHours.Name = "LblTotalManHours"
         Me.LblTotalManHours.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalManHours.TabIndex = 43
@@ -397,7 +371,7 @@ Partial Class FrmPSE
         '
         'TxtTotalManHours
         '
-        Me.TxtTotalManHours.Location = New System.Drawing.Point(612, 88)
+        Me.TxtTotalManHours.Location = New System.Drawing.Point(296, 87)
         Me.TxtTotalManHours.Name = "TxtTotalManHours"
         Me.TxtTotalManHours.ReadOnly = True
         Me.TxtTotalManHours.Size = New System.Drawing.Size(100, 20)
@@ -405,7 +379,7 @@ Partial Class FrmPSE
         '
         'LblTotalJobSuppliesCost
         '
-        Me.LblTotalJobSuppliesCost.Location = New System.Drawing.Point(520, 169)
+        Me.LblTotalJobSuppliesCost.Location = New System.Drawing.Point(204, 168)
         Me.LblTotalJobSuppliesCost.Name = "LblTotalJobSuppliesCost"
         Me.LblTotalJobSuppliesCost.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalJobSuppliesCost.TabIndex = 41
@@ -413,7 +387,7 @@ Partial Class FrmPSE
         '
         'TxtTotalJobSuppliesCost
         '
-        Me.TxtTotalJobSuppliesCost.Location = New System.Drawing.Point(612, 166)
+        Me.TxtTotalJobSuppliesCost.Location = New System.Drawing.Point(296, 165)
         Me.TxtTotalJobSuppliesCost.Name = "TxtTotalJobSuppliesCost"
         Me.TxtTotalJobSuppliesCost.ReadOnly = True
         Me.TxtTotalJobSuppliesCost.Size = New System.Drawing.Size(100, 20)
@@ -421,7 +395,7 @@ Partial Class FrmPSE
         '
         'LblTotalMGMTLabor
         '
-        Me.LblTotalMGMTLabor.Location = New System.Drawing.Point(520, 143)
+        Me.LblTotalMGMTLabor.Location = New System.Drawing.Point(204, 142)
         Me.LblTotalMGMTLabor.Name = "LblTotalMGMTLabor"
         Me.LblTotalMGMTLabor.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalMGMTLabor.TabIndex = 39
@@ -429,7 +403,7 @@ Partial Class FrmPSE
         '
         'TxtTotalMGMTLabor
         '
-        Me.TxtTotalMGMTLabor.Location = New System.Drawing.Point(612, 140)
+        Me.TxtTotalMGMTLabor.Location = New System.Drawing.Point(296, 139)
         Me.TxtTotalMGMTLabor.Name = "TxtTotalMGMTLabor"
         Me.TxtTotalMGMTLabor.ReadOnly = True
         Me.TxtTotalMGMTLabor.Size = New System.Drawing.Size(100, 20)
@@ -437,7 +411,7 @@ Partial Class FrmPSE
         '
         'LblTotalDesignLabor
         '
-        Me.LblTotalDesignLabor.Location = New System.Drawing.Point(520, 117)
+        Me.LblTotalDesignLabor.Location = New System.Drawing.Point(204, 116)
         Me.LblTotalDesignLabor.Name = "LblTotalDesignLabor"
         Me.LblTotalDesignLabor.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalDesignLabor.TabIndex = 37
@@ -445,7 +419,7 @@ Partial Class FrmPSE
         '
         'TxtTotalDesignLabor
         '
-        Me.TxtTotalDesignLabor.Location = New System.Drawing.Point(612, 114)
+        Me.TxtTotalDesignLabor.Location = New System.Drawing.Point(296, 113)
         Me.TxtTotalDesignLabor.Name = "TxtTotalDesignLabor"
         Me.TxtTotalDesignLabor.ReadOnly = True
         Me.TxtTotalDesignLabor.Size = New System.Drawing.Size(100, 20)
@@ -453,7 +427,7 @@ Partial Class FrmPSE
         '
         'LblTotalManufLaborCost
         '
-        Me.LblTotalManufLaborCost.Location = New System.Drawing.Point(519, 62)
+        Me.LblTotalManufLaborCost.Location = New System.Drawing.Point(203, 61)
         Me.LblTotalManufLaborCost.Name = "LblTotalManufLaborCost"
         Me.LblTotalManufLaborCost.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalManufLaborCost.TabIndex = 35
@@ -461,7 +435,7 @@ Partial Class FrmPSE
         '
         'TxtTotalManufLaborCost
         '
-        Me.TxtTotalManufLaborCost.Location = New System.Drawing.Point(612, 62)
+        Me.TxtTotalManufLaborCost.Location = New System.Drawing.Point(296, 61)
         Me.TxtTotalManufLaborCost.Name = "TxtTotalManufLaborCost"
         Me.TxtTotalManufLaborCost.ReadOnly = True
         Me.TxtTotalManufLaborCost.Size = New System.Drawing.Size(100, 20)
@@ -469,7 +443,7 @@ Partial Class FrmPSE
         '
         'LblTotalPlateCost
         '
-        Me.LblTotalPlateCost.Location = New System.Drawing.Point(519, 36)
+        Me.LblTotalPlateCost.Location = New System.Drawing.Point(203, 35)
         Me.LblTotalPlateCost.Name = "LblTotalPlateCost"
         Me.LblTotalPlateCost.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalPlateCost.TabIndex = 33
@@ -477,7 +451,7 @@ Partial Class FrmPSE
         '
         'TxtTotalPlateCost
         '
-        Me.TxtTotalPlateCost.Location = New System.Drawing.Point(612, 36)
+        Me.TxtTotalPlateCost.Location = New System.Drawing.Point(296, 35)
         Me.TxtTotalPlateCost.Name = "TxtTotalPlateCost"
         Me.TxtTotalPlateCost.ReadOnly = True
         Me.TxtTotalPlateCost.Size = New System.Drawing.Size(100, 20)
@@ -485,7 +459,7 @@ Partial Class FrmPSE
         '
         'LblTotalLumberCost
         '
-        Me.LblTotalLumberCost.Location = New System.Drawing.Point(519, 10)
+        Me.LblTotalLumberCost.Location = New System.Drawing.Point(203, 9)
         Me.LblTotalLumberCost.Name = "LblTotalLumberCost"
         Me.LblTotalLumberCost.Size = New System.Drawing.Size(86, 20)
         Me.LblTotalLumberCost.TabIndex = 31
@@ -493,7 +467,7 @@ Partial Class FrmPSE
         '
         'TxtTotalLumberCost
         '
-        Me.TxtTotalLumberCost.Location = New System.Drawing.Point(612, 10)
+        Me.TxtTotalLumberCost.Location = New System.Drawing.Point(296, 9)
         Me.TxtTotalLumberCost.Name = "TxtTotalLumberCost"
         Me.TxtTotalLumberCost.ReadOnly = True
         Me.TxtTotalLumberCost.Size = New System.Drawing.Size(100, 20)
@@ -501,7 +475,7 @@ Partial Class FrmPSE
         '
         'LblTotalBDFT
         '
-        Me.LblTotalBDFT.Location = New System.Drawing.Point(325, 91)
+        Me.LblTotalBDFT.Location = New System.Drawing.Point(10, 116)
         Me.LblTotalBDFT.Name = "LblTotalBDFT"
         Me.LblTotalBDFT.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalBDFT.TabIndex = 29
@@ -509,7 +483,7 @@ Partial Class FrmPSE
         '
         'TxtTotalBDFT
         '
-        Me.TxtTotalBDFT.Location = New System.Drawing.Point(413, 88)
+        Me.TxtTotalBDFT.Location = New System.Drawing.Point(98, 113)
         Me.TxtTotalBDFT.Name = "TxtTotalBDFT"
         Me.TxtTotalBDFT.ReadOnly = True
         Me.TxtTotalBDFT.Size = New System.Drawing.Size(100, 20)
@@ -517,7 +491,7 @@ Partial Class FrmPSE
         '
         'LblTotalLF
         '
-        Me.LblTotalLF.Location = New System.Drawing.Point(325, 117)
+        Me.LblTotalLF.Location = New System.Drawing.Point(10, 142)
         Me.LblTotalLF.Name = "LblTotalLF"
         Me.LblTotalLF.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalLF.TabIndex = 27
@@ -525,7 +499,7 @@ Partial Class FrmPSE
         '
         'TxtTotalLF
         '
-        Me.TxtTotalLF.Location = New System.Drawing.Point(413, 114)
+        Me.TxtTotalLF.Location = New System.Drawing.Point(98, 139)
         Me.TxtTotalLF.Name = "TxtTotalLF"
         Me.TxtTotalLF.ReadOnly = True
         Me.TxtTotalLF.Size = New System.Drawing.Size(100, 20)
@@ -533,7 +507,7 @@ Partial Class FrmPSE
         '
         'LblTotalQuantity
         '
-        Me.LblTotalQuantity.Location = New System.Drawing.Point(325, 143)
+        Me.LblTotalQuantity.Location = New System.Drawing.Point(10, 168)
         Me.LblTotalQuantity.Name = "LblTotalQuantity"
         Me.LblTotalQuantity.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalQuantity.TabIndex = 25
@@ -541,7 +515,7 @@ Partial Class FrmPSE
         '
         'TxtTotalQuantity
         '
-        Me.TxtTotalQuantity.Location = New System.Drawing.Point(413, 140)
+        Me.TxtTotalQuantity.Location = New System.Drawing.Point(98, 165)
         Me.TxtTotalQuantity.Name = "TxtTotalQuantity"
         Me.TxtTotalQuantity.ReadOnly = True
         Me.TxtTotalQuantity.Size = New System.Drawing.Size(100, 20)
@@ -549,7 +523,7 @@ Partial Class FrmPSE
         '
         'LblTotalPlanSQFT
         '
-        Me.LblTotalPlanSQFT.Location = New System.Drawing.Point(325, 169)
+        Me.LblTotalPlanSQFT.Location = New System.Drawing.Point(10, 194)
         Me.LblTotalPlanSQFT.Name = "LblTotalPlanSQFT"
         Me.LblTotalPlanSQFT.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalPlanSQFT.TabIndex = 23
@@ -557,7 +531,7 @@ Partial Class FrmPSE
         '
         'TxtTotalPlanSQFT
         '
-        Me.TxtTotalPlanSQFT.Location = New System.Drawing.Point(413, 166)
+        Me.TxtTotalPlanSQFT.Location = New System.Drawing.Point(98, 191)
         Me.TxtTotalPlanSQFT.Name = "TxtTotalPlanSQFT"
         Me.TxtTotalPlanSQFT.ReadOnly = True
         Me.TxtTotalPlanSQFT.Size = New System.Drawing.Size(100, 20)
@@ -566,9 +540,9 @@ Partial Class FrmPSE
         'ListBoxAvailableUnits
         '
         Me.ListBoxAvailableUnits.FormattingEnabled = True
-        Me.ListBoxAvailableUnits.Location = New System.Drawing.Point(10, 10)
+        Me.ListBoxAvailableUnits.Location = New System.Drawing.Point(10, 23)
         Me.ListBoxAvailableUnits.Name = "ListBoxAvailableUnits"
-        Me.ListBoxAvailableUnits.Size = New System.Drawing.Size(140, 199)
+        Me.ListBoxAvailableUnits.Size = New System.Drawing.Size(140, 186)
         Me.ListBoxAvailableUnits.TabIndex = 1
         '
         'BtnConvertToActualUnit
@@ -665,6 +639,16 @@ Partial Class FrmPSE
         Me.PanelDetails.Size = New System.Drawing.Size(253, 647)
         Me.PanelDetails.TabIndex = 2
         Me.PanelDetails.Visible = False
+        '
+        'chkAttachToLevel
+        '
+        Me.chkAttachToLevel.AutoSize = True
+        Me.chkAttachToLevel.Location = New System.Drawing.Point(98, 552)
+        Me.chkAttachToLevel.Name = "chkAttachToLevel"
+        Me.chkAttachToLevel.Size = New System.Drawing.Size(141, 17)
+        Me.chkAttachToLevel.TabIndex = 49
+        Me.chkAttachToLevel.Text = "Attach to Current Level?"
+        Me.chkAttachToLevel.UseVisualStyleBackColor = True
         '
         'btnDeleteUnit
         '
@@ -984,15 +968,64 @@ Partial Class FrmPSE
         Me.TxtReferencedRawUnit.Size = New System.Drawing.Size(119, 20)
         Me.TxtReferencedRawUnit.TabIndex = 15
         '
-        'chkAttachToLevel
+        'Label3
         '
-        Me.chkAttachToLevel.AutoSize = True
-        Me.chkAttachToLevel.Location = New System.Drawing.Point(98, 552)
-        Me.chkAttachToLevel.Name = "chkAttachToLevel"
-        Me.chkAttachToLevel.Size = New System.Drawing.Size(141, 17)
-        Me.chkAttachToLevel.TabIndex = 49
-        Me.chkAttachToLevel.Text = "Attach to Current Level?"
-        Me.chkAttachToLevel.UseVisualStyleBackColor = True
+        Me.Label3.Location = New System.Drawing.Point(7, 10)
+        Me.Label3.Name = "Label3"
+        Me.Label3.Size = New System.Drawing.Size(67, 13)
+        Me.Label3.TabIndex = 59
+        Me.Label3.Text = "Raw Units:"
+        '
+        'Label4
+        '
+        Me.Label4.Location = New System.Drawing.Point(156, 10)
+        Me.Label4.Name = "Label4"
+        Me.Label4.Size = New System.Drawing.Size(67, 13)
+        Me.Label4.TabIndex = 60
+        Me.Label4.Text = "Actual Units:"
+        '
+        'GroupBox1
+        '
+        Me.GroupBox1.Controls.Add(Me.Label2)
+        Me.GroupBox1.Controls.Add(Me.txtTotMargin)
+        Me.GroupBox1.Controls.Add(Me.Label1)
+        Me.GroupBox1.Controls.Add(Me.txtTotalDeliveryCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalMargin)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalMargin)
+        Me.GroupBox1.Controls.Add(Me.LblTotalSellPrice)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalSellPrice)
+        Me.GroupBox1.Controls.Add(Me.LblTotalOverallCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalOverallCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalItemCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalItemCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalManHours)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalManHours)
+        Me.GroupBox1.Controls.Add(Me.LblTotalJobSuppliesCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalJobSuppliesCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalMGMTLabor)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalMGMTLabor)
+        Me.GroupBox1.Controls.Add(Me.LblTotalDesignLabor)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalDesignLabor)
+        Me.GroupBox1.Controls.Add(Me.LblTotalManufLaborCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalManufLaborCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalPlateCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalPlateCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalLumberCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalLumberCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalBDFT)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalBDFT)
+        Me.GroupBox1.Controls.Add(Me.LblTotalLF)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalLF)
+        Me.GroupBox1.Controls.Add(Me.LblTotalQuantity)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalQuantity)
+        Me.GroupBox1.Controls.Add(Me.LblTotalPlanSQFT)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalPlanSQFT)
+        Me.GroupBox1.Location = New System.Drawing.Point(323, 7)
+        Me.GroupBox1.Name = "GroupBox1"
+        Me.GroupBox1.Size = New System.Drawing.Size(402, 243)
+        Me.GroupBox1.TabIndex = 61
+        Me.GroupBox1.TabStop = False
+        Me.GroupBox1.Text = "Level Information"
         '
         'FrmPSE
         '
@@ -1013,6 +1046,8 @@ Partial Class FrmPSE
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.PanelDetails.ResumeLayout(False)
         Me.PanelDetails.PerformLayout()
+        Me.GroupBox1.ResumeLayout(False)
+        Me.GroupBox1.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -1113,4 +1148,7 @@ Partial Class FrmPSE
     Friend WithEvents tabRawUnit As TabPage
     Friend WithEvents DataGridView1 As DataGridView
     Friend WithEvents chkAttachToLevel As CheckBox
+    Private WithEvents Label4 As Label
+    Private WithEvents Label3 As Label
+    Friend WithEvents GroupBox1 As GroupBox
 End Class

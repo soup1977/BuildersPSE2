@@ -172,6 +172,18 @@
         Public Const DeleteProjectItemsByProject As String = "DELETE FROM ProjectItems WHERE ProjectID = @ProjectID"
         Public Const DeleteProjectByID As String = "DELETE FROM Projects WHERE ProjectID = @ProjectID"
 
+        ' LumberType Queries
+        Public Const SelectLumberTypes As String = "SELECT LumberTypeID, LumberTypeDesc FROM LumberType ORDER BY LumberTypeDesc"
+        Public Const InsertLumberType As String = "INSERT INTO LumberType (LumberTypeDesc) OUTPUT INSERTED.LumberTypeID VALUES (@LumberTypeDesc)"
+
+        ' LumberCostEffective Queries
+        Public Const SelectLumberCostEffective As String = "SELECT CostEffectiveID, CosteffectiveDate FROM LumberCostEffective ORDER BY CosteffectiveDate DESC"
+        Public Const InsertLumberCostEffective As String = "INSERT INTO LumberCostEffective (CosteffectiveDate) OUTPUT INSERTED.CostEffectiveID VALUES (@CosteffectiveDate)"
+
+        ' LumberCost Queries
+        Public Const SelectLumberCostsByEffectiveDate As String = "SELECT lc.LumberCostID, lc.LumberTypeID, lt.LumberTypeDesc, lc.LumberCost, lc.CostEffectiveDateID FROM LumberCost lc JOIN LumberType lt ON lc.LumberTypeID = lt.LumberTypeID WHERE lc.CostEffectiveDateID = @CostEffectiveDateID ORDER BY lt.LumberTypeDesc"
+        Public Const InsertLumberCost As String = "INSERT INTO LumberCost (LumberTypeID, LumberCost, CostEffectiveDateID) OUTPUT INSERTED.LumberCostID VALUES (@LumberTypeID, @LumberCost, @CostEffectiveDateID)"
+        Public Const UpdateLumberCost As String = "UPDATE LumberCost SET LumberCost = @LumberCost WHERE LumberCostID = @LumberCostID"
 
     End Module
 End Namespace

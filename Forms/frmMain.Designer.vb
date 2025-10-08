@@ -35,6 +35,7 @@ Partial Class frmMain
         Me.Button1 = New System.Windows.Forms.Button()
         Me.frmCreateProject = New System.Windows.Forms.Button()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.btnEditLumber = New System.Windows.Forms.Button()
         Me.MenuStrip.SuspendLayout()
         Me.StatusStrip.SuspendLayout()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -89,6 +90,7 @@ Partial Class frmMain
         '
         'SplitContainer1.Panel1
         '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnEditLumber)
         Me.SplitContainer1.Panel1.Controls.Add(Me.Button2)
         Me.SplitContainer1.Panel1.Controls.Add(Me.Button1)
         Me.SplitContainer1.Panel1.Controls.Add(Me.frmCreateProject)
@@ -136,6 +138,15 @@ Partial Class frmMain
         Me.TabControl1.Size = New System.Drawing.Size(1223, 665)
         Me.TabControl1.TabIndex = 0
         '
+        'btnEditLumber
+        '
+        Me.btnEditLumber.Location = New System.Drawing.Point(19, 213)
+        Me.btnEditLumber.Name = "btnEditLumber"
+        Me.btnEditLumber.Size = New System.Drawing.Size(127, 31)
+        Me.btnEditLumber.TabIndex = 3
+        Me.btnEditLumber.Text = "Edit Lumber"
+        Me.btnEditLumber.UseVisualStyleBackColor = True
+        '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -170,4 +181,5 @@ Partial Class frmMain
     Friend WithEvents TabControl1 As TabControl
     Friend WithEvents Button1 As Button
     Friend WithEvents Button2 As Button
+    Friend WithEvents btnEditLumber As Button
 End Class
