@@ -8,7 +8,18 @@ Public Class frmMondayList
     Public Sub New()
         InitializeComponent()
     End Sub
-
+    Private Sub UpdateStatus(message As String)
+        Try
+            Dim parentForm As frmMain = TryCast(Me.ParentForm, frmMain)
+            If parentForm IsNot Nothing AndAlso parentForm.StatusLabel IsNot Nothing Then
+                parentForm.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
+            Else
+                Debug.WriteLine($"Status update skipped: Parent form or StatusLabel is null. Message: {message}")
+            End If
+        Catch ex As Exception
+            Debug.WriteLine($"Error updating status: {ex.Message}")
+        End Try
+    End Sub
     Private Sub frmMondayList_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
             Dim encryptedToken As String = ConfigurationManager.AppSettings("MondayApiTokenEncrypted")
@@ -53,6 +64,20 @@ Public Class frmMondayList
 
         Catch ex As Exception
             MessageBox.Show("Error loading monday.com items: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
+        Try
+            Dim tagValue As String = Me.Tag?.ToString()
+            If String.IsNullOrEmpty(tagValue) Then
+                Throw New Exception("Tab tag not found.")
+            End If
+            RemoveTabFromTabControl(tagValue)
+            UpdateStatus($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
+        Catch ex As Exception
+            UpdateStatus($"Error closing tab: {ex.Message} at {DateTime.Now:HH:mm:ss}")
+            MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 End Class

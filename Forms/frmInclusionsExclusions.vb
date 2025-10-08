@@ -43,16 +43,7 @@ Public Class frmInclusionsExclusions
         cmbIntWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
         cmbCorridorWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
 
-        ' Load combo options from DB
-        cmbBuildingCode.Items.AddRange(da.GetComboOptions("BuildingCode").ToArray())
-        cmbImportance.Items.AddRange(da.GetComboOptions("Importance").ToArray())
-        cmbExposure.Items.AddRange(da.GetComboOptions("Exposure").ToArray())
-        cmbWindSpeed.Items.AddRange(da.GetComboOptions("WindSpeed").ToArray())
-        cmbSnowLoad.Items.AddRange(da.GetComboOptions("SnowLoad").ToArray())
-        cmbOccupancy.Items.AddRange(da.GetComboOptions("Occupancy").ToArray())
-        cmbExtWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
-        cmbIntWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
-        cmbCorridorWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
+
 
         ' Load loads combo options from DB to individual ComboBoxes
         Dim tcllOptions = da.GetComboOptions("TCLL").ToArray()
@@ -174,6 +165,7 @@ Public Class frmInclusionsExclusions
                 txtRoofPitches.Text = info.RoofPitches
                 txtFloorDepths.Text = info.FloorDepths
                 txtWallHeights.Text = info.WallHeights
+                txtHeelHeights.Text = info.HeelHeights
             End If
 
 
@@ -275,7 +267,8 @@ Public Class frmInclusionsExclusions
             .OccupancyCategory = If(cmbOccupancy.SelectedItem Is Nothing, String.Empty, CStr(cmbOccupancy.SelectedItem)),
             .RoofPitches = txtRoofPitches.Text,
             .FloorDepths = txtFloorDepths.Text,
-            .WallHeights = txtWallHeights.Text
+            .WallHeights = txtWallHeights.Text,
+            .HeelHeights = txtHeelHeights.Text
         }
             Dim existingInfo = da.GetProjectDesignInfo(ProjectID)
             If existingInfo IsNot Nothing Then info.InfoID = existingInfo.InfoID

@@ -15,6 +15,8 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -196,11 +198,25 @@
     <Compile Include="Forms\frmPSE.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\frmReportPreview.Designer.vb">
+      <DependentUpon>frmReportPreview.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmReportPreview.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\frmVersionDialog.Designer.vb">
       <DependentUpon>frmVersionDialog.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmVersionDialog.vb">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="IncExcDataSet.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IncExcDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="IncExcDataSet.vb">
+      <DependentUpon>IncExcDataSet.xsd</DependentUpon>
     </Compile>
     <Compile Include="Models\ActualToLevelMappingModel.vb" />
     <Compile Include="Models\ActualUnitModel.vb" />
@@ -241,6 +257,11 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="ProjectSummaryDataSet.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ProjectSummaryDataSet.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Utilities\modDialogs.vb" />
     <Compile Include="Utilities\MondaycomAccess.vb" />
     <Compile Include="Utilities\SecurityHelper.vb" />
@@ -269,22 +290,75 @@
     <EmbeddedResource Include="Forms\frmPSE.resx">
       <DependentUpon>frmPSE.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmReportPreview.resx">
+      <DependentUpon>frmReportPreview.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmVersionDialog.resx">
       <DependentUpon>frmVersionDialog.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="InclusionsExclusions.rdlc" />
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="ProjectSummary.rdlc" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
+    <None Include="IncExcDataSet.xsc">
+      <DependentUpon>IncExcDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="IncExcDataSet.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>IncExcDataSet.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="IncExcDataSet.xss">
+      <DependentUpon>IncExcDataSet.xsd</DependentUpon>
+    </None>
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
     </None>
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.DataAccess.DataAccess.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.DataAccess.SpreadsheetImportData.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.ActualToLevelMappingModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.ActualUnitModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.BuildingModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.CalculatedComponentModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.ConfigurationModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.CustomerModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.CustomerTypeModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.DisplayUnitData.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.EstimatorModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.LevelModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.MondayBoardItem.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.ProductTypeModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.ProjectModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.ProjectProductSettingsModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.ProjectTypeModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.RawUnitModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Models.SalesModel.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.BuildersPSE.Utilities.SqlConnectionManager.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.My.MyApplication.datasource" />
+    <None Include="My Project\DataSources\BuildersPSE2.My.MySettings.datasource" />
+    <None Include="My Project\DataSources\frmCreateEditProject.datasource" />
+    <None Include="My Project\DataSources\FrmCustomerDialog.datasource" />
+    <None Include="My Project\DataSources\frmInclusionsExclusions.datasource" />
+    <None Include="My Project\DataSources\frmMain.datasource" />
+    <None Include="My Project\DataSources\frmMainProjectList.datasource" />
+    <None Include="My Project\DataSources\frmMondayList.datasource" />
+    <None Include="My Project\DataSources\FrmPSE.datasource" />
+    <None Include="My Project\DataSources\frmVersionDialog.datasource" />
+    <None Include="My Project\DataSources\MondaycomAccess.datasource" />
+    <None Include="My Project\DataSources\ProjectBearingStylesModel.datasource" />
+    <None Include="My Project\DataSources\ProjectDesignInfoModel.datasource" />
+    <None Include="My Project\DataSources\ProjectGeneralNotesModel.datasource" />
+    <None Include="My Project\DataSources\ProjectItemModel.datasource" />
+    <None Include="My Project\DataSources\ProjectLoadModel.datasource" />
+    <None Include="My Project\DataSources\ProjectVersionModel.datasource" />
     <None Include="My Project\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <CustomToolNamespace>My</CustomToolNamespace>
@@ -292,6 +366,17 @@
     </None>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="ProjectSummaryDataSet.xsc">
+      <DependentUpon>ProjectSummaryDataSet.xsd</DependentUpon>
+    </None>
+    <EmbeddedResource Include="ProjectSummaryDataSet.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>ProjectSummaryDataSet.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="ProjectSummaryDataSet.xss">
+      <DependentUpon>ProjectSummaryDataSet.xsd</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="SqlServerTypes\Loader.cs" />

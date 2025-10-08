@@ -11,4 +11,6 @@
     Public Property RoofPitches As String
     Public Property FloorDepths As String
     Public Property WallHeights As String
+    Public Property HeelHeights As String
+
 End Class

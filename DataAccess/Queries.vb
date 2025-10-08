@@ -130,8 +130,8 @@
         ' Add to Queries.vb (in BuildersPSE.DataAccess namespace)
         ' ProjectDesignInfo
         Public Const SelectProjectDesignInfo As String = "SELECT * FROM ProjectDesignInfo WHERE ProjectID = @ProjectID"
-        Public Const InsertProjectDesignInfo As String = "INSERT INTO ProjectDesignInfo (ProjectID,  BuildingCode, Importance, ExposureCategory, WindSpeed, SnowLoadType, OccupancyCategory, RoofPitches, FloorDepths, WallHeights) OUTPUT INSERTED.InfoID VALUES (@ProjectID, @BuildingCode, @Importance, @ExposureCategory, @WindSpeed, @SnowLoadType, @OccupancyCategory, @RoofPitches, @FloorDepths, @WallHeights)"
-        Public Const UpdateProjectDesignInfo As String = "UPDATE ProjectDesignInfo SET BuildingCode = @BuildingCode, Importance = @Importance, ExposureCategory = @ExposureCategory, WindSpeed = @WindSpeed, SnowLoadType = @SnowLoadType, OccupancyCategory = @OccupancyCategory, RoofPitches = @RoofPitches, FloorDepths = @FloorDepths, WallHeights = @WallHeights WHERE InfoID = @InfoID"
+        Public Const InsertProjectDesignInfo As String = "INSERT INTO ProjectDesignInfo (ProjectID,  BuildingCode, Importance, ExposureCategory, WindSpeed, SnowLoadType, OccupancyCategory, RoofPitches, FloorDepths, WallHeights, HeelHeights) OUTPUT INSERTED.InfoID VALUES (@ProjectID, @BuildingCode, @Importance, @ExposureCategory, @WindSpeed, @SnowLoadType, @OccupancyCategory, @RoofPitches, @FloorDepths, @WallHeights, @HeelHeights)"
+        Public Const UpdateProjectDesignInfo As String = "UPDATE ProjectDesignInfo SET BuildingCode = @BuildingCode, Importance = @Importance, ExposureCategory = @ExposureCategory, WindSpeed = @WindSpeed, SnowLoadType = @SnowLoadType, OccupancyCategory = @OccupancyCategory, RoofPitches = @RoofPitches, FloorDepths = @FloorDepths, WallHeights = @WallHeights, HeelHeights=@HeelHeights WHERE InfoID = @InfoID"
 
         ' ProjectLoads
         Public Const SelectProjectLoads As String = "SELECT * FROM ProjectLoads WHERE ProjectID = @ProjectID ORDER BY Category desc"

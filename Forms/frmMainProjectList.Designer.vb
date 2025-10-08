@@ -103,7 +103,7 @@ Partial Class frmMainProjectList
         Me.btnClose.Name = "btnClose"
         Me.btnClose.Size = New System.Drawing.Size(87, 27)
         Me.btnClose.TabIndex = 6
-        Me.btnClose.Text = "Close"
+        Me.btnClose.Text = "Exit Program"
         Me.btnClose.UseVisualStyleBackColor = True
         '
         'frmMainProjectList

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="ProjectSummaryDataSet" targetNamespace="http://tempuri.org/ProjectSummaryDataSet.xsd" xmlns:mstns="http://tempuri.org/ProjectSummaryDataSet.xsd" xmlns="http://tempuri.org/ProjectSummaryDataSet.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections />
+        <Tables />
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="ProjectSummaryDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_UserDSName="ProjectSummaryDataSet" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="ProjectSummaryDataSet">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="ProjectSummaryTable" msprop:Generator_RowClassName="ProjectSummaryTableRow" msprop:Generator_RowEvHandlerName="ProjectSummaryTableRowChangeEventHandler" msprop:Generator_RowDeletedName="ProjectSummaryTableRowDeleted" msprop:Generator_RowDeletingName="ProjectSummaryTableRowDeleting" msprop:Generator_RowEvArgName="ProjectSummaryTableRowChangeEvent" msprop:Generator_TablePropName="ProjectSummaryTable" msprop:Generator_RowChangedName="ProjectSummaryTableRowChanged" msprop:Generator_UserTableName="ProjectSummaryTable" msprop:Generator_RowChangingName="ProjectSummaryTableRowChanging" msprop:Generator_TableClassName="ProjectSummaryTableDataTable" msprop:Generator_TableVarName="tableProjectSummaryTable">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ProjectName" msprop:Generator_UserColumnName="ProjectName" msprop:Generator_ColumnPropNameInTable="ProjectNameColumn" msprop:Generator_ColumnPropNameInRow="ProjectName" msprop:Generator_ColumnVarNameInTable="columnProjectName" type="xs:string" minOccurs="0" />
+              <xs:element name="VersionName" msprop:Generator_UserColumnName="VersionName" msprop:Generator_ColumnPropNameInTable="VersionNameColumn" msprop:Generator_ColumnPropNameInRow="VersionName" msprop:Generator_ColumnVarNameInTable="columnVersionName" type="xs:string" minOccurs="0" />
+              <xs:element name="CustomerName" msprop:Generator_UserColumnName="CustomerName" msprop:Generator_ColumnPropNameInTable="CustomerNameColumn" msprop:Generator_ColumnPropNameInRow="CustomerName" msprop:Generator_ColumnVarNameInTable="columnCustomerName" type="xs:string" minOccurs="0" />
+              <xs:element name="BuildingName" msprop:Generator_UserColumnName="BuildingName" msprop:Generator_ColumnPropNameInTable="BuildingNameColumn" msprop:Generator_ColumnPropNameInRow="BuildingName" msprop:Generator_ColumnVarNameInTable="columnBuildingName" type="xs:string" minOccurs="0" />
+              <xs:element name="BldgQty" msprop:Generator_UserColumnName="BldgQty" msprop:Generator_ColumnPropNameInTable="BldgQtyColumn" msprop:Generator_ColumnPropNameInRow="BldgQty" msprop:Generator_ColumnVarNameInTable="columnBldgQty" type="xs:int" minOccurs="0" />
+              <xs:element name="OverallPrice" msprop:Generator_UserColumnName="OverallPrice" msprop:Generator_ColumnPropNameInTable="OverallPriceColumn" msprop:Generator_ColumnPropNameInRow="OverallPrice" msprop:Generator_ColumnVarNameInTable="columnOverallPrice" type="xs:decimal" minOccurs="0" />
+              <xs:element name="LevelName" msprop:Generator_UserColumnName="LevelName" msprop:Generator_ColumnPropNameInTable="LevelNameColumn" msprop:Generator_ColumnPropNameInRow="LevelName" msprop:Generator_ColumnVarNameInTable="columnLevelName" type="xs:string" minOccurs="0" />
+              <xs:element name="OverallSQFT" msprop:Generator_UserColumnName="OverallSQFT" msprop:Generator_ColumnPropNameInTable="OverallSQFTColumn" msprop:Generator_ColumnPropNameInRow="OverallSQFT" msprop:Generator_ColumnVarNameInTable="columnOverallSQFT" type="xs:decimal" minOccurs="0" />
+              <xs:element name="OverallPrice_Level" msprop:Generator_UserColumnName="OverallPrice_Level" msprop:Generator_ColumnPropNameInTable="OverallPrice_LevelColumn" msprop:Generator_ColumnPropNameInRow="OverallPrice_Level" msprop:Generator_ColumnVarNameInTable="columnOverallPrice_Level" type="xs:decimal" minOccurs="0" />
+              <xs:element name="ProductTypeName" msprop:Generator_ColumnPropNameInRow="ProductTypeName" msprop:Generator_ColumnPropNameInTable="ProductTypeNameColumn" msprop:Generator_ColumnVarNameInTable="columnProductTypeName" msprop:Generator_UserColumnName="ProductTypeName" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

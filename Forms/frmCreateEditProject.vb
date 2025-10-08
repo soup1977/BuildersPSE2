@@ -2,6 +2,8 @@
 Imports System.Windows.Forms
 Imports BuildersPSE2.BuildersPSE.DataAccess
 Imports BuildersPSE2.BuildersPSE.Models
+Imports Microsoft.Reporting.WinForms
+Imports System.IO
 
 Public Class frmCreateEditProject
     Private ReadOnly da As New DataAccess()
@@ -897,5 +899,48 @@ Public Class frmCreateEditProject
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Try
         End If
+    End Sub
+
+    Private Sub btnGenerateProjectReport_Click(sender As Object, e As EventArgs) Handles btnGenerateProjectReport.Click
+        If currentProject Is Nothing OrElse currentProject.ProjectID <= 0 OrElse currentVersionID <= 0 Then
+            MessageBox.Show("No valid project or version selected. Save the project and select a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateStatus("No valid project or version selected for report")
+            Exit Sub
+        End If
+        Try
+            UpdateStatus("Opening Project Summary Preview...")
+            Dim dataSources As New List(Of ReportDataSource) From {
+            New ReportDataSource("ProjectSummaryDataSet", da.GetProjectSummaryData(currentProject.ProjectID, currentVersionID))
+        }
+            Dim previewForm As New frmReportPreview("BuildersPSE2.ProjectSummary.rdlc", dataSources)
+            previewForm.ShowDialog()
+            UpdateStatus("Project Summary Preview opened")
+        Catch ex As Exception
+            UpdateStatus("Error opening preview: " & ex.Message)
+            MessageBox.Show("Error opening preview: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub btnPreviewIncExc_Click(sender As Object, e As EventArgs) Handles btnPreviewIncExc.Click
+        If currentProject Is Nothing OrElse currentProject.ProjectID <= 0 OrElse currentVersionID <= 0 Then
+            MessageBox.Show("No valid project or version selected. Save the project and select a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateStatus("No valid project or version selected for report")
+            Exit Sub
+        End If
+        Try
+            UpdateStatus("Opening Inclusions/Exclusions Preview...")
+            Dim dataSources As New List(Of ReportDataSource) From {
+            New ReportDataSource("ProjectHeaderDataSet", da.GetProjectHeaderData(currentProject.ProjectID, currentVersionID)),
+            New ReportDataSource("IncExcItemsDataSet", da.GetProjectItems(currentProject.ProjectID)),
+            New ReportDataSource("ProjectLoadsDataSet", da.GetProjectLoadsData(currentProject.ProjectID)),
+            New ReportDataSource("ProjectBearingStylesDataSet", da.GetProjectBearingStylesData(currentProject.ProjectID))
+        }
+            Dim previewForm As New frmReportPreview("BuildersPSE2.InclusionsExclusions.rdlc", dataSources)
+            previewForm.ShowDialog()
+            UpdateStatus("Inclusions/Exclusions Preview opened")
+        Catch ex As Exception
+            UpdateStatus("Error opening preview: " & ex.Message)
+            MessageBox.Show("Error opening preview: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 End Class

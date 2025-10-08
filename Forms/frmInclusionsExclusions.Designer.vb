@@ -22,26 +22,19 @@ Partial Class frmInclusionsExclusions
     Private Sub InitializeComponent()
         Me.tabControl = New System.Windows.Forms.TabControl()
         Me.tabDesignInfo = New System.Windows.Forms.TabPage()
-        Me.lblWallHeights = New System.Windows.Forms.Label()
-        Me.txtWallHeights = New System.Windows.Forms.TextBox()
-        Me.lblFloorDepths = New System.Windows.Forms.Label()
-        Me.txtFloorDepths = New System.Windows.Forms.TextBox()
-        Me.lblRoofPitches = New System.Windows.Forms.Label()
-        Me.txtRoofPitches = New System.Windows.Forms.TextBox()
-        Me.lblOccupancy = New System.Windows.Forms.Label()
-        Me.cmbOccupancy = New System.Windows.Forms.ComboBox()
-        Me.lblSnowLoad = New System.Windows.Forms.Label()
-        Me.cmbSnowLoad = New System.Windows.Forms.ComboBox()
-        Me.lblWindSpeed = New System.Windows.Forms.Label()
-        Me.cmbWindSpeed = New System.Windows.Forms.ComboBox()
-        Me.lblExposure = New System.Windows.Forms.Label()
-        Me.cmbExposure = New System.Windows.Forms.ComboBox()
-        Me.lblImportance = New System.Windows.Forms.Label()
-        Me.cmbImportance = New System.Windows.Forms.ComboBox()
-        Me.lblBuildingCode = New System.Windows.Forms.Label()
-        Me.cmbBuildingCode = New System.Windows.Forms.ComboBox()
-        Me.tabLoads = New System.Windows.Forms.TabPage()
+        Me.cboCorridorRimRibbon = New System.Windows.Forms.ComboBox()
+        Me.cboIntRimRibbon = New System.Windows.Forms.ComboBox()
+        Me.cboExtRimRibbon = New System.Windows.Forms.ComboBox()
+        Me.cmbCorridorWall = New System.Windows.Forms.ComboBox()
+        Me.lblCorridorWall = New System.Windows.Forms.Label()
+        Me.cmbIntWall = New System.Windows.Forms.ComboBox()
+        Me.lblIntWall = New System.Windows.Forms.Label()
+        Me.lblExtRim = New System.Windows.Forms.Label()
+        Me.cmbExtWall = New System.Windows.Forms.ComboBox()
+        Me.lblExtWall = New System.Windows.Forms.Label()
         Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel()
+        Me.lblCorridor = New System.Windows.Forms.Label()
+        Me.lblFloor = New System.Windows.Forms.Label()
         Me.lblCategory = New System.Windows.Forms.Label()
         Me.lblTCLL = New System.Windows.Forms.Label()
         Me.lblTCDL = New System.Windows.Forms.Label()
@@ -80,19 +73,26 @@ Partial Class frmInclusionsExclusions
         Me.cmbTotalLoadDeflection_Corridor = New System.Windows.Forms.ComboBox()
         Me.cmbAbsolute_Corridor = New System.Windows.Forms.ComboBox()
         Me.cmbDeflection_Corridor = New System.Windows.Forms.ComboBox()
-        Me.tabBearing = New System.Windows.Forms.TabPage()
-        Me.cboCorridorRimRibbon = New System.Windows.Forms.ComboBox()
-        Me.cboIntRimRibbon = New System.Windows.Forms.ComboBox()
-        Me.cboExtRimRibbon = New System.Windows.Forms.ComboBox()
-        Me.lblCorridorRim = New System.Windows.Forms.Label()
-        Me.cmbCorridorWall = New System.Windows.Forms.ComboBox()
-        Me.lblCorridorWall = New System.Windows.Forms.Label()
-        Me.lblIntRim = New System.Windows.Forms.Label()
-        Me.cmbIntWall = New System.Windows.Forms.ComboBox()
-        Me.lblIntWall = New System.Windows.Forms.Label()
-        Me.lblExtRim = New System.Windows.Forms.Label()
-        Me.cmbExtWall = New System.Windows.Forms.ComboBox()
-        Me.lblExtWall = New System.Windows.Forms.Label()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.txtHeelHeights = New System.Windows.Forms.TextBox()
+        Me.lblWallHeights = New System.Windows.Forms.Label()
+        Me.txtWallHeights = New System.Windows.Forms.TextBox()
+        Me.lblFloorDepths = New System.Windows.Forms.Label()
+        Me.txtFloorDepths = New System.Windows.Forms.TextBox()
+        Me.lblRoofPitches = New System.Windows.Forms.Label()
+        Me.txtRoofPitches = New System.Windows.Forms.TextBox()
+        Me.lblOccupancy = New System.Windows.Forms.Label()
+        Me.cmbOccupancy = New System.Windows.Forms.ComboBox()
+        Me.lblSnowLoad = New System.Windows.Forms.Label()
+        Me.cmbSnowLoad = New System.Windows.Forms.ComboBox()
+        Me.lblWindSpeed = New System.Windows.Forms.Label()
+        Me.cmbWindSpeed = New System.Windows.Forms.ComboBox()
+        Me.lblExposure = New System.Windows.Forms.Label()
+        Me.cmbExposure = New System.Windows.Forms.ComboBox()
+        Me.lblImportance = New System.Windows.Forms.Label()
+        Me.cmbImportance = New System.Windows.Forms.ComboBox()
+        Me.lblBuildingCode = New System.Windows.Forms.Label()
+        Me.cmbBuildingCode = New System.Windows.Forms.ComboBox()
         Me.tabRoofItems = New System.Windows.Forms.TabPage()
         Me.dgvRoofItems = New System.Windows.Forms.DataGridView()
         Me.colRoofKN = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -118,13 +118,9 @@ Partial Class frmInclusionsExclusions
         Me.txtGeneralNotes = New System.Windows.Forms.TextBox()
         Me.btnSave = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
-        Me.lblFloor = New System.Windows.Forms.Label()
-        Me.lblCorridor = New System.Windows.Forms.Label()
         Me.tabControl.SuspendLayout()
         Me.tabDesignInfo.SuspendLayout()
-        Me.tabLoads.SuspendLayout()
         Me.TableLayoutPanel1.SuspendLayout()
-        Me.tabBearing.SuspendLayout()
         Me.tabRoofItems.SuspendLayout()
         CType(Me.dgvRoofItems, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.tabFloorItems.SuspendLayout()
@@ -139,8 +135,6 @@ Partial Class frmInclusionsExclusions
         Me.tabControl.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tabControl.Controls.Add(Me.tabDesignInfo)
-        Me.tabControl.Controls.Add(Me.tabLoads)
-        Me.tabControl.Controls.Add(Me.tabBearing)
         Me.tabControl.Controls.Add(Me.tabRoofItems)
         Me.tabControl.Controls.Add(Me.tabFloorItems)
         Me.tabControl.Controls.Add(Me.tabWallItems)
@@ -153,6 +147,19 @@ Partial Class frmInclusionsExclusions
         '
         'tabDesignInfo
         '
+        Me.tabDesignInfo.Controls.Add(Me.cboCorridorRimRibbon)
+        Me.tabDesignInfo.Controls.Add(Me.cboIntRimRibbon)
+        Me.tabDesignInfo.Controls.Add(Me.cboExtRimRibbon)
+        Me.tabDesignInfo.Controls.Add(Me.cmbCorridorWall)
+        Me.tabDesignInfo.Controls.Add(Me.lblCorridorWall)
+        Me.tabDesignInfo.Controls.Add(Me.cmbIntWall)
+        Me.tabDesignInfo.Controls.Add(Me.lblIntWall)
+        Me.tabDesignInfo.Controls.Add(Me.lblExtRim)
+        Me.tabDesignInfo.Controls.Add(Me.cmbExtWall)
+        Me.tabDesignInfo.Controls.Add(Me.lblExtWall)
+        Me.tabDesignInfo.Controls.Add(Me.TableLayoutPanel1)
+        Me.tabDesignInfo.Controls.Add(Me.Label1)
+        Me.tabDesignInfo.Controls.Add(Me.txtHeelHeights)
         Me.tabDesignInfo.Controls.Add(Me.lblWallHeights)
         Me.tabDesignInfo.Controls.Add(Me.txtWallHeights)
         Me.tabDesignInfo.Controls.Add(Me.lblFloorDepths)
@@ -179,175 +186,101 @@ Partial Class frmInclusionsExclusions
         Me.tabDesignInfo.Text = "Design Info"
         Me.tabDesignInfo.UseVisualStyleBackColor = True
         '
-        'lblWallHeights
+        'cboCorridorRimRibbon
         '
-        Me.lblWallHeights.AutoSize = True
-        Me.lblWallHeights.Location = New System.Drawing.Point(6, 6)
-        Me.lblWallHeights.Name = "lblWallHeights"
-        Me.lblWallHeights.Size = New System.Drawing.Size(70, 13)
-        Me.lblWallHeights.TabIndex = 0
-        Me.lblWallHeights.Text = "Wall Heights:"
+        Me.cboCorridorRimRibbon.FormattingEnabled = True
+        Me.cboCorridorRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
+        Me.cboCorridorRimRibbon.Location = New System.Drawing.Point(287, 387)
+        Me.cboCorridorRimRibbon.Name = "cboCorridorRimRibbon"
+        Me.cboCorridorRimRibbon.Size = New System.Drawing.Size(121, 21)
+        Me.cboCorridorRimRibbon.TabIndex = 43
         '
-        'txtWallHeights
+        'cboIntRimRibbon
         '
-        Me.txtWallHeights.Location = New System.Drawing.Point(82, 3)
-        Me.txtWallHeights.Name = "txtWallHeights"
-        Me.txtWallHeights.Size = New System.Drawing.Size(100, 20)
-        Me.txtWallHeights.TabIndex = 1
+        Me.cboIntRimRibbon.FormattingEnabled = True
+        Me.cboIntRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
+        Me.cboIntRimRibbon.Location = New System.Drawing.Point(287, 360)
+        Me.cboIntRimRibbon.Name = "cboIntRimRibbon"
+        Me.cboIntRimRibbon.Size = New System.Drawing.Size(121, 21)
+        Me.cboIntRimRibbon.TabIndex = 41
         '
-        'lblFloorDepths
+        'cboExtRimRibbon
         '
-        Me.lblFloorDepths.AutoSize = True
-        Me.lblFloorDepths.Location = New System.Drawing.Point(188, 6)
-        Me.lblFloorDepths.Name = "lblFloorDepths"
-        Me.lblFloorDepths.Size = New System.Drawing.Size(70, 13)
-        Me.lblFloorDepths.TabIndex = 2
-        Me.lblFloorDepths.Text = "Floor Depths:"
+        Me.cboExtRimRibbon.FormattingEnabled = True
+        Me.cboExtRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
+        Me.cboExtRimRibbon.Location = New System.Drawing.Point(287, 333)
+        Me.cboExtRimRibbon.Name = "cboExtRimRibbon"
+        Me.cboExtRimRibbon.Size = New System.Drawing.Size(121, 21)
+        Me.cboExtRimRibbon.TabIndex = 39
         '
-        'txtFloorDepths
+        'cmbCorridorWall
         '
-        Me.txtFloorDepths.Location = New System.Drawing.Point(266, 3)
-        Me.txtFloorDepths.Name = "txtFloorDepths"
-        Me.txtFloorDepths.Size = New System.Drawing.Size(100, 20)
-        Me.txtFloorDepths.TabIndex = 3
+        Me.cmbCorridorWall.FormattingEnabled = True
+        Me.cmbCorridorWall.Location = New System.Drawing.Point(103, 387)
+        Me.cmbCorridorWall.Name = "cmbCorridorWall"
+        Me.cmbCorridorWall.Size = New System.Drawing.Size(121, 21)
+        Me.cmbCorridorWall.TabIndex = 42
         '
-        'lblRoofPitches
+        'lblCorridorWall
         '
-        Me.lblRoofPitches.AutoSize = True
-        Me.lblRoofPitches.Location = New System.Drawing.Point(372, 6)
-        Me.lblRoofPitches.Name = "lblRoofPitches"
-        Me.lblRoofPitches.Size = New System.Drawing.Size(71, 13)
-        Me.lblRoofPitches.TabIndex = 4
-        Me.lblRoofPitches.Text = "Roof Pitches:"
+        Me.lblCorridorWall.AutoSize = True
+        Me.lblCorridorWall.Location = New System.Drawing.Point(29, 390)
+        Me.lblCorridorWall.Name = "lblCorridorWall"
+        Me.lblCorridorWall.Size = New System.Drawing.Size(70, 13)
+        Me.lblCorridorWall.TabIndex = 26
+        Me.lblCorridorWall.Text = "Corridor Wall:"
         '
-        'txtRoofPitches
+        'cmbIntWall
         '
-        Me.txtRoofPitches.Location = New System.Drawing.Point(448, 3)
-        Me.txtRoofPitches.Name = "txtRoofPitches"
-        Me.txtRoofPitches.Size = New System.Drawing.Size(100, 20)
-        Me.txtRoofPitches.TabIndex = 5
+        Me.cmbIntWall.FormattingEnabled = True
+        Me.cmbIntWall.Location = New System.Drawing.Point(103, 360)
+        Me.cmbIntWall.Name = "cmbIntWall"
+        Me.cmbIntWall.Size = New System.Drawing.Size(121, 21)
+        Me.cmbIntWall.TabIndex = 40
         '
-        'lblOccupancy
+        'lblIntWall
         '
-        Me.lblOccupancy.AutoSize = True
-        Me.lblOccupancy.Location = New System.Drawing.Point(6, 32)
-        Me.lblOccupancy.Name = "lblOccupancy"
-        Me.lblOccupancy.Size = New System.Drawing.Size(65, 13)
-        Me.lblOccupancy.TabIndex = 6
-        Me.lblOccupancy.Text = "Occupancy:"
+        Me.lblIntWall.AutoSize = True
+        Me.lblIntWall.Location = New System.Drawing.Point(29, 363)
+        Me.lblIntWall.Name = "lblIntWall"
+        Me.lblIntWall.Size = New System.Drawing.Size(46, 13)
+        Me.lblIntWall.TabIndex = 24
+        Me.lblIntWall.Text = "Int Wall:"
         '
-        'cmbOccupancy
+        'lblExtRim
         '
-        Me.cmbOccupancy.FormattingEnabled = True
-        Me.cmbOccupancy.Location = New System.Drawing.Point(82, 29)
-        Me.cmbOccupancy.Name = "cmbOccupancy"
-        Me.cmbOccupancy.Size = New System.Drawing.Size(100, 21)
-        Me.cmbOccupancy.TabIndex = 7
+        Me.lblExtRim.AutoSize = True
+        Me.lblExtRim.Location = New System.Drawing.Point(284, 317)
+        Me.lblExtRim.Name = "lblExtRim"
+        Me.lblExtRim.Size = New System.Drawing.Size(67, 13)
+        Me.lblExtRim.TabIndex = 23
+        Me.lblExtRim.Text = "Rim/Ribbon:"
         '
-        'lblSnowLoad
+        'cmbExtWall
         '
-        Me.lblSnowLoad.AutoSize = True
-        Me.lblSnowLoad.Location = New System.Drawing.Point(188, 32)
-        Me.lblSnowLoad.Name = "lblSnowLoad"
-        Me.lblSnowLoad.Size = New System.Drawing.Size(64, 13)
-        Me.lblSnowLoad.TabIndex = 8
-        Me.lblSnowLoad.Text = "Snow Load:"
+        Me.cmbExtWall.FormattingEnabled = True
+        Me.cmbExtWall.Location = New System.Drawing.Point(103, 333)
+        Me.cmbExtWall.Name = "cmbExtWall"
+        Me.cmbExtWall.Size = New System.Drawing.Size(121, 21)
+        Me.cmbExtWall.TabIndex = 38
         '
-        'cmbSnowLoad
+        'lblExtWall
         '
-        Me.cmbSnowLoad.FormattingEnabled = True
-        Me.cmbSnowLoad.Location = New System.Drawing.Point(266, 29)
-        Me.cmbSnowLoad.Name = "cmbSnowLoad"
-        Me.cmbSnowLoad.Size = New System.Drawing.Size(100, 21)
-        Me.cmbSnowLoad.TabIndex = 9
-        '
-        'lblWindSpeed
-        '
-        Me.lblWindSpeed.AutoSize = True
-        Me.lblWindSpeed.Location = New System.Drawing.Point(372, 32)
-        Me.lblWindSpeed.Name = "lblWindSpeed"
-        Me.lblWindSpeed.Size = New System.Drawing.Size(69, 13)
-        Me.lblWindSpeed.TabIndex = 10
-        Me.lblWindSpeed.Text = "Wind Speed:"
-        '
-        'cmbWindSpeed
-        '
-        Me.cmbWindSpeed.FormattingEnabled = True
-        Me.cmbWindSpeed.Location = New System.Drawing.Point(448, 29)
-        Me.cmbWindSpeed.Name = "cmbWindSpeed"
-        Me.cmbWindSpeed.Size = New System.Drawing.Size(100, 21)
-        Me.cmbWindSpeed.TabIndex = 11
-        '
-        'lblExposure
-        '
-        Me.lblExposure.AutoSize = True
-        Me.lblExposure.Location = New System.Drawing.Point(6, 58)
-        Me.lblExposure.Name = "lblExposure"
-        Me.lblExposure.Size = New System.Drawing.Size(54, 13)
-        Me.lblExposure.TabIndex = 12
-        Me.lblExposure.Text = "Exposure:"
-        '
-        'cmbExposure
-        '
-        Me.cmbExposure.FormattingEnabled = True
-        Me.cmbExposure.Location = New System.Drawing.Point(82, 55)
-        Me.cmbExposure.Name = "cmbExposure"
-        Me.cmbExposure.Size = New System.Drawing.Size(100, 21)
-        Me.cmbExposure.TabIndex = 13
-        '
-        'lblImportance
-        '
-        Me.lblImportance.AutoSize = True
-        Me.lblImportance.Location = New System.Drawing.Point(188, 58)
-        Me.lblImportance.Name = "lblImportance"
-        Me.lblImportance.Size = New System.Drawing.Size(63, 13)
-        Me.lblImportance.TabIndex = 14
-        Me.lblImportance.Text = "Importance:"
-        '
-        'cmbImportance
-        '
-        Me.cmbImportance.FormattingEnabled = True
-        Me.cmbImportance.Location = New System.Drawing.Point(266, 55)
-        Me.cmbImportance.Name = "cmbImportance"
-        Me.cmbImportance.Size = New System.Drawing.Size(100, 21)
-        Me.cmbImportance.TabIndex = 15
-        '
-        'lblBuildingCode
-        '
-        Me.lblBuildingCode.AutoSize = True
-        Me.lblBuildingCode.Location = New System.Drawing.Point(372, 58)
-        Me.lblBuildingCode.Name = "lblBuildingCode"
-        Me.lblBuildingCode.Size = New System.Drawing.Size(75, 13)
-        Me.lblBuildingCode.TabIndex = 16
-        Me.lblBuildingCode.Text = "Building Code:"
-        '
-        'cmbBuildingCode
-        '
-        Me.cmbBuildingCode.FormattingEnabled = True
-        Me.cmbBuildingCode.Location = New System.Drawing.Point(448, 55)
-        Me.cmbBuildingCode.Name = "cmbBuildingCode"
-        Me.cmbBuildingCode.Size = New System.Drawing.Size(100, 21)
-        Me.cmbBuildingCode.TabIndex = 17
-        '
-        'tabLoads
-        '
-        Me.tabLoads.Controls.Add(Me.TableLayoutPanel1)
-        Me.tabLoads.Location = New System.Drawing.Point(4, 22)
-        Me.tabLoads.Name = "tabLoads"
-        Me.tabLoads.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabLoads.Size = New System.Drawing.Size(892, 514)
-        Me.tabLoads.TabIndex = 1
-        Me.tabLoads.Text = "Loads"
-        Me.tabLoads.UseVisualStyleBackColor = True
+        Me.lblExtWall.AutoSize = True
+        Me.lblExtWall.Location = New System.Drawing.Point(29, 336)
+        Me.lblExtWall.Name = "lblExtWall"
+        Me.lblExtWall.Size = New System.Drawing.Size(49, 13)
+        Me.lblExtWall.TabIndex = 21
+        Me.lblExtWall.Text = "Ext Wall:"
         '
         'TableLayoutPanel1
         '
         Me.TableLayoutPanel1.ColumnCount = 10
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 8.465012!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.04515!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.41903!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.41903!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.30578!))
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10.0!))
@@ -393,15 +326,37 @@ Partial Class frmInclusionsExclusions
         Me.TableLayoutPanel1.Controls.Add(Me.cmbTotalLoadDeflection_Corridor, 7, 3)
         Me.TableLayoutPanel1.Controls.Add(Me.cmbAbsolute_Corridor, 8, 3)
         Me.TableLayoutPanel1.Controls.Add(Me.cmbDeflection_Corridor, 9, 3)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(3, 3)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(6, 116)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 4
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25.0!))
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25.0!))
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25.0!))
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25.0!))
-        Me.TableLayoutPanel1.Size = New System.Drawing.Size(886, 131)
-        Me.TableLayoutPanel1.TabIndex = 0
+        Me.TableLayoutPanel1.Size = New System.Drawing.Size(883, 131)
+        Me.TableLayoutPanel1.TabIndex = 20
+        '
+        'lblCorridor
+        '
+        Me.lblCorridor.AutoSize = True
+        Me.lblCorridor.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblCorridor.Location = New System.Drawing.Point(3, 96)
+        Me.lblCorridor.Name = "lblCorridor"
+        Me.lblCorridor.Size = New System.Drawing.Size(69, 35)
+        Me.lblCorridor.TabIndex = 41
+        Me.lblCorridor.Text = "Corridor"
+        Me.lblCorridor.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
+        'lblFloor
+        '
+        Me.lblFloor.AutoSize = True
+        Me.lblFloor.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblFloor.Location = New System.Drawing.Point(3, 64)
+        Me.lblFloor.Name = "lblFloor"
+        Me.lblFloor.Size = New System.Drawing.Size(69, 32)
+        Me.lblFloor.TabIndex = 40
+        Me.lblFloor.Text = "Floor"
+        Me.lblFloor.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
         'lblCategory
         '
@@ -409,7 +364,7 @@ Partial Class frmInclusionsExclusions
         Me.lblCategory.Dock = System.Windows.Forms.DockStyle.Fill
         Me.lblCategory.Location = New System.Drawing.Point(3, 0)
         Me.lblCategory.Name = "lblCategory"
-        Me.lblCategory.Size = New System.Drawing.Size(82, 32)
+        Me.lblCategory.Size = New System.Drawing.Size(69, 32)
         Me.lblCategory.TabIndex = 0
         Me.lblCategory.Text = "Category"
         Me.lblCategory.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -418,9 +373,9 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblTCLL.AutoSize = True
         Me.lblTCLL.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblTCLL.Location = New System.Drawing.Point(91, 0)
+        Me.lblTCLL.Location = New System.Drawing.Point(78, 0)
         Me.lblTCLL.Name = "lblTCLL"
-        Me.lblTCLL.Size = New System.Drawing.Size(82, 32)
+        Me.lblTCLL.Size = New System.Drawing.Size(83, 32)
         Me.lblTCLL.TabIndex = 1
         Me.lblTCLL.Text = "TCLL"
         Me.lblTCLL.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -429,9 +384,9 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblTCDL.AutoSize = True
         Me.lblTCDL.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblTCDL.Location = New System.Drawing.Point(179, 0)
+        Me.lblTCDL.Location = New System.Drawing.Point(167, 0)
         Me.lblTCDL.Name = "lblTCDL"
-        Me.lblTCDL.Size = New System.Drawing.Size(82, 32)
+        Me.lblTCDL.Size = New System.Drawing.Size(86, 32)
         Me.lblTCDL.TabIndex = 2
         Me.lblTCDL.Text = "TCDL"
         Me.lblTCDL.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -440,9 +395,9 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblBCLL.AutoSize = True
         Me.lblBCLL.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblBCLL.Location = New System.Drawing.Point(267, 0)
+        Me.lblBCLL.Location = New System.Drawing.Point(259, 0)
         Me.lblBCLL.Name = "lblBCLL"
-        Me.lblBCLL.Size = New System.Drawing.Size(82, 32)
+        Me.lblBCLL.Size = New System.Drawing.Size(86, 32)
         Me.lblBCLL.TabIndex = 3
         Me.lblBCLL.Text = "BCLL"
         Me.lblBCLL.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -451,9 +406,9 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblBCDL.AutoSize = True
         Me.lblBCDL.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblBCDL.Location = New System.Drawing.Point(355, 0)
+        Me.lblBCDL.Location = New System.Drawing.Point(351, 0)
         Me.lblBCDL.Name = "lblBCDL"
-        Me.lblBCDL.Size = New System.Drawing.Size(82, 32)
+        Me.lblBCDL.Size = New System.Drawing.Size(85, 32)
         Me.lblBCDL.TabIndex = 4
         Me.lblBCDL.Text = "BCDL"
         Me.lblBCDL.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -462,7 +417,7 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblOCSpacing.AutoSize = True
         Me.lblOCSpacing.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblOCSpacing.Location = New System.Drawing.Point(443, 0)
+        Me.lblOCSpacing.Location = New System.Drawing.Point(442, 0)
         Me.lblOCSpacing.Name = "lblOCSpacing"
         Me.lblOCSpacing.Size = New System.Drawing.Size(82, 32)
         Me.lblOCSpacing.TabIndex = 5
@@ -473,7 +428,7 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblLiveLoadDeflection.AutoSize = True
         Me.lblLiveLoadDeflection.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblLiveLoadDeflection.Location = New System.Drawing.Point(531, 0)
+        Me.lblLiveLoadDeflection.Location = New System.Drawing.Point(530, 0)
         Me.lblLiveLoadDeflection.Name = "lblLiveLoadDeflection"
         Me.lblLiveLoadDeflection.Size = New System.Drawing.Size(82, 32)
         Me.lblLiveLoadDeflection.TabIndex = 6
@@ -484,7 +439,7 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblTotalLoadDeflection.AutoSize = True
         Me.lblTotalLoadDeflection.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblTotalLoadDeflection.Location = New System.Drawing.Point(619, 0)
+        Me.lblTotalLoadDeflection.Location = New System.Drawing.Point(618, 0)
         Me.lblTotalLoadDeflection.Name = "lblTotalLoadDeflection"
         Me.lblTotalLoadDeflection.Size = New System.Drawing.Size(82, 32)
         Me.lblTotalLoadDeflection.TabIndex = 7
@@ -495,7 +450,7 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblAbsolute.AutoSize = True
         Me.lblAbsolute.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblAbsolute.Location = New System.Drawing.Point(707, 0)
+        Me.lblAbsolute.Location = New System.Drawing.Point(706, 0)
         Me.lblAbsolute.Name = "lblAbsolute"
         Me.lblAbsolute.Size = New System.Drawing.Size(82, 32)
         Me.lblAbsolute.TabIndex = 8
@@ -506,9 +461,9 @@ Partial Class frmInclusionsExclusions
         '
         Me.lblDeflection.AutoSize = True
         Me.lblDeflection.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblDeflection.Location = New System.Drawing.Point(795, 0)
+        Me.lblDeflection.Location = New System.Drawing.Point(794, 0)
         Me.lblDeflection.Name = "lblDeflection"
-        Me.lblDeflection.Size = New System.Drawing.Size(88, 32)
+        Me.lblDeflection.Size = New System.Drawing.Size(86, 32)
         Me.lblDeflection.TabIndex = 9
         Me.lblDeflection.Text = "Deflection"
         Me.lblDeflection.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -519,7 +474,7 @@ Partial Class frmInclusionsExclusions
         Me.lblRoof.Dock = System.Windows.Forms.DockStyle.Fill
         Me.lblRoof.Location = New System.Drawing.Point(3, 32)
         Me.lblRoof.Name = "lblRoof"
-        Me.lblRoof.Size = New System.Drawing.Size(82, 32)
+        Me.lblRoof.Size = New System.Drawing.Size(69, 32)
         Me.lblRoof.TabIndex = 10
         Me.lblRoof.Text = "Roof"
         Me.lblRoof.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -530,316 +485,358 @@ Partial Class frmInclusionsExclusions
         Me.cmbTCLL_Roof.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.cmbTCLL_Roof.Dock = System.Windows.Forms.DockStyle.Fill
         Me.cmbTCLL_Roof.FormattingEnabled = True
-        Me.cmbTCLL_Roof.Location = New System.Drawing.Point(91, 35)
+        Me.cmbTCLL_Roof.Location = New System.Drawing.Point(78, 35)
         Me.cmbTCLL_Roof.Name = "cmbTCLL_Roof"
-        Me.cmbTCLL_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTCLL_Roof.TabIndex = 11
+        Me.cmbTCLL_Roof.Size = New System.Drawing.Size(83, 21)
+        Me.cmbTCLL_Roof.TabIndex = 7
         '
         'cmbTCDL_Roof
         '
-        Me.cmbTCDL_Roof.Location = New System.Drawing.Point(179, 35)
+        Me.cmbTCDL_Roof.Location = New System.Drawing.Point(167, 35)
         Me.cmbTCDL_Roof.Name = "cmbTCDL_Roof"
         Me.cmbTCDL_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTCDL_Roof.TabIndex = 12
+        Me.cmbTCDL_Roof.TabIndex = 8
         '
         'cmbBCLL_Roof
         '
-        Me.cmbBCLL_Roof.Location = New System.Drawing.Point(267, 35)
+        Me.cmbBCLL_Roof.Location = New System.Drawing.Point(259, 35)
         Me.cmbBCLL_Roof.Name = "cmbBCLL_Roof"
         Me.cmbBCLL_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbBCLL_Roof.TabIndex = 13
+        Me.cmbBCLL_Roof.TabIndex = 9
         '
         'cmbBCDL_Roof
         '
-        Me.cmbBCDL_Roof.Location = New System.Drawing.Point(355, 35)
+        Me.cmbBCDL_Roof.Location = New System.Drawing.Point(351, 35)
         Me.cmbBCDL_Roof.Name = "cmbBCDL_Roof"
         Me.cmbBCDL_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbBCDL_Roof.TabIndex = 14
+        Me.cmbBCDL_Roof.TabIndex = 10
         '
         'cmbOCSpacing_Roof
         '
-        Me.cmbOCSpacing_Roof.Location = New System.Drawing.Point(443, 35)
+        Me.cmbOCSpacing_Roof.Location = New System.Drawing.Point(442, 35)
         Me.cmbOCSpacing_Roof.Name = "cmbOCSpacing_Roof"
         Me.cmbOCSpacing_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbOCSpacing_Roof.TabIndex = 15
+        Me.cmbOCSpacing_Roof.TabIndex = 11
         '
         'cmbLiveLoadDeflection_Roof
         '
-        Me.cmbLiveLoadDeflection_Roof.Location = New System.Drawing.Point(531, 35)
+        Me.cmbLiveLoadDeflection_Roof.Location = New System.Drawing.Point(530, 35)
         Me.cmbLiveLoadDeflection_Roof.Name = "cmbLiveLoadDeflection_Roof"
         Me.cmbLiveLoadDeflection_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbLiveLoadDeflection_Roof.TabIndex = 16
+        Me.cmbLiveLoadDeflection_Roof.TabIndex = 12
         '
         'cmbTotalLoadDeflection_Roof
         '
-        Me.cmbTotalLoadDeflection_Roof.Location = New System.Drawing.Point(619, 35)
+        Me.cmbTotalLoadDeflection_Roof.Location = New System.Drawing.Point(618, 35)
         Me.cmbTotalLoadDeflection_Roof.Name = "cmbTotalLoadDeflection_Roof"
         Me.cmbTotalLoadDeflection_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTotalLoadDeflection_Roof.TabIndex = 17
+        Me.cmbTotalLoadDeflection_Roof.TabIndex = 13
         '
         'cmbAbsolute_Roof
         '
-        Me.cmbAbsolute_Roof.Location = New System.Drawing.Point(707, 35)
+        Me.cmbAbsolute_Roof.Location = New System.Drawing.Point(706, 35)
         Me.cmbAbsolute_Roof.Name = "cmbAbsolute_Roof"
         Me.cmbAbsolute_Roof.Size = New System.Drawing.Size(82, 21)
-        Me.cmbAbsolute_Roof.TabIndex = 18
+        Me.cmbAbsolute_Roof.TabIndex = 14
         '
         'cmbDeflection_Roof
         '
-        Me.cmbDeflection_Roof.Location = New System.Drawing.Point(795, 35)
+        Me.cmbDeflection_Roof.Location = New System.Drawing.Point(794, 35)
         Me.cmbDeflection_Roof.Name = "cmbDeflection_Roof"
-        Me.cmbDeflection_Roof.Size = New System.Drawing.Size(88, 21)
-        Me.cmbDeflection_Roof.TabIndex = 19
+        Me.cmbDeflection_Roof.Size = New System.Drawing.Size(86, 21)
+        Me.cmbDeflection_Roof.TabIndex = 15
         '
         'cmbTCLL_Floor
         '
-        Me.cmbTCLL_Floor.Location = New System.Drawing.Point(91, 67)
+        Me.cmbTCLL_Floor.Location = New System.Drawing.Point(78, 67)
         Me.cmbTCLL_Floor.Name = "cmbTCLL_Floor"
         Me.cmbTCLL_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTCLL_Floor.TabIndex = 21
+        Me.cmbTCLL_Floor.TabIndex = 16
         '
         'cmbTCDL_Floor
         '
-        Me.cmbTCDL_Floor.Location = New System.Drawing.Point(179, 67)
+        Me.cmbTCDL_Floor.Location = New System.Drawing.Point(167, 67)
         Me.cmbTCDL_Floor.Name = "cmbTCDL_Floor"
         Me.cmbTCDL_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTCDL_Floor.TabIndex = 22
+        Me.cmbTCDL_Floor.TabIndex = 17
         '
         'cmbBCLL_Floor
         '
-        Me.cmbBCLL_Floor.Location = New System.Drawing.Point(267, 67)
+        Me.cmbBCLL_Floor.Location = New System.Drawing.Point(259, 67)
         Me.cmbBCLL_Floor.Name = "cmbBCLL_Floor"
         Me.cmbBCLL_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbBCLL_Floor.TabIndex = 23
+        Me.cmbBCLL_Floor.TabIndex = 18
         '
         'cmbBCDL_Floor
         '
-        Me.cmbBCDL_Floor.Location = New System.Drawing.Point(355, 67)
+        Me.cmbBCDL_Floor.Location = New System.Drawing.Point(351, 67)
         Me.cmbBCDL_Floor.Name = "cmbBCDL_Floor"
         Me.cmbBCDL_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbBCDL_Floor.TabIndex = 24
+        Me.cmbBCDL_Floor.TabIndex = 19
         '
         'cmbOCSpacing_Floor
         '
-        Me.cmbOCSpacing_Floor.Location = New System.Drawing.Point(443, 67)
+        Me.cmbOCSpacing_Floor.Location = New System.Drawing.Point(442, 67)
         Me.cmbOCSpacing_Floor.Name = "cmbOCSpacing_Floor"
         Me.cmbOCSpacing_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbOCSpacing_Floor.TabIndex = 25
+        Me.cmbOCSpacing_Floor.TabIndex = 20
         '
         'cmbLiveLoadDeflection_Floor
         '
-        Me.cmbLiveLoadDeflection_Floor.Location = New System.Drawing.Point(531, 67)
+        Me.cmbLiveLoadDeflection_Floor.Location = New System.Drawing.Point(530, 67)
         Me.cmbLiveLoadDeflection_Floor.Name = "cmbLiveLoadDeflection_Floor"
         Me.cmbLiveLoadDeflection_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbLiveLoadDeflection_Floor.TabIndex = 26
+        Me.cmbLiveLoadDeflection_Floor.TabIndex = 21
         '
         'cmbTotalLoadDeflection_Floor
         '
-        Me.cmbTotalLoadDeflection_Floor.Location = New System.Drawing.Point(619, 67)
+        Me.cmbTotalLoadDeflection_Floor.Location = New System.Drawing.Point(618, 67)
         Me.cmbTotalLoadDeflection_Floor.Name = "cmbTotalLoadDeflection_Floor"
         Me.cmbTotalLoadDeflection_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTotalLoadDeflection_Floor.TabIndex = 27
+        Me.cmbTotalLoadDeflection_Floor.TabIndex = 22
         '
         'cmbAbsolute_Floor
         '
-        Me.cmbAbsolute_Floor.Location = New System.Drawing.Point(707, 67)
+        Me.cmbAbsolute_Floor.Location = New System.Drawing.Point(706, 67)
         Me.cmbAbsolute_Floor.Name = "cmbAbsolute_Floor"
         Me.cmbAbsolute_Floor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbAbsolute_Floor.TabIndex = 28
+        Me.cmbAbsolute_Floor.TabIndex = 23
         '
         'cmbDeflection_Floor
         '
-        Me.cmbDeflection_Floor.Location = New System.Drawing.Point(795, 67)
+        Me.cmbDeflection_Floor.Location = New System.Drawing.Point(794, 67)
         Me.cmbDeflection_Floor.Name = "cmbDeflection_Floor"
-        Me.cmbDeflection_Floor.Size = New System.Drawing.Size(88, 21)
-        Me.cmbDeflection_Floor.TabIndex = 29
+        Me.cmbDeflection_Floor.Size = New System.Drawing.Size(86, 21)
+        Me.cmbDeflection_Floor.TabIndex = 24
         '
         'cmbTCLL_Corridor
         '
-        Me.cmbTCLL_Corridor.Location = New System.Drawing.Point(91, 99)
+        Me.cmbTCLL_Corridor.Location = New System.Drawing.Point(78, 99)
         Me.cmbTCLL_Corridor.Name = "cmbTCLL_Corridor"
         Me.cmbTCLL_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTCLL_Corridor.TabIndex = 31
+        Me.cmbTCLL_Corridor.TabIndex = 25
         '
         'cmbTCDL_Corridor
         '
-        Me.cmbTCDL_Corridor.Location = New System.Drawing.Point(179, 99)
+        Me.cmbTCDL_Corridor.Location = New System.Drawing.Point(167, 99)
         Me.cmbTCDL_Corridor.Name = "cmbTCDL_Corridor"
         Me.cmbTCDL_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTCDL_Corridor.TabIndex = 32
+        Me.cmbTCDL_Corridor.TabIndex = 26
         '
         'cmbBCLL_Corridor
         '
-        Me.cmbBCLL_Corridor.Location = New System.Drawing.Point(267, 99)
+        Me.cmbBCLL_Corridor.Location = New System.Drawing.Point(259, 99)
         Me.cmbBCLL_Corridor.Name = "cmbBCLL_Corridor"
         Me.cmbBCLL_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbBCLL_Corridor.TabIndex = 33
+        Me.cmbBCLL_Corridor.TabIndex = 27
         '
         'cmbBCDL_Corridor
         '
-        Me.cmbBCDL_Corridor.Location = New System.Drawing.Point(355, 99)
+        Me.cmbBCDL_Corridor.Location = New System.Drawing.Point(351, 99)
         Me.cmbBCDL_Corridor.Name = "cmbBCDL_Corridor"
         Me.cmbBCDL_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbBCDL_Corridor.TabIndex = 34
+        Me.cmbBCDL_Corridor.TabIndex = 28
         '
         'cmbOCSpacing_Corridor
         '
-        Me.cmbOCSpacing_Corridor.Location = New System.Drawing.Point(443, 99)
+        Me.cmbOCSpacing_Corridor.Location = New System.Drawing.Point(442, 99)
         Me.cmbOCSpacing_Corridor.Name = "cmbOCSpacing_Corridor"
         Me.cmbOCSpacing_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbOCSpacing_Corridor.TabIndex = 35
+        Me.cmbOCSpacing_Corridor.TabIndex = 29
         '
         'cmbLiveLoadDeflection_Corridor
         '
-        Me.cmbLiveLoadDeflection_Corridor.Location = New System.Drawing.Point(531, 99)
+        Me.cmbLiveLoadDeflection_Corridor.Location = New System.Drawing.Point(530, 99)
         Me.cmbLiveLoadDeflection_Corridor.Name = "cmbLiveLoadDeflection_Corridor"
         Me.cmbLiveLoadDeflection_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbLiveLoadDeflection_Corridor.TabIndex = 36
+        Me.cmbLiveLoadDeflection_Corridor.TabIndex = 30
         '
         'cmbTotalLoadDeflection_Corridor
         '
-        Me.cmbTotalLoadDeflection_Corridor.Location = New System.Drawing.Point(619, 99)
+        Me.cmbTotalLoadDeflection_Corridor.Location = New System.Drawing.Point(618, 99)
         Me.cmbTotalLoadDeflection_Corridor.Name = "cmbTotalLoadDeflection_Corridor"
         Me.cmbTotalLoadDeflection_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbTotalLoadDeflection_Corridor.TabIndex = 37
+        Me.cmbTotalLoadDeflection_Corridor.TabIndex = 31
         '
         'cmbAbsolute_Corridor
         '
-        Me.cmbAbsolute_Corridor.Location = New System.Drawing.Point(707, 99)
+        Me.cmbAbsolute_Corridor.Location = New System.Drawing.Point(706, 99)
         Me.cmbAbsolute_Corridor.Name = "cmbAbsolute_Corridor"
         Me.cmbAbsolute_Corridor.Size = New System.Drawing.Size(82, 21)
-        Me.cmbAbsolute_Corridor.TabIndex = 38
+        Me.cmbAbsolute_Corridor.TabIndex = 32
         '
         'cmbDeflection_Corridor
         '
-        Me.cmbDeflection_Corridor.Location = New System.Drawing.Point(795, 99)
+        Me.cmbDeflection_Corridor.Location = New System.Drawing.Point(794, 99)
         Me.cmbDeflection_Corridor.Name = "cmbDeflection_Corridor"
-        Me.cmbDeflection_Corridor.Size = New System.Drawing.Size(88, 21)
-        Me.cmbDeflection_Corridor.TabIndex = 39
+        Me.cmbDeflection_Corridor.Size = New System.Drawing.Size(86, 21)
+        Me.cmbDeflection_Corridor.TabIndex = 33
         '
-        'tabBearing
+        'Label1
         '
-        Me.tabBearing.Controls.Add(Me.cboCorridorRimRibbon)
-        Me.tabBearing.Controls.Add(Me.cboIntRimRibbon)
-        Me.tabBearing.Controls.Add(Me.cboExtRimRibbon)
-        Me.tabBearing.Controls.Add(Me.lblCorridorRim)
-        Me.tabBearing.Controls.Add(Me.cmbCorridorWall)
-        Me.tabBearing.Controls.Add(Me.lblCorridorWall)
-        Me.tabBearing.Controls.Add(Me.lblIntRim)
-        Me.tabBearing.Controls.Add(Me.cmbIntWall)
-        Me.tabBearing.Controls.Add(Me.lblIntWall)
-        Me.tabBearing.Controls.Add(Me.lblExtRim)
-        Me.tabBearing.Controls.Add(Me.cmbExtWall)
-        Me.tabBearing.Controls.Add(Me.lblExtWall)
-        Me.tabBearing.Location = New System.Drawing.Point(4, 22)
-        Me.tabBearing.Name = "tabBearing"
-        Me.tabBearing.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabBearing.Size = New System.Drawing.Size(892, 514)
-        Me.tabBearing.TabIndex = 2
-        Me.tabBearing.Text = "Bearing Styles"
-        Me.tabBearing.UseVisualStyleBackColor = True
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(210, 282)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(71, 13)
+        Me.Label1.TabIndex = 19
+        Me.Label1.Text = "Heel Heights:"
         '
-        'cboCorridorRimRibbon
+        'txtHeelHeights
         '
-        Me.cboCorridorRimRibbon.FormattingEnabled = True
-        Me.cboCorridorRimRibbon.Location = New System.Drawing.Point(100, 150)
-        Me.cboCorridorRimRibbon.Name = "cboCorridorRimRibbon"
-        Me.cboCorridorRimRibbon.Size = New System.Drawing.Size(121, 21)
-        Me.cboCorridorRimRibbon.TabIndex = 11
+        Me.txtHeelHeights.Location = New System.Drawing.Point(287, 279)
+        Me.txtHeelHeights.Name = "txtHeelHeights"
+        Me.txtHeelHeights.Size = New System.Drawing.Size(100, 20)
+        Me.txtHeelHeights.TabIndex = 37
         '
-        'cboIntRimRibbon
+        'lblWallHeights
         '
-        Me.cboIntRimRibbon.FormattingEnabled = True
-        Me.cboIntRimRibbon.Location = New System.Drawing.Point(100, 100)
-        Me.cboIntRimRibbon.Name = "cboIntRimRibbon"
-        Me.cboIntRimRibbon.Size = New System.Drawing.Size(121, 21)
-        Me.cboIntRimRibbon.TabIndex = 10
+        Me.lblWallHeights.AutoSize = True
+        Me.lblWallHeights.Location = New System.Drawing.Point(27, 256)
+        Me.lblWallHeights.Name = "lblWallHeights"
+        Me.lblWallHeights.Size = New System.Drawing.Size(70, 13)
+        Me.lblWallHeights.TabIndex = 0
+        Me.lblWallHeights.Text = "Wall Heights:"
         '
-        'cboExtRimRibbon
+        'txtWallHeights
         '
-        Me.cboExtRimRibbon.FormattingEnabled = True
-        Me.cboExtRimRibbon.Location = New System.Drawing.Point(100, 50)
-        Me.cboExtRimRibbon.Name = "cboExtRimRibbon"
-        Me.cboExtRimRibbon.Size = New System.Drawing.Size(121, 21)
-        Me.cboExtRimRibbon.TabIndex = 9
+        Me.txtWallHeights.Location = New System.Drawing.Point(103, 253)
+        Me.txtWallHeights.Name = "txtWallHeights"
+        Me.txtWallHeights.Size = New System.Drawing.Size(100, 20)
+        Me.txtWallHeights.TabIndex = 34
         '
-        'lblCorridorRim
+        'lblFloorDepths
         '
-        Me.lblCorridorRim.AutoSize = True
-        Me.lblCorridorRim.Location = New System.Drawing.Point(3, 153)
-        Me.lblCorridorRim.Name = "lblCorridorRim"
-        Me.lblCorridorRim.Size = New System.Drawing.Size(88, 13)
-        Me.lblCorridorRim.TabIndex = 8
-        Me.lblCorridorRim.Text = "Corridor Rim/Rib:"
+        Me.lblFloorDepths.AutoSize = True
+        Me.lblFloorDepths.Location = New System.Drawing.Point(211, 256)
+        Me.lblFloorDepths.Name = "lblFloorDepths"
+        Me.lblFloorDepths.Size = New System.Drawing.Size(70, 13)
+        Me.lblFloorDepths.TabIndex = 2
+        Me.lblFloorDepths.Text = "Floor Depths:"
         '
-        'cmbCorridorWall
+        'txtFloorDepths
         '
-        Me.cmbCorridorWall.FormattingEnabled = True
-        Me.cmbCorridorWall.Location = New System.Drawing.Point(100, 126)
-        Me.cmbCorridorWall.Name = "cmbCorridorWall"
-        Me.cmbCorridorWall.Size = New System.Drawing.Size(121, 21)
-        Me.cmbCorridorWall.TabIndex = 7
+        Me.txtFloorDepths.Location = New System.Drawing.Point(287, 253)
+        Me.txtFloorDepths.Name = "txtFloorDepths"
+        Me.txtFloorDepths.Size = New System.Drawing.Size(100, 20)
+        Me.txtFloorDepths.TabIndex = 35
         '
-        'lblCorridorWall
+        'lblRoofPitches
         '
-        Me.lblCorridorWall.AutoSize = True
-        Me.lblCorridorWall.Location = New System.Drawing.Point(3, 129)
-        Me.lblCorridorWall.Name = "lblCorridorWall"
-        Me.lblCorridorWall.Size = New System.Drawing.Size(70, 13)
-        Me.lblCorridorWall.TabIndex = 6
-        Me.lblCorridorWall.Text = "Corridor Wall:"
+        Me.lblRoofPitches.AutoSize = True
+        Me.lblRoofPitches.Location = New System.Drawing.Point(27, 282)
+        Me.lblRoofPitches.Name = "lblRoofPitches"
+        Me.lblRoofPitches.Size = New System.Drawing.Size(71, 13)
+        Me.lblRoofPitches.TabIndex = 4
+        Me.lblRoofPitches.Text = "Roof Pitches:"
         '
-        'lblIntRim
+        'txtRoofPitches
         '
-        Me.lblIntRim.AutoSize = True
-        Me.lblIntRim.Location = New System.Drawing.Point(3, 103)
-        Me.lblIntRim.Name = "lblIntRim"
-        Me.lblIntRim.Size = New System.Drawing.Size(64, 13)
-        Me.lblIntRim.TabIndex = 5
-        Me.lblIntRim.Text = "Int Rim/Rib:"
+        Me.txtRoofPitches.Location = New System.Drawing.Point(103, 279)
+        Me.txtRoofPitches.Name = "txtRoofPitches"
+        Me.txtRoofPitches.Size = New System.Drawing.Size(100, 20)
+        Me.txtRoofPitches.TabIndex = 36
         '
-        'cmbIntWall
+        'lblOccupancy
         '
-        Me.cmbIntWall.FormattingEnabled = True
-        Me.cmbIntWall.Location = New System.Drawing.Point(100, 76)
-        Me.cmbIntWall.Name = "cmbIntWall"
-        Me.cmbIntWall.Size = New System.Drawing.Size(121, 21)
-        Me.cmbIntWall.TabIndex = 4
+        Me.lblOccupancy.AutoSize = True
+        Me.lblOccupancy.Location = New System.Drawing.Point(216, 92)
+        Me.lblOccupancy.Name = "lblOccupancy"
+        Me.lblOccupancy.Size = New System.Drawing.Size(65, 13)
+        Me.lblOccupancy.TabIndex = 6
+        Me.lblOccupancy.Text = "Occupancy:"
         '
-        'lblIntWall
+        'cmbOccupancy
         '
-        Me.lblIntWall.AutoSize = True
-        Me.lblIntWall.Location = New System.Drawing.Point(3, 79)
-        Me.lblIntWall.Name = "lblIntWall"
-        Me.lblIntWall.Size = New System.Drawing.Size(46, 13)
-        Me.lblIntWall.TabIndex = 3
-        Me.lblIntWall.Text = "Int Wall:"
+        Me.cmbOccupancy.FormattingEnabled = True
+        Me.cmbOccupancy.Location = New System.Drawing.Point(287, 89)
+        Me.cmbOccupancy.Name = "cmbOccupancy"
+        Me.cmbOccupancy.Size = New System.Drawing.Size(100, 21)
+        Me.cmbOccupancy.TabIndex = 6
         '
-        'lblExtRim
+        'lblSnowLoad
         '
-        Me.lblExtRim.AutoSize = True
-        Me.lblExtRim.Location = New System.Drawing.Point(3, 53)
-        Me.lblExtRim.Name = "lblExtRim"
-        Me.lblExtRim.Size = New System.Drawing.Size(67, 13)
-        Me.lblExtRim.TabIndex = 2
-        Me.lblExtRim.Text = "Ext Rim/Rib:"
+        Me.lblSnowLoad.AutoSize = True
+        Me.lblSnowLoad.Location = New System.Drawing.Point(6, 65)
+        Me.lblSnowLoad.Name = "lblSnowLoad"
+        Me.lblSnowLoad.Size = New System.Drawing.Size(91, 13)
+        Me.lblSnowLoad.TabIndex = 8
+        Me.lblSnowLoad.Text = "Snow Load Type:"
         '
-        'cmbExtWall
+        'cmbSnowLoad
         '
-        Me.cmbExtWall.FormattingEnabled = True
-        Me.cmbExtWall.Location = New System.Drawing.Point(100, 26)
-        Me.cmbExtWall.Name = "cmbExtWall"
-        Me.cmbExtWall.Size = New System.Drawing.Size(121, 21)
-        Me.cmbExtWall.TabIndex = 1
+        Me.cmbSnowLoad.FormattingEnabled = True
+        Me.cmbSnowLoad.Location = New System.Drawing.Point(103, 62)
+        Me.cmbSnowLoad.Name = "cmbSnowLoad"
+        Me.cmbSnowLoad.Size = New System.Drawing.Size(100, 21)
+        Me.cmbSnowLoad.TabIndex = 3
         '
-        'lblExtWall
+        'lblWindSpeed
         '
-        Me.lblExtWall.AutoSize = True
-        Me.lblExtWall.Location = New System.Drawing.Point(3, 29)
-        Me.lblExtWall.Name = "lblExtWall"
-        Me.lblExtWall.Size = New System.Drawing.Size(49, 13)
-        Me.lblExtWall.TabIndex = 0
-        Me.lblExtWall.Text = "Ext Wall:"
+        Me.lblWindSpeed.AutoSize = True
+        Me.lblWindSpeed.Location = New System.Drawing.Point(28, 92)
+        Me.lblWindSpeed.Name = "lblWindSpeed"
+        Me.lblWindSpeed.Size = New System.Drawing.Size(69, 13)
+        Me.lblWindSpeed.TabIndex = 10
+        Me.lblWindSpeed.Text = "Wind Speed:"
+        '
+        'cmbWindSpeed
+        '
+        Me.cmbWindSpeed.FormattingEnabled = True
+        Me.cmbWindSpeed.Location = New System.Drawing.Point(103, 89)
+        Me.cmbWindSpeed.Name = "cmbWindSpeed"
+        Me.cmbWindSpeed.Size = New System.Drawing.Size(100, 21)
+        Me.cmbWindSpeed.TabIndex = 5
+        '
+        'lblExposure
+        '
+        Me.lblExposure.AutoSize = True
+        Me.lblExposure.Location = New System.Drawing.Point(227, 65)
+        Me.lblExposure.Name = "lblExposure"
+        Me.lblExposure.Size = New System.Drawing.Size(54, 13)
+        Me.lblExposure.TabIndex = 12
+        Me.lblExposure.Text = "Exposure:"
+        '
+        'cmbExposure
+        '
+        Me.cmbExposure.FormattingEnabled = True
+        Me.cmbExposure.Location = New System.Drawing.Point(287, 62)
+        Me.cmbExposure.Name = "cmbExposure"
+        Me.cmbExposure.Size = New System.Drawing.Size(100, 21)
+        Me.cmbExposure.TabIndex = 4
+        '
+        'lblImportance
+        '
+        Me.lblImportance.AutoSize = True
+        Me.lblImportance.Location = New System.Drawing.Point(218, 38)
+        Me.lblImportance.Name = "lblImportance"
+        Me.lblImportance.Size = New System.Drawing.Size(63, 13)
+        Me.lblImportance.TabIndex = 14
+        Me.lblImportance.Text = "Importance:"
+        '
+        'cmbImportance
+        '
+        Me.cmbImportance.FormattingEnabled = True
+        Me.cmbImportance.Location = New System.Drawing.Point(287, 35)
+        Me.cmbImportance.Name = "cmbImportance"
+        Me.cmbImportance.Size = New System.Drawing.Size(100, 21)
+        Me.cmbImportance.TabIndex = 2
+        '
+        'lblBuildingCode
+        '
+        Me.lblBuildingCode.AutoSize = True
+        Me.lblBuildingCode.Location = New System.Drawing.Point(22, 38)
+        Me.lblBuildingCode.Name = "lblBuildingCode"
+        Me.lblBuildingCode.Size = New System.Drawing.Size(75, 13)
+        Me.lblBuildingCode.TabIndex = 16
+        Me.lblBuildingCode.Text = "Building Code:"
+        '
+        'cmbBuildingCode
+        '
+        Me.cmbBuildingCode.FormattingEnabled = True
+        Me.cmbBuildingCode.Location = New System.Drawing.Point(103, 35)
+        Me.cmbBuildingCode.Name = "cmbBuildingCode"
+        Me.cmbBuildingCode.Size = New System.Drawing.Size(100, 21)
+        Me.cmbBuildingCode.TabIndex = 1
         '
         'tabRoofItems
         '
@@ -1034,28 +1031,6 @@ Partial Class frmInclusionsExclusions
         Me.btnClose.Text = "Close"
         Me.btnClose.UseVisualStyleBackColor = True
         '
-        'lblFloor
-        '
-        Me.lblFloor.AutoSize = True
-        Me.lblFloor.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblFloor.Location = New System.Drawing.Point(3, 64)
-        Me.lblFloor.Name = "lblFloor"
-        Me.lblFloor.Size = New System.Drawing.Size(82, 32)
-        Me.lblFloor.TabIndex = 40
-        Me.lblFloor.Text = "Floor"
-        Me.lblFloor.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
-        '
-        'lblCorridor
-        '
-        Me.lblCorridor.AutoSize = True
-        Me.lblCorridor.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.lblCorridor.Location = New System.Drawing.Point(3, 96)
-        Me.lblCorridor.Name = "lblCorridor"
-        Me.lblCorridor.Size = New System.Drawing.Size(82, 35)
-        Me.lblCorridor.TabIndex = 41
-        Me.lblCorridor.Text = "Corridor"
-        Me.lblCorridor.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
-        '
         'frmInclusionsExclusions
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1069,11 +1044,8 @@ Partial Class frmInclusionsExclusions
         Me.tabControl.ResumeLayout(False)
         Me.tabDesignInfo.ResumeLayout(False)
         Me.tabDesignInfo.PerformLayout()
-        Me.tabLoads.ResumeLayout(False)
         Me.TableLayoutPanel1.ResumeLayout(False)
         Me.TableLayoutPanel1.PerformLayout()
-        Me.tabBearing.ResumeLayout(False)
-        Me.tabBearing.PerformLayout()
         Me.tabRoofItems.ResumeLayout(False)
         CType(Me.dgvRoofItems, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabFloorItems.ResumeLayout(False)
@@ -1105,8 +1077,46 @@ Partial Class frmInclusionsExclusions
     Friend WithEvents cmbImportance As ComboBox
     Friend WithEvents lblBuildingCode As Label
     Friend WithEvents cmbBuildingCode As ComboBox
-    Friend WithEvents tabLoads As TabPage
+    Friend WithEvents tabRoofItems As TabPage
+    Friend WithEvents dgvRoofItems As DataGridView
+    Friend WithEvents colRoofKN As DataGridViewTextBoxColumn
+    Friend WithEvents colRoofDesc As DataGridViewTextBoxColumn
+    Friend WithEvents colRoofIncluded As DataGridViewCheckBoxColumn
+    Friend WithEvents colRoofExcluded As DataGridViewCheckBoxColumn
+    Friend WithEvents colRoofOptional As DataGridViewCheckBoxColumn
+    Friend WithEvents tabFloorItems As TabPage
+    Friend WithEvents dgvFloorItems As DataGridView
+    Friend WithEvents colFloorKN As DataGridViewTextBoxColumn
+    Friend WithEvents colFloorDesc As DataGridViewTextBoxColumn
+    Friend WithEvents colFloorIncluded As DataGridViewCheckBoxColumn
+    Friend WithEvents colFloorExcluded As DataGridViewCheckBoxColumn
+    Friend WithEvents colFloorOptional As DataGridViewCheckBoxColumn
+    Friend WithEvents tabWallItems As TabPage
+    Friend WithEvents dgvWallItems As DataGridView
+    Friend WithEvents colWallKN As DataGridViewTextBoxColumn
+    Friend WithEvents colWallDesc As DataGridViewTextBoxColumn
+    Friend WithEvents colWallIncluded As DataGridViewCheckBoxColumn
+    Friend WithEvents colWallExcluded As DataGridViewCheckBoxColumn
+    Friend WithEvents colWallOptional As DataGridViewCheckBoxColumn
+    Friend WithEvents tabNotes As TabPage
+    Friend WithEvents txtGeneralNotes As TextBox
+    Friend WithEvents btnSave As Button
+    Friend WithEvents btnClose As Button
+    Friend WithEvents Label1 As Label
+    Friend WithEvents txtHeelHeights As TextBox
+    Friend WithEvents cboCorridorRimRibbon As ComboBox
+    Friend WithEvents cboIntRimRibbon As ComboBox
+    Friend WithEvents cboExtRimRibbon As ComboBox
+    Friend WithEvents cmbCorridorWall As ComboBox
+    Friend WithEvents lblCorridorWall As Label
+    Friend WithEvents cmbIntWall As ComboBox
+    Friend WithEvents lblIntWall As Label
+    Friend WithEvents lblExtRim As Label
+    Friend WithEvents cmbExtWall As ComboBox
+    Friend WithEvents lblExtWall As Label
     Friend WithEvents TableLayoutPanel1 As TableLayoutPanel
+    Friend WithEvents lblCorridor As Label
+    Friend WithEvents lblFloor As Label
     Friend WithEvents lblCategory As Label
     Friend WithEvents lblTCLL As Label
     Friend WithEvents lblTCDL As Label
@@ -1145,44 +1155,4 @@ Partial Class frmInclusionsExclusions
     Friend WithEvents cmbTotalLoadDeflection_Corridor As ComboBox
     Friend WithEvents cmbAbsolute_Corridor As ComboBox
     Friend WithEvents cmbDeflection_Corridor As ComboBox
-    Friend WithEvents tabBearing As TabPage
-    Friend WithEvents cboCorridorRimRibbon As ComboBox
-    Friend WithEvents cboIntRimRibbon As ComboBox
-    Friend WithEvents cboExtRimRibbon As ComboBox
-    Friend WithEvents lblCorridorRim As Label
-    Friend WithEvents cmbCorridorWall As ComboBox
-    Friend WithEvents lblCorridorWall As Label
-    Friend WithEvents lblIntRim As Label
-    Friend WithEvents cmbIntWall As ComboBox
-    Friend WithEvents lblIntWall As Label
-    Friend WithEvents lblExtRim As Label
-    Friend WithEvents cmbExtWall As ComboBox
-    Friend WithEvents lblExtWall As Label
-    Friend WithEvents tabRoofItems As TabPage
-    Friend WithEvents dgvRoofItems As DataGridView
-    Friend WithEvents colRoofKN As DataGridViewTextBoxColumn
-    Friend WithEvents colRoofDesc As DataGridViewTextBoxColumn
-    Friend WithEvents colRoofIncluded As DataGridViewCheckBoxColumn
-    Friend WithEvents colRoofExcluded As DataGridViewCheckBoxColumn
-    Friend WithEvents colRoofOptional As DataGridViewCheckBoxColumn
-    Friend WithEvents tabFloorItems As TabPage
-    Friend WithEvents dgvFloorItems As DataGridView
-    Friend WithEvents colFloorKN As DataGridViewTextBoxColumn
-    Friend WithEvents colFloorDesc As DataGridViewTextBoxColumn
-    Friend WithEvents colFloorIncluded As DataGridViewCheckBoxColumn
-    Friend WithEvents colFloorExcluded As DataGridViewCheckBoxColumn
-    Friend WithEvents colFloorOptional As DataGridViewCheckBoxColumn
-    Friend WithEvents tabWallItems As TabPage
-    Friend WithEvents dgvWallItems As DataGridView
-    Friend WithEvents colWallKN As DataGridViewTextBoxColumn
-    Friend WithEvents colWallDesc As DataGridViewTextBoxColumn
-    Friend WithEvents colWallIncluded As DataGridViewCheckBoxColumn
-    Friend WithEvents colWallExcluded As DataGridViewCheckBoxColumn
-    Friend WithEvents colWallOptional As DataGridViewCheckBoxColumn
-    Friend WithEvents tabNotes As TabPage
-    Friend WithEvents txtGeneralNotes As TextBox
-    Friend WithEvents btnSave As Button
-    Friend WithEvents btnClose As Button
-    Friend WithEvents lblCorridor As Label
-    Friend WithEvents lblFloor As Label
 End Class

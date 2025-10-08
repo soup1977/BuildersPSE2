@@ -75,7 +75,11 @@ Private Sub LoadProjects()
         End Try
     End Sub
     Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
-        RemoveTabFromTabControl("ProjectList")
+
+        If MessageBox.Show("Are you sure you want to exit?", "Confirm Exit", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
+            Application.Exit()
+        End If
+
     End Sub
 
     Private Sub TxtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
