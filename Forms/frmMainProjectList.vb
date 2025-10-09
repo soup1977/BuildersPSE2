@@ -1,10 +1,9 @@
 ﻿Option Strict On
-
-Imports BuildersPSE2.BuildersPSE.DataAccess
 Imports BuildersPSE2.BuildersPSE.Models
+Imports BuildersPSE2.DataAccess
 
 Public Class frmMainProjectList
-    Private da As New DataAccess() ' DAL instance - servant-simple dependency
+    Private da As New ProjectDataAccess() ' DAL instance - servant-simple dependency
     Private projects As List(Of ProjectModel) ' Cache for filtering
 
     Private Sub FrmMainProjectList_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -17,12 +16,12 @@ Public Class frmMainProjectList
             mdiParent.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
         End If
     End Sub
-Private Sub LoadProjects()
+    Private Sub LoadProjects()
         Try
             projects = da.GetProjects(includeDetails:=False)
             Dim displayProjects = projects.Select(Function(p)
-                                                    Dim latestVersion As ProjectVersionModel = da.GetProjectVersions(p.ProjectID).FirstOrDefault()
-                                                    Return New With {
+                                                      Dim latestVersion As ProjectVersionModel = ProjVersionDataAccess.GetProjectVersions(p.ProjectID).FirstOrDefault()
+                                                      Return New With {
                                                         p.ProjectID,
                                                         p.JBID,
                                                         p.ProjectName,

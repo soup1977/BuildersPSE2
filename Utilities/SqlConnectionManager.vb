@@ -63,6 +63,9 @@ Namespace BuildersPSE.Utilities
             End Using
         End Sub
 
+
+
+
         Public Function ExecuteScalar(Of T)(sql As String, Optional parameters As SqlParameter() = Nothing) As T
             Using conn As SqlConnection = GetConnection()
                 Using cmd As New SqlCommand(sql, conn)
@@ -108,5 +111,7 @@ Namespace BuildersPSE.Utilities
                 Return CType(cmd.ExecuteScalar(), T)
             End Using
         End Function
+
+
     End Class
 End Namespace

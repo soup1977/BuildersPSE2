@@ -1,10 +1,10 @@
 ﻿Option Strict On
 Imports System.Windows.Forms
-Imports BuildersPSE2.BuildersPSE.DataAccess
+Imports BuildersPSE2.DataAccess
 Imports BuildersPSE2.BuildersPSE.Models
 
 Public Class FrmCustomerDialog
-    Private ReadOnly da As New DataAccess()
+    Private ReadOnly da As New ProjectDataAccess()
     Private ReadOnly customer As CustomerModel
 
     Public ReadOnly Property CustomerName As String
@@ -24,7 +24,7 @@ Public Class FrmCustomerDialog
 
     Public Sub New(Optional selectedCustomer As CustomerModel = Nothing, Optional defaultTypeID As Integer? = Nothing)
         InitializeComponent()
-        cboCustomerType.DataSource = da.GetCustomerTypes()
+        cboCustomerType.DataSource = HelperDataAccess.GetCustomerTypes()
         cboCustomerType.DisplayMember = "CustomerTypeName"
         cboCustomerType.ValueMember = "CustomerTypeID"
 
@@ -58,7 +58,7 @@ Public Class FrmCustomerDialog
 
             customer.CustomerName = txtCustomerName.Text
             customer.CustomerTypeID = CInt(cboCustomerType.SelectedValue)
-            customer.CustomerID = da.SaveCustomer(customer, customer.CustomerTypeID)
+            customer.CustomerID = HelperDataAccess.SaveCustomer(customer, customer.CustomerTypeID)
 
             DialogResult = DialogResult.OK
             Close()

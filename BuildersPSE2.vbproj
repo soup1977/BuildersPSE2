@@ -152,9 +152,15 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataAccess\DataAccess.vb" />
+    <Compile Include="DataAccess\HelperDataAccess.vb" />
+    <Compile Include="DataAccess\IEDataAccess.vb" />
+    <Compile Include="DataAccess\LumberDataAccess.vb" />
+    <Compile Include="DataAccess\ProjectDataAccess.vb" />
+    <Compile Include="DataAccess\ProjVersionDataAccess.vb" />
     <Compile Include="DataAccess\Queries.vb" />
-    <Compile Include="DataAccess\SpreadsheetImportData.vb" />
+    <Compile Include="DataAccess\ExternalImportDataAccess.vb" />
+    <Compile Include="DataAccess\ReportsDataAccess.vb" />
+    <Compile Include="DataAccess\RollupDataAccess.vb" />
     <Compile Include="Forms\frmCreateEditProject.Designer.vb">
       <DependentUpon>frmCreateEditProject.vb</DependentUpon>
     </Compile>
@@ -165,6 +171,12 @@
       <DependentUpon>frmCustomerDialog.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmCustomerDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmImportProjectDialog.Designer.vb">
+      <DependentUpon>frmImportProjectDialog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmImportProjectDialog.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\frmInclusionsExclusions.Designer.vb">
@@ -248,6 +260,7 @@
     <Compile Include="Models\ProjectProductSettingsModel.vb" />
     <Compile Include="Models\ProjectTypeModel.vb" />
     <Compile Include="Models\ProjectVersionModel.vb" />
+    <Compile Include="Models\RawUnitLumberHistoryModel.vb" />
     <Compile Include="Models\RawUnitModel.vb" />
     <Compile Include="Models\SalesModel.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -283,6 +296,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmCustomerDialog.resx">
       <DependentUpon>frmCustomerDialog.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmImportProjectDialog.resx">
+      <DependentUpon>frmImportProjectDialog.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmInclusionsExclusions.resx">
       <DependentUpon>frmInclusionsExclusions.vb</DependentUpon>

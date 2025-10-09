@@ -1,13 +1,14 @@
 ﻿Option Strict On
 
-Imports BuildersPSE2.BuildersPSE.DataAccess
+Imports BuildersPSE2.DataAccess
 
 
 
 
 Public Class frmInclusionsExclusions
     Private ProjectID As Integer ' Set from caller, e.g., main form.
-    Private ReadOnly da As New DataAccess()
+    Private ReadOnly da As New ProjectDataAccess()
+    Private ReadOnly ieda As New IEDataAccess
 
     Public Sub New(projID As Integer)
         InitializeComponent() ' Call designer-generated setup
@@ -33,60 +34,60 @@ Public Class frmInclusionsExclusions
 
 
         ' Load combo options from DB
-        cmbBuildingCode.Items.AddRange(da.GetComboOptions("BuildingCode").ToArray())
-        cmbImportance.Items.AddRange(da.GetComboOptions("Importance").ToArray())
-        cmbExposure.Items.AddRange(da.GetComboOptions("Exposure").ToArray())
-        cmbWindSpeed.Items.AddRange(da.GetComboOptions("WindSpeed").ToArray())
-        cmbSnowLoad.Items.AddRange(da.GetComboOptions("SnowLoad").ToArray())
-        cmbOccupancy.Items.AddRange(da.GetComboOptions("Occupancy").ToArray())
-        cmbExtWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
-        cmbIntWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
-        cmbCorridorWall.Items.AddRange(da.GetComboOptions("BearingStyle").ToArray())
+        cmbBuildingCode.Items.AddRange(ieda.GetComboOptions("BuildingCode").ToArray())
+        cmbImportance.Items.AddRange(ieda.GetComboOptions("Importance").ToArray())
+        cmbExposure.Items.AddRange(ieda.GetComboOptions("Exposure").ToArray())
+        cmbWindSpeed.Items.AddRange(ieda.GetComboOptions("WindSpeed").ToArray())
+        cmbSnowLoad.Items.AddRange(ieda.GetComboOptions("SnowLoad").ToArray())
+        cmbOccupancy.Items.AddRange(ieda.GetComboOptions("Occupancy").ToArray())
+        cmbExtWall.Items.AddRange(ieda.GetComboOptions("BearingStyle").ToArray())
+        cmbIntWall.Items.AddRange(ieda.GetComboOptions("BearingStyle").ToArray())
+        cmbCorridorWall.Items.AddRange(ieda.GetComboOptions("BearingStyle").ToArray())
 
 
 
         ' Load loads combo options from DB to individual ComboBoxes
-        Dim tcllOptions = da.GetComboOptions("TCLL").ToArray()
+        Dim tcllOptions = ieda.GetComboOptions("TCLL").ToArray()
         cmbTCLL_Roof.Items.AddRange(tcllOptions)
         cmbTCLL_Floor.Items.AddRange(tcllOptions)
         cmbTCLL_Corridor.Items.AddRange(tcllOptions)
 
-        Dim tcdlOptions = da.GetComboOptions("TCDL").ToArray()
+        Dim tcdlOptions = ieda.GetComboOptions("TCDL").ToArray()
         cmbTCDL_Roof.Items.AddRange(tcdlOptions)
         cmbTCDL_Floor.Items.AddRange(tcdlOptions)
         cmbTCDL_Corridor.Items.AddRange(tcdlOptions)
 
-        Dim bcllOptions = da.GetComboOptions("BCLL").ToArray()
+        Dim bcllOptions = ieda.GetComboOptions("BCLL").ToArray()
         cmbBCLL_Roof.Items.AddRange(bcllOptions)
         cmbBCLL_Floor.Items.AddRange(bcllOptions)
         cmbBCLL_Corridor.Items.AddRange(bcllOptions)
 
-        Dim bcdlOptions = da.GetComboOptions("BCDL").ToArray()
+        Dim bcdlOptions = ieda.GetComboOptions("BCDL").ToArray()
         cmbBCDL_Roof.Items.AddRange(bcdlOptions)
         cmbBCDL_Floor.Items.AddRange(bcdlOptions)
         cmbBCDL_Corridor.Items.AddRange(bcdlOptions)
 
-        Dim ocSpacingOptions = da.GetComboOptions("OCSpacing").ToArray()
+        Dim ocSpacingOptions = ieda.GetComboOptions("OCSpacing").ToArray()
         cmbOCSpacing_Roof.Items.AddRange(ocSpacingOptions)
         cmbOCSpacing_Floor.Items.AddRange(ocSpacingOptions)
         cmbOCSpacing_Corridor.Items.AddRange(ocSpacingOptions)
 
-        Dim liveDeflOptions = da.GetComboOptions("LiveDefl").ToArray()
+        Dim liveDeflOptions = ieda.GetComboOptions("LiveDefl").ToArray()
         cmbLiveLoadDeflection_Roof.Items.AddRange(liveDeflOptions)
         cmbLiveLoadDeflection_Floor.Items.AddRange(liveDeflOptions)
         cmbLiveLoadDeflection_Corridor.Items.AddRange(liveDeflOptions)
 
-        Dim totalDeflOptions = da.GetComboOptions("TotalDefl").ToArray()
+        Dim totalDeflOptions = ieda.GetComboOptions("TotalDefl").ToArray()
         cmbTotalLoadDeflection_Roof.Items.AddRange(totalDeflOptions)
         cmbTotalLoadDeflection_Floor.Items.AddRange(totalDeflOptions)
         cmbTotalLoadDeflection_Corridor.Items.AddRange(totalDeflOptions)
 
-        Dim absoluteOptions = da.GetComboOptions("Absolute").ToArray()
+        Dim absoluteOptions = ieda.GetComboOptions("Absolute").ToArray()
         cmbAbsolute_Roof.Items.AddRange(absoluteOptions)
         cmbAbsolute_Floor.Items.AddRange(absoluteOptions)
         cmbAbsolute_Corridor.Items.AddRange(absoluteOptions)
 
-        Dim deflectionOptions = da.GetComboOptions("Deflection").ToArray()
+        Dim deflectionOptions = ieda.GetComboOptions("Deflection").ToArray()
         cmbDeflection_Roof.Items.AddRange(deflectionOptions)
         cmbDeflection_Floor.Items.AddRange(deflectionOptions)
         cmbDeflection_Corridor.Items.AddRange(deflectionOptions)
@@ -105,13 +106,13 @@ Public Class frmInclusionsExclusions
         Next
 
         ' Load item options from DB
-        For Each item In da.GetItemOptions("Roof")
+        For Each item In ieda.GetItemOptions("Roof")
             Me.dgvRoofItems.Rows.Add(item.Item1, item.Item2, False, False, False, String.Empty)
         Next
-        For Each item In da.GetItemOptions("Floor")
+        For Each item In ieda.GetItemOptions("Floor")
             Me.dgvFloorItems.Rows.Add(item.Item1, item.Item2, False, False, False, String.Empty)
         Next
-        For Each item In da.GetItemOptions("Wall")
+        For Each item In ieda.GetItemOptions("Wall")
             Me.dgvWallItems.Rows.Add(item.Item1, item.Item2, False, False, False, String.Empty)
         Next
 
@@ -154,7 +155,7 @@ Public Class frmInclusionsExclusions
 
             UpdateStatus("Loading Inclusions/Exclusions data...")
             ' Load Design Info
-            Dim info = da.GetProjectDesignInfo(ProjectID)
+            Dim info = ieda.GetProjectDesignInfo(ProjectID)
             If info IsNot Nothing Then
                 cmbBuildingCode.SelectedItem = info.BuildingCode
                 cmbImportance.SelectedItem = info.Importance
@@ -171,7 +172,7 @@ Public Class frmInclusionsExclusions
 
 
             ' Load Bearing Styles
-            Dim bearing = da.GetProjectBearingStyles(ProjectID)
+            Dim bearing = IEDataAccess.GetProjectBearingStyles(ProjectID)
             If bearing IsNot Nothing Then
                 cmbExtWall.SelectedItem = bearing.ExtWallStyle
                 cboExtRimRibbon.Text = bearing.ExtRimRibbon
@@ -182,7 +183,7 @@ Public Class frmInclusionsExclusions
             End If
 
             ' Load Loads
-            Dim loads = da.GetProjectLoads(ProjectID)
+            Dim loads = IEDataAccess.GetProjectLoads(ProjectID)
             If loads IsNot Nothing AndAlso loads.Count = 3 Then
                 ' Assume order: Roof (0), Floor (1), Corridor (2) from ORDER BY Category in query
                 With loads(0) ' Roof
@@ -222,13 +223,13 @@ Public Class frmInclusionsExclusions
 
 
             ' Load Notes
-            Dim note = da.GetProjectGeneralNotes(ProjectID)
+            Dim note = ieda.GetProjectGeneralNotes(ProjectID)
             If note IsNot Nothing Then
                 txtGeneralNotes.Text = note.Notes
             End If
 
             ' Load Items (Roof, Floor, Wall)
-            Dim items = da.GetProjectItems(ProjectID)
+            Dim items = IEDataAccess.GetProjectItems(ProjectID)
             For Each dgv In {dgvRoofItems, dgvFloorItems, dgvWallItems}
                 Dim section As String = If(dgv Is dgvRoofItems, "Roof", If(dgv Is dgvFloorItems, "Floor", "Wall"))
                 Dim colKN As String = "col" & section & "KN"
@@ -270,9 +271,9 @@ Public Class frmInclusionsExclusions
             .WallHeights = txtWallHeights.Text,
             .HeelHeights = txtHeelHeights.Text
         }
-            Dim existingInfo = da.GetProjectDesignInfo(ProjectID)
+            Dim existingInfo = ieda.GetProjectDesignInfo(ProjectID)
             If existingInfo IsNot Nothing Then info.InfoID = existingInfo.InfoID
-            da.SaveProjectDesignInfo(info)
+            ieda.SaveProjectDesignInfo(info)
 
             ' Save Loads
             Dim loads As New List(Of ProjectLoadModel) From {
@@ -316,7 +317,7 @@ Public Class frmInclusionsExclusions
     .Deflection = cmbDeflection_Corridor.Text
 }
             }
-            da.SaveProjectLoads(ProjectID, loads)
+            ieda.SaveProjectLoads(ProjectID, loads)
 
 
             ' Save Bearing Styles
@@ -329,18 +330,18 @@ Public Class frmInclusionsExclusions
             .CorridorWallStyle = If(cmbCorridorWall.SelectedItem Is Nothing, String.Empty, CStr(cmbCorridorWall.SelectedItem)),
             .CorridorRimRibbon = cboCorridorRimRibbon.Text
         }
-            Dim existingBearing = da.GetProjectBearingStyles(ProjectID)
+            Dim existingBearing = IEDataAccess.GetProjectBearingStyles(ProjectID)
             If existingBearing IsNot Nothing Then bearing.BearingID = existingBearing.BearingID
-            da.SaveProjectBearingStyles(bearing)
+            ieda.SaveProjectBearingStyles(bearing)
 
             ' Save Notes
             Dim note As New ProjectGeneralNotesModel With {
             .ProjectID = ProjectID,
             .Notes = txtGeneralNotes.Text
         }
-            Dim existingNote = da.GetProjectGeneralNotes(ProjectID)
+            Dim existingNote = ieda.GetProjectGeneralNotes(ProjectID)
             If existingNote IsNot Nothing Then note.NoteID = existingNote.NoteID
-            da.SaveProjectGeneralNotes(note)
+            ieda.SaveProjectGeneralNotes(note)
 
             ' Save Items
 
@@ -366,7 +367,7 @@ Public Class frmInclusionsExclusions
             })
                 Next
             Next
-            da.SaveProjectItems(ProjectID, items)
+            ieda.SaveProjectItems(ProjectID, items)
 
             UpdateStatus("Inclusions/Exclusions data saved successfully.")
             MessageBox.Show("Data saved successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)

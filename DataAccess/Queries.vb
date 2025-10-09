@@ -1,4 +1,4 @@
-﻿Namespace BuildersPSE.DataAccess
+﻿Namespace DataAccess
     Public Module Queries
         ' Projects (unchanged, targets parent projects)
         Public Const SelectProjects As String = "SELECT p.*, pt.ProjectTypeName AS ProjectType, e.EstimatorName AS Estimator, ca.CustomerName AS ArchitectName, ce.CustomerName AS EngineerName FROM Projects p LEFT JOIN ProjectType pt ON p.ProjectTypeID = pt.ProjectTypeID LEFT JOIN Estimator e ON p.EstimatorID = e.EstimatorID LEFT JOIN Customer ca ON p.ArchitectID = ca.CustomerID AND ca.CustomerType = 2 LEFT JOIN Customer ce ON p.EngineerID = ce.CustomerID AND ce.CustomerType = 3 ORDER BY BidDate DESC"
@@ -17,6 +17,8 @@
         Public Const UpdateLevel As String = "UPDATE Levels SET ProductTypeID = @ProductTypeID, LevelNumber = @LevelNumber, LevelName = @LevelName, LastModifiedDate = GetDate() WHERE LevelID = @LevelID"
         Public Const DeleteLevel As String = "DELETE FROM Levels WHERE LevelID = @LevelID"
         Public Const GetBuildingIDByLevelID As String = "SELECT BuildingID FROM Levels WHERE LevelID = @LevelID"
+        Public Const SelectLevelsByVersionID As String = "SELECT LevelID, BuildingID, ProductTypeID, LevelNumber, LevelName FROM Levels WHERE VersionID = @VersionID"
+
 
         ' Product Types (unchanged)
         Public Const SelectProductTypes As String = "SELECT * FROM ProductType"
@@ -39,9 +41,9 @@
 
         ' RawUnits (updated to use VersionID)
         Public Const SelectRawUnitsByVersion As String = "SELECT * FROM RawUnits WHERE VersionID = @VersionID"
-        Public Const InsertRawUnit As String = "INSERT INTO RawUnits (RawUnitName, VersionID, ProductTypeID, BF, LF, EWPLF, SqFt, FCArea, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, DeliveryCost, TotalSellPrice, AvgSPFNo2) OUTPUT INSERTED.RawUnitID VALUES (@RawUnitName, @VersionID, @ProductTypeID, @BF, @LF, @EWPLF, @SqFt, @FCArea, @LumberCost, @PlateCost, @ManufLaborCost, @DesignLabor, @MGMTLabor, @JobSuppliesCost, @ManHours, @ItemCost, @OverallCost, @DeliveryCost, @TotalSellPrice, @AvgSPFNo2)"
+        Public Const InsertRawUnit As String = "INSERT INTO RawUnits (RawUnitName, VersionID, ProductTypeID, BF, LF, EWPLF, SqFt, FCArea, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, DeliveryCost, TotalSellPrice, AvgSPFNo2, SPFNo2BDFT, Avg241800, MSR241800BDFT, Avg242400, MSR242400BDFT, Avg261800, MSR261800BDFT, Avg262400, MSR262400BDFT) OUTPUT INSERTED.RawUnitID VALUES (@RawUnitName, @VersionID, @ProductTypeID, @BF, @LF, @EWPLF, @SqFt, @FCArea, @LumberCost, @PlateCost, @ManufLaborCost, @DesignLabor, @MGMTLabor, @JobSuppliesCost, @ManHours, @ItemCost, @OverallCost, @DeliveryCost, @TotalSellPrice, @AvgSPFNo2, @SPFNo2BDFT, @Avg241800, @MSR241800BDFT, @Avg242400, @MSR242400BDFT, @Avg261800, @MSR261800BDFT, @Avg262400, @MSR262400BDFT)"
         Public Const SelectRawUnitByID As String = "SELECT * FROM RawUnits WHERE RawUnitID = @RawUnitID"
-        Public Const UpdateRawUnit As String = "UPDATE RawUnits SET RawUnitName = @RawUnitName, BF = @BF, LF = @LF, EWPLF = @EWPLF, SqFt = @SqFt, FCArea = @FCArea, LumberCost = @LumberCost, PlateCost = @PlateCost, ManufLaborCost = @ManufLaborCost, DesignLabor = @DesignLabor, MGMTLabor = @MGMTLabor, JobSuppliesCost = @JobSuppliesCost, ManHours = @ManHours, ItemCost = @ItemCost, OverallCost = @OverallCost, DeliveryCost = @DeliveryCost, TotalSellPrice = @TotalSellPrice, AvgSPFNo2 = @AvgSPFNo2 WHERE RawUnitID = @RawUnitID"
+        Public Const UpdateRawUnit As String = "UPDATE RawUnits SET RawUnitName = @RawUnitName, BF = @BF, LF = @LF, EWPLF = @EWPLF, SqFt = @SqFt, FCArea = @FCArea, LumberCost = @LumberCost, PlateCost = @PlateCost, ManufLaborCost = @ManufLaborCost, DesignLabor = @DesignLabor, MGMTLabor = @MGMTLabor, JobSuppliesCost = @JobSuppliesCost, ManHours = @ManHours, ItemCost = @ItemCost, OverallCost = @OverallCost, DeliveryCost = @DeliveryCost, TotalSellPrice = @TotalSellPrice, AvgSPFNo2 = @AvgSPFNo2, SPFNo2BDFT = @SPFNo2BDFT, Avg241800 = @Avg241800, MSR241800BDFT = @MSR241800BDFT, Avg242400 = @Avg242400, MSR242400BDFT = @MSR242400BDFT, Avg261800 = @Avg261800, MSR261800BDFT = @MSR261800BDFT, Avg262400 = @Avg262400, MSR262400BDFT = @MSR262400BDFT WHERE RawUnitID = @RawUnitID"
 
         ' ActualUnits (updated to use VersionID)
         Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder)"
@@ -88,7 +90,16 @@
         Public Const CalculateOverallSQFT As String = "SELECT SUM(au.PlanSQFT * alm.Quantity) AS OverallSQFT FROM ActualUnits au JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID WHERE alm.LevelID = @LevelID"
         Public Const CalculateOverallLF As String = "SELECT SUM(cc.Value * au.OptionalAdder * alm.Quantity * au.PlanSQFT) AS OverallLF FROM CalculatedComponents cc JOIN ActualUnits au ON cc.ActualUnitID = au.ActualUnitID JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID WHERE cc.ComponentType = 'LF/SQFT' AND alm.LevelID = @LevelID"
         Public Const CalculateOverallBDFT As String = "SELECT SUM(cc.Value * au.OptionalAdder * alm.Quantity * au.PlanSQFT) AS OverallBDFT FROM CalculatedComponents cc JOIN ActualUnits au ON cc.ActualUnitID = au.ActualUnitID JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID WHERE cc.ComponentType = 'BDFT/SQFT' AND alm.LevelID = @LevelID"
-        Public Const CalculateLumberCost As String = "SELECT SUM(cc.Value * au.OptionalAdder * alm.Quantity * au.PlanSQFT) + COALESCE((l.OverallBDFT / 1000) * pps.LumberAdder, 0) AS LumberCost FROM CalculatedComponents cc JOIN ActualUnits au ON cc.ActualUnitID = au.ActualUnitID JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID JOIN Levels l ON alm.LevelID = l.LevelID JOIN ProjectProductSettings pps ON l.VersionID = pps.VersionID AND au.ProductTypeID = pps.ProductTypeID WHERE cc.ComponentType = 'Lumber/SQFT' AND l.LevelID = @LevelID GROUP BY l.OverallBDFT, pps.LumberAdder"
+        'Public Const CalculateLumberCost As String = "SELECT SUM(cc.Value * au.OptionalAdder * alm.Quantity * au.PlanSQFT) + COALESCE((l.OverallBDFT / 1000) * pps.LumberAdder, 0) AS LumberCost FROM CalculatedComponents cc JOIN ActualUnits au ON cc.ActualUnitID = au.ActualUnitID JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID JOIN Levels l ON alm.LevelID = l.LevelID JOIN ProjectProductSettings pps ON l.VersionID = pps.VersionID AND au.ProductTypeID = pps.ProductTypeID WHERE cc.ComponentType = 'Lumber/SQFT' AND l.LevelID = @LevelID GROUP BY l.OverallBDFT, pps.LumberAdder"
+        Public Const CalculateLumberCost As String = "SELECT SUM(rlh.LumberCost * au.OptionalAdder * alm.Quantity) + COALESCE((l.OverallBDFT / 1000) * pps.LumberAdder, 0) AS LumberCost " &
+                                                    "FROM ActualToLevelMapping alm " &
+                                                    "JOIN ActualUnits au ON alm.ActualUnitID = au.ActualUnitID " &
+                                                    "JOIN (SELECT RawUnitID, LumberCost " &
+                                                          "FROM RawUnitLumberHistory rlh1 " &
+                                                          "WHERE rlh1.UpdateDate = (SELECT MAX(UpdateDate) FROM RawUnitLumberHistory rlh2 WHERE rlh2.RawUnitID = rlh1.RawUnitID AND rlh2.VersionID = @VersionID)) rlh ON au.RawUnitID = rlh.RawUnitID " &
+                                                    "JOIN Levels l ON alm.LevelID = l.LevelID " &
+                                                    "JOIN ProjectProductSettings pps ON l.VersionID = pps.VersionID AND au.ProductTypeID = pps.ProductTypeID " &
+                                                    "WHERE alm.LevelID = @LevelID GROUP BY l.OverallBDFT, pps.LumberAdder"
         Public Const CalculatePlateCost As String = "SELECT SUM(cc.Value * au.OptionalAdder * alm.Quantity * au.PlanSQFT) AS PlateCost FROM CalculatedComponents cc JOIN ActualUnits au ON cc.ActualUnitID = au.ActualUnitID JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID WHERE cc.ComponentType = 'Plate/SQFT' AND alm.LevelID = @LevelID"
         Public Const CalculateLaborCost As String = "SELECT SUM(cc.Value * au.OptionalAdder * alm.Quantity * au.PlanSQFT) AS LaborCost FROM CalculatedComponents cc JOIN ActualUnits au ON cc.ActualUnitID = au.ActualUnitID JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID WHERE cc.ComponentType = 'ManufLabor/SQFT' AND alm.LevelID = @LevelID"
         Public Const CalculateLaborMH As String = "SELECT SUM(cc.Value * au.OptionalAdder * alm.Quantity * au.PlanSQFT) AS LaborMH FROM CalculatedComponents cc JOIN ActualUnits au ON cc.ActualUnitID = au.ActualUnitID JOIN ActualToLevelMapping alm ON au.ActualUnitID = alm.ActualUnitID WHERE cc.ComponentType = 'ManHours/SQFT' AND alm.LevelID = @LevelID"
@@ -108,10 +119,17 @@
         Public Const CalculateRoofDeliveryCost As String = "SELECT SUM(l.DeliveryCost) AS RoofDeliveryCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
         Public Const UpdateBuildingRollupsSql As String = "UPDATE Buildings SET FloorCostPerBldg = @FloorCostPerBldg, RoofCostPerBldg = @RoofCostPerBldg, WallCostPerBldg = @WallCostPerBldg, ExtendedFloorCost = @ExtendedFloorCost, ExtendedRoofCost = @ExtendedRoofCost, ExtendedWallCost = @ExtendedWallCost, OverallPrice = @OverallPrice, OverallCost = @OverallCost WHERE BuildingID = @BuildingID"
         Public Const CalculateSumUnitSellNoDelivery As String = "SELECT SUM( (cc.Value * au.PlanSQFT * au.OptionalAdder * alm.Quantity) / (1 - ((ru.TotalSellPrice - ru.OverallCost) / ru.TotalSellPrice)) ) FROM ActualToLevelMapping alm JOIN ActualUnits au ON alm.ActualUnitID = au.ActualUnitID JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID JOIN CalculatedComponents cc ON cc.ActualUnitID = au.ActualUnitID WHERE alm.LevelID = @LevelID AND cc.ComponentType = 'OverallCost/SQFT' AND ru.TotalSellPrice > 0 AND ((ru.TotalSellPrice - ru.OverallCost) / ru.TotalSellPrice) BETWEEN 0 AND 0.999"
+        'Public Const CalculateFloorPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS FloorPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 1"
+        'Public Const CalculateRoofPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS RoofPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
+        'Public Const CalculateFloorBaseCost As String = "SELECT SUM(l.OverallCost) AS FloorBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 1"
+        'Public Const CalculateRoofBaseCost As String = "SELECT SUM(l.OverallCost) AS RoofBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
+        ' Modified Building Rollup Queries
         Public Const CalculateFloorPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS FloorPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 1"
         Public Const CalculateRoofPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS RoofPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
         Public Const CalculateFloorBaseCost As String = "SELECT SUM(l.OverallCost) AS FloorBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 1"
         Public Const CalculateRoofBaseCost As String = "SELECT SUM(l.OverallCost) AS RoofBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
+
+
 
         ' ProjectVersions Queries
         Public Const SelectProjectVersions As String = "SELECT pv.*, c.CustomerName, s.SalesName FROM ProjectVersions pv LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT JOIN Sales s ON pv.SalesID = s.SalesID WHERE ProjectID = @ProjectID ORDER BY VersionDate DESC"
@@ -184,6 +202,32 @@
         Public Const SelectLumberCostsByEffectiveDate As String = "SELECT lc.LumberCostID, lc.LumberTypeID, lt.LumberTypeDesc, lc.LumberCost, lc.CostEffectiveDateID FROM LumberCost lc JOIN LumberType lt ON lc.LumberTypeID = lt.LumberTypeID WHERE lc.CostEffectiveDateID = @CostEffectiveDateID ORDER BY lt.LumberTypeDesc"
         Public Const InsertLumberCost As String = "INSERT INTO LumberCost (LumberTypeID, LumberCost, CostEffectiveDateID) OUTPUT INSERTED.LumberCostID VALUES (@LumberTypeID, @LumberCost, @CostEffectiveDateID)"
         Public Const UpdateLumberCost As String = "UPDATE LumberCost SET LumberCost = @LumberCost WHERE LumberCostID = @LumberCostID"
+
+
+        ' RawUnitLumberHistory Queries
+        Public Const InsertRawUnitLumberHistory As String = "INSERT INTO RawUnitLumberHistory (RawUnitID, VersionID, CostEffectiveDateID, LumberCost, AvgSPFNo2, Avg241800, Avg242400, Avg261800, Avg262400, UpdateDate, IsActive) OUTPUT INSERTED.HistoryID VALUES (@RawUnitID, @VersionID, @CostEffectiveDateID, @LumberCost, @AvgSPFNo2, @Avg241800, @Avg242400, @Avg261800, @Avg262400, GETDATE(), 1)"
+        Public Const SelectLatestLumberHistoryByRawUnit As String = "SELECT TOP 1 * FROM RawUnitLumberHistory WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID ORDER BY UpdateDate DESC"
+        Public Const SelectLumberHistoryByVersion As String = "SELECT rlh.*, ru.RawUnitName FROM RawUnitLumberHistory rlh JOIN RawUnits ru ON rlh.RawUnitID = ru.RawUnitID WHERE rlh.VersionID = @VersionID ORDER BY rlh.UpdateDate DESC"
+        Public Const SelectLumberTypeIDByDesc As String = "SELECT LumberTypeID FROM LumberType WHERE LumberTypeDesc = @LumberTypeDesc"
+        Public Const SelectLumberCostByTypeAndDate As String = "SELECT LumberCost FROM LumberCost WHERE LumberTypeID = @LumberTypeID AND CostEffectiveDateID = @CostEffectiveDateID"
+        Public Const SetLumberHistoryActive As String = "UPDATE RawUnitLumberHistory SET IsActive = 0 WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID; UPDATE RawUnitLumberHistory SET IsActive = 1 WHERE HistoryID = @HistoryID"
+
+        ' New query to delete a history record
+        Public Const DeleteLumberHistory As String = "DELETE FROM RawUnitLumberHistory WHERE HistoryID = @HistoryID AND VersionID = @VersionID"
+        ' New query for distinct CosteffectiveDate values
+        Public Const SelectDistinctLumberHistoryDates As String = "SELECT rlh.CostEffectiveDateID, lce.CosteffectiveDate, " &
+                                                                 "CASE WHEN EXISTS (SELECT 1 FROM RawUnitLumberHistory rlh2 WHERE rlh2.CostEffectiveDateID = rlh.CostEffectiveDateID AND rlh2.VersionID = @VersionID AND rlh2.IsActive = 1) THEN 1 ELSE 0 END AS IsActive " &
+                                                                 "FROM RawUnitLumberHistory rlh " &
+                                                                 "JOIN LumberCostEffective lce ON rlh.CostEffectiveDateID = lce.CostEffectiveID " &
+                                                                 "WHERE rlh.VersionID = @VersionID " &
+                                                                 "GROUP BY rlh.CostEffectiveDateID, lce.CosteffectiveDate " &
+                                                                 "ORDER BY lce.CosteffectiveDate DESC"
+
+        ' New query to find CostEffectiveDateID by cost
+        Public Const SelectCostEffectiveDateIDByCost As String = "SELECT lc.CostEffectiveDateID " &
+                                                                "FROM LumberCost lc " &
+                                                                "JOIN LumberType lt ON lc.LumberTypeID = lt.LumberTypeID " &
+                                                                "WHERE lt.LumberTypeID = 1 AND lc.LumberCost = @LumberCost"
 
     End Module
 End Namespace

@@ -1,37 +1,46 @@
 ﻿Option Strict On
 Imports System.Windows.Forms
-Imports BuildersPSE2.BuildersPSE.DataAccess
+Imports BuildersPSE2.DataAccess
 Imports BuildersPSE2.BuildersPSE.Models
 Imports Microsoft.Reporting.WinForms
 Imports System.IO
+Imports System.Data.SqlClient
+Imports BuildersPSE2.BuildersPSE.Utilities
 
 Public Class frmCreateEditProject
-    Private ReadOnly da As New DataAccess()
+    Private ReadOnly da As New ProjectDataAccess()
+
     Private currentProject As ProjectModel
     Private currentVersionID As Integer
     Private copiedLevels As List(Of LevelModel)
     Private copiedBuilding As BuildingModel
     Private isNewProject As Boolean = True
     Private isChangingVersion As Boolean = False
-
+    Private Class LumberHistoryDate
+        Public Property DisplayText As String
+        Public Property CostEffectiveID As Integer
+        Public Overrides Function ToString() As String
+            Return DisplayText
+        End Function
+    End Class
     Public Sub New(Optional selectedProj As ProjectModel = Nothing, Optional versionID As Integer = 0)
         InitializeComponent()
-        cboCustomer.DataSource = da.GetCustomers(customerType:=1)
+        cboCustomer.DataSource = HelperDataAccess.GetCustomers(customerType:=1)
         cboCustomer.DisplayMember = "CustomerName"
         cboCustomer.ValueMember = "CustomerID"
-        cboSalesman.DataSource = da.GetSales()
+        cboSalesman.DataSource = HelperDataAccess.GetSales()
         cboSalesman.DisplayMember = "SalesName"
         cboSalesman.ValueMember = "SalesID"
         cboProjectType.DataSource = da.GetProjectTypes()
         cboProjectType.DisplayMember = "ProjectTypeName"
         cboProjectType.ValueMember = "ProjectTypeID"
-        cboEstimator.DataSource = da.GetEstimators()
+        cboEstimator.DataSource = HelperDataAccess.GetEstimators()
         cboEstimator.DisplayMember = "EstimatorName"
         cboEstimator.ValueMember = "EstimatorID"
-        cboProjectArchitect.DataSource = da.GetCustomers(customerType:=2)
+        cboProjectArchitect.DataSource = HelperDataAccess.GetCustomers(customerType:=2)
         cboProjectArchitect.DisplayMember = "CustomerName"
         cboProjectArchitect.ValueMember = "CustomerID"
-        cboProjectEngineer.DataSource = da.GetCustomers(customerType:=3)
+        cboProjectEngineer.DataSource = HelperDataAccess.GetCustomers(customerType:=3)
         cboProjectEngineer.DisplayMember = "CustomerName"
         cboProjectEngineer.ValueMember = "CustomerID"
         cboVersion.DataSource = New List(Of ProjectVersionModel)() ' Initialize to avoid null issues
@@ -111,7 +120,7 @@ Public Class frmCreateEditProject
                 tvProjectTree.Nodes.Add(New TreeNode(currentProject.ProjectName & "-No Version") With {.Tag = currentProject})
                 Return
             End If
-            Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(currentProject.ProjectID)
+            Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID)
             isChangingVersion = True
             cboVersion.DataSource = versions
             cboVersion.DisplayMember = "VersionName"
@@ -127,6 +136,15 @@ Public Class frmCreateEditProject
             End If
             isChangingVersion = False
             LoadVersionSpecificData()
+
+            ' Populate cboCostEffective with LumberCostEffective data
+            Dim dtCostEffective As DataTable = LumberDataAccess.GetAllLumberCostEffective()
+            cboCostEffective.DataSource = dtCostEffective
+            cboCostEffective.DisplayMember = "CosteffectiveDate"
+            cboCostEffective.ValueMember = "CostEffectiveID"
+            If dtCostEffective.Rows.Count > 0 Then
+                cboCostEffective.SelectedIndex = 0
+            End If
         Catch ex As Exception
             isChangingVersion = False
             UpdateStatus("Status: Error loading versions: " & ex.Message)
@@ -153,11 +171,11 @@ Public Class frmCreateEditProject
     Private Sub LoadVersionSpecificData()
         Try
             UpdateStatus("Loading version...")
-            currentProject.Settings = da.GetProjectProductSettings(currentVersionID)
+            currentProject.Settings = ProjectDataAccess.GetProjectProductSettings(currentVersionID)
             LoadOverrides(currentProject.Settings)
-            currentProject.Buildings = da.GetBuildingsByVersionID(currentVersionID)
+            currentProject.Buildings = ProjectDataAccess.GetBuildingsByVersionID(currentVersionID)
             tvProjectTree.Nodes.Clear()
-            Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, da.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
+            Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
             Dim rootText As String = If(selectedVersion IsNot Nothing, $"{currentProject.ProjectName}-{selectedVersion.VersionName}", currentProject.ProjectName & "-No Version")
             Dim root As New TreeNode(rootText) With {.Tag = currentProject}
             tvProjectTree.Nodes.Add(root)
@@ -177,8 +195,36 @@ Public Class frmCreateEditProject
                 cboVersion.SelectedValue = currentVersionID
             End If
             ' Load average SPFNo2 prices for floors and roofs
-            txtRawFloorSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Floor").ToString("F2"), "0.00")
-            txtRawRoofSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Roof").ToString("F2"), "0.00")
+            txtRawFloorSPFPrice.Text = If(currentVersionID > 0, LumberDataAccess.GetAverageSPFNo2ByProductType(currentVersionID, "Floor").ToString("F2"), "0.00")
+            txtRawRoofSPFPrice.Text = If(currentVersionID > 0, LumberDataAccess.GetAverageSPFNo2ByProductType(currentVersionID, "Roof").ToString("F2"), "0.00")
+            ' Load lumber history dates
+            If currentVersionID > 0 Then
+                Dim dtHistory As New DataTable()
+                Dim params As SqlParameter() = {New SqlParameter("@VersionID", currentVersionID)}
+                Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                    conn.Open()
+                    Dim cmd As New SqlCommand(Queries.SelectDistinctLumberHistoryDates, conn)
+                    cmd.Parameters.AddRange(params)
+                    Dim da As New SqlDataAdapter(cmd)
+                    da.Fill(dtHistory)
+                End Using
+                lstLumberHistory.Items.Clear()
+                For Each row As DataRow In dtHistory.Rows
+                    Dim costEffectiveID As Integer = CInt(row("CostEffectiveDateID"))
+                    Dim costEffectiveDate As Date = CDate(row("CosteffectiveDate"))
+                    Dim isActive As Boolean = CBool(row("IsActive"))
+                    Dim displayText As String = $"{costEffectiveDate:yyyy-MM-dd}{(If(isActive, " (Active)", ""))}"
+                    lstLumberHistory.Items.Add(New LumberHistoryDate With {
+                        .displayText = displayText,
+                        .costEffectiveID = costEffectiveID
+                    })
+                Next
+                If lstLumberHistory.Items.Count > 0 Then
+                    lstLumberHistory.SelectedIndex = 0
+                End If
+            Else
+                lstLumberHistory.Items.Clear()
+            End If
 
             LoadRollup(currentProject)
             UpdateStatus($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
@@ -362,7 +408,7 @@ Public Class frmCreateEditProject
         Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         If cboCustomer.SelectedValue IsNot Nothing AndAlso cboCustomer.SelectedValue IsNot DBNull.Value Then
             Dim selectedCustomerID As Integer = CInt(cboCustomer.SelectedValue)
-            Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=1).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
+            Dim selectedCustomer As CustomerModel = HelperDataAccess.GetCustomers(customerType:=1).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
             If selectedCustomer IsNot Nothing Then
                 Using frm As New FrmCustomerDialog(selectedCustomer)
                     UpdateStatus($"Opened customer dialog for CustomerID {selectedCustomerID}")
@@ -393,7 +439,7 @@ Public Class frmCreateEditProject
         Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         If cboProjectArchitect.SelectedValue IsNot Nothing AndAlso cboProjectArchitect.SelectedValue IsNot DBNull.Value Then
             Dim selectedCustomerID As Integer = CInt(cboProjectArchitect.SelectedValue)
-            Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=2).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
+            Dim selectedCustomer As CustomerModel = HelperDataAccess.GetCustomers(customerType:=2).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
             If selectedCustomer IsNot Nothing Then
                 Using frm As New FrmCustomerDialog(selectedCustomer)
                     UpdateStatus($"Opened architect dialog for CustomerID {selectedCustomerID}")
@@ -424,7 +470,7 @@ Public Class frmCreateEditProject
         Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
         If cboProjectEngineer.SelectedValue IsNot Nothing AndAlso cboProjectEngineer.SelectedValue IsNot DBNull.Value Then
             Dim selectedCustomerID As Integer = CInt(cboProjectEngineer.SelectedValue)
-            Dim selectedCustomer As CustomerModel = da.GetCustomers(customerType:=3).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
+            Dim selectedCustomer As CustomerModel = HelperDataAccess.GetCustomers(customerType:=3).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
             If selectedCustomer IsNot Nothing Then
                 Using frm As New FrmCustomerDialog(selectedCustomer)
                     UpdateStatus($"Opened engineer dialog for CustomerID {selectedCustomerID}")
@@ -442,9 +488,9 @@ Public Class frmCreateEditProject
 
     ' Helper to refresh all customer comboboxes after add/edit
     Private Sub RefreshCustomerComboboxes()
-        cboCustomer.DataSource = da.GetCustomers(customerType:=1)
-        cboProjectArchitect.DataSource = da.GetCustomers(customerType:=2)
-        cboProjectEngineer.DataSource = da.GetCustomers(customerType:=3)
+        cboCustomer.DataSource = HelperDataAccess.GetCustomers(customerType:=1)
+        cboProjectArchitect.DataSource = HelperDataAccess.GetCustomers(customerType:=2)
+        cboProjectEngineer.DataSource = HelperDataAccess.GetCustomers(customerType:=3)
     End Sub
     Private Sub btnSaveProjectInfo_Click(sender As Object, e As EventArgs) Handles btnSaveProjectInfo.Click
         Try
@@ -471,7 +517,7 @@ Public Class frmCreateEditProject
             Dim customerID As Integer? = If(cboCustomer.SelectedValue IsNot DBNull.Value, CInt(cboCustomer.SelectedValue), Nothing)
             Dim salesID As Integer? = If(cboSalesman.SelectedValue IsNot DBNull.Value, CInt(cboSalesman.SelectedValue), Nothing)
             If isNewProject AndAlso currentVersionID = 0 Then
-                currentVersionID = da.CreateProjectVersion(currentProject.ProjectID, "v1", "Base Version", customerID, salesID)
+                currentVersionID = ProjVersionDataAccess.CreateProjectVersion(currentProject.ProjectID, "v1", "Base Version", customerID, salesID)
                 Dim productTypes As List(Of ProductTypeModel) = da.GetProductTypes()
                 For Each pt In productTypes
                     Dim setting As New ProjectProductSettingsModel With {
@@ -484,7 +530,7 @@ Public Class frmCreateEditProject
                 Next
                 isNewProject = False
             ElseIf currentVersionID > 0 Then
-                da.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtProjectNotes.Text, customerID, salesID)
+                ProjVersionDataAccess.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtProjectNotes.Text, customerID, salesID)
             End If
             MessageBox.Show("Project and version info saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
             LoadVersions()
@@ -694,18 +740,18 @@ Public Class frmCreateEditProject
     ' In frmCreateEditProject.vb: Modify RefreshRollupData to update SPF prices
     Private Sub RefreshRollupData()
         Try
-            Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, da.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
-            currentProject.Settings = da.GetProjectProductSettings(currentVersionID)
+            Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
+            currentProject.Settings = ProjectDataAccess.GetProjectProductSettings(currentVersionID)
             LoadOverrides(currentProject.Settings)
-            currentProject.Buildings = da.GetBuildingsByVersionID(currentVersionID)
+            currentProject.Buildings = ProjectDataAccess.GetBuildingsByVersionID(currentVersionID)
             If selectedVersion IsNot Nothing Then
                 cboCustomer.SelectedValue = If(selectedVersion.CustomerID, 0)
                 cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
                 cboVersion.SelectedValue = currentVersionID
             End If
             ' Update average SPFNo2 prices for floors and roofs
-            txtRawFloorSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Floor").ToString("F2"), "0.00")
-            txtRawRoofSPFPrice.Text = If(currentVersionID > 0, da.GetAverageSPFNo2ByProductType(currentVersionID, "Roof").ToString("F2"), "0.00")
+            txtRawFloorSPFPrice.Text = If(currentVersionID > 0, LumberDataAccess.GetAverageSPFNo2ByProductType(currentVersionID, "Floor").ToString("F2"), "0.00")
+            txtRawRoofSPFPrice.Text = If(currentVersionID > 0, LumberDataAccess.GetAverageSPFNo2ByProductType(currentVersionID, "Roof").ToString("F2"), "0.00")
         Catch ex As Exception
             UpdateStatus($"Error refreshing rollup data: {ex.Message}")
             MessageBox.Show($"Error refreshing rollup data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -722,7 +768,7 @@ Public Class frmCreateEditProject
                 setting.VersionID = currentVersionID
                 da.SaveProjectProductSetting(setting, currentVersionID)
             Next
-            da.RecalculateVersion(currentVersionID) ' Recalculate all rollups
+            RollupDataAccess.RecalculateVersion(currentVersionID) ' Recalculate all rollups
             RefreshRollupData() ' Refresh only necessary data
             dgvRollup.DataSource = Nothing ' Clear grid to force refresh
             If selectedNode IsNot Nothing Then
@@ -745,9 +791,9 @@ Public Class frmCreateEditProject
         Using frm As New frmVersionDialog()
             If frm.ShowDialog() = DialogResult.OK Then
                 Try
-                    Dim newVersionID As Integer = da.CreateProjectVersion(currentProject.ProjectID, frm.VersionName, frm.Description, Nothing, Nothing)
+                    Dim newVersionID As Integer = ProjVersionDataAccess.CreateProjectVersion(currentProject.ProjectID, frm.VersionName, frm.Description, Nothing, Nothing)
                     currentVersionID = newVersionID
-                    Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(currentProject.ProjectID)
+                    Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID)
                     cboVersion.DataSource = versions
                     cboVersion.DisplayMember = "VersionName"
                     cboVersion.ValueMember = "VersionID"
@@ -765,8 +811,8 @@ Public Class frmCreateEditProject
         Using frm As New frmVersionDialog()
             If frm.ShowDialog() = DialogResult.OK Then
                 Try
-                    da.DuplicateProjectVersion(currentVersionID, frm.VersionName, frm.Description, currentProject.ProjectID)
-                    Dim versions As List(Of ProjectVersionModel) = da.GetProjectVersions(currentProject.ProjectID)
+                    ProjVersionDataAccess.DuplicateProjectVersion(currentVersionID, frm.VersionName, frm.Description, currentProject.ProjectID)
+                    Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID)
                     currentVersionID = CInt((versions.FirstOrDefault(Function(v) v.VersionName = frm.VersionName)?.VersionID))
                     cboVersion.DataSource = versions
                     cboVersion.DisplayMember = "VersionName"
@@ -910,7 +956,7 @@ Public Class frmCreateEditProject
         Try
             UpdateStatus("Opening Project Summary Preview...")
             Dim dataSources As New List(Of ReportDataSource) From {
-            New ReportDataSource("ProjectSummaryDataSet", da.GetProjectSummaryData(currentProject.ProjectID, currentVersionID))
+            New ReportDataSource("ProjectSummaryDataSet", ReportsDataAccess.GetProjectSummaryData(currentProject.ProjectID, currentVersionID))
         }
             Dim previewForm As New frmReportPreview("BuildersPSE2.ProjectSummary.rdlc", dataSources)
             previewForm.ShowDialog()
@@ -930,10 +976,10 @@ Public Class frmCreateEditProject
         Try
             UpdateStatus("Opening Inclusions/Exclusions Preview...")
             Dim dataSources As New List(Of ReportDataSource) From {
-            New ReportDataSource("ProjectHeaderDataSet", da.GetProjectHeaderData(currentProject.ProjectID, currentVersionID)),
-            New ReportDataSource("IncExcItemsDataSet", da.GetProjectItems(currentProject.ProjectID)),
-            New ReportDataSource("ProjectLoadsDataSet", da.GetProjectLoadsData(currentProject.ProjectID)),
-            New ReportDataSource("ProjectBearingStylesDataSet", da.GetProjectBearingStylesData(currentProject.ProjectID))
+            New ReportDataSource("ProjectHeaderDataSet", ReportsDataAccess.GetProjectHeaderData(currentProject.ProjectID, currentVersionID)),
+            New ReportDataSource("IncExcItemsDataSet", IEDataAccess.GetProjectItems(currentProject.ProjectID)),
+            New ReportDataSource("ProjectLoadsDataSet", IEDataAccess.GetProjectLoadsData(currentProject.ProjectID)),
+            New ReportDataSource("ProjectBearingStylesDataSet", IEDataAccess.GetProjectBearingStylesData(currentProject.ProjectID))
         }
             Dim previewForm As New frmReportPreview("BuildersPSE2.InclusionsExclusions.rdlc", dataSources)
             previewForm.ShowDialog()
@@ -943,4 +989,102 @@ Public Class frmCreateEditProject
             MessageBox.Show("Error opening preview: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub btnUpdateLumber_Click(sender As Object, e As EventArgs) Handles btnUpdateLumber.Click
+        Try
+            If currentVersionID <= 0 Then
+                UpdateStatus("No valid version selected for lumber update")
+                MessageBox.Show("No valid version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Exit Sub
+            End If
+            If cboCostEffective.SelectedValue Is Nothing OrElse CInt(cboCostEffective.SelectedValue) <= 0 Then
+                UpdateStatus("No cost-effective date selected for lumber update")
+                MessageBox.Show("Please select a cost-effective date.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Exit Sub
+            End If
+            Dim costEffectiveID As Integer = CInt(cboCostEffective.SelectedValue)
+            LumberDataAccess.UpdateLumberPrices(currentVersionID, costEffectiveID)
+            UpdateStatus("Lumber prices updated successfully for version " & currentVersionID)
+            MessageBox.Show("Lumber prices updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadVersionSpecificData() ' Refresh data after update
+        Catch ex As Exception
+            UpdateStatus("Error updating lumber prices: " & ex.Message)
+            MessageBox.Show("Error updating lumber prices: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    ' New handler for Set Active button
+    Private Sub btnSetActive_Click(sender As Object, e As EventArgs) Handles btnSetActive.Click
+        Try
+            If lstLumberHistory.SelectedItem Is Nothing Then
+                MessageBox.Show("Please select a cost-effective date to set as active.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Exit Sub
+            End If
+            Dim selectedItem As LumberHistoryDate = TryCast(lstLumberHistory.SelectedItem, LumberHistoryDate)
+            If selectedItem Is Nothing Then
+                MessageBox.Show("Invalid selection in lumber history.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Exit Sub
+            End If
+            Dim costEffectiveID As Integer = selectedItem.CostEffectiveID
+            Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                conn.Open()
+                Using transaction As SqlTransaction = conn.BeginTransaction()
+                    Try
+                        ' Deactivate all records for this VersionID
+                        Dim deactivateParams As New Dictionary(Of String, Object) From {
+                            {"@VersionID", currentVersionID}
+                        }
+                        SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 0 WHERE VersionID = @VersionID", HelperDataAccess.BuildParameters(deactivateParams), conn, transaction)
+                        ' Activate records for selected CostEffectiveDateID
+                        Dim activateParams As New Dictionary(Of String, Object) From {
+                            {"@CostEffectiveDateID", costEffectiveID},
+                            {"@VersionID", currentVersionID}
+                        }
+                        SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 1 WHERE CostEffectiveDateID = @CostEffectiveDateID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(activateParams), conn, transaction)
+                        transaction.Commit()
+                        UpdateStatus($"Set CostEffectiveDateID {costEffectiveID} as active for VersionID {currentVersionID}")
+                        RollupDataAccess.RecalculateVersion(currentVersionID)
+                        LoadVersionSpecificData() ' Refresh ListBox
+                    Catch ex As Exception
+                        transaction.Rollback()
+                        UpdateStatus($"Error setting active lumber history: {ex.Message}")
+                        MessageBox.Show($"Error setting active lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    End Try
+                End Using
+            End Using
+        Catch ex As Exception
+            UpdateStatus($"Error setting active lumber history: {ex.Message}")
+            MessageBox.Show($"Error setting active lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    ' New handler for Delete button
+    Private Sub btnDeleteLumberHistory_Click(sender As Object, e As EventArgs) Handles btnDeleteLumberHistory.Click
+        Try
+            If lstLumberHistory.SelectedItem Is Nothing Then
+                MessageBox.Show("Please select a cost-effective date to delete.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Exit Sub
+            End If
+            Dim selectedItem As LumberHistoryDate = TryCast(lstLumberHistory.SelectedItem, LumberHistoryDate)
+            If selectedItem Is Nothing Then
+                MessageBox.Show("Invalid selection in lumber history.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Exit Sub
+            End If
+            Dim costEffectiveID As Integer = selectedItem.CostEffectiveID
+            If MessageBox.Show($"Are you sure you want to delete all lumber history records for Cost Effective Date ID {costEffectiveID}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.Yes Then
+                Dim params As New Dictionary(Of String, Object) From {
+                    {"@CostEffectiveDateID", costEffectiveID},
+                    {"@VersionID", currentVersionID}
+                }
+                SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteLumberHistory, HelperDataAccess.BuildParameters(params))
+                UpdateStatus($"Deleted lumber history for CostEffectiveDateID {costEffectiveID}")
+                RollupDataAccess.RecalculateVersion(currentVersionID)
+                LoadVersionSpecificData() ' Refresh ListBox
+            End If
+        Catch ex As Exception
+            UpdateStatus($"Error deleting lumber history: {ex.Message}")
+            MessageBox.Show($"Error deleting lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
 End Class

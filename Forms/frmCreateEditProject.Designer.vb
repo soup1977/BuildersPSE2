@@ -35,6 +35,7 @@ Partial Class frmCreateEditProject
         Me.mnuPasteBuilding = New System.Windows.Forms.ToolStripMenuItem()
         Me.tabControlRight = New System.Windows.Forms.TabControl()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
+        Me.btnPreviewIncExc = New System.Windows.Forms.Button()
         Me.btnGenerateProjectReport = New System.Windows.Forms.Button()
         Me.btnDeleteProject = New System.Windows.Forms.Button()
         Me.btnIEOpen = New System.Windows.Forms.Button()
@@ -128,7 +129,11 @@ Partial Class frmCreateEditProject
         Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
-        Me.btnPreviewIncExc = New System.Windows.Forms.Button()
+        Me.cboCostEffective = New System.Windows.Forms.ComboBox()
+        Me.btnUpdateLumber = New System.Windows.Forms.Button()
+        Me.lstLumberHistory = New System.Windows.Forms.ListBox()
+        Me.btnSetActive = New System.Windows.Forms.Button()
+        Me.btnDeleteLumberHistory = New System.Windows.Forms.Button()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -247,6 +252,15 @@ Partial Class frmCreateEditProject
         Me.tabProjectInfo.Size = New System.Drawing.Size(711, 551)
         Me.tabProjectInfo.TabIndex = 0
         Me.tabProjectInfo.Text = "Project Info"
+        '
+        'btnPreviewIncExc
+        '
+        Me.btnPreviewIncExc.Location = New System.Drawing.Point(606, 492)
+        Me.btnPreviewIncExc.Name = "btnPreviewIncExc"
+        Me.btnPreviewIncExc.Size = New System.Drawing.Size(94, 24)
+        Me.btnPreviewIncExc.TabIndex = 26
+        Me.btnPreviewIncExc.Text = "I/E Report"
+        Me.btnPreviewIncExc.UseVisualStyleBackColor = True
         '
         'btnGenerateProjectReport
         '
@@ -814,6 +828,11 @@ Partial Class frmCreateEditProject
         '
         'tabOverrides
         '
+        Me.tabOverrides.Controls.Add(Me.btnDeleteLumberHistory)
+        Me.tabOverrides.Controls.Add(Me.btnSetActive)
+        Me.tabOverrides.Controls.Add(Me.lstLumberHistory)
+        Me.tabOverrides.Controls.Add(Me.btnUpdateLumber)
+        Me.tabOverrides.Controls.Add(Me.cboCostEffective)
         Me.tabOverrides.Controls.Add(Me.Label3)
         Me.tabOverrides.Controls.Add(Me.Label2)
         Me.tabOverrides.Controls.Add(Me.txtRawRoofSPFPrice)
@@ -1125,14 +1144,48 @@ Partial Class frmCreateEditProject
         Me.SplitContainer1.SplitterDistance = 200
         Me.SplitContainer1.TabIndex = 2
         '
-        'btnPreviewIncExc
+        'cboCostEffective
         '
-        Me.btnPreviewIncExc.Location = New System.Drawing.Point(606, 492)
-        Me.btnPreviewIncExc.Name = "btnPreviewIncExc"
-        Me.btnPreviewIncExc.Size = New System.Drawing.Size(94, 24)
-        Me.btnPreviewIncExc.TabIndex = 26
-        Me.btnPreviewIncExc.Text = "I/E Report"
-        Me.btnPreviewIncExc.UseVisualStyleBackColor = True
+        Me.cboCostEffective.FormattingEnabled = True
+        Me.cboCostEffective.Location = New System.Drawing.Point(60, 283)
+        Me.cboCostEffective.Name = "cboCostEffective"
+        Me.cboCostEffective.Size = New System.Drawing.Size(169, 21)
+        Me.cboCostEffective.TabIndex = 49
+        '
+        'btnUpdateLumber
+        '
+        Me.btnUpdateLumber.Location = New System.Drawing.Point(244, 283)
+        Me.btnUpdateLumber.Name = "btnUpdateLumber"
+        Me.btnUpdateLumber.Size = New System.Drawing.Size(103, 20)
+        Me.btnUpdateLumber.TabIndex = 50
+        Me.btnUpdateLumber.Text = "Update Lumber"
+        Me.btnUpdateLumber.UseVisualStyleBackColor = True
+        '
+        'lstLumberHistory
+        '
+        Me.lstLumberHistory.FormattingEnabled = True
+        Me.lstLumberHistory.Location = New System.Drawing.Point(62, 329)
+        Me.lstLumberHistory.Name = "lstLumberHistory"
+        Me.lstLumberHistory.Size = New System.Drawing.Size(166, 121)
+        Me.lstLumberHistory.TabIndex = 51
+        '
+        'btnSetActive
+        '
+        Me.btnSetActive.Location = New System.Drawing.Point(254, 333)
+        Me.btnSetActive.Name = "btnSetActive"
+        Me.btnSetActive.Size = New System.Drawing.Size(92, 29)
+        Me.btnSetActive.TabIndex = 52
+        Me.btnSetActive.Text = "Set Active"
+        Me.btnSetActive.UseVisualStyleBackColor = True
+        '
+        'btnDeleteLumberHistory
+        '
+        Me.btnDeleteLumberHistory.Location = New System.Drawing.Point(256, 372)
+        Me.btnDeleteLumberHistory.Name = "btnDeleteLumberHistory"
+        Me.btnDeleteLumberHistory.Size = New System.Drawing.Size(89, 31)
+        Me.btnDeleteLumberHistory.TabIndex = 53
+        Me.btnDeleteLumberHistory.Text = "Delete History"
+        Me.btnDeleteLumberHistory.UseVisualStyleBackColor = True
         '
         'frmCreateEditProject
         '
@@ -1278,4 +1331,9 @@ Partial Class frmCreateEditProject
     Friend WithEvents btnDeleteProject As Button
     Friend WithEvents btnGenerateProjectReport As Button
     Friend WithEvents btnPreviewIncExc As Button
+    Friend WithEvents btnUpdateLumber As Button
+    Friend WithEvents cboCostEffective As ComboBox
+    Friend WithEvents btnDeleteLumberHistory As Button
+    Friend WithEvents btnSetActive As Button
+    Friend WithEvents lstLumberHistory As ListBox
 End Class

@@ -1,9 +1,10 @@
 ﻿Imports System.Windows.Forms
-Imports BuildersPSE2.BuildersPSE.DataAccess
+Imports BuildersPSE2.DataAccess
+
 Imports System.Data
 
 Public Class frmLumberManagement
-    Private ReadOnly _dataAccess As New DataAccess()
+    Private ReadOnly _dataAccess As New LumberDataAccess()
     Private _lumberCostsDataTable As DataTable
 
     Private Sub frmLumberManagement_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -83,7 +84,7 @@ Public Class frmLumberManagement
 
     Private Sub PopulateCostEffectiveDates()
         Try
-            Dim dt As DataTable = _dataAccess.GetAllLumberCostEffective()
+            Dim dt As DataTable = LumberDataAccess.GetAllLumberCostEffective()
             lstCostEffective.DataSource = dt
         Catch ex As Exception
             MessageBox.Show("Error loading cost effective dates: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)

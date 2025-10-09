@@ -2,7 +2,8 @@
 Option Strict On
 
 Imports System.Windows.Forms
-Imports BuildersPSE2.BuildersPSE.DataAccess
+Imports BuildersPSE2.DataAccess
+Imports Microsoft.VisualBasic.FileIO
 
 Public Class frmMain
     Private m_ChildFormNumber As Integer
@@ -29,18 +30,18 @@ Public Class frmMain
         AddFormToTabControl(GetType(frmMainProjectList), "ProjectList")
     End Sub
 
-    Private Sub frmCreateProject_Click(sender As Object, e As EventArgs) Handles frmCreateProject.Click
+    Private Sub frmCreateProject_Click(sender As Object, e As EventArgs) Handles btnCreateProject.Click
         Try
             Dim tagValue As String = $"NewProject_{m_ChildFormNumber + 1}"
             AddFormToTabControl(GetType(frmCreateEditProject), tagValue, New Object() {Nothing, 0})
             ToolStripStatusLabel.Text = $"Opening new project form (Tab: {tagValue}) at {DateTime.Now:HH:mm:ss}"
         Catch ex As Exception
             ToolStripStatusLabel.Text = $"Error opening new project form: {ex.Message} at {DateTime.Now:HH:mm:ss}"
-        MessageBox.Show($"Error opening new project form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            MessageBox.Show($"Error opening new project form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles btnImportPSE.Click
         Using dialog As New OpenFileDialog()
             dialog.Filter = "Excel Files (*.xlsx;*.xls;*.xlsm)|*.xlsx;*.xls;*.xlsm|All Files (*.*)|*.*"
             dialog.Title = "Select a Spreadsheet File"
@@ -102,9 +103,8 @@ Public Class frmMain
                 testForm.AcceptButton = btnOK
                 testForm.CancelButton = btnCancel
                 If testForm.ShowDialog() = DialogResult.OK Then
-                    Dim importer As New SpreadsheetImportData()
                     Try
-                        importer.ImportSpreadsheetAsNewProject(dialog.FileName)
+                        ExternalImportDataAccess.ImportSpreadsheetAsNewProject(dialog.FileName)
                         MessageBox.Show("Import successful.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
                     Catch ex As Exception
                         MessageBox.Show($"Import failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -118,7 +118,7 @@ Public Class frmMain
         End Using
     End Sub
 
-    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles btnMondayList.Click
         'frmMondayList.Show()
         Try
             Dim tagValue As String = $"MondayList_{m_ChildFormNumber + 1}"
@@ -138,6 +138,66 @@ Public Class frmMain
         Catch ex As Exception
             ToolStripStatusLabel.Text = $"Error opening Lumber Management form: {ex.Message} at {DateTime.Now:HH:mm:ss}"
             MessageBox.Show($"Error opening Lumber Management form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub btnImportCSV_Click(sender As Object, e As EventArgs) Handles btnImportCSV.Click
+        Try
+            Using openFileDialog As New OpenFileDialog()
+                openFileDialog.Filter = "CSV Files (*.csv)|*.csv"
+                openFileDialog.Title = "Select Project CSV File"
+                If openFileDialog.ShowDialog() = DialogResult.OK Then
+                    Using importDialog As New frmImportProjectDialog()
+                        ' Pre-fill ProjectName from CSV's Project field
+                        Using parser As New TextFieldParser(openFileDialog.FileName)
+                            parser.TextFieldType = FieldType.Delimited
+                            parser.SetDelimiters(",")
+                            If Not parser.EndOfData Then
+                                parser.ReadLine() ' Skip header
+                                If Not parser.EndOfData Then
+                                    Dim fields As String() = parser.ReadFields()
+                                    If fields.Length >= 3 Then
+                                        importDialog.txtProjectName.Text = fields(2).Trim() ' Project field
+                                    End If
+                                End If
+                            End If
+                        End Using
+
+                        If importDialog.ShowDialog() = DialogResult.OK Then
+                            Dim csvPath As String = openFileDialog.FileName
+                            Dim projName As String = importDialog.txtProjectName.Text.Trim()
+                            Dim custName As String = importDialog.cboCustomerName.Text.Trim()
+                            Dim estID As Integer? = If(importDialog.cboEstimator.SelectedIndex >= 0, CInt(importDialog.cboEstimator.SelectedValue), Nothing)
+                            Dim salID As Integer? = If(importDialog.cboSales.SelectedIndex >= 0, CInt(importDialog.cboSales.SelectedValue), Nothing)
+
+                            Task.Run(Sub()
+                                         Try
+                                             Dim dataAccess As New ProjectDataAccess()
+                                             Dim projectID As Integer = ExternalImportDataAccess.ImportProjectFromCSV(csvPath, projName, custName, estID, salID)
+                                             Me.Invoke(Sub()
+                                                           Debug.WriteLine($"Import completed successfully for ProjectID: {projectID}")
+                                                           MessageBox.Show($"Project {projectID} imported successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                                                           AddFormToTabControl(GetType(frmMainProjectList), "ProjectList")
+                                                           Debug.WriteLine("Refreshed project list tab for ProjectID: " & projectID)
+                                                       End Sub)
+                                         Catch ex As Exception
+                                             Me.Invoke(Sub()
+                                                           Debug.WriteLine($"Import failed: {ex.Message}")
+                                                           MessageBox.Show($"Error importing project: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                                       End Sub)
+                                         End Try
+                                     End Sub)
+                        Else
+                            MessageBox.Show("Import cancelled.", "Import Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                        End If
+                    End Using
+                Else
+                    MessageBox.Show("No file selected.", "Import Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                End If
+            End Using
+        Catch ex As Exception
+            Debug.WriteLine($"Import error in btnImportCSV_Click: {ex.Message}")
+            MessageBox.Show($"Error importing project: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 End Class

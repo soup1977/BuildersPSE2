@@ -1,68 +1,16 @@
 ﻿Option Strict On
-' Add this import at the top of SpreadsheetImportData.vb (if not already present)
-Imports System.Windows.Forms
-Imports System.Collections.Generic
-Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Globalization
+Imports System.Text
 Imports BuildersPSE2.BuildersPSE.Models ' Adjust if your models are in a different namespace
 Imports BuildersPSE2.BuildersPSE.Utilities
-Imports System.Text
+Imports Microsoft.VisualBasic.FileIO
 
 
-Namespace BuildersPSE.DataAccess
-    Public Class SpreadsheetImportData
-        ' Helper to build parameters (from existing DataAccess)
-        Private Function BuildParameters(params As IDictionary(Of String, Object)) As SqlParameter()
-            Dim sqlParams As New List(Of SqlParameter)
-            For Each kvp As KeyValuePair(Of String, Object) In params
-                sqlParams.Add(New SqlParameter(kvp.Key, If(kvp.Value, DBNull.Value)))
-            Next
-            Return sqlParams.ToArray()
-        End Function
+Namespace DataAccess
+    Public Class ExternalImportDataAccess
 
-        ' Helper to get or insert CustomerID
-        Private Function GetOrInsertCustomer(customerName As String, customerType As Integer, conn As SqlConnection, transaction As SqlTransaction) As Integer?
-            If String.IsNullOrEmpty(customerName) Then Return Nothing
-            Dim params As New Dictionary(Of String, Object) From {
-                {"@CustomerName", customerName},
-                {"@CustomerType", customerType}
-            }
-            Dim customerIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT CustomerID FROM Customer WHERE CustomerName = @CustomerName AND CustomerType = @CustomerType", BuildParameters(params), conn, transaction)
-            If customerIDObj Is DBNull.Value OrElse customerIDObj Is Nothing Then
-                params = New Dictionary(Of String, Object) From {
-                    {"@CustomerName", customerName},
-                    {"@CustomerType", customerType}
-                }
-                Return SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertCustomer, BuildParameters(params), conn, transaction)
-            End If
-            Return CInt(customerIDObj)
-        End Function
-
-        ' Helper to get or insert EstimatorID
-        Private Function GetOrInsertEstimator(estimatorName As String, conn As SqlConnection, transaction As SqlTransaction) As Integer?
-            If String.IsNullOrEmpty(estimatorName) Then Return Nothing
-            Dim params As New Dictionary(Of String, Object) From {{"@EstimatorName", estimatorName}}
-            Dim estimatorIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT EstimatorID FROM Estimator WHERE EstimatorName = @EstimatorName", BuildParameters(params), conn, transaction)
-            If estimatorIDObj Is DBNull.Value OrElse estimatorIDObj Is Nothing Then
-                params = New Dictionary(Of String, Object) From {{"@EstimatorName", estimatorName}}
-                Return SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertEstimator, BuildParameters(params), conn, transaction)
-            End If
-            Return CInt(estimatorIDObj)
-        End Function
-
-        ' Helper to get or insert SalesID
-        Private Function GetOrInsertSales(salesName As String, conn As SqlConnection, transaction As SqlTransaction) As Integer?
-            If String.IsNullOrEmpty(salesName) Then Return Nothing
-            Dim params As New Dictionary(Of String, Object) From {{"@SalesName", salesName}}
-            Dim salesIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT SalesID FROM Sales WHERE SalesName = @SalesName", BuildParameters(params), conn, transaction)
-            If salesIDObj Is DBNull.Value OrElse salesIDObj Is Nothing Then
-                params = New Dictionary(Of String, Object) From {{"@SalesName", salesName}}
-                Return SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertSales, BuildParameters(params), conn, transaction)
-            End If
-            Return CInt(salesIDObj)
-        End Function
-        Private Function ParseDate(value As String) As Date?
+        Public Shared Function ParseDate(value As String) As Date?
             If String.IsNullOrEmpty(value) Then Return Nothing
             value = value.Trim()
             Dim result As Date
@@ -73,7 +21,7 @@ Namespace BuildersPSE.DataAccess
         End Function
 
         ' Inside SpreadsheetImportData class
-        Public Sub ImportSpreadsheetAsNewProject(filePath As String)
+        Public Shared Sub ImportSpreadsheetAsNewProject(filePath As String)
             Dim spreadsheetData As Dictionary(Of String, DataTable) = SpreadsheetParser.ParseSpreadsheet(filePath)
             Dim importLog As New StringBuilder()
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
@@ -102,11 +50,11 @@ Namespace BuildersPSE.DataAccess
                                                                                    Dim salesName As String = If(summaryDt.Rows(0)(6) Is DBNull.Value, String.Empty, CStr(summaryDt.Rows(0)(6))) ' Row 2, col 6: Doug Sehr
 
                                                                                    ' Step 2: Insert new project
-                                                                                   Dim architectID As Integer? = GetOrInsertCustomer(architectName, 2, conn, transaction) ' CustomerType=2 (Architect)
-                                                                                   Dim engineerID As Integer? = GetOrInsertCustomer(engineerName, 3, conn, transaction) ' CustomerType=3 (Engineer)
-                                                                                   Dim customerID As Integer? = GetOrInsertCustomer(customerName, 1, conn, transaction) ' CustomerType=1 (Customer)
-                                                                                   Dim estimatorID As Integer? = GetOrInsertEstimator(estimatorName, conn, transaction)
-                                                                                   Dim salesID As Integer? = GetOrInsertSales(salesName, conn, transaction)
+                                                                                   Dim architectID As Integer? = HelperDataAccess.GetOrInsertCustomer(architectName, 2, conn, transaction) ' CustomerType=2 (Architect)
+                                                                                   Dim engineerID As Integer? = HelperDataAccess.GetOrInsertCustomer(engineerName, 3, conn, transaction) ' CustomerType=3 (Engineer)
+                                                                                   Dim customerID As Integer? = HelperDataAccess.GetOrInsertCustomer(customerName, 1, conn, transaction) ' CustomerType=1 (Customer)
+                                                                                   Dim estimatorID As Integer? = HelperDataAccess.GetOrInsertEstimator(estimatorName, conn, transaction)
+                                                                                   Dim salesID As Integer? = HelperDataAccess.GetOrInsertSales(salesName, conn, transaction)
 
                                                                                    Dim projectParams As New Dictionary(Of String, Object) From {
                         {"@JBID", If(String.IsNullOrEmpty(jbid), DBNull.Value, CType(jbid, Object))},
@@ -127,7 +75,7 @@ Namespace BuildersPSE.DataAccess
                         {"@EngineerID", If(engineerID.HasValue, CType(engineerID.Value, Object), DBNull.Value)},
                         {"@ProjectNotes", DBNull.Value}
                     }
-                                                                                   Dim projectID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProject, BuildParameters(projectParams), conn, transaction)
+                                                                                   Dim projectID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProject, HelperDataAccess.BuildParameters(projectParams), conn, transaction)
                                                                                    importLog.AppendLine($"Project '{projectName}' created successfully with ID {projectID}.")
 
                                                                                    ' Step 3: Call existing ImportFromSpreadsheet
@@ -146,11 +94,11 @@ Namespace BuildersPSE.DataAccess
                                                                                                 {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                                                 {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)}
                                                                                             }
-                                                                                   Dim newVersionID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectVersion, BuildParameters(versionParams), conn, transaction)
+                                                                                   Dim newVersionID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectVersion, HelperDataAccess.BuildParameters(versionParams), conn, transaction)
                                                                                    importLog.AppendLine($"Project version created with ID {newVersionID}.")
 
                                                                                    ' Insert default ProjectProductSettings for the new version
-                                                                                   Dim da As New DataAccess()
+                                                                                   Dim da As New ProjectDataAccess()
                                                                                    Dim productTypes As List(Of ProductTypeModel) = da.GetProductTypes()
                                                                                    For Each pt In productTypes
                                                                                        Dim settingParams As New Dictionary(Of String, Object) From {
@@ -159,7 +107,7 @@ Namespace BuildersPSE.DataAccess
                                                                                             {"@MarginPercent", 0D},
                                                                                             {"@LumberAdder", 0D}
                                                                                         }
-                                                                                       SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectProductSetting, BuildParameters(settingParams), conn, transaction)
+                                                                                       SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectProductSetting, HelperDataAccess.BuildParameters(settingParams), conn, transaction)
                                                                                    Next
                                                                                    importLog.AppendLine($"Inserted default project product settings for {productTypes.Count} product types.")
 
@@ -196,7 +144,7 @@ Namespace BuildersPSE.DataAccess
                                                                                                     {"@TotalSellPrice", If(row("TotalSellPrice") Is DBNull.Value, DBNull.Value, CType(row("TotalSellPrice"), Object))},
                                                                                                     {"@AvgSPFNo2", If(row("AvgSPFNo2") Is DBNull.Value, DBNull.Value, CType(row("AvgSPFNo2"), Object))}
                                                                                                 }
-                                                                                               Dim newRawID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertRawUnit, BuildParameters(rawParams), conn, transaction)
+                                                                                               Dim newRawID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertRawUnit, HelperDataAccess.BuildParameters(rawParams), conn, transaction)
                                                                                                rawUnitMap.Add(uniqueKey, newRawID)
                                                                                                rawUnitCount += 1
                                                                                            Next
@@ -240,7 +188,7 @@ Namespace BuildersPSE.DataAccess
                 {"@UnitType", "Standard"},
                 {"@OptionalAdder", 1D}
             }
-                                                                                               Dim newActualID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertActualUnit, BuildParameters(actualParams), conn, transaction)
+                                                                                               Dim newActualID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertActualUnit, HelperDataAccess.BuildParameters(actualParams), conn, transaction)
                                                                                                actualUnitMap.Add(uniqueKey, newActualID)
                                                                                                actualUnitSet.Add(uniqueCombo) ' Track unique combo
                                                                                                actualUnitCount += 1
@@ -252,7 +200,7 @@ Namespace BuildersPSE.DataAccess
 
                                                                                    ' Step 3.4: Import CalculatedComponents
                                                                                    Dim componentCount As Integer = 0
-                                                                                   Dim dataAccess As New DataAccess()
+                                                                                   Dim dataAccess As New ProjectDataAccess()
                                                                                    ' Collect RawUnit data first to avoid open DataReader during inserts
                                                                                    Dim rawUnitData As New Dictionary(Of Integer, Dictionary(Of String, Decimal))
                                                                                    For Each actualKey As String In actualUnitMap.Keys
@@ -267,7 +215,7 @@ Namespace BuildersPSE.DataAccess
         {"@ActualUnitID", actualUnitID},
         {"@VersionID", newVersionID}
     }
-                                                                                       Dim rawUnitIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT RawUnitID FROM ActualUnits WHERE ActualUnitID = @ActualUnitID AND VersionID = @VersionID", BuildParameters(actualParams), conn, transaction)
+                                                                                       Dim rawUnitIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT RawUnitID FROM ActualUnits WHERE ActualUnitID = @ActualUnitID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(actualParams), conn, transaction)
                                                                                        If rawUnitIDObj Is DBNull.Value Then Continue For
                                                                                        Dim rawUnitID As Integer = CInt(rawUnitIDObj)
                                                                                        ' Skip if RawUnitID already processed
@@ -277,7 +225,7 @@ Namespace BuildersPSE.DataAccess
         {"@RawUnitID", rawUnitID},
         {"@VersionID", newVersionID}
     }
-                                                                                       Dim rawReader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReaderTransactional("SELECT SqFt, LF, BF, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, TotalSellPrice FROM RawUnits WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID", BuildParameters(rawParams), conn, transaction)
+                                                                                       Dim rawReader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReaderTransactional("SELECT SqFt, LF, BF, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, TotalSellPrice FROM RawUnits WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(rawParams), conn, transaction)
                                                                                        If Not rawReader.Read() Then
                                                                                            rawReader.Close()
                                                                                            Debug.WriteLine($"Skipped CalculatedComponents for ActualUnitID {actualUnitID}: RawUnitID {rawUnitID} not found")
@@ -339,7 +287,7 @@ Namespace BuildersPSE.DataAccess
             {"@ComponentType", comp.Item1},
             {"@Value", comp.Item2}
         }
-                                                                                           SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertCalculatedComponent, BuildParameters(componentParams), conn, transaction)
+                                                                                           SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertCalculatedComponent, HelperDataAccess.BuildParameters(componentParams), conn, transaction)
                                                                                            componentCount += 1
                                                                                        Next
                                                                                    Next
@@ -362,7 +310,7 @@ Namespace BuildersPSE.DataAccess
                                 {"@BldgQty", bldgQty},
                                 {"@VersionID", newVersionID}
                             }
-                                                                                           Dim newBldgID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertBuilding, BuildParameters(bldgParams), conn, transaction)
+                                                                                           Dim newBldgID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertBuilding, HelperDataAccess.BuildParameters(bldgParams), conn, transaction)
                                                                                            buildingMap.Add(buildingName, newBldgID)
                                                                                            buildingCount += 1
                                                                                        Next
@@ -396,7 +344,7 @@ Namespace BuildersPSE.DataAccess
                 {"@LevelNumber", rowIdx - 33}, ' Incremental number starting from 1 (row 39 = 1)
                 {"@LevelName", levelName}
             }
-                                                                                               Dim newLevelID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertLevel, BuildParameters(levelParams), conn, transaction)
+                                                                                               Dim newLevelID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertLevel, HelperDataAccess.BuildParameters(levelParams), conn, transaction)
                                                                                                levelMap.Add(uniqueKey, newLevelID)
                                                                                                levelCount += 1
                                                                                            Next
@@ -444,7 +392,7 @@ Namespace BuildersPSE.DataAccess
                                                                                                         {"@LevelID", levelID},
                                                                                                         {"@Quantity", CInt(qtyObj)}
                                                                                                     }
-                                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.InsertActualToLevelMapping, BuildParameters(mappingParams), conn, transaction)
+                                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.InsertActualToLevelMapping, HelperDataAccess.BuildParameters(mappingParams), conn, transaction)
                                                                                                    mappingCount += 1
                                                                                                Next
                                                                                            Next
@@ -455,7 +403,7 @@ Namespace BuildersPSE.DataAccess
                                                                                    ' Step 3.7: Commit and recalculate
                                                                                    transaction.Commit()
 
-                                                                                   da.RecalculateVersion(newVersionID)
+                                                                                   RollupDataAccess.RecalculateVersion(newVersionID)
                                                                                    importLog.AppendLine("All data imported and rollups recalculated.")
                                                                                    MessageBox.Show(importLog.ToString(), "Import Summary", MessageBoxButtons.OK, MessageBoxIcon.Information)
                                                                                Catch ex As Exception
@@ -466,5 +414,320 @@ Namespace BuildersPSE.DataAccess
                                                                        End Using
                                                                    End Sub, "Error importing spreadsheet as new project")
         End Sub
+
+        Public Shared Function ImportProjectFromCSV(csvFilePath As String, projectName As String, customerName As String, Optional estimatorID As Integer? = Nothing, Optional salesID As Integer? = Nothing) As Integer
+            Dim newProjectID As Integer
+            Dim importLog As New StringBuilder()
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                           conn.Open()
+                                                                           Using transaction As SqlTransaction = conn.BeginTransaction()
+                                                                               Try
+                                                                                   ' Extract project number from filename (e.g., "P206547" from "P206547 - Component Export.csv") for JBID
+                                                                                   Dim fileName As String = System.IO.Path.GetFileNameWithoutExtension(csvFilePath)
+                                                                                   Dim projectNumber As String = fileName.Split("-"c)(0).Trim() ' Take part before first "-"
+                                                                                   Debug.WriteLine("Creating project with JBID: " & projectNumber & ", ProjectName: " & projectName & "...")
+                                                                                   ' Step 2: Create Project
+                                                                                   Dim customerID As Integer? = Nothing
+                                                                                   If Not String.IsNullOrEmpty(customerName) Then
+                                                                                       Dim custParams As New Dictionary(Of String, Object) From {{"@CustomerName", customerName}, {"@CustomerType", 1}}
+                                                                                       Dim cmd As New SqlCommand("SELECT CustomerID FROM Customer WHERE CustomerName = @CustomerName AND CustomerType = @CustomerType", conn, transaction) With {
+                                                                                           .CommandTimeout = 0
+                                                                                       }
+                                                                                       cmd.Parameters.AddRange(HelperDataAccess.BuildParameters(custParams))
+                                                                                       Dim custIDObj As Object = cmd.ExecuteScalar()
+                                                                                       If custIDObj IsNot DBNull.Value AndAlso custIDObj IsNot Nothing Then
+                                                                                           customerID = CInt(custIDObj)
+                                                                                           Debug.WriteLine("Found existing customer: " & customerName & ", ID: " & customerID.Value)
+                                                                                       Else
+                                                                                           cmd = New SqlCommand(Queries.InsertCustomer, conn, transaction) With {
+                                                                                               .CommandTimeout = 0
+                                                                                           }
+                                                                                           cmd.Parameters.AddRange(HelperDataAccess.BuildParameters(custParams))
+                                                                                           customerID = CInt(cmd.ExecuteScalar())
+                                                                                           Debug.WriteLine("Created new customer: " & customerName & ", ID: " & customerID.Value)
+                                                                                       End If
+                                                                                   End If
+
+                                                                                   Dim projParams As New Dictionary(Of String, Object) From {
+                        {"@JBID", projectNumber}, {"@ProjectTypeID", 1}, {"@ProjectName", projectName}, {"@EstimatorID", If(estimatorID.HasValue, CType(estimatorID.Value, Object), DBNull.Value)},
+                        {"@Address", DBNull.Value}, {"@City", DBNull.Value}, {"@State", DBNull.Value}, {"@Zip", DBNull.Value},
+                        {"@BidDate", Date.Today}, {"@ArchPlansDated", #1/1/1900#}, {"@EngPlansDated", #1/1/1900#},
+                        {"@MilesToJobSite", 0}, {"@TotalNetSqft", 0}, {"@TotalGrossSqft", 0}, {"@ArchitectID", DBNull.Value}, {"@EngineerID", DBNull.Value}, {"@ProjectNotes", DBNull.Value}
+                    }
+                                                                                   Dim cmdProj As New SqlCommand(Queries.InsertProject, conn, transaction) With {
+                                                                                       .CommandTimeout = 0
+                                                                                   }
+                                                                                   cmdProj.Parameters.AddRange(HelperDataAccess.BuildParameters(projParams))
+                                                                                   newProjectID = CInt(cmdProj.ExecuteScalar())
+                                                                                   Debug.WriteLine("Created project ID: " & newProjectID)
+                                                                                   importLog.AppendLine("Created project: " & projectName & " (ID: " & newProjectID & ", JBID: " & projectNumber & ")")
+
+                                                                                   Debug.WriteLine("Creating project version...")
+                                                                                   ' Step 2: Create ProjectVersion
+                                                                                   Dim verParams As New Dictionary(Of String, Object) From {
+                        {"@ProjectID", newProjectID},
+                        {"@VersionName", "Imported Version"},
+                        {"@VersionDate", Date.Now},
+                        {"@Description", "Imported from CSV"},
+                        {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
+                        {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)}
+                    }
+                                                                                   Dim cmdVer As New SqlCommand(Queries.InsertProjectVersion, conn, transaction) With {
+                                                                                       .CommandTimeout = 0
+                                                                                   }
+                                                                                   cmdVer.Parameters.AddRange(HelperDataAccess.BuildParameters(verParams))
+                                                                                   Dim versionID As Integer = CInt(cmdVer.ExecuteScalar())
+                                                                                   Debug.WriteLine("Created version ID: " & versionID)
+                                                                                   importLog.AppendLine("Created project version: Imported Version (ID: " & versionID & ")")
+
+                                                                                   Debug.WriteLine("Parsing CSV: " & csvFilePath)
+                                                                                   ' Step 3: Parse CSV and Group Buildings
+                                                                                   Dim buildingKeys As New HashSet(Of String)
+                                                                                   Dim rows As New List(Of String())
+                                                                                   Dim skippedRows As Integer = 0
+                                                                                   Using parser As New TextFieldParser(csvFilePath)
+                                                                                       parser.TextFieldType = FieldType.Delimited
+                                                                                       parser.SetDelimiters(",")
+                                                                                       parser.ReadLine() ' Skip header
+                                                                                       While Not parser.EndOfData
+                                                                                           Dim fields As String() = parser.ReadFields()
+                                                                                           If fields.Length < 26 Then
+                                                                                               skippedRows += 1
+                                                                                               Debug.WriteLine("Skipping invalid row: insufficient columns")
+                                                                                               Continue While
+                                                                                           End If
+                                                                                           rows.Add(fields)
+                                                                                           Dim jobNumberPrefix As String = fields(0).Trim().Split("-"c)(0).Trim() ' e.g., "E210360"
+                                                                                           Dim plan As String = fields(6).Trim() ' e.g., "Bldg A"
+                                                                                           Dim buildingKey As String = jobNumberPrefix & "_" & plan
+                                                                                           buildingKeys.Add(buildingKey) ' Track unique buildings
+                                                                                       End While
+                                                                                   End Using
+                                                                                   Debug.WriteLine("Parsed " & rows.Count & " valid rows (skipped " & skippedRows & ")")
+                                                                                   importLog.AppendLine("Parsed " & rows.Count & " valid rows from CSV (skipped " & skippedRows & ")")
+
+                                                                                   Debug.WriteLine("Inserting " & buildingKeys.Count & " buildings...")
+                                                                                   ' Step 3: Insert Buildings
+                                                                                   Dim buildingIdMap As New Dictionary(Of String, Integer)
+                                                                                   For Each buildingKey In buildingKeys
+                                                                                       Dim plan As String = buildingKey.Split("_"c)(1) ' Extract plan from key
+                                                                                       Dim bldgParams As New Dictionary(Of String, Object) From {
+                            {"@BuildingName", plan}, {"@BuildingType", 1}, {"@ResUnits", 0}, {"@BldgQty", 1}, {"@VersionID", versionID}
+                        }
+                                                                                       Using cmdBldg As New SqlCommand(Queries.InsertBuilding, conn, transaction) With {
+                                                                                           .CommandTimeout = 0
+                                                                                       }
+                                                                                           cmdBldg.Parameters.AddRange(HelperDataAccess.BuildParameters(bldgParams))
+                                                                                           Dim buildingID As Integer = CInt(cmdBldg.ExecuteScalar())
+                                                                                           buildingIdMap.Add(buildingKey, buildingID)
+                                                                                           Debug.WriteLine("Created building: " & plan & " (Key: " & buildingKey & "), ID: " & buildingID)
+                                                                                       End Using
+                                                                                   Next
+                                                                                   importLog.AppendLine("Imported " & buildingIdMap.Count & " buildings.")
+
+                                                                                   Debug.WriteLine("Processing rows (0/" & rows.Count & ")...")
+                                                                                   ' Step 4: Process Rows
+                                                                                   Dim levelIdMap As New Dictionary(Of String, Integer)
+                                                                                   Dim skippedRowCount As Integer = 0
+                                                                                   Dim levelCount As Integer = 0
+                                                                                   Dim rawUnitCount As Integer = 0
+                                                                                   Dim actualUnitCount As Integer = 0
+                                                                                   Dim mappingCount As Integer = 0
+                                                                                   For i As Integer = 0 To rows.Count - 1
+                                                                                       If i Mod 10 = 0 Then Debug.WriteLine("Processing rows (" & i & "/" & rows.Count & ")...")
+                                                                                       Dim fields = rows(i)
+                                                                                       Dim product As String = fields(1).Trim()
+                                                                                       Dim productTypeID As Integer = If(product = "Floor", 1, If(product = "Roof", 2, 0))
+                                                                                       If productTypeID = 0 Then
+                                                                                           skippedRowCount += 1
+                                                                                           Debug.WriteLine("Skipping row " & i & ": Invalid product '" & product & "'")
+                                                                                           Continue For
+                                                                                       End If
+                                                                                       Dim jobNumberPrefix As String = fields(0).Trim().Split("-"c)(0).Trim() ' e.g., "E210360"
+                                                                                       Dim plan As String = fields(6).Trim()
+                                                                                       Dim buildingKey As String = jobNumberPrefix & "_" & plan
+                                                                                       Dim elevation As String = fields(7).Trim()
+                                                                                       Dim rawUnitName As String = fields(0).Trim() & " " & product
+                                                                                       Dim sqFt As Decimal = If(Decimal.TryParse(fields(11), Nothing), CDec(fields(11)), 1D)
+                                                                                       If sqFt = 0 Then
+                                                                                           sqFt = 1D ' Use placeholder for invalid or zero SqFt
+                                                                                           Debug.WriteLine("Row " & i & ": Used placeholder SqFt=1.0 for '" & fields(11) & "'")
+                                                                                       End If
+
+                                                                                       ' Parse other decimals
+                                                                                       Dim bf As Decimal? = If(Decimal.TryParse(fields(8), Nothing), CDec(fields(8)), Nothing)
+                                                                                       Dim lf As Decimal? = If(Decimal.TryParse(fields(9), Nothing), CDec(fields(9)), Nothing)
+                                                                                       Dim ewplf As Decimal? = If(Decimal.TryParse(fields(10), Nothing), CDec(fields(10)), Nothing)
+                                                                                       Dim fcArea As Decimal? = If(Decimal.TryParse(fields(12), Nothing), CDec(fields(12)), Nothing)
+                                                                                       Dim lumberCost As Decimal? = If(Decimal.TryParse(fields(13), Nothing), CDec(fields(13)), Nothing)
+                                                                                       Dim plateCost As Decimal? = If(Decimal.TryParse(fields(14), Nothing), CDec(fields(14)), Nothing)
+                                                                                       Dim manufLaborCost As Decimal? = If(Decimal.TryParse(fields(15), Nothing), CDec(fields(15)), Nothing)
+                                                                                       Dim designLabor As Decimal? = If(Decimal.TryParse(fields(16), Nothing), CDec(fields(16)), Nothing)
+                                                                                       Dim mgmtLabor As Decimal? = If(Decimal.TryParse(fields(17), Nothing), CDec(fields(17)), Nothing)
+                                                                                       Dim jobSuppliesCost As Decimal? = If(Decimal.TryParse(fields(18), Nothing), CDec(fields(18)), Nothing)
+                                                                                       Dim manHours As Decimal? = If(Decimal.TryParse(fields(19), Nothing), CDec(fields(19)), Nothing)
+                                                                                       Dim itemCost As Decimal? = If(Decimal.TryParse(fields(20), Nothing), CDec(fields(20)), Nothing)
+                                                                                       Dim overallCost As Decimal? = If(Decimal.TryParse(fields(21), Nothing), CDec(fields(21)), Nothing)
+                                                                                       Dim deliveryCost As Decimal? = If(Decimal.TryParse(fields(22), Nothing), CDec(fields(22)), Nothing)
+                                                                                       Dim totalSellPrice As Decimal? = If(Decimal.TryParse(fields(23), Nothing), CDec(fields(23)), Nothing)
+                                                                                       Dim avgSPFNo2 As Decimal? = If(Decimal.TryParse(fields(24), Nothing), CDec(fields(24)), Nothing)
+                                                                                       Dim spfNo2BDFT As Decimal? = If(Decimal.TryParse(fields(25), Nothing), CDec(fields(25)), Nothing)
+                                                                                       Dim avg241800 As Decimal? = If(Decimal.TryParse(fields(26), Nothing), CDec(fields(26)), Nothing)
+                                                                                       Dim msr241800BDFT As Decimal? = If(Decimal.TryParse(fields(27), Nothing), CDec(fields(27)), Nothing)
+                                                                                       Dim avg242400 As Decimal? = If(Decimal.TryParse(fields(28), Nothing), CDec(fields(28)), Nothing)
+                                                                                       Dim msr242400BDFT As Decimal? = If(Decimal.TryParse(fields(29), Nothing), CDec(fields(29)), Nothing)
+                                                                                       Dim avg261800 As Decimal? = If(Decimal.TryParse(fields(30), Nothing), CDec(fields(30)), Nothing)
+                                                                                       Dim msr261800BDFT As Decimal? = If(Decimal.TryParse(fields(31), Nothing), CDec(fields(31)), Nothing)
+                                                                                       Dim avg262400 As Decimal? = If(Decimal.TryParse(fields(32), Nothing), CDec(fields(32)), Nothing)
+                                                                                       Dim msr262400BDFT As Decimal? = If(Decimal.TryParse(fields(33), Nothing), CDec(fields(33)), Nothing)
+
+                                                                                       ' Level
+                                                                                       Dim levelKey As String = $"{plan}_{productTypeID}_{elevation}"
+                                                                                       Dim levelID As Integer
+                                                                                       If Not levelIdMap.ContainsKey(levelKey) Then
+                                                                                           Dim levelParams As New Dictionary(Of String, Object) From {
+                                {"@VersionID", versionID}, {"@BuildingID", buildingIdMap(buildingKey)}, {"@ProductTypeID", productTypeID}, {"@LevelNumber", 1}, {"@LevelName", elevation}
+                            }
+                                                                                           Dim cmdLevel As New SqlCommand(Queries.InsertLevel, conn, transaction) With {
+                                                                                               .CommandTimeout = 0
+                                                                                           }
+                                                                                           cmdLevel.Parameters.AddRange(HelperDataAccess.BuildParameters(levelParams))
+                                                                                           levelID = CInt(cmdLevel.ExecuteScalar())
+                                                                                           levelIdMap.Add(levelKey, levelID)
+                                                                                           levelCount += 1
+                                                                                           Debug.WriteLine("Created level: " & elevation & ", ID: " & levelID)
+                                                                                       Else
+                                                                                           levelID = levelIdMap(levelKey)
+                                                                                       End If
+
+                                                                                       ' RawUnit
+                                                                                       Dim rawParams As New Dictionary(Of String, Object) From {
+                            {"@RawUnitName", rawUnitName}, {"@VersionID", versionID}, {"@ProductTypeID", productTypeID},
+                            {"@BF", If(bf.HasValue, CType(bf.Value, Object), DBNull.Value)},
+                            {"@LF", If(lf.HasValue, CType(lf.Value, Object), DBNull.Value)},
+                            {"@EWPLF", If(ewplf.HasValue, CType(ewplf.Value, Object), DBNull.Value)},
+                            {"@SqFt", If(sqFt > 0, CType(sqFt, Object), DBNull.Value)},
+                            {"@FCArea", If(fcArea.HasValue, CType(fcArea.Value, Object), DBNull.Value)},
+                            {"@LumberCost", If(lumberCost.HasValue, CType(lumberCost.Value, Object), DBNull.Value)},
+                            {"@PlateCost", If(plateCost.HasValue, CType(plateCost.Value, Object), DBNull.Value)},
+                            {"@ManufLaborCost", If(manufLaborCost.HasValue, CType(manufLaborCost.Value, Object), DBNull.Value)},
+                            {"@DesignLabor", If(designLabor.HasValue, CType(designLabor.Value, Object), DBNull.Value)},
+                            {"@MGMTLabor", If(mgmtLabor.HasValue, CType(mgmtLabor.Value, Object), DBNull.Value)},
+                            {"@JobSuppliesCost", If(jobSuppliesCost.HasValue, CType(jobSuppliesCost.Value, Object), DBNull.Value)},
+                            {"@ManHours", If(manHours.HasValue, CType(manHours.Value, Object), DBNull.Value)},
+                            {"@ItemCost", If(itemCost.HasValue, CType(itemCost.Value, Object), DBNull.Value)},
+                            {"@OverallCost", If(overallCost.HasValue, CType(overallCost.Value, Object), DBNull.Value)},
+                            {"@DeliveryCost", If(deliveryCost.HasValue, CType(deliveryCost.Value, Object), DBNull.Value)},
+                            {"@TotalSellPrice", If(totalSellPrice.HasValue, CType(totalSellPrice.Value, Object), DBNull.Value)},
+                            {"@AvgSPFNo2", If(avgSPFNo2.HasValue, CType(avgSPFNo2.Value, Object), DBNull.Value)},
+                            {"@SPFNo2BDFT", If(spfNo2BDFT.HasValue, CType(spfNo2BDFT.Value, Object), DBNull.Value)},
+                            {"@Avg241800", If(avg241800.HasValue, CType(avg241800.Value, Object), DBNull.Value)},
+                            {"@MSR241800BDFT", If(msr241800BDFT.HasValue, CType(msr241800BDFT.Value, Object), DBNull.Value)},
+                            {"@Avg242400", If(avg242400.HasValue, CType(avg242400.Value, Object), DBNull.Value)},
+                            {"@MSR242400BDFT", If(msr242400BDFT.HasValue, CType(msr242400BDFT.Value, Object), DBNull.Value)},
+                            {"@Avg261800", If(avg261800.HasValue, CType(avg261800.Value, Object), DBNull.Value)},
+                            {"@MSR261800BDFT", If(msr261800BDFT.HasValue, CType(msr261800BDFT.Value, Object), DBNull.Value)},
+                            {"@Avg262400", If(avg262400.HasValue, CType(avg262400.Value, Object), DBNull.Value)},
+                            {"@MSR262400BDFT", If(msr262400BDFT.HasValue, CType(msr262400BDFT.Value, Object), DBNull.Value)}
+                        }
+                                                                                       Dim cmdRaw As New SqlCommand(Queries.InsertRawUnit, conn, transaction) With {
+                                                                                           .CommandTimeout = 0
+                                                                                       }
+                                                                                       cmdRaw.Parameters.AddRange(HelperDataAccess.BuildParameters(rawParams))
+                                                                                       Dim newRawUnitID As Integer = CInt(cmdRaw.ExecuteScalar())
+                                                                                       rawUnitCount += 1
+                                                                                       Debug.WriteLine("Created RawUnit: " & rawUnitName & ", ID: " & newRawUnitID)
+
+
+                                                                                       ' Insert initial RawUnitLumberHistory record with CostEffectiveDateID = NULL
+                                                                                       Dim historyParams As New Dictionary(Of String, Object) From {
+                            {"@RawUnitID", newRawUnitID},
+                            {"@VersionID", versionID},
+                            {"@CostEffectiveDateID", DBNull.Value},
+                            {"@LumberCost", If(lumberCost.HasValue, CType(lumberCost.Value, Object), DBNull.Value)},
+                            {"@AvgSPFNo2", If(avgSPFNo2.HasValue, CType(avgSPFNo2.Value, Object), DBNull.Value)},
+                            {"@Avg241800", If(avg241800.HasValue, CType(avg241800.Value, Object), DBNull.Value)},
+                            {"@Avg242400", If(avg242400.HasValue, CType(avg242400.Value, Object), DBNull.Value)},
+                            {"@Avg261800", If(avg261800.HasValue, CType(avg261800.Value, Object), DBNull.Value)},
+                            {"@Avg262400", If(avg262400.HasValue, CType(avg262400.Value, Object), DBNull.Value)}
+                        }
+                                                                                       Using cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
+                                                                                           .CommandTimeout = 0
+                                                                                       }
+                                                                                           cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
+                                                                                           Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
+                                                                                           Debug.WriteLine("Created initial RawUnitLumberHistory for RawUnitID: " & newRawUnitID & ", HistoryID: " & historyID)
+                                                                                       End Using
+
+
+                                                                                       ' ActualUnit
+                                                                                       Dim actualParams As New Dictionary(Of String, Object) From {
+                            {"@VersionID", versionID}, {"@RawUnitID", newRawUnitID}, {"@ProductTypeID", productTypeID}, {"@UnitName", elevation},
+                            {"@PlanSQFT", sqFt}, {"@UnitType", "Res"}, {"@OptionalAdder", 1D}
+                        }
+                                                                                       Dim cmdActual As New SqlCommand(Queries.InsertActualUnit, conn, transaction) With {
+                                                                                           .CommandTimeout = 0
+                                                                                       }
+                                                                                       cmdActual.Parameters.AddRange(HelperDataAccess.BuildParameters(actualParams))
+                                                                                       Dim newActualUnitID As Integer = CInt(cmdActual.ExecuteScalar())
+                                                                                       actualUnitCount += 1
+                                                                                       Debug.WriteLine("Created ActualUnit: " & elevation & ", ID: " & newActualUnitID)
+
+                                                                                       ' ActualToLevelMapping
+                                                                                       Dim mappingParams As New Dictionary(Of String, Object) From {
+                            {"@VersionID", versionID}, {"@ActualUnitID", newActualUnitID}, {"@LevelID", levelID}, {"@Quantity", 1}
+                        }
+                                                                                       Dim cmdMapping As New SqlCommand(Queries.InsertActualToLevelMapping, conn, transaction) With {
+                                                                                           .CommandTimeout = 0
+                                                                                       }
+                                                                                       cmdMapping.Parameters.AddRange(HelperDataAccess.BuildParameters(mappingParams))
+                                                                                       cmdMapping.ExecuteScalar()
+                                                                                       mappingCount += 1
+                                                                                       Debug.WriteLine("Created mapping for ActualUnitID: " & newActualUnitID & ", LevelID: " & levelID)
+                                                                                   Next
+                                                                                   importLog.AppendLine("Processed " & rows.Count & " rows (skipped " & skippedRowCount & ", imported " & levelCount & " levels, " & rawUnitCount & " raw units, " & actualUnitCount & " actual units, " & mappingCount & " mappings).")
+
+                                                                                   Debug.WriteLine("Inserting project product settings...")
+                                                                                   ' Step 5: Default ProjectProductSettings
+                                                                                   For Each ptID As Integer In {1, 2}
+                                                                                       Dim ppsParams As New Dictionary(Of String, Object) From {
+                            {"@VersionID", versionID}, {"@ProductTypeID", ptID}, {"@MarginPercent", 0D}, {"@LumberAdder", 0D}
+                        }
+                                                                                       Dim cmdPps As New SqlCommand(Queries.InsertProjectProductSetting, conn, transaction) With {
+                                                                                           .CommandTimeout = 0
+                                                                                       }
+                                                                                       cmdPps.Parameters.AddRange(HelperDataAccess.BuildParameters(ppsParams))
+                                                                                       cmdPps.ExecuteScalar()
+                                                                                       Debug.WriteLine("Created ProjectProductSetting for ProductTypeID: " & ptID)
+                                                                                   Next
+                                                                                   importLog.AppendLine("Imported 2 project product settings.")
+
+                                                                                   Debug.WriteLine("Committing transaction...")
+                                                                                   transaction.Commit()
+                                                                                   Debug.WriteLine("Transaction committed.")
+
+                                                                                   Debug.WriteLine("Recalculating rollups...")
+                                                                                   ' Step 6: Recalculate Rollups
+                                                                                   RollupDataAccess.RecalculateVersion(versionID)
+                                                                                   Debug.WriteLine("Rollups completed for VersionID: " & versionID)
+                                                                                   importLog.AppendLine("Rollups recalculated successfully.")
+
+                                                                                   Debug.WriteLine("Import complete for ProjectID: " & newProjectID)
+                                                                                   importLog.AppendLine("All data imported successfully.")
+                                                                                   MessageBox.Show(importLog.ToString(), "Import Summary", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+                                                                               Catch ex As Exception
+                                                                                   transaction.Rollback()
+                                                                                   Debug.WriteLine("Import failed: " & ex.Message)
+                                                                                   Throw
+                                                                               End Try
+                                                                           End Using
+                                                                       End Using
+                                                                   End Sub, "Error importing project from CSV: " & csvFilePath)
+            Return newProjectID
+        End Function
+
+
     End Class
 End Namespace

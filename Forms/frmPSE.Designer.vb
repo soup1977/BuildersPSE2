@@ -29,22 +29,14 @@ Partial Class FrmPSE
         Me.mnuPasteUnits = New System.Windows.Forms.ToolStripMenuItem()
         Me.TabControlData = New System.Windows.Forms.TabControl()
         Me.TabUnitBased = New System.Windows.Forms.TabPage()
+        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.txtTotMargin = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.txtTotalDeliveryCost = New System.Windows.Forms.TextBox()
-        Me.ChkDetailedView = New System.Windows.Forms.CheckBox()
-        Me.btnReuseActualUnit = New System.Windows.Forms.Button()
-        Me.ListboxExistingActualUnits = New System.Windows.Forms.ListBox()
-        Me.ContextMenuActualUnits = New System.Windows.Forms.ContextMenuStrip(Me.components)
-        Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.DeleteActualUnitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.BtnImportLevelData = New System.Windows.Forms.Button()
         Me.LblTotalMargin = New System.Windows.Forms.Label()
         Me.TxtTotalMargin = New System.Windows.Forms.TextBox()
         Me.LblTotalSellPrice = New System.Windows.Forms.Label()
-        Me.BtnRecalculate = New System.Windows.Forms.Button()
-        Me.BtnFinish = New System.Windows.Forms.Button()
         Me.TxtTotalSellPrice = New System.Windows.Forms.TextBox()
         Me.LblTotalOverallCost = New System.Windows.Forms.Label()
         Me.TxtTotalOverallCost = New System.Windows.Forms.TextBox()
@@ -72,6 +64,17 @@ Partial Class FrmPSE
         Me.TxtTotalQuantity = New System.Windows.Forms.TextBox()
         Me.LblTotalPlanSQFT = New System.Windows.Forms.Label()
         Me.TxtTotalPlanSQFT = New System.Windows.Forms.TextBox()
+        Me.Label4 = New System.Windows.Forms.Label()
+        Me.Label3 = New System.Windows.Forms.Label()
+        Me.ChkDetailedView = New System.Windows.Forms.CheckBox()
+        Me.btnReuseActualUnit = New System.Windows.Forms.Button()
+        Me.ListboxExistingActualUnits = New System.Windows.Forms.ListBox()
+        Me.ContextMenuActualUnits = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DeleteActualUnitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.BtnImportLevelData = New System.Windows.Forms.Button()
+        Me.BtnRecalculate = New System.Windows.Forms.Button()
+        Me.BtnFinish = New System.Windows.Forms.Button()
         Me.ListBoxAvailableUnits = New System.Windows.Forms.ListBox()
         Me.BtnConvertToActualUnit = New System.Windows.Forms.Button()
         Me.DataGridViewAssigned = New System.Windows.Forms.DataGridView()
@@ -119,18 +122,15 @@ Partial Class FrmPSE
         Me.BtnCancel = New System.Windows.Forms.Button()
         Me.LblReferencedRawUnit = New System.Windows.Forms.Label()
         Me.TxtReferencedRawUnit = New System.Windows.Forms.TextBox()
-        Me.Label3 = New System.Windows.Forms.Label()
-        Me.Label4 = New System.Windows.Forms.Label()
-        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.ContextMenuLevels.SuspendLayout()
         Me.TabControlData.SuspendLayout()
         Me.TabUnitBased.SuspendLayout()
+        Me.GroupBox1.SuspendLayout()
         Me.ContextMenuActualUnits.SuspendLayout()
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.tabRawUnit.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.PanelDetails.SuspendLayout()
-        Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
         'TreeViewLevels
@@ -192,6 +192,49 @@ Partial Class FrmPSE
         Me.TabUnitBased.TabIndex = 0
         Me.TabUnitBased.Text = "Units"
         '
+        'GroupBox1
+        '
+        Me.GroupBox1.Controls.Add(Me.Label2)
+        Me.GroupBox1.Controls.Add(Me.txtTotMargin)
+        Me.GroupBox1.Controls.Add(Me.Label1)
+        Me.GroupBox1.Controls.Add(Me.txtTotalDeliveryCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalMargin)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalMargin)
+        Me.GroupBox1.Controls.Add(Me.LblTotalSellPrice)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalSellPrice)
+        Me.GroupBox1.Controls.Add(Me.LblTotalOverallCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalOverallCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalItemCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalItemCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalManHours)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalManHours)
+        Me.GroupBox1.Controls.Add(Me.LblTotalJobSuppliesCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalJobSuppliesCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalMGMTLabor)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalMGMTLabor)
+        Me.GroupBox1.Controls.Add(Me.LblTotalDesignLabor)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalDesignLabor)
+        Me.GroupBox1.Controls.Add(Me.LblTotalManufLaborCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalManufLaborCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalPlateCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalPlateCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalLumberCost)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalLumberCost)
+        Me.GroupBox1.Controls.Add(Me.LblTotalBDFT)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalBDFT)
+        Me.GroupBox1.Controls.Add(Me.LblTotalLF)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalLF)
+        Me.GroupBox1.Controls.Add(Me.LblTotalQuantity)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalQuantity)
+        Me.GroupBox1.Controls.Add(Me.LblTotalPlanSQFT)
+        Me.GroupBox1.Controls.Add(Me.TxtTotalPlanSQFT)
+        Me.GroupBox1.Location = New System.Drawing.Point(323, 7)
+        Me.GroupBox1.Name = "GroupBox1"
+        Me.GroupBox1.Size = New System.Drawing.Size(402, 243)
+        Me.GroupBox1.TabIndex = 61
+        Me.GroupBox1.TabStop = False
+        Me.GroupBox1.Text = "Level Information"
+        '
         'Label2
         '
         Me.Label2.Location = New System.Drawing.Point(10, 220)
@@ -224,61 +267,6 @@ Partial Class FrmPSE
         Me.txtTotalDeliveryCost.Size = New System.Drawing.Size(100, 20)
         Me.txtTotalDeliveryCost.TabIndex = 55
         '
-        'ChkDetailedView
-        '
-        Me.ChkDetailedView.AutoSize = True
-        Me.ChkDetailedView.Location = New System.Drawing.Point(10, 250)
-        Me.ChkDetailedView.Name = "ChkDetailedView"
-        Me.ChkDetailedView.Size = New System.Drawing.Size(91, 17)
-        Me.ChkDetailedView.TabIndex = 54
-        Me.ChkDetailedView.Text = "Detailed View"
-        Me.ChkDetailedView.UseVisualStyleBackColor = True
-        '
-        'btnReuseActualUnit
-        '
-        Me.btnReuseActualUnit.Location = New System.Drawing.Point(156, 215)
-        Me.btnReuseActualUnit.Name = "btnReuseActualUnit"
-        Me.btnReuseActualUnit.Size = New System.Drawing.Size(135, 29)
-        Me.btnReuseActualUnit.TabIndex = 53
-        Me.btnReuseActualUnit.Text = "Add Actual Unit to Level"
-        Me.btnReuseActualUnit.UseVisualStyleBackColor = True
-        '
-        'ListboxExistingActualUnits
-        '
-        Me.ListboxExistingActualUnits.ContextMenuStrip = Me.ContextMenuActualUnits
-        Me.ListboxExistingActualUnits.FormattingEnabled = True
-        Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(156, 23)
-        Me.ListboxExistingActualUnits.Name = "ListboxExistingActualUnits"
-        Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(163, 186)
-        Me.ListboxExistingActualUnits.TabIndex = 52
-        '
-        'ContextMenuActualUnits
-        '
-        Me.ContextMenuActualUnits.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EditToolStripMenuItem, Me.DeleteActualUnitToolStripMenuItem})
-        Me.ContextMenuActualUnits.Name = "ContextMenuActualUnits"
-        Me.ContextMenuActualUnits.Size = New System.Drawing.Size(170, 48)
-        '
-        'EditToolStripMenuItem
-        '
-        Me.EditToolStripMenuItem.Name = "EditToolStripMenuItem"
-        Me.EditToolStripMenuItem.Size = New System.Drawing.Size(169, 22)
-        Me.EditToolStripMenuItem.Text = "Edit Actual Unit"
-        '
-        'DeleteActualUnitToolStripMenuItem
-        '
-        Me.DeleteActualUnitToolStripMenuItem.Name = "DeleteActualUnitToolStripMenuItem"
-        Me.DeleteActualUnitToolStripMenuItem.Size = New System.Drawing.Size(169, 22)
-        Me.DeleteActualUnitToolStripMenuItem.Text = "Delete Actual Unit"
-        '
-        'BtnImportLevelData
-        '
-        Me.BtnImportLevelData.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.BtnImportLevelData.Location = New System.Drawing.Point(505, 566)
-        Me.BtnImportLevelData.Name = "BtnImportLevelData"
-        Me.BtnImportLevelData.Size = New System.Drawing.Size(150, 30)
-        Me.BtnImportLevelData.TabIndex = 0
-        Me.BtnImportLevelData.Text = "Import Level Data (CSV)"
-        '
         'LblTotalMargin
         '
         Me.LblTotalMargin.Location = New System.Drawing.Point(10, 89)
@@ -302,24 +290,6 @@ Partial Class FrmPSE
         Me.LblTotalSellPrice.Size = New System.Drawing.Size(67, 20)
         Me.LblTotalSellPrice.TabIndex = 49
         Me.LblTotalSellPrice.Text = "Sell Price:"
-        '
-        'BtnRecalculate
-        '
-        Me.BtnRecalculate.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.BtnRecalculate.Location = New System.Drawing.Point(661, 566)
-        Me.BtnRecalculate.Name = "BtnRecalculate"
-        Me.BtnRecalculate.Size = New System.Drawing.Size(100, 30)
-        Me.BtnRecalculate.TabIndex = 3
-        Me.BtnRecalculate.Text = "Recalculate"
-        '
-        'BtnFinish
-        '
-        Me.BtnFinish.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.BtnFinish.Location = New System.Drawing.Point(767, 566)
-        Me.BtnFinish.Name = "BtnFinish"
-        Me.BtnFinish.Size = New System.Drawing.Size(100, 30)
-        Me.BtnFinish.TabIndex = 4
-        Me.BtnFinish.Text = "Close"
         '
         'TxtTotalSellPrice
         '
@@ -537,6 +507,95 @@ Partial Class FrmPSE
         Me.TxtTotalPlanSQFT.Size = New System.Drawing.Size(100, 20)
         Me.TxtTotalPlanSQFT.TabIndex = 22
         '
+        'Label4
+        '
+        Me.Label4.Location = New System.Drawing.Point(156, 10)
+        Me.Label4.Name = "Label4"
+        Me.Label4.Size = New System.Drawing.Size(67, 13)
+        Me.Label4.TabIndex = 60
+        Me.Label4.Text = "Actual Units:"
+        '
+        'Label3
+        '
+        Me.Label3.Location = New System.Drawing.Point(7, 10)
+        Me.Label3.Name = "Label3"
+        Me.Label3.Size = New System.Drawing.Size(67, 13)
+        Me.Label3.TabIndex = 59
+        Me.Label3.Text = "Raw Units:"
+        '
+        'ChkDetailedView
+        '
+        Me.ChkDetailedView.AutoSize = True
+        Me.ChkDetailedView.Location = New System.Drawing.Point(10, 250)
+        Me.ChkDetailedView.Name = "ChkDetailedView"
+        Me.ChkDetailedView.Size = New System.Drawing.Size(91, 17)
+        Me.ChkDetailedView.TabIndex = 54
+        Me.ChkDetailedView.Text = "Detailed View"
+        Me.ChkDetailedView.UseVisualStyleBackColor = True
+        '
+        'btnReuseActualUnit
+        '
+        Me.btnReuseActualUnit.Location = New System.Drawing.Point(156, 215)
+        Me.btnReuseActualUnit.Name = "btnReuseActualUnit"
+        Me.btnReuseActualUnit.Size = New System.Drawing.Size(135, 29)
+        Me.btnReuseActualUnit.TabIndex = 53
+        Me.btnReuseActualUnit.Text = "Add Actual Unit to Level"
+        Me.btnReuseActualUnit.UseVisualStyleBackColor = True
+        '
+        'ListboxExistingActualUnits
+        '
+        Me.ListboxExistingActualUnits.ContextMenuStrip = Me.ContextMenuActualUnits
+        Me.ListboxExistingActualUnits.FormattingEnabled = True
+        Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(156, 23)
+        Me.ListboxExistingActualUnits.Name = "ListboxExistingActualUnits"
+        Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(163, 186)
+        Me.ListboxExistingActualUnits.TabIndex = 52
+        '
+        'ContextMenuActualUnits
+        '
+        Me.ContextMenuActualUnits.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EditToolStripMenuItem, Me.DeleteActualUnitToolStripMenuItem})
+        Me.ContextMenuActualUnits.Name = "ContextMenuActualUnits"
+        Me.ContextMenuActualUnits.Size = New System.Drawing.Size(170, 48)
+        '
+        'EditToolStripMenuItem
+        '
+        Me.EditToolStripMenuItem.Name = "EditToolStripMenuItem"
+        Me.EditToolStripMenuItem.Size = New System.Drawing.Size(169, 22)
+        Me.EditToolStripMenuItem.Text = "Edit Actual Unit"
+        '
+        'DeleteActualUnitToolStripMenuItem
+        '
+        Me.DeleteActualUnitToolStripMenuItem.Name = "DeleteActualUnitToolStripMenuItem"
+        Me.DeleteActualUnitToolStripMenuItem.Size = New System.Drawing.Size(169, 22)
+        Me.DeleteActualUnitToolStripMenuItem.Text = "Delete Actual Unit"
+        '
+        'BtnImportLevelData
+        '
+        Me.BtnImportLevelData.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.BtnImportLevelData.Location = New System.Drawing.Point(505, 566)
+        Me.BtnImportLevelData.Name = "BtnImportLevelData"
+        Me.BtnImportLevelData.Size = New System.Drawing.Size(150, 30)
+        Me.BtnImportLevelData.TabIndex = 0
+        Me.BtnImportLevelData.Text = "Import Level Data (CSV)"
+        '
+        'BtnRecalculate
+        '
+        Me.BtnRecalculate.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.BtnRecalculate.Location = New System.Drawing.Point(661, 566)
+        Me.BtnRecalculate.Name = "BtnRecalculate"
+        Me.BtnRecalculate.Size = New System.Drawing.Size(100, 30)
+        Me.BtnRecalculate.TabIndex = 3
+        Me.BtnRecalculate.Text = "Recalculate"
+        '
+        'BtnFinish
+        '
+        Me.BtnFinish.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.BtnFinish.Location = New System.Drawing.Point(767, 566)
+        Me.BtnFinish.Name = "BtnFinish"
+        Me.BtnFinish.Size = New System.Drawing.Size(100, 30)
+        Me.BtnFinish.TabIndex = 4
+        Me.BtnFinish.Text = "Close"
+        '
         'ListBoxAvailableUnits
         '
         Me.ListBoxAvailableUnits.FormattingEnabled = True
@@ -580,9 +639,11 @@ Partial Class FrmPSE
         '
         Me.DataGridView1.AllowUserToAddRows = False
         Me.DataGridView1.AllowUserToDeleteRows = False
+        Me.DataGridView1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells
         Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Dock = System.Windows.Forms.DockStyle.Top
         Me.DataGridView1.Location = New System.Drawing.Point(3, 3)
         Me.DataGridView1.Name = "DataGridView1"
         Me.DataGridView1.ReadOnly = True
@@ -968,65 +1029,6 @@ Partial Class FrmPSE
         Me.TxtReferencedRawUnit.Size = New System.Drawing.Size(119, 20)
         Me.TxtReferencedRawUnit.TabIndex = 15
         '
-        'Label3
-        '
-        Me.Label3.Location = New System.Drawing.Point(7, 10)
-        Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(67, 13)
-        Me.Label3.TabIndex = 59
-        Me.Label3.Text = "Raw Units:"
-        '
-        'Label4
-        '
-        Me.Label4.Location = New System.Drawing.Point(156, 10)
-        Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(67, 13)
-        Me.Label4.TabIndex = 60
-        Me.Label4.Text = "Actual Units:"
-        '
-        'GroupBox1
-        '
-        Me.GroupBox1.Controls.Add(Me.Label2)
-        Me.GroupBox1.Controls.Add(Me.txtTotMargin)
-        Me.GroupBox1.Controls.Add(Me.Label1)
-        Me.GroupBox1.Controls.Add(Me.txtTotalDeliveryCost)
-        Me.GroupBox1.Controls.Add(Me.LblTotalMargin)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalMargin)
-        Me.GroupBox1.Controls.Add(Me.LblTotalSellPrice)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalSellPrice)
-        Me.GroupBox1.Controls.Add(Me.LblTotalOverallCost)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalOverallCost)
-        Me.GroupBox1.Controls.Add(Me.LblTotalItemCost)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalItemCost)
-        Me.GroupBox1.Controls.Add(Me.LblTotalManHours)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalManHours)
-        Me.GroupBox1.Controls.Add(Me.LblTotalJobSuppliesCost)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalJobSuppliesCost)
-        Me.GroupBox1.Controls.Add(Me.LblTotalMGMTLabor)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalMGMTLabor)
-        Me.GroupBox1.Controls.Add(Me.LblTotalDesignLabor)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalDesignLabor)
-        Me.GroupBox1.Controls.Add(Me.LblTotalManufLaborCost)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalManufLaborCost)
-        Me.GroupBox1.Controls.Add(Me.LblTotalPlateCost)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalPlateCost)
-        Me.GroupBox1.Controls.Add(Me.LblTotalLumberCost)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalLumberCost)
-        Me.GroupBox1.Controls.Add(Me.LblTotalBDFT)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalBDFT)
-        Me.GroupBox1.Controls.Add(Me.LblTotalLF)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalLF)
-        Me.GroupBox1.Controls.Add(Me.LblTotalQuantity)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalQuantity)
-        Me.GroupBox1.Controls.Add(Me.LblTotalPlanSQFT)
-        Me.GroupBox1.Controls.Add(Me.TxtTotalPlanSQFT)
-        Me.GroupBox1.Location = New System.Drawing.Point(323, 7)
-        Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Size = New System.Drawing.Size(402, 243)
-        Me.GroupBox1.TabIndex = 61
-        Me.GroupBox1.TabStop = False
-        Me.GroupBox1.Text = "Level Information"
-        '
         'FrmPSE
         '
         Me.BackColor = System.Drawing.Color.LightGray
@@ -1040,14 +1042,14 @@ Partial Class FrmPSE
         Me.TabControlData.ResumeLayout(False)
         Me.TabUnitBased.ResumeLayout(False)
         Me.TabUnitBased.PerformLayout()
+        Me.GroupBox1.ResumeLayout(False)
+        Me.GroupBox1.PerformLayout()
         Me.ContextMenuActualUnits.ResumeLayout(False)
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabRawUnit.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.PanelDetails.ResumeLayout(False)
         Me.PanelDetails.PerformLayout()
-        Me.GroupBox1.ResumeLayout(False)
-        Me.GroupBox1.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub

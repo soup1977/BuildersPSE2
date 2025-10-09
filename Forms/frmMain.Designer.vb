@@ -31,11 +31,12 @@ Partial Class frmMain
         Me.ToolStripStatusLabel = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
-        Me.Button2 = New System.Windows.Forms.Button()
-        Me.Button1 = New System.Windows.Forms.Button()
-        Me.frmCreateProject = New System.Windows.Forms.Button()
-        Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.btnImportCSV = New System.Windows.Forms.Button()
         Me.btnEditLumber = New System.Windows.Forms.Button()
+        Me.btnMondayList = New System.Windows.Forms.Button()
+        Me.btnImportPSE = New System.Windows.Forms.Button()
+        Me.btnCreateProject = New System.Windows.Forms.Button()
+        Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.MenuStrip.SuspendLayout()
         Me.StatusStrip.SuspendLayout()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -90,10 +91,11 @@ Partial Class frmMain
         '
         'SplitContainer1.Panel1
         '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnImportCSV)
         Me.SplitContainer1.Panel1.Controls.Add(Me.btnEditLumber)
-        Me.SplitContainer1.Panel1.Controls.Add(Me.Button2)
-        Me.SplitContainer1.Panel1.Controls.Add(Me.Button1)
-        Me.SplitContainer1.Panel1.Controls.Add(Me.frmCreateProject)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnMondayList)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnImportPSE)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnCreateProject)
         '
         'SplitContainer1.Panel2
         '
@@ -102,32 +104,50 @@ Partial Class frmMain
         Me.SplitContainer1.SplitterDistance = 157
         Me.SplitContainer1.TabIndex = 8
         '
-        'Button2
+        'btnImportCSV
         '
-        Me.Button2.Location = New System.Drawing.Point(19, 176)
-        Me.Button2.Name = "Button2"
-        Me.Button2.Size = New System.Drawing.Size(127, 31)
-        Me.Button2.TabIndex = 2
-        Me.Button2.Text = "Monday List"
-        Me.Button2.UseVisualStyleBackColor = True
+        Me.btnImportCSV.Location = New System.Drawing.Point(19, 139)
+        Me.btnImportCSV.Name = "btnImportCSV"
+        Me.btnImportCSV.Size = New System.Drawing.Size(127, 31)
+        Me.btnImportCSV.TabIndex = 4
+        Me.btnImportCSV.Text = "Import MGMT Project"
+        Me.btnImportCSV.UseVisualStyleBackColor = True
         '
-        'Button1
+        'btnEditLumber
         '
-        Me.Button1.Location = New System.Drawing.Point(19, 139)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(127, 31)
-        Me.Button1.TabIndex = 1
-        Me.Button1.Text = "Import PSE"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.btnEditLumber.Location = New System.Drawing.Point(19, 261)
+        Me.btnEditLumber.Name = "btnEditLumber"
+        Me.btnEditLumber.Size = New System.Drawing.Size(127, 31)
+        Me.btnEditLumber.TabIndex = 3
+        Me.btnEditLumber.Text = "Edit Lumber"
+        Me.btnEditLumber.UseVisualStyleBackColor = True
         '
-        'frmCreateProject
+        'btnMondayList
         '
-        Me.frmCreateProject.Location = New System.Drawing.Point(19, 102)
-        Me.frmCreateProject.Name = "frmCreateProject"
-        Me.frmCreateProject.Size = New System.Drawing.Size(127, 31)
-        Me.frmCreateProject.TabIndex = 0
-        Me.frmCreateProject.Text = "Create Project"
-        Me.frmCreateProject.UseVisualStyleBackColor = True
+        Me.btnMondayList.Location = New System.Drawing.Point(19, 224)
+        Me.btnMondayList.Name = "btnMondayList"
+        Me.btnMondayList.Size = New System.Drawing.Size(127, 31)
+        Me.btnMondayList.TabIndex = 2
+        Me.btnMondayList.Text = "Monday List"
+        Me.btnMondayList.UseVisualStyleBackColor = True
+        '
+        'btnImportPSE
+        '
+        Me.btnImportPSE.Location = New System.Drawing.Point(19, 176)
+        Me.btnImportPSE.Name = "btnImportPSE"
+        Me.btnImportPSE.Size = New System.Drawing.Size(127, 31)
+        Me.btnImportPSE.TabIndex = 1
+        Me.btnImportPSE.Text = "Import PSE"
+        Me.btnImportPSE.UseVisualStyleBackColor = True
+        '
+        'btnCreateProject
+        '
+        Me.btnCreateProject.Location = New System.Drawing.Point(19, 102)
+        Me.btnCreateProject.Name = "btnCreateProject"
+        Me.btnCreateProject.Size = New System.Drawing.Size(127, 31)
+        Me.btnCreateProject.TabIndex = 0
+        Me.btnCreateProject.Text = "Create Project"
+        Me.btnCreateProject.UseVisualStyleBackColor = True
         '
         'TabControl1
         '
@@ -137,15 +157,6 @@ Partial Class frmMain
         Me.TabControl1.SelectedIndex = 0
         Me.TabControl1.Size = New System.Drawing.Size(1223, 665)
         Me.TabControl1.TabIndex = 0
-        '
-        'btnEditLumber
-        '
-        Me.btnEditLumber.Location = New System.Drawing.Point(19, 213)
-        Me.btnEditLumber.Name = "btnEditLumber"
-        Me.btnEditLumber.Size = New System.Drawing.Size(127, 31)
-        Me.btnEditLumber.TabIndex = 3
-        Me.btnEditLumber.Text = "Edit Lumber"
-        Me.btnEditLumber.UseVisualStyleBackColor = True
         '
         'frmMain
         '
@@ -177,9 +188,10 @@ Partial Class frmMain
     Friend WithEvents FileMenu As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents MenuStrip As System.Windows.Forms.MenuStrip
     Friend WithEvents SplitContainer1 As SplitContainer
-    Friend WithEvents frmCreateProject As Button
+    Friend WithEvents btnCreateProject As Button
     Friend WithEvents TabControl1 As TabControl
-    Friend WithEvents Button1 As Button
-    Friend WithEvents Button2 As Button
+    Friend WithEvents btnImportPSE As Button
+    Friend WithEvents btnMondayList As Button
     Friend WithEvents btnEditLumber As Button
+    Friend WithEvents btnImportCSV As Button
 End Class
