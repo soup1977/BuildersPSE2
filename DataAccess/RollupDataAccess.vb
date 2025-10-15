@@ -15,45 +15,40 @@ Namespace DataAccess
                                                                        Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader("SELECT DISTINCT VersionID FROM Levels WHERE BuildingID = @BuildingID", levelInfoParams)
                                                                            If reader.Read() Then versionID = reader.GetInt32(0)
                                                                        End Using
-
                                                                        Dim floorPricePerBldgParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
                                                                        Dim floorPricePerBldgObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateFloorPricePerBldg, floorPricePerBldgParams)
                                                                        Dim floorPricePerBldg As Decimal = If(floorPricePerBldgObj Is DBNull.Value OrElse floorPricePerBldgObj Is Nothing, 0D, CDec(floorPricePerBldgObj))
-
                                                                        Dim roofPricePerBldgParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
                                                                        Dim roofPricePerBldgObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateRoofPricePerBldg, roofPricePerBldgParams)
                                                                        Dim roofPricePerBldg As Decimal = If(roofPricePerBldgObj Is DBNull.Value OrElse roofPricePerBldgObj Is Nothing, 0D, CDec(roofPricePerBldgObj))
-
-                                                                       Dim wallPricePerBldg As Decimal = 0D ' Stub for future
-
+                                                                       Dim wallPricePerBldgParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
+                                                                       Dim wallPricePerBldgObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateWallPricePerBldg, wallPricePerBldgParams)
+                                                                       Dim wallPricePerBldg As Decimal = If(wallPricePerBldgObj Is DBNull.Value OrElse wallPricePerBldgObj Is Nothing, 0D, CDec(wallPricePerBldgObj))
                                                                        Dim floorBaseCostParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
                                                                        Dim floorBaseCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateFloorBaseCost, floorBaseCostParams)
                                                                        Dim floorBaseCost As Decimal = If(floorBaseCostObj Is DBNull.Value OrElse floorBaseCostObj Is Nothing, 0D, CDec(floorBaseCostObj))
-
                                                                        Dim roofBaseCostParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
                                                                        Dim roofBaseCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateRoofBaseCost, roofBaseCostParams)
                                                                        Dim roofBaseCost As Decimal = If(roofBaseCostObj Is DBNull.Value OrElse roofBaseCostObj Is Nothing, 0D, CDec(roofBaseCostObj))
-
-                                                                       Dim wallBaseCost As Decimal = 0D ' Stub
-
-                                                                       Dim extendedFloorCost As Decimal = floorPricePerBldg * bldgQty
-                                                                       Dim extendedRoofCost As Decimal = roofPricePerBldg * bldgQty
-                                                                       Dim extendedWallCost As Decimal = wallPricePerBldg * bldgQty
-
+                                                                       Dim wallBaseCostParams As SqlParameter() = {New SqlParameter("@BuildingID", buildingID)}
+                                                                       Dim wallBaseCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.CalculateWallBaseCost, wallBaseCostParams)
+                                                                       Dim wallBaseCost As Decimal = If(wallBaseCostObj Is DBNull.Value OrElse wallBaseCostObj Is Nothing, 0D, CDec(wallBaseCostObj))
+                                                                       Dim extendedFloorCost As Decimal = floorBaseCost * bldgQty
+                                                                       Dim extendedRoofCost As Decimal = roofBaseCost * bldgQty
+                                                                       Dim extendedWallCost As Decimal = wallBaseCost * bldgQty
                                                                        Dim overallCost As Decimal = floorBaseCost + roofBaseCost + wallBaseCost
                                                                        Dim overallPrice As Decimal = floorPricePerBldg + roofPricePerBldg + wallPricePerBldg
-
                                                                        Dim updateParams As New Dictionary(Of String, Object) From {
-                                            {"@BuildingID", buildingID},
-                                            {"@FloorCostPerBldg", floorPricePerBldg},
-                                            {"@RoofCostPerBldg", roofPricePerBldg},
-                                            {"@WallCostPerBldg", wallPricePerBldg},
-                                            {"@ExtendedFloorCost", extendedFloorCost},
-                                            {"@ExtendedRoofCost", extendedRoofCost},
-                                            {"@ExtendedWallCost", extendedWallCost},
-                                            {"@OverallPrice", overallPrice},
-                                            {"@OverallCost", overallCost}
-                                        }
+                                                                            {"@BuildingID", buildingID},
+                                                                            {"@FloorCostPerBldg", floorBaseCost},
+                                                                            {"@RoofCostPerBldg", roofBaseCost},
+                                                                            {"@WallCostPerBldg", wallBaseCost},
+                                                                            {"@ExtendedFloorCost", extendedFloorCost},
+                                                                            {"@ExtendedRoofCost", extendedRoofCost},
+                                                                            {"@ExtendedWallCost", extendedWallCost},
+                                                                            {"@OverallPrice", overallPrice},
+                                                                            {"@OverallCost", overallCost}
+                                                                        }
                                                                        SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateBuildingRollupsSql, HelperDataAccess.BuildParameters(updateParams))
                                                                    End Sub, "Error updating building rollups for ID " & buildingID)
         End Sub

@@ -254,23 +254,23 @@ Namespace DataAccess
                                                                                        End If
                                                                                        ' Deactivate existing records for this RawUnitID
                                                                                        Dim deactivateParams As New Dictionary(Of String, Object) From {
-                            {"@RawUnitID", rawUnit.RawUnitID},
-                            {"@VersionID", versionID}
-                        }
+                                                                                                {"@RawUnitID", rawUnit.RawUnitID},
+                                                                                                {"@VersionID", versionID}
+                                                                                            }
                                                                                        SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 0 WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(deactivateParams), conn, transaction)
 
                                                                                        ' Insert new record with IsActive=1
                                                                                        Dim historyParams As New Dictionary(Of String, Object) From {
-                            {"@RawUnitID", rawUnit.RawUnitID},
-                            {"@VersionID", versionID},
-                            {"@CostEffectiveDateID", costEffectiveDateID},
-                            {"@LumberCost", updatedLumberCost},
-                            {"@AvgSPFNo2", If(newAvgPrices.ContainsKey("AvgSPFNo2") AndAlso newAvgPrices("AvgSPFNo2").HasValue, CType(newAvgPrices("AvgSPFNo2").Value, Object), DBNull.Value)},
-                            {"@Avg241800", If(newAvgPrices.ContainsKey("Avg241800") AndAlso newAvgPrices("Avg241800").HasValue, CType(newAvgPrices("Avg241800").Value, Object), DBNull.Value)},
-                            {"@Avg242400", If(newAvgPrices.ContainsKey("Avg242400") AndAlso newAvgPrices("Avg242400").HasValue, CType(newAvgPrices("Avg242400").Value, Object), DBNull.Value)},
-                            {"@Avg261800", If(newAvgPrices.ContainsKey("Avg261800") AndAlso newAvgPrices("Avg261800").HasValue, CType(newAvgPrices("Avg261800").Value, Object), DBNull.Value)},
-                            {"@Avg262400", If(newAvgPrices.ContainsKey("Avg262400") AndAlso newAvgPrices("Avg262400").HasValue, CType(newAvgPrices("Avg262400").Value, Object), DBNull.Value)},
-                            {"@IsActive", 1}
+                                                                                            {"@RawUnitID", rawUnit.RawUnitID},
+                                                                                            {"@VersionID", versionID},
+                                                                                            {"@CostEffectiveDateID", costEffectiveDateID},
+                                                                                            {"@LumberCost", updatedLumberCost},
+                                                                                            {"@AvgSPFNo2", If(newAvgPrices.ContainsKey("AvgSPFNo2") AndAlso newAvgPrices("AvgSPFNo2").HasValue, CType(newAvgPrices("AvgSPFNo2").Value, Object), DBNull.Value)},
+                                                                                            {"@Avg241800", If(newAvgPrices.ContainsKey("Avg241800") AndAlso newAvgPrices("Avg241800").HasValue, CType(newAvgPrices("Avg241800").Value, Object), DBNull.Value)},
+                                                                                            {"@Avg242400", If(newAvgPrices.ContainsKey("Avg242400") AndAlso newAvgPrices("Avg242400").HasValue, CType(newAvgPrices("Avg242400").Value, Object), DBNull.Value)},
+                                                                                            {"@Avg261800", If(newAvgPrices.ContainsKey("Avg261800") AndAlso newAvgPrices("Avg261800").HasValue, CType(newAvgPrices("Avg261800").Value, Object), DBNull.Value)},
+                                                                                            {"@Avg262400", If(newAvgPrices.ContainsKey("Avg262400") AndAlso newAvgPrices("Avg262400").HasValue, CType(newAvgPrices("Avg262400").Value, Object), DBNull.Value)},
+                                                                                            {"@IsActive", 1}
                         }
                                                                                        Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
                             .CommandTimeout = 0

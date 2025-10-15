@@ -79,7 +79,7 @@ Partial Class FrmPSE
         Me.BtnConvertToActualUnit = New System.Windows.Forms.Button()
         Me.DataGridViewAssigned = New System.Windows.Forms.DataGridView()
         Me.tabRawUnit = New System.Windows.Forms.TabPage()
-        Me.DataGridView1 = New System.Windows.Forms.DataGridView()
+        Me.dgvRawUnitsData = New System.Windows.Forms.DataGridView()
         Me.PanelDetails = New System.Windows.Forms.Panel()
         Me.chkAttachToLevel = New System.Windows.Forms.CheckBox()
         Me.btnDeleteUnit = New System.Windows.Forms.Button()
@@ -122,6 +122,9 @@ Partial Class FrmPSE
         Me.BtnCancel = New System.Windows.Forms.Button()
         Me.LblReferencedRawUnit = New System.Windows.Forms.Label()
         Me.TxtReferencedRawUnit = New System.Windows.Forms.TextBox()
+        Me.txtColorCode = New System.Windows.Forms.TextBox()
+        Me.Label5 = New System.Windows.Forms.Label()
+        Me.btnPickColor = New System.Windows.Forms.Button()
         Me.ContextMenuLevels.SuspendLayout()
         Me.TabControlData.SuspendLayout()
         Me.TabUnitBased.SuspendLayout()
@@ -129,7 +132,7 @@ Partial Class FrmPSE
         Me.ContextMenuActualUnits.SuspendLayout()
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.tabRawUnit.SuspendLayout()
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvRawUnitsData, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.PanelDetails.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -228,7 +231,7 @@ Partial Class FrmPSE
         Me.GroupBox1.Controls.Add(Me.TxtTotalQuantity)
         Me.GroupBox1.Controls.Add(Me.LblTotalPlanSQFT)
         Me.GroupBox1.Controls.Add(Me.TxtTotalPlanSQFT)
-        Me.GroupBox1.Location = New System.Drawing.Point(323, 7)
+        Me.GroupBox1.Location = New System.Drawing.Point(395, 10)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(402, 243)
         Me.GroupBox1.TabIndex = 61
@@ -509,7 +512,7 @@ Partial Class FrmPSE
         '
         'Label4
         '
-        Me.Label4.Location = New System.Drawing.Point(156, 10)
+        Me.Label4.Location = New System.Drawing.Point(226, 10)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(67, 13)
         Me.Label4.TabIndex = 60
@@ -535,9 +538,9 @@ Partial Class FrmPSE
         '
         'btnReuseActualUnit
         '
-        Me.btnReuseActualUnit.Location = New System.Drawing.Point(156, 215)
+        Me.btnReuseActualUnit.Location = New System.Drawing.Point(226, 216)
         Me.btnReuseActualUnit.Name = "btnReuseActualUnit"
-        Me.btnReuseActualUnit.Size = New System.Drawing.Size(135, 29)
+        Me.btnReuseActualUnit.Size = New System.Drawing.Size(163, 29)
         Me.btnReuseActualUnit.TabIndex = 53
         Me.btnReuseActualUnit.Text = "Add Actual Unit to Level"
         Me.btnReuseActualUnit.UseVisualStyleBackColor = True
@@ -545,8 +548,9 @@ Partial Class FrmPSE
         'ListboxExistingActualUnits
         '
         Me.ListboxExistingActualUnits.ContextMenuStrip = Me.ContextMenuActualUnits
+        Me.ListboxExistingActualUnits.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
         Me.ListboxExistingActualUnits.FormattingEnabled = True
-        Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(156, 23)
+        Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(226, 23)
         Me.ListboxExistingActualUnits.Name = "ListboxExistingActualUnits"
         Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(163, 186)
         Me.ListboxExistingActualUnits.TabIndex = 52
@@ -601,16 +605,16 @@ Partial Class FrmPSE
         Me.ListBoxAvailableUnits.FormattingEnabled = True
         Me.ListBoxAvailableUnits.Location = New System.Drawing.Point(10, 23)
         Me.ListBoxAvailableUnits.Name = "ListBoxAvailableUnits"
-        Me.ListBoxAvailableUnits.Size = New System.Drawing.Size(140, 186)
+        Me.ListBoxAvailableUnits.Size = New System.Drawing.Size(151, 186)
         Me.ListBoxAvailableUnits.TabIndex = 1
         '
         'BtnConvertToActualUnit
         '
-        Me.BtnConvertToActualUnit.Location = New System.Drawing.Point(10, 214)
+        Me.BtnConvertToActualUnit.Location = New System.Drawing.Point(167, 79)
         Me.BtnConvertToActualUnit.Name = "BtnConvertToActualUnit"
-        Me.BtnConvertToActualUnit.Size = New System.Drawing.Size(140, 30)
+        Me.BtnConvertToActualUnit.Size = New System.Drawing.Size(53, 67)
         Me.BtnConvertToActualUnit.TabIndex = 2
-        Me.BtnConvertToActualUnit.Text = "Convert to Actual Unit"
+        Me.BtnConvertToActualUnit.Text = "Convert to Actual Unit -->"
         '
         'DataGridViewAssigned
         '
@@ -626,7 +630,7 @@ Partial Class FrmPSE
         '
         'tabRawUnit
         '
-        Me.tabRawUnit.Controls.Add(Me.DataGridView1)
+        Me.tabRawUnit.Controls.Add(Me.dgvRawUnitsData)
         Me.tabRawUnit.Location = New System.Drawing.Point(4, 22)
         Me.tabRawUnit.Name = "tabRawUnit"
         Me.tabRawUnit.Padding = New System.Windows.Forms.Padding(3)
@@ -635,24 +639,27 @@ Partial Class FrmPSE
         Me.tabRawUnit.Text = "Raw Units Data"
         Me.tabRawUnit.UseVisualStyleBackColor = True
         '
-        'DataGridView1
+        'dgvRawUnitsData
         '
-        Me.DataGridView1.AllowUserToAddRows = False
-        Me.DataGridView1.AllowUserToDeleteRows = False
-        Me.DataGridView1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+        Me.dgvRawUnitsData.AllowUserToAddRows = False
+        Me.dgvRawUnitsData.AllowUserToDeleteRows = False
+        Me.dgvRawUnitsData.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.DataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells
-        Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Location = New System.Drawing.Point(3, 3)
-        Me.DataGridView1.Name = "DataGridView1"
-        Me.DataGridView1.ReadOnly = True
-        Me.DataGridView1.Size = New System.Drawing.Size(873, 518)
-        Me.DataGridView1.TabIndex = 0
+        Me.dgvRawUnitsData.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells
+        Me.dgvRawUnitsData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvRawUnitsData.Location = New System.Drawing.Point(3, 3)
+        Me.dgvRawUnitsData.Name = "dgvRawUnitsData"
+        Me.dgvRawUnitsData.ReadOnly = True
+        Me.dgvRawUnitsData.Size = New System.Drawing.Size(873, 518)
+        Me.dgvRawUnitsData.TabIndex = 0
         '
         'PanelDetails
         '
         Me.PanelDetails.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.PanelDetails.Controls.Add(Me.btnPickColor)
+        Me.PanelDetails.Controls.Add(Me.Label5)
+        Me.PanelDetails.Controls.Add(Me.txtColorCode)
         Me.PanelDetails.Controls.Add(Me.chkAttachToLevel)
         Me.PanelDetails.Controls.Add(Me.btnDeleteUnit)
         Me.PanelDetails.Controls.Add(Me.btnSave)
@@ -731,7 +738,7 @@ Partial Class FrmPSE
         '
         'LblActualUnitQuantity
         '
-        Me.LblActualUnitQuantity.Location = New System.Drawing.Point(5, 171)
+        Me.LblActualUnitQuantity.Location = New System.Drawing.Point(5, 145)
         Me.LblActualUnitQuantity.Name = "LblActualUnitQuantity"
         Me.LblActualUnitQuantity.Size = New System.Drawing.Size(109, 23)
         Me.LblActualUnitQuantity.TabIndex = 46
@@ -739,7 +746,7 @@ Partial Class FrmPSE
         '
         'TxtActualUnitQuantity
         '
-        Me.TxtActualUnitQuantity.Location = New System.Drawing.Point(120, 171)
+        Me.TxtActualUnitQuantity.Location = New System.Drawing.Point(120, 142)
         Me.TxtActualUnitQuantity.Name = "TxtActualUnitQuantity"
         Me.TxtActualUnitQuantity.Size = New System.Drawing.Size(119, 20)
         Me.TxtActualUnitQuantity.TabIndex = 7
@@ -938,7 +945,7 @@ Partial Class FrmPSE
         '
         'BtnToggleDetails
         '
-        Me.BtnToggleDetails.Location = New System.Drawing.Point(10, 14)
+        Me.BtnToggleDetails.Location = New System.Drawing.Point(3, 3)
         Me.BtnToggleDetails.Name = "BtnToggleDetails"
         Me.BtnToggleDetails.Size = New System.Drawing.Size(100, 30)
         Me.BtnToggleDetails.TabIndex = 0
@@ -946,7 +953,7 @@ Partial Class FrmPSE
         '
         'LblUnitName
         '
-        Me.LblUnitName.Location = New System.Drawing.Point(5, 54)
+        Me.LblUnitName.Location = New System.Drawing.Point(7, 40)
         Me.LblUnitName.Name = "LblUnitName"
         Me.LblUnitName.Size = New System.Drawing.Size(109, 23)
         Me.LblUnitName.TabIndex = 1
@@ -954,14 +961,14 @@ Partial Class FrmPSE
         '
         'TxtUnitName
         '
-        Me.TxtUnitName.Location = New System.Drawing.Point(120, 54)
+        Me.TxtUnitName.Location = New System.Drawing.Point(120, 37)
         Me.TxtUnitName.Name = "TxtUnitName"
         Me.TxtUnitName.Size = New System.Drawing.Size(119, 20)
         Me.TxtUnitName.TabIndex = 3
         '
         'LblPlanSQFT
         '
-        Me.LblPlanSQFT.Location = New System.Drawing.Point(5, 84)
+        Me.LblPlanSQFT.Location = New System.Drawing.Point(5, 66)
         Me.LblPlanSQFT.Name = "LblPlanSQFT"
         Me.LblPlanSQFT.Size = New System.Drawing.Size(109, 23)
         Me.LblPlanSQFT.TabIndex = 3
@@ -969,14 +976,14 @@ Partial Class FrmPSE
         '
         'TxtPlanSQFT
         '
-        Me.TxtPlanSQFT.Location = New System.Drawing.Point(120, 84)
+        Me.TxtPlanSQFT.Location = New System.Drawing.Point(120, 63)
         Me.TxtPlanSQFT.Name = "TxtPlanSQFT"
         Me.TxtPlanSQFT.Size = New System.Drawing.Size(119, 20)
         Me.TxtPlanSQFT.TabIndex = 4
         '
         'LblOptionalAdder
         '
-        Me.LblOptionalAdder.Location = New System.Drawing.Point(5, 114)
+        Me.LblOptionalAdder.Location = New System.Drawing.Point(5, 92)
         Me.LblOptionalAdder.Name = "LblOptionalAdder"
         Me.LblOptionalAdder.Size = New System.Drawing.Size(109, 23)
         Me.LblOptionalAdder.TabIndex = 5
@@ -984,14 +991,14 @@ Partial Class FrmPSE
         '
         'TxtOptionalAdder
         '
-        Me.TxtOptionalAdder.Location = New System.Drawing.Point(120, 114)
+        Me.TxtOptionalAdder.Location = New System.Drawing.Point(120, 89)
         Me.TxtOptionalAdder.Name = "TxtOptionalAdder"
         Me.TxtOptionalAdder.Size = New System.Drawing.Size(119, 20)
         Me.TxtOptionalAdder.TabIndex = 5
         '
         'LblUnitType
         '
-        Me.LblUnitType.Location = New System.Drawing.Point(5, 144)
+        Me.LblUnitType.Location = New System.Drawing.Point(5, 118)
         Me.LblUnitType.Name = "LblUnitType"
         Me.LblUnitType.Size = New System.Drawing.Size(109, 23)
         Me.LblUnitType.TabIndex = 7
@@ -1000,7 +1007,7 @@ Partial Class FrmPSE
         'CmbUnitType
         '
         Me.CmbUnitType.Items.AddRange(New Object() {"Res", "NonRes"})
-        Me.CmbUnitType.Location = New System.Drawing.Point(120, 144)
+        Me.CmbUnitType.Location = New System.Drawing.Point(120, 115)
         Me.CmbUnitType.Name = "CmbUnitType"
         Me.CmbUnitType.Size = New System.Drawing.Size(119, 21)
         Me.CmbUnitType.TabIndex = 6
@@ -1029,6 +1036,31 @@ Partial Class FrmPSE
         Me.TxtReferencedRawUnit.Size = New System.Drawing.Size(119, 20)
         Me.TxtReferencedRawUnit.TabIndex = 15
         '
+        'txtColorCode
+        '
+        Me.txtColorCode.Location = New System.Drawing.Point(122, 168)
+        Me.txtColorCode.Name = "txtColorCode"
+        Me.txtColorCode.Size = New System.Drawing.Size(76, 20)
+        Me.txtColorCode.TabIndex = 50
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(0, 168)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(117, 13)
+        Me.Label5.TabIndex = 51
+        Me.Label5.Text = "Actual Unit Color Code:"
+        '
+        'btnPickColor
+        '
+        Me.btnPickColor.Location = New System.Drawing.Point(203, 168)
+        Me.btnPickColor.Name = "btnPickColor"
+        Me.btnPickColor.Size = New System.Drawing.Size(35, 21)
+        Me.btnPickColor.TabIndex = 52
+        Me.btnPickColor.Text = "..."
+        Me.btnPickColor.UseVisualStyleBackColor = True
+        '
         'FrmPSE
         '
         Me.BackColor = System.Drawing.Color.LightGray
@@ -1047,7 +1079,7 @@ Partial Class FrmPSE
         Me.ContextMenuActualUnits.ResumeLayout(False)
         CType(Me.DataGridViewAssigned, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabRawUnit.ResumeLayout(False)
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvRawUnitsData, System.ComponentModel.ISupportInitialize).EndInit()
         Me.PanelDetails.ResumeLayout(False)
         Me.PanelDetails.PerformLayout()
         Me.ResumeLayout(False)
@@ -1148,9 +1180,12 @@ Partial Class FrmPSE
     Private WithEvents Label2 As Label
     Private WithEvents txtTotMargin As TextBox
     Friend WithEvents tabRawUnit As TabPage
-    Friend WithEvents DataGridView1 As DataGridView
+    Friend WithEvents dgvRawUnitsData As DataGridView
     Friend WithEvents chkAttachToLevel As CheckBox
     Private WithEvents Label4 As Label
     Private WithEvents Label3 As Label
     Friend WithEvents GroupBox1 As GroupBox
+    Friend WithEvents btnPickColor As Button
+    Friend WithEvents Label5 As Label
+    Friend WithEvents txtColorCode As TextBox
 End Class

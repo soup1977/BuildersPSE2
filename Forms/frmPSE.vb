@@ -386,6 +386,43 @@ Public Class FrmPSE
             MessageBox.Show("Error loading actual units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub ListboxExistingActualUnits_DrawItem(sender As Object, e As DrawItemEventArgs) Handles ListboxExistingActualUnits.DrawItem
+        If e.Index < 0 Then Exit Sub
+        Dim itemText As String = ListboxExistingActualUnits.Items(e.Index).ToString()
+        Dim unit As ActualUnitModel = existingActualUnits(e.Index)
+        Dim backColor As Color = Color.White
+        If Not String.IsNullOrEmpty(unit.ColorCode) Then
+            Try
+                backColor = ColorTranslator.FromHtml("#" & unit.ColorCode)
+            Catch
+                ' Fallback to white on invalid hex
+            End Try
+        End If
+
+        ' Draw the background (ColorCode-based) to cover entire bounds
+        e.Graphics.FillRectangle(New SolidBrush(backColor), e.Bounds)
+
+        ' Draw selection highlight if selected
+        If (e.State And DrawItemState.Selected) = DrawItemState.Selected Then
+            ' Use semi-transparent light blue highlight
+            Dim highlightColor As Color = Color.FromArgb(128, SystemColors.Highlight) ' 50% opacity
+            e.Graphics.FillRectangle(New SolidBrush(highlightColor), e.Bounds)
+            ' Draw a 1-pixel border inside bounds to avoid overlap
+            Using pen As New Pen(Color.Black, 1)
+                Dim borderRect As New Rectangle(e.Bounds.X + 1, e.Bounds.Y + 1, e.Bounds.Width - 2, e.Bounds.Height - 2)
+                e.Graphics.DrawRectangle(pen, borderRect)
+            End Using
+        End If
+
+        ' Set text color: white for black background, black for all others
+        Dim luminance As Double = (0.299 * backColor.R + 0.587 * backColor.G + 0.114 * backColor.B) / 255
+        Dim textColor As Color = If(luminance < 0.5, Color.White, Color.Black)
+
+        ' Draw the text
+        e.Graphics.DrawString(itemText, e.Font, New SolidBrush(textColor), e.Bounds.X, e.Bounds.Y)
+
+    End Sub
     Private Sub LoadAssignedUnits()
         Try
             displayUnits = ProjectDataAccess.ComputeLevelUnits(selectedLevelID)
@@ -476,14 +513,9 @@ Public Class FrmPSE
             Else
                 UpdateStatus("Status: No levels available for version " & selectedVersionID & ".")
             End If
-            ' Populate DataGridView1 with RawUnits for the selected VersionID
-            Dim rawUnits As List(Of RawUnitModel) = ProjectDataAccess.GetRawUnitsByVersionID(selectedVersionID)
-            If rawUnits.Any() Then
-                DataGridView1.DataSource = rawUnits
-            Else
-                DataGridView1.DataSource = Nothing
-                UpdateStatus("Status: No raw units found for version " & selectedVersionID & ".")
-            End If
+
+            populaterawunits()
+
             UpdateLevelTotals()
             UpdateSelectedRawPreview()
             TreeViewLevels.ExpandAll()
@@ -493,7 +525,16 @@ Public Class FrmPSE
             MessageBox.Show("Error initializing form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-
+    Private Sub populaterawunits()
+        ' Populate DataGridView1 with RawUnits for the selected VersionID
+        Dim rawUnits As List(Of RawUnitModel) = ProjectDataAccess.GetRawUnitsByVersionID(selectedVersionID)
+        If rawUnits.Any() Then
+            dgvRawUnitsData.DataSource = rawUnits
+        Else
+            dgvRawUnitsData.DataSource = Nothing
+            UpdateStatus("Status: No raw units found for version " & selectedVersionID & ".")
+        End If
+    End Sub
     Private Function CreateAndSaveActualUnit() As ActualUnitModel
         Try
             Dim sqft As Decimal
@@ -518,6 +559,7 @@ Public Class FrmPSE
             .ProductTypeID = rawUnit.ProductTypeID,
             .UnitName = TxtUnitName.Text,
             .PlanSQFT = sqft,
+            .ColorCode = txtColorCode.Text,
             .UnitType = If(CmbUnitType.SelectedItem?.ToString(), "Res"),
             .OptionalAdder = adder,
             .MarginPercent = ProjectDataAccess.GetEffectiveMargin(Me.selectedVersionID, rawUnit.ProductTypeID, rawUnit.RawUnitID)
@@ -601,6 +643,7 @@ Public Class FrmPSE
                 If ImportRawUnitsWithMapping(ofd.FileName, productTypeID) Then
                     UpdateStatus("Status: Raw units imported successfully for version " & selectedVersionID & ".")
                     If selectedLevelID <> -1 Then
+                        populaterawunits()
                         FilterRawUnits(productTypeID)
                         RecalculateAllActualUnits(selectedVersionID)
                         FilterActualUnits(productTypeID)
@@ -681,7 +724,8 @@ Public Class FrmPSE
         .Size = New Size(600, 400)
     }
         Dim dgv As New DataGridView With {
-        .Dock = DockStyle.Fill
+        .Dock = DockStyle.Fill,
+        .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
     }
         dgv.Columns.Add("NewName", "New RawUnit Name")
         Dim cmbCol As New DataGridViewComboBoxColumn With {
@@ -695,8 +739,17 @@ Public Class FrmPSE
         dgv.Columns.Add(cmbCol)
         For Each nr In newRawData
             Dim rowIdx As Integer = dgv.Rows.Add()
-            Dim csvUnitName As String = nr(NAME_KEY.ToUpper()).Trim()
-            dgv.Rows(rowIdx).Cells("NewName").Value = csvUnitName ' Display trimmed CSV value
+            Dim csvUnitName As String
+            If nr.ContainsKey("PRODUCT") AndAlso nr("PRODUCT").ToUpper().Contains("WALL") Then
+                Dim planVal As String = If(nr.ContainsKey("PLAN"), nr("PLAN").Trim(), "")
+                Dim elevVal As String = If(nr.ContainsKey("ELEVATION"), nr("ELEVATION").Trim(), "")
+                csvUnitName = planVal & If(String.IsNullOrEmpty(planVal) OrElse String.IsNullOrEmpty(elevVal), "", " - ") & elevVal
+                If String.IsNullOrEmpty(csvUnitName) Then csvUnitName = "Unnamed Wall Unit"
+            Else
+                csvUnitName = If(nr.ContainsKey("ELEVATION"), nr("ELEVATION").Trim(), "")
+            End If
+            dgv.Rows(rowIdx).Cells("NewName").Value = csvUnitName ' Display trimmed CSV value (PLAN - ELEVATION for walls)
+            dgv.Rows(rowIdx).Tag = nr("ELEVATION").Trim() ' Store original ELEVATION for lookup
             Dim matchingUnit As RawUnitModel = allRawUnits.FirstOrDefault(Function(r) r.RawUnitName.Trim().ToUpper() = csvUnitName.ToUpper())
             If matchingUnit Is Nothing Then
                 Dim duplicates As List(Of RawUnitModel) = allRawUnits.Where(Function(r) r.RawUnitName.Trim().ToUpper() = csvUnitName.ToUpper()).ToList()
@@ -729,9 +782,10 @@ Public Class FrmPSE
                                                          If r.IsNewRow Then Continue For
                                                          Dim newName As String = CStr(r.Cells("NewName").Value)
                                                          Dim mapTo As String = CStr(r.Cells("MapTo").Value)
-                                                         Dim rowData As Dictionary(Of String, String) = newRawData.FirstOrDefault(Function(d) d(NAME_KEY.ToUpper()).Trim() = newName)
+                                                         Dim lookupElev As String = CStr(r.Tag) ' Use stored ELEVATION for lookup
+                                                         Dim rowData As Dictionary(Of String, String) = newRawData.FirstOrDefault(Function(d) d(NAME_KEY.ToUpper()).Trim() = lookupElev)
                                                          If rowData Is Nothing Then
-                                                             MessageBox.Show("No matching row data found for " & newName, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                                             MessageBox.Show("No matching row data found for " & newName & " (ELEVATION: " & lookupElev & ")", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                                                              Continue For
                                                          End If
                                                          Dim productType As String = rowData("PRODUCT".ToUpper())
@@ -741,15 +795,17 @@ Public Class FrmPSE
                                                                  mappedProductTypeID = 1
                                                              Case "ROOF"
                                                                  mappedProductTypeID = 2
+                                                             Case "WALL"
+                                                                 mappedProductTypeID = 3
                                                              Case Else
                                                                  MessageBox.Show("Invalid Product type '" & productType & "' for unit " & newName & ". Defaulting to ProductTypeID 1 (Floor).", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                                                                  mappedProductTypeID = 1
                                                          End Select
                                                          Dim model As New RawUnitModel With {
-                            .VersionID = selectedVersionID,
-                            .ProductTypeID = mappedProductTypeID,
-                            .RawUnitName = newName
-                        }
+                                                         .VersionID = selectedVersionID,
+                                                         .ProductTypeID = mappedProductTypeID,
+                                                         .RawUnitName = newName
+                                                     }
                                                          Dim decVal As Decimal
                                                          Dim upperKey As String
                                                          ' Required fields
@@ -810,22 +866,30 @@ Public Class FrmPSE
                                                          Try
                                                              If mapTo = "Create New" Then
                                                                  ' Insert new RawUnit
-                                                                 dataAccess.InsertRawUnit(model)
+                                                                 Dim newRawUnitID As Integer = dataAccess.InsertRawUnit(model)
+                                                                 model.RawUnitID = newRawUnitID
+                                                                 ' Fetch the CostEffectiveDateID based on AvgSPFNo2
+                                                                 Dim costEffectiveID As Object = DBNull.Value
+                                                                 If model.AvgSPFNo2.HasValue Then
+                                                                     Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", model.AvgSPFNo2.Value)}
+                                                                     costEffectiveID = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectCostEffectiveDateIDByCost, fetchParams)
+                                                                 End If
+
                                                                  ' Insert initial RawUnitLumberHistory record
                                                                  Dim historyParams As New Dictionary(Of String, Object) From {
-                                    {"@RawUnitID", model.RawUnitID},
-                                    {"@VersionID", selectedVersionID},
-                                    {"@CostEffectiveDateID", DBNull.Value},
-                                    {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-                                    {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-                                    {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-                                    {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-                                    {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-                                    {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)}
-                                }
+                                                                 {"@RawUnitID", model.RawUnitID},
+                                                                 {"@VersionID", selectedVersionID},
+                                                                 {"@CostEffectiveDateID", costEffectiveID},
+                                                                 {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
+                                                                 {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
+                                                                 {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
+                                                                 {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
+                                                                 {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
+                                                                 {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)}
+                                                             }
                                                                  Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
-                                                                     .CommandTimeout = 0
-                                                                 }
+                                                                 .CommandTimeout = 0
+                                                             }
                                                                  cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
                                                                  Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
                                                                  Debug.WriteLine("Created initial RawUnitLumberHistory for RawUnitID: " & model.RawUnitID & ", HistoryID: " & historyID)
@@ -833,43 +897,58 @@ Public Class FrmPSE
                                                                  Dim existing As RawUnitModel = allRawUnits.FirstOrDefault(Function(ru) ru.RawUnitName.Trim().ToUpper() = mapTo.Trim().ToUpper())
                                                                  If existing Is Nothing Then
                                                                      MessageBox.Show("Selected existing unit '" & mapTo & "' not found. Creating new unit.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                                                                     dataAccess.InsertRawUnit(model)
-                                                                     ' Insert initial RawUnitLumberHistory record for new unit
+                                                                     Dim newRawUnitID As Integer = dataAccess.InsertRawUnit(model)
+                                                                     model.RawUnitID = newRawUnitID
+                                                                     ' Fetch the CostEffectiveDateID based on AvgSPFNo2
+                                                                     Dim costEffectiveID As Object = DBNull.Value
+                                                                     If model.AvgSPFNo2.HasValue Then
+                                                                         Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", model.AvgSPFNo2.Value)}
+                                                                         costEffectiveID = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectCostEffectiveDateIDByCost, fetchParams)
+                                                                     End If
+
+                                                                     ' Insert initial RawUnitLumberHistory record
                                                                      Dim historyParams As New Dictionary(Of String, Object) From {
-                                        {"@RawUnitID", model.RawUnitID},
-                                        {"@VersionID", selectedVersionID},
-                                        {"@CostEffectiveDateID", DBNull.Value},
-                                        {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-                                        {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-                                        {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-                                        {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-                                        {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-                                        {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)}
-                                    }
+                                                                     {"@RawUnitID", model.RawUnitID},
+                                                                     {"@VersionID", selectedVersionID},
+                                                                     {"@CostEffectiveDateID", costEffectiveID},
+                                                                     {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
+                                                                     {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
+                                                                     {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
+                                                                     {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
+                                                                     {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
+                                                                     {"@Avg262400", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)}
+                                                                 }
                                                                      Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
-                                                                         .CommandTimeout = 0
-                                                                     }
+                                                                     .CommandTimeout = 0
+                                                                 }
                                                                      cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
                                                                      Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
                                                                      Debug.WriteLine("Created initial RawUnitLumberHistory for RawUnitID: " & model.RawUnitID & ", HistoryID: " & historyID)
                                                                  Else
                                                                      model.RawUnitID = existing.RawUnitID
                                                                      dataAccess.UpdateRawUnit(model)
-                                                                     ' Insert RawUnitLumberHistory record for updated unit
+                                                                     ' Fetch the CostEffectiveDateID based on AvgSPFNo2
+                                                                     Dim costEffectiveID As Object = DBNull.Value
+                                                                     If model.AvgSPFNo2.HasValue Then
+                                                                         Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", model.AvgSPFNo2.Value)}
+                                                                         costEffectiveID = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectCostEffectiveDateIDByCost, fetchParams)
+                                                                     End If
+
+                                                                     ' Insert initial RawUnitLumberHistory record
                                                                      Dim historyParams As New Dictionary(Of String, Object) From {
-                                        {"@RawUnitID", model.RawUnitID},
-                                        {"@VersionID", selectedVersionID},
-                                        {"@CostEffectiveDateID", DBNull.Value},
-                                        {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-                                        {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-                                        {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-                                        {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-                                        {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-                                        {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)}
-                                    }
+                                                                     {"@RawUnitID", model.RawUnitID},
+                                                                     {"@VersionID", selectedVersionID},
+                                                                     {"@CostEffectiveDateID", costEffectiveID},
+                                                                     {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
+                                                                     {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
+                                                                     {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
+                                                                     {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
+                                                                     {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
+                                                                     {"@Avg262400", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)}
+                                                                 }
                                                                      Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
-                                                                         .CommandTimeout = 0
-                                                                     }
+                                                                     .CommandTimeout = 0
+                                                                 }
                                                                      cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
                                                                      Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
                                                                      Debug.WriteLine("Created initial RawUnitLumberHistory for RawUnitID: " & model.RawUnitID & ", HistoryID: " & historyID)
@@ -905,6 +984,7 @@ Public Class FrmPSE
         mappingForm.ShowDialog()
         Return wasConfirmed
     End Function
+
     ' Add in frmPSE.vb: New subroutine to recalculate components for all affected ActualUnits post-import, ensuring data consistency across versions.
     Private Sub RecalculateAllActualUnits(versionID As Integer)
         Dim actualUnits As List(Of ActualUnitModel) = ProjectDataAccess.GetActualUnitsByVersion(versionID).ToList()
@@ -987,6 +1067,7 @@ Public Class FrmPSE
             TxtPlanSQFT.Text = actual.PlanSQFT.ToString()
             TxtOptionalAdder.Text = actual.OptionalAdder.ToString()
             CmbUnitType.SelectedItem = actual.UnitType
+            txtColorCode.Text = actual.ColorCode
             TxtReferencedRawUnit.Text = actual.ReferencedRawUnitName
             TxtActualUnitQuantity.Text = quantity.ToString()
 
@@ -994,6 +1075,7 @@ Public Class FrmPSE
             TxtUnitName.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
             TxtPlanSQFT.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
             TxtOptionalAdder.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
+            txtColorCode.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
             CmbUnitType.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
             TxtReferencedRawUnit.Enabled = False
             TxtActualUnitQuantity.Enabled = currentdetailsMode = DetailsMode.ReuseUnit OrElse currentdetailsMode = DetailsMode.EditMappingQuantity
@@ -1089,6 +1171,7 @@ Public Class FrmPSE
             updatedUnit.UnitName = TxtUnitName.Text
             updatedUnit.PlanSQFT = sqft
             updatedUnit.OptionalAdder = adder
+            updatedUnit.ColorCode = txtColorCode.Text
             updatedUnit.UnitType = If(CmbUnitType.SelectedItem?.ToString(), "Res")
 
             dataAccess.SaveActualUnit(updatedUnit)
@@ -1506,7 +1589,7 @@ Public Class FrmPSE
         End Try
     End Sub
 
-    Private Sub EditToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditToolStripMenuItem.Click
+    Private Sub EditToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditToolStripMenuItem.Click, ListboxExistingActualUnits.DoubleClick
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
                 UpdateStatus("Status: Please select an actual unit to edit for version " & selectedVersionID & ".")
@@ -1577,5 +1660,26 @@ Public Class FrmPSE
             Debug.WriteLine($"Error updating status: {ex.Message}")
         End Try
     End Sub
+
+    Private Sub btnPickColor_Click(sender As Object, e As EventArgs) Handles btnPickColor.Click
+        Try
+            Using colorDialog As New ColorDialog
+                ' Configure ColorDialog
+                colorDialog.AnyColor = True
+                colorDialog.AllowFullOpen = True
+                colorDialog.SolidColorOnly = False
+
+                If colorDialog.ShowDialog() = DialogResult.OK Then
+                    Dim selectedColor As Color = colorDialog.Color
+                    Dim hexColor As String = String.Format("{0:X2}{1:X2}{2:X2}", selectedColor.R, selectedColor.G, selectedColor.B)
+                    txtColorCode.Text = hexColor
+                End If
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Error selecting color: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+
+    End Sub
+
 
 End Class

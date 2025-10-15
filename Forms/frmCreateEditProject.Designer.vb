@@ -35,12 +35,6 @@ Partial Class frmCreateEditProject
         Me.mnuPasteBuilding = New System.Windows.Forms.ToolStripMenuItem()
         Me.tabControlRight = New System.Windows.Forms.TabControl()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
-        Me.btnPreviewIncExc = New System.Windows.Forms.Button()
-        Me.btnGenerateProjectReport = New System.Windows.Forms.Button()
-        Me.btnDeleteProject = New System.Windows.Forms.Button()
-        Me.btnIEOpen = New System.Windows.Forms.Button()
-        Me.btnClose = New System.Windows.Forms.Button()
-        Me.btnOpenPSE = New System.Windows.Forms.Button()
         Me.pnlProjectInfo = New System.Windows.Forms.Panel()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnEditEngineer = New System.Windows.Forms.Button()
@@ -94,8 +88,14 @@ Partial Class frmCreateEditProject
         Me.lblVersion = New System.Windows.Forms.Label()
         Me.lblVersionDate = New System.Windows.Forms.Label()
         Me.dtpCreatedDate = New System.Windows.Forms.DateTimePicker()
-        Me.btnSaveProjectInfo = New System.Windows.Forms.Button()
         Me.tabOverrides = New System.Windows.Forms.TabPage()
+        Me.Label5 = New System.Windows.Forms.Label()
+        Me.Label4 = New System.Windows.Forms.Label()
+        Me.btnDeleteLumberHistory = New System.Windows.Forms.Button()
+        Me.btnSetActive = New System.Windows.Forms.Button()
+        Me.lstLumberHistory = New System.Windows.Forms.ListBox()
+        Me.btnUpdateLumber = New System.Windows.Forms.Button()
+        Me.cboCostEffective = New System.Windows.Forms.ComboBox()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.txtRawRoofSPFPrice = New System.Windows.Forms.TextBox()
@@ -127,13 +127,16 @@ Partial Class frmCreateEditProject
         Me.cmbLevelType = New System.Windows.Forms.ComboBox()
         Me.lblLevelNumber = New System.Windows.Forms.Label()
         Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
+        Me.btnPreviewIncExc = New System.Windows.Forms.Button()
+        Me.btnGenerateProjectReport = New System.Windows.Forms.Button()
+        Me.btnDeleteProject = New System.Windows.Forms.Button()
+        Me.btnIEOpen = New System.Windows.Forms.Button()
+        Me.btnClose = New System.Windows.Forms.Button()
+        Me.btnOpenPSE = New System.Windows.Forms.Button()
+        Me.btnSaveProjectInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
-        Me.cboCostEffective = New System.Windows.Forms.ComboBox()
-        Me.btnUpdateLumber = New System.Windows.Forms.Button()
-        Me.lstLumberHistory = New System.Windows.Forms.ListBox()
-        Me.btnSetActive = New System.Windows.Forms.Button()
-        Me.btnDeleteLumberHistory = New System.Windows.Forms.Button()
+        Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -225,86 +228,28 @@ Partial Class frmCreateEditProject
         '
         'tabControlRight
         '
+        Me.tabControlRight.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tabControlRight.Controls.Add(Me.tabProjectInfo)
         Me.tabControlRight.Controls.Add(Me.tabOverrides)
         Me.tabControlRight.Controls.Add(Me.tabRollup)
         Me.tabControlRight.Controls.Add(Me.tabBuildingInfo)
         Me.tabControlRight.Controls.Add(Me.tabLevelInfo)
-        Me.tabControlRight.Dock = System.Windows.Forms.DockStyle.Fill
         Me.tabControlRight.Location = New System.Drawing.Point(0, 0)
         Me.tabControlRight.Name = "tabControlRight"
         Me.tabControlRight.SelectedIndex = 0
-        Me.tabControlRight.Size = New System.Drawing.Size(719, 577)
+        Me.tabControlRight.Size = New System.Drawing.Size(689, 577)
         Me.tabControlRight.TabIndex = 1
         '
         'tabProjectInfo
         '
-        Me.tabProjectInfo.Controls.Add(Me.btnPreviewIncExc)
-        Me.tabProjectInfo.Controls.Add(Me.btnGenerateProjectReport)
-        Me.tabProjectInfo.Controls.Add(Me.btnDeleteProject)
-        Me.tabProjectInfo.Controls.Add(Me.btnIEOpen)
-        Me.tabProjectInfo.Controls.Add(Me.btnClose)
-        Me.tabProjectInfo.Controls.Add(Me.btnOpenPSE)
         Me.tabProjectInfo.Controls.Add(Me.pnlProjectInfo)
-        Me.tabProjectInfo.Controls.Add(Me.btnSaveProjectInfo)
         Me.tabProjectInfo.Location = New System.Drawing.Point(4, 22)
         Me.tabProjectInfo.Name = "tabProjectInfo"
-        Me.tabProjectInfo.Size = New System.Drawing.Size(711, 551)
+        Me.tabProjectInfo.Size = New System.Drawing.Size(681, 551)
         Me.tabProjectInfo.TabIndex = 0
         Me.tabProjectInfo.Text = "Project Info"
-        '
-        'btnPreviewIncExc
-        '
-        Me.btnPreviewIncExc.Location = New System.Drawing.Point(606, 492)
-        Me.btnPreviewIncExc.Name = "btnPreviewIncExc"
-        Me.btnPreviewIncExc.Size = New System.Drawing.Size(94, 24)
-        Me.btnPreviewIncExc.TabIndex = 26
-        Me.btnPreviewIncExc.Text = "I/E Report"
-        Me.btnPreviewIncExc.UseVisualStyleBackColor = True
-        '
-        'btnGenerateProjectReport
-        '
-        Me.btnGenerateProjectReport.Location = New System.Drawing.Point(606, 519)
-        Me.btnGenerateProjectReport.Name = "btnGenerateProjectReport"
-        Me.btnGenerateProjectReport.Size = New System.Drawing.Size(94, 24)
-        Me.btnGenerateProjectReport.TabIndex = 25
-        Me.btnGenerateProjectReport.Text = "Project Report"
-        Me.btnGenerateProjectReport.UseVisualStyleBackColor = True
-        '
-        'btnDeleteProject
-        '
-        Me.btnDeleteProject.Location = New System.Drawing.Point(39, 519)
-        Me.btnDeleteProject.Name = "btnDeleteProject"
-        Me.btnDeleteProject.Size = New System.Drawing.Size(89, 25)
-        Me.btnDeleteProject.TabIndex = 24
-        Me.btnDeleteProject.Text = "Delete Project"
-        Me.btnDeleteProject.UseVisualStyleBackColor = True
-        '
-        'btnIEOpen
-        '
-        Me.btnIEOpen.Location = New System.Drawing.Point(255, 518)
-        Me.btnIEOpen.Name = "btnIEOpen"
-        Me.btnIEOpen.Size = New System.Drawing.Size(93, 27)
-        Me.btnIEOpen.TabIndex = 23
-        Me.btnIEOpen.Text = "Open IE"
-        Me.btnIEOpen.UseVisualStyleBackColor = True
-        '
-        'btnClose
-        '
-        Me.btnClose.Location = New System.Drawing.Point(487, 518)
-        Me.btnClose.Name = "btnClose"
-        Me.btnClose.Size = New System.Drawing.Size(101, 27)
-        Me.btnClose.TabIndex = 22
-        Me.btnClose.Text = "Close"
-        Me.btnClose.UseVisualStyleBackColor = True
-        '
-        'btnOpenPSE
-        '
-        Me.btnOpenPSE.Location = New System.Drawing.Point(146, 518)
-        Me.btnOpenPSE.Name = "btnOpenPSE"
-        Me.btnOpenPSE.Size = New System.Drawing.Size(100, 27)
-        Me.btnOpenPSE.TabIndex = 21
-        Me.btnOpenPSE.Text = "Open PSE"
         '
         'pnlProjectInfo
         '
@@ -361,9 +306,10 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Controls.Add(Me.lblVersion)
         Me.pnlProjectInfo.Controls.Add(Me.lblVersionDate)
         Me.pnlProjectInfo.Controls.Add(Me.dtpCreatedDate)
-        Me.pnlProjectInfo.Location = New System.Drawing.Point(3, 3)
+        Me.pnlProjectInfo.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.pnlProjectInfo.Location = New System.Drawing.Point(0, 0)
         Me.pnlProjectInfo.Name = "pnlProjectInfo"
-        Me.pnlProjectInfo.Size = New System.Drawing.Size(593, 509)
+        Me.pnlProjectInfo.Size = New System.Drawing.Size(681, 551)
         Me.pnlProjectInfo.TabIndex = 0
         '
         'Label1
@@ -413,7 +359,7 @@ Partial Class frmCreateEditProject
         '
         'btnEditCustomer
         '
-        Me.btnEditCustomer.Location = New System.Drawing.Point(503, 250)
+        Me.btnEditCustomer.Location = New System.Drawing.Point(503, 251)
         Me.btnEditCustomer.Name = "btnEditCustomer"
         Me.btnEditCustomer.Size = New System.Drawing.Size(34, 20)
         Me.btnEditCustomer.TabIndex = 50
@@ -818,16 +764,10 @@ Partial Class frmCreateEditProject
         Me.dtpCreatedDate.TabIndex = 41
         Me.dtpCreatedDate.TabStop = False
         '
-        'btnSaveProjectInfo
-        '
-        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(354, 518)
-        Me.btnSaveProjectInfo.Name = "btnSaveProjectInfo"
-        Me.btnSaveProjectInfo.Size = New System.Drawing.Size(127, 27)
-        Me.btnSaveProjectInfo.TabIndex = 20
-        Me.btnSaveProjectInfo.Text = "Save Project Info"
-        '
         'tabOverrides
         '
+        Me.tabOverrides.Controls.Add(Me.Label5)
+        Me.tabOverrides.Controls.Add(Me.Label4)
         Me.tabOverrides.Controls.Add(Me.btnDeleteLumberHistory)
         Me.tabOverrides.Controls.Add(Me.btnSetActive)
         Me.tabOverrides.Controls.Add(Me.lstLumberHistory)
@@ -841,14 +781,75 @@ Partial Class frmCreateEditProject
         Me.tabOverrides.Controls.Add(Me.btnSaveOverrides)
         Me.tabOverrides.Location = New System.Drawing.Point(4, 22)
         Me.tabOverrides.Name = "tabOverrides"
-        Me.tabOverrides.Size = New System.Drawing.Size(711, 551)
+        Me.tabOverrides.Size = New System.Drawing.Size(681, 551)
         Me.tabOverrides.TabIndex = 0
         Me.tabOverrides.Text = "Overrides"
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(6, 293)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(115, 13)
+        Me.Label5.TabIndex = 55
+        Me.Label5.Text = "Lumber Update History"
+        '
+        'Label4
+        '
+        Me.Label4.AutoSize = True
+        Me.Label4.Location = New System.Drawing.Point(6, 235)
+        Me.Label4.Name = "Label4"
+        Me.Label4.Size = New System.Drawing.Size(92, 13)
+        Me.Label4.TabIndex = 54
+        Me.Label4.Text = "Lumber Cost Date"
+        '
+        'btnDeleteLumberHistory
+        '
+        Me.btnDeleteLumberHistory.Location = New System.Drawing.Point(304, 344)
+        Me.btnDeleteLumberHistory.Name = "btnDeleteLumberHistory"
+        Me.btnDeleteLumberHistory.Size = New System.Drawing.Size(103, 31)
+        Me.btnDeleteLumberHistory.TabIndex = 53
+        Me.btnDeleteLumberHistory.Text = "Delete History"
+        Me.btnDeleteLumberHistory.UseVisualStyleBackColor = True
+        '
+        'btnSetActive
+        '
+        Me.btnSetActive.Location = New System.Drawing.Point(304, 309)
+        Me.btnSetActive.Name = "btnSetActive"
+        Me.btnSetActive.Size = New System.Drawing.Size(103, 29)
+        Me.btnSetActive.TabIndex = 52
+        Me.btnSetActive.Text = "Set Active"
+        Me.btnSetActive.UseVisualStyleBackColor = True
+        '
+        'lstLumberHistory
+        '
+        Me.lstLumberHistory.FormattingEnabled = True
+        Me.lstLumberHistory.Location = New System.Drawing.Point(9, 309)
+        Me.lstLumberHistory.Name = "lstLumberHistory"
+        Me.lstLumberHistory.Size = New System.Drawing.Size(278, 134)
+        Me.lstLumberHistory.TabIndex = 51
+        '
+        'btnUpdateLumber
+        '
+        Me.btnUpdateLumber.Location = New System.Drawing.Point(304, 243)
+        Me.btnUpdateLumber.Name = "btnUpdateLumber"
+        Me.btnUpdateLumber.Size = New System.Drawing.Size(103, 29)
+        Me.btnUpdateLumber.TabIndex = 50
+        Me.btnUpdateLumber.Text = "Update Lumber"
+        Me.btnUpdateLumber.UseVisualStyleBackColor = True
+        '
+        'cboCostEffective
+        '
+        Me.cboCostEffective.FormattingEnabled = True
+        Me.cboCostEffective.Location = New System.Drawing.Point(9, 251)
+        Me.cboCostEffective.Name = "cboCostEffective"
+        Me.cboCostEffective.Size = New System.Drawing.Size(278, 21)
+        Me.cboCostEffective.TabIndex = 49
         '
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(30, 206)
+        Me.Label3.Location = New System.Drawing.Point(6, 183)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(149, 13)
         Me.Label3.TabIndex = 48
@@ -857,7 +858,7 @@ Partial Class frmCreateEditProject
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(30, 177)
+        Me.Label2.Location = New System.Drawing.Point(6, 154)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(149, 13)
         Me.Label2.TabIndex = 47
@@ -865,7 +866,7 @@ Partial Class frmCreateEditProject
         '
         'txtRawRoofSPFPrice
         '
-        Me.txtRawRoofSPFPrice.Location = New System.Drawing.Point(185, 203)
+        Me.txtRawRoofSPFPrice.Location = New System.Drawing.Point(161, 180)
         Me.txtRawRoofSPFPrice.Name = "txtRawRoofSPFPrice"
         Me.txtRawRoofSPFPrice.ReadOnly = True
         Me.txtRawRoofSPFPrice.Size = New System.Drawing.Size(68, 20)
@@ -873,7 +874,7 @@ Partial Class frmCreateEditProject
         '
         'txtRawFloorSPFPrice
         '
-        Me.txtRawFloorSPFPrice.Location = New System.Drawing.Point(185, 174)
+        Me.txtRawFloorSPFPrice.Location = New System.Drawing.Point(161, 151)
         Me.txtRawFloorSPFPrice.Name = "txtRawFloorSPFPrice"
         Me.txtRawFloorSPFPrice.ReadOnly = True
         Me.txtRawFloorSPFPrice.Size = New System.Drawing.Size(68, 20)
@@ -884,14 +885,14 @@ Partial Class frmCreateEditProject
         Me.dgvOverrides.Dock = System.Windows.Forms.DockStyle.Top
         Me.dgvOverrides.Location = New System.Drawing.Point(0, 0)
         Me.dgvOverrides.Name = "dgvOverrides"
-        Me.dgvOverrides.Size = New System.Drawing.Size(711, 145)
+        Me.dgvOverrides.Size = New System.Drawing.Size(681, 145)
         Me.dgvOverrides.TabIndex = 43
         '
         'btnSaveOverrides
         '
-        Me.btnSaveOverrides.Location = New System.Drawing.Point(0, 483)
+        Me.btnSaveOverrides.Location = New System.Drawing.Point(452, 482)
         Me.btnSaveOverrides.Name = "btnSaveOverrides"
-        Me.btnSaveOverrides.Size = New System.Drawing.Size(562, 30)
+        Me.btnSaveOverrides.Size = New System.Drawing.Size(226, 30)
         Me.btnSaveOverrides.TabIndex = 44
         Me.btnSaveOverrides.Text = "Save Overrides"
         '
@@ -901,7 +902,7 @@ Partial Class frmCreateEditProject
         Me.tabRollup.Controls.Add(Me.btnRecalcRollup)
         Me.tabRollup.Location = New System.Drawing.Point(4, 22)
         Me.tabRollup.Name = "tabRollup"
-        Me.tabRollup.Size = New System.Drawing.Size(711, 551)
+        Me.tabRollup.Size = New System.Drawing.Size(681, 551)
         Me.tabRollup.TabIndex = 0
         Me.tabRollup.Text = "Rollup Data"
         '
@@ -910,7 +911,7 @@ Partial Class frmCreateEditProject
         Me.dgvRollup.Dock = System.Windows.Forms.DockStyle.Top
         Me.dgvRollup.Location = New System.Drawing.Point(0, 0)
         Me.dgvRollup.Name = "dgvRollup"
-        Me.dgvRollup.Size = New System.Drawing.Size(711, 490)
+        Me.dgvRollup.Size = New System.Drawing.Size(681, 490)
         Me.dgvRollup.TabIndex = 45
         '
         'btnRecalcRollup
@@ -927,7 +928,7 @@ Partial Class frmCreateEditProject
         Me.tabBuildingInfo.Controls.Add(Me.btnSaveBuildingInfo)
         Me.tabBuildingInfo.Location = New System.Drawing.Point(4, 22)
         Me.tabBuildingInfo.Name = "tabBuildingInfo"
-        Me.tabBuildingInfo.Size = New System.Drawing.Size(711, 551)
+        Me.tabBuildingInfo.Size = New System.Drawing.Size(681, 551)
         Me.tabBuildingInfo.TabIndex = 0
         Me.tabBuildingInfo.Text = "Building Info"
         '
@@ -947,7 +948,7 @@ Partial Class frmCreateEditProject
         Me.pnlBuildingInfo.Dock = System.Windows.Forms.DockStyle.Top
         Me.pnlBuildingInfo.Location = New System.Drawing.Point(0, 0)
         Me.pnlBuildingInfo.Name = "pnlBuildingInfo"
-        Me.pnlBuildingInfo.Size = New System.Drawing.Size(711, 489)
+        Me.pnlBuildingInfo.Size = New System.Drawing.Size(681, 489)
         Me.pnlBuildingInfo.TabIndex = 0
         '
         'lblPlanUnits
@@ -1049,7 +1050,7 @@ Partial Class frmCreateEditProject
         Me.tabLevelInfo.Controls.Add(Me.btnSaveLevelInfo)
         Me.tabLevelInfo.Location = New System.Drawing.Point(4, 22)
         Me.tabLevelInfo.Name = "tabLevelInfo"
-        Me.tabLevelInfo.Size = New System.Drawing.Size(711, 551)
+        Me.tabLevelInfo.Size = New System.Drawing.Size(681, 551)
         Me.tabLevelInfo.TabIndex = 0
         Me.tabLevelInfo.Text = "Level Info"
         '
@@ -1065,7 +1066,7 @@ Partial Class frmCreateEditProject
         Me.pnlLevelInfo.Dock = System.Windows.Forms.DockStyle.Top
         Me.pnlLevelInfo.Location = New System.Drawing.Point(0, 0)
         Me.pnlLevelInfo.Name = "pnlLevelInfo"
-        Me.pnlLevelInfo.Size = New System.Drawing.Size(711, 489)
+        Me.pnlLevelInfo.Size = New System.Drawing.Size(681, 489)
         Me.pnlLevelInfo.TabIndex = 0
         '
         'nudLevelNumber
@@ -1126,6 +1127,74 @@ Partial Class frmCreateEditProject
         Me.btnSaveLevelInfo.TabIndex = 6
         Me.btnSaveLevelInfo.Text = "Save Level Info"
         '
+        'btnPreviewIncExc
+        '
+        Me.btnPreviewIncExc.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnPreviewIncExc.Location = New System.Drawing.Point(695, 257)
+        Me.btnPreviewIncExc.Name = "btnPreviewIncExc"
+        Me.btnPreviewIncExc.Size = New System.Drawing.Size(100, 27)
+        Me.btnPreviewIncExc.TabIndex = 26
+        Me.btnPreviewIncExc.Text = "I/E Report"
+        Me.btnPreviewIncExc.UseVisualStyleBackColor = True
+        '
+        'btnGenerateProjectReport
+        '
+        Me.btnGenerateProjectReport.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnGenerateProjectReport.Location = New System.Drawing.Point(695, 290)
+        Me.btnGenerateProjectReport.Name = "btnGenerateProjectReport"
+        Me.btnGenerateProjectReport.Size = New System.Drawing.Size(100, 27)
+        Me.btnGenerateProjectReport.TabIndex = 25
+        Me.btnGenerateProjectReport.Text = "Project Report"
+        Me.btnGenerateProjectReport.UseVisualStyleBackColor = True
+        '
+        'btnDeleteProject
+        '
+        Me.btnDeleteProject.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnDeleteProject.Location = New System.Drawing.Point(695, 481)
+        Me.btnDeleteProject.Name = "btnDeleteProject"
+        Me.btnDeleteProject.Size = New System.Drawing.Size(100, 27)
+        Me.btnDeleteProject.TabIndex = 24
+        Me.btnDeleteProject.Text = "Delete Project"
+        Me.btnDeleteProject.UseVisualStyleBackColor = True
+        '
+        'btnIEOpen
+        '
+        Me.btnIEOpen.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnIEOpen.Location = New System.Drawing.Point(695, 219)
+        Me.btnIEOpen.Name = "btnIEOpen"
+        Me.btnIEOpen.Size = New System.Drawing.Size(100, 27)
+        Me.btnIEOpen.TabIndex = 23
+        Me.btnIEOpen.Text = "Open IE"
+        Me.btnIEOpen.UseVisualStyleBackColor = True
+        '
+        'btnClose
+        '
+        Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnClose.Location = New System.Drawing.Point(695, 514)
+        Me.btnClose.Name = "btnClose"
+        Me.btnClose.Size = New System.Drawing.Size(100, 27)
+        Me.btnClose.TabIndex = 22
+        Me.btnClose.Text = "Close"
+        Me.btnClose.UseVisualStyleBackColor = True
+        '
+        'btnOpenPSE
+        '
+        Me.btnOpenPSE.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnOpenPSE.Location = New System.Drawing.Point(695, 186)
+        Me.btnOpenPSE.Name = "btnOpenPSE"
+        Me.btnOpenPSE.Size = New System.Drawing.Size(100, 27)
+        Me.btnOpenPSE.TabIndex = 21
+        Me.btnOpenPSE.Text = "Open PSE"
+        '
+        'btnSaveProjectInfo
+        '
+        Me.btnSaveProjectInfo.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(695, 448)
+        Me.btnSaveProjectInfo.Name = "btnSaveProjectInfo"
+        Me.btnSaveProjectInfo.Size = New System.Drawing.Size(100, 27)
+        Me.btnSaveProjectInfo.TabIndex = 20
+        Me.btnSaveProjectInfo.Text = "Save Project Info"
+        '
         'SplitContainer1
         '
         Me.SplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill
@@ -1139,59 +1208,34 @@ Partial Class frmCreateEditProject
         '
         'SplitContainer1.Panel2
         '
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnOpenProjectBuilder)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnPreviewIncExc)
         Me.SplitContainer1.Panel2.Controls.Add(Me.tabControlRight)
-        Me.SplitContainer1.Size = New System.Drawing.Size(923, 577)
-        Me.SplitContainer1.SplitterDistance = 200
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnGenerateProjectReport)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnClose)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnDeleteProject)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnSaveProjectInfo)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnIEOpen)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnOpenPSE)
+        Me.SplitContainer1.Size = New System.Drawing.Size(1035, 577)
+        Me.SplitContainer1.SplitterDistance = 224
         Me.SplitContainer1.TabIndex = 2
         '
-        'cboCostEffective
+        'btnOpenProjectBuilder
         '
-        Me.cboCostEffective.FormattingEnabled = True
-        Me.cboCostEffective.Location = New System.Drawing.Point(60, 283)
-        Me.cboCostEffective.Name = "cboCostEffective"
-        Me.cboCostEffective.Size = New System.Drawing.Size(169, 21)
-        Me.cboCostEffective.TabIndex = 49
-        '
-        'btnUpdateLumber
-        '
-        Me.btnUpdateLumber.Location = New System.Drawing.Point(244, 283)
-        Me.btnUpdateLumber.Name = "btnUpdateLumber"
-        Me.btnUpdateLumber.Size = New System.Drawing.Size(103, 20)
-        Me.btnUpdateLumber.TabIndex = 50
-        Me.btnUpdateLumber.Text = "Update Lumber"
-        Me.btnUpdateLumber.UseVisualStyleBackColor = True
-        '
-        'lstLumberHistory
-        '
-        Me.lstLumberHistory.FormattingEnabled = True
-        Me.lstLumberHistory.Location = New System.Drawing.Point(62, 329)
-        Me.lstLumberHistory.Name = "lstLumberHistory"
-        Me.lstLumberHistory.Size = New System.Drawing.Size(166, 121)
-        Me.lstLumberHistory.TabIndex = 51
-        '
-        'btnSetActive
-        '
-        Me.btnSetActive.Location = New System.Drawing.Point(254, 333)
-        Me.btnSetActive.Name = "btnSetActive"
-        Me.btnSetActive.Size = New System.Drawing.Size(92, 29)
-        Me.btnSetActive.TabIndex = 52
-        Me.btnSetActive.Text = "Set Active"
-        Me.btnSetActive.UseVisualStyleBackColor = True
-        '
-        'btnDeleteLumberHistory
-        '
-        Me.btnDeleteLumberHistory.Location = New System.Drawing.Point(256, 372)
-        Me.btnDeleteLumberHistory.Name = "btnDeleteLumberHistory"
-        Me.btnDeleteLumberHistory.Size = New System.Drawing.Size(89, 31)
-        Me.btnDeleteLumberHistory.TabIndex = 53
-        Me.btnDeleteLumberHistory.Text = "Delete History"
-        Me.btnDeleteLumberHistory.UseVisualStyleBackColor = True
+        Me.btnOpenProjectBuilder.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnOpenProjectBuilder.Location = New System.Drawing.Point(695, 143)
+        Me.btnOpenProjectBuilder.Name = "btnOpenProjectBuilder"
+        Me.btnOpenProjectBuilder.Size = New System.Drawing.Size(100, 37)
+        Me.btnOpenProjectBuilder.TabIndex = 27
+        Me.btnOpenProjectBuilder.Text = "Open Project Builder"
+        Me.btnOpenProjectBuilder.UseVisualStyleBackColor = True
         '
         'frmCreateEditProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(923, 577)
+        Me.ClientSize = New System.Drawing.Size(1035, 577)
         Me.Controls.Add(Me.SplitContainer1)
         Me.Name = "frmCreateEditProject"
         Me.Text = "Create/Edit Project"
@@ -1336,4 +1380,7 @@ Partial Class frmCreateEditProject
     Friend WithEvents btnDeleteLumberHistory As Button
     Friend WithEvents btnSetActive As Button
     Friend WithEvents lstLumberHistory As ListBox
+    Friend WithEvents Label5 As Label
+    Friend WithEvents Label4 As Label
+    Friend WithEvents btnOpenProjectBuilder As Button
 End Class

@@ -18,7 +18,8 @@ Namespace DataAccess
                                                                        Dim params As New Dictionary(Of String, Object) From {
                                                                    {"@ProjectID", projectID},
                                                                    {"@VersionName", versionName},
-                                                                   {"@VersionDate", Date.Now},
+                                                                   {"@VersionDate", Now},
+                                                                   {"@LastModifiedDate", Now},
                                                                    {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
                                                                    {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                    {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)}
@@ -92,6 +93,7 @@ Namespace DataAccess
                         {"@ProjectID", projectID},
                         {"@VersionName", newVersionName},
                         {"@VersionDate", Date.Now},
+                        {"@LastModifiedDate", Date.Now},
                         {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
                         {"@CustomerID", DBNull.Value},
                         {"@SalesID", DBNull.Value}
@@ -267,6 +269,7 @@ Namespace DataAccess
                                                                        Dim params As New Dictionary(Of String, Object) From {
                                                                    {"@VersionID", versionID},
                                                                    {"@VersionName", versionName},
+                                                                   {"@LastModifiedDate", Date.Now},
                                                                    {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
                                                                    {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                    {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)}
@@ -274,6 +277,37 @@ Namespace DataAccess
                                                                        SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateProjectVersion, HelperDataAccess.BuildParameters(params))
                                                                    End Sub, "Error updating project version " & versionID)
         End Sub
-
+        ' In ProjVersionDataAccess.vb (add to existing class)
+        Public Shared Function GetAllProjectVersions() As List(Of List(Of ProjectVersionModel))
+            Dim projectVersions As New List(Of List(Of ProjectVersionModel))
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader("SELECT pv.*, c.CustomerName, s.SalesName FROM ProjectVersions pv LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT JOIN Sales s ON pv.SalesID = s.SalesID ORDER BY pv.ProjectID, pv.VersionDate DESC")
+                                                                           Dim currentProjectID As Integer = -1
+                                                                           Dim currentVersions As List(Of ProjectVersionModel) = Nothing
+                                                                           While reader.Read()
+                                                                               Dim projectID As Integer = reader.GetInt32(reader.GetOrdinal("ProjectID"))
+                                                                               If projectID <> currentProjectID Then
+                                                                                   currentVersions = New List(Of ProjectVersionModel)
+                                                                                   projectVersions.Add(currentVersions)
+                                                                                   currentProjectID = projectID
+                                                                               End If
+                                                                               Dim version As New ProjectVersionModel With {
+                                                                                   .VersionID = reader.GetInt32(reader.GetOrdinal("VersionID")),
+                                                                                   .ProjectID = projectID,
+                                                                                   .VersionName = If(Not reader.IsDBNull(reader.GetOrdinal("VersionName")), reader.GetString(reader.GetOrdinal("VersionName")), String.Empty),
+                                                                                   .VersionDate = If(Not reader.IsDBNull(reader.GetOrdinal("VersionDate")), reader.GetDateTime(reader.GetOrdinal("VersionDate")), Nothing),
+                                                                                   .Description = If(Not reader.IsDBNull(reader.GetOrdinal("Description")), reader.GetString(reader.GetOrdinal("Description")), String.Empty),
+                                                                                   .LastModifiedDate = If(Not reader.IsDBNull(reader.GetOrdinal("LastModifiedDate")), reader.GetDateTime(reader.GetOrdinal("LastModifiedDate")), Nothing),
+                                                                                   .CustomerID = If(Not reader.IsDBNull(reader.GetOrdinal("CustomerID")), reader.GetInt32(reader.GetOrdinal("CustomerID")), Nothing),
+                                                                                   .SalesID = If(Not reader.IsDBNull(reader.GetOrdinal("SalesID")), reader.GetInt32(reader.GetOrdinal("SalesID")), Nothing),
+                                                                                   .CustomerName = If(Not reader.IsDBNull(reader.GetOrdinal("CustomerName")), reader.GetString(reader.GetOrdinal("CustomerName")), String.Empty),
+                                                                                   .SalesName = If(Not reader.IsDBNull(reader.GetOrdinal("SalesName")), reader.GetString(reader.GetOrdinal("SalesName")), String.Empty)
+                                                                               }
+                                                                               currentVersions.Add(version)
+                                                                           End While
+                                                                       End Using
+                                                                   End Sub, "Error loading all project versions")
+            Return projectVersions
+        End Function
     End Class
 End Namespace

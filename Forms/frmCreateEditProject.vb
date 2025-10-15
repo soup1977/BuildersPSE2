@@ -180,7 +180,7 @@ Public Class frmCreateEditProject
             Dim root As New TreeNode(rootText) With {.Tag = currentProject}
             tvProjectTree.Nodes.Add(root)
             For Each bldg In currentProject.Buildings
-                Dim bldgNode As New TreeNode(bldg.BuildingName) With {.Tag = bldg}
+                Dim bldgNode As New TreeNode(String.Format("{0} ({1})", bldg.BuildingName, "x" & bldg.BldgQty)) With {.Tag = bldg}
                 root.Nodes.Add(bldgNode)
                 For Each level In bldg.Levels
                     Dim levelNode As New TreeNode(String.Format("{0} ({1})", level.LevelName, level.ProductTypeName)) With {.Tag = level}
@@ -213,10 +213,11 @@ Public Class frmCreateEditProject
                     Dim costEffectiveID As Integer = CInt(row("CostEffectiveDateID"))
                     Dim costEffectiveDate As Date = CDate(row("CosteffectiveDate"))
                     Dim isActive As Boolean = CBool(row("IsActive"))
-                    Dim displayText As String = $"{costEffectiveDate:yyyy-MM-dd}{(If(isActive, " (Active)", ""))}"
+                    Dim updateDate As Date = CDate(row("UpdateDate"))
+                    Dim displayText As String = $"{costEffectiveDate:yyyy-MM-dd}{(If(isActive, " (Active)", ""))} (Updated: {updateDate:yyyy-MM-dd HH:mm:ss})"
                     lstLumberHistory.Items.Add(New LumberHistoryDate With {
-                        .displayText = displayText,
-                        .costEffectiveID = costEffectiveID
+                        .DisplayText = displayText,
+                        .CostEffectiveID = costEffectiveID
                     })
                 Next
                 If lstLumberHistory.Items.Count > 0 Then
@@ -286,7 +287,7 @@ Public Class frmCreateEditProject
                     col.DefaultCellStyle.Format = "P2"
                     col.Visible = True
                 Case "LumberAdder"
-                    col.HeaderText = "Lumber Adder/MBF"
+                    col.HeaderText = "Futures Adder/MBF"
                     col.DefaultCellStyle.Format = "C2"
                     col.Visible = True
                     col.Width = 150
@@ -349,6 +350,7 @@ Public Class frmCreateEditProject
                 Dim bldg As BuildingModel = CType(item, BuildingModel)
                 dgvRollup.Rows.Add("Floor Cost Per Bldg", CDec(If(bldg.FloorCostPerBldg, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Roof Cost Per Bldg", CDec(If(bldg.RoofCostPerBldg, 0D)).ToString("C2"))
+                dgvRollup.Rows.Add("Wall Cost Per Bldg", CDec(If(bldg.WallCostPerBldg, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Extended Floor Cost", CDec(If(bldg.ExtendedFloorCost, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Extended Roof Cost", CDec(If(bldg.ExtendedRoofCost, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Extended Wall Cost", CDec(If(bldg.ExtendedWallCost, 0D)).ToString("C2"))
@@ -369,6 +371,8 @@ Public Class frmCreateEditProject
                 dgvRollup.Rows.Add("Job Supplies Cost", CDec(If(level.JobSuppliesCost, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Items Cost", CDec(If(level.ItemsCost, 0D)).ToString("C2"))
                 dgvRollup.Rows.Add("Delivery Cost", CDec(If(level.DeliveryCost, 0D)).ToString("C2"))
+                dgvRollup.Rows.Add("MGMT Material Cost comparison", (CDec(If(level.LumberCost, 0D)) + CDec(If(level.PlateCost, 0D))).ToString("C2"))
+                dgvRollup.Rows.Add("MGMT Labor Cost comparison", (CDec(If(level.LaborCost, 0D)) + CDec(If(level.DesignCost, 0D)) + CDec(If(level.MGMTCost, 0D)) + CDec(If(level.JobSuppliesCost, 0D))).ToString("C2"))
                 Dim margin As Decimal = If(level.OverallPrice = 0, 0D, ((CDec((If(level.OverallPrice, 0D)) - CDec(If(level.DeliveryCost, 0D))) - CDec(If(level.OverallCost, 0D))) / CDec((If(level.OverallPrice, 0D)) - CDec(If(level.DeliveryCost, 0D)))))
                 dgvRollup.Rows.Add("Margin", margin.ToString("P1"))
         End Select
@@ -549,6 +553,7 @@ Public Class frmCreateEditProject
             Next
             MessageBox.Show("Overrides saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
             LoadOverrides(currentProject.Settings)
+            btnRecalcRollup.PerformClick()
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -559,7 +564,7 @@ Public Class frmCreateEditProject
             Dim bldg As BuildingModel = CType(tvProjectTree.SelectedNode.Tag, BuildingModel)
             bldg.BuildingName = txtBuildingName.Text
             bldg.BldgQty = CInt(nudBldgQty.Value)
-            da.SaveBuilding(bldg, currentVersionID)
+            ProjectDataAccess.SaveBuilding(bldg, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -573,7 +578,7 @@ Public Class frmCreateEditProject
             level.ProductTypeID = CInt(cmbLevelType.SelectedValue)
             level.ProductTypeName = CType(cmbLevelType.SelectedItem, ProductTypeModel).ProductTypeName
             level.LevelNumber = CInt(nudLevelNumber.Value)
-            da.SaveLevel(level, level.BuildingID, currentVersionID)
+            ProjectDataAccess.SaveLevel(level, level.BuildingID, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -646,7 +651,7 @@ Public Class frmCreateEditProject
     Private Sub mnuAddBuilding_Click(sender As Object, e As EventArgs) Handles mnuAddBuilding.Click
         Dim newBldg As New BuildingModel With {.BuildingName = "New Building", .BldgQty = 1}
         currentProject.Buildings.Add(newBldg)
-        da.SaveBuilding(newBldg, currentVersionID)
+        ProjectDataAccess.SaveBuilding(newBldg, currentVersionID)
         LoadProjectData()
     End Sub
 
@@ -659,7 +664,7 @@ Public Class frmCreateEditProject
             .ProductTypeName = "Floor"
         }
         selectedBldg.Levels.Add(newLevel)
-        da.SaveLevel(newLevel, selectedBldg.BuildingID, currentVersionID)
+        ProjectDataAccess.SaveLevel(newLevel, selectedBldg.BuildingID, currentVersionID)
         LoadProjectData()
     End Sub
 
@@ -712,7 +717,7 @@ Public Class frmCreateEditProject
             .ProductTypeName = clonedLevel.ProductTypeName
         }
             targetBldg.Levels.Add(newLevel)
-            da.SaveLevel(newLevel, targetBldg.BuildingID, currentVersionID)
+            ProjectDataAccess.SaveLevel(newLevel, targetBldg.BuildingID, currentVersionID)
         Next
         LoadProjectData()
     End Sub
@@ -908,7 +913,7 @@ Public Class frmCreateEditProject
             .ResUnits = copiedBuilding.ResUnits
         }
         currentProject.Buildings.Add(newBldg)
-        da.SaveBuilding(newBldg, currentVersionID)
+        ProjectDataAccess.SaveBuilding(newBldg, currentVersionID)
         newBldg.Levels = New List(Of LevelModel)
         For Each clonedLevel In copiedBuilding.Levels
             Dim newLevel As New LevelModel With {
@@ -918,7 +923,7 @@ Public Class frmCreateEditProject
                 .ProductTypeName = clonedLevel.ProductTypeName
             }
             newBldg.Levels.Add(newLevel)
-            da.SaveLevel(newLevel, newBldg.BuildingID, currentVersionID)
+            ProjectDataAccess.SaveLevel(newLevel, newBldg.BuildingID, currentVersionID)
         Next
         LoadProjectData()  ' Refresh tree and data
     End Sub
@@ -932,7 +937,7 @@ Public Class frmCreateEditProject
         End If
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles btnDeleteProject.Click
+    Private Sub btnDeleteProject_Click(sender As Object, e As EventArgs) Handles btnDeleteProject.Click
         Dim result As DialogResult = MessageBox.Show("Are you really sure you want to delete this project? This action cannot be undone.", "Confirm Deletion", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
         If result = DialogResult.Yes Then
             Dim notification As String = String.Empty
@@ -941,6 +946,9 @@ Public Class frmCreateEditProject
                 If Not String.IsNullOrEmpty(notification) Then
                     MessageBox.Show(notification, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 End If
+                frmMainProjectList.RefreshProjects()
+                btnClose.PerformClick()
+
             Catch ex As Exception
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Try
@@ -1040,7 +1048,7 @@ Public Class frmCreateEditProject
                             {"@CostEffectiveDateID", costEffectiveID},
                             {"@VersionID", currentVersionID}
                         }
-                        SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 1 WHERE CostEffectiveDateID = @CostEffectiveDateID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(activateParams), conn, transaction)
+                        SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 1, UpdateDate = GETDATE() WHERE CostEffectiveDateID = @CostEffectiveDateID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(activateParams), conn, transaction)
                         transaction.Commit()
                         UpdateStatus($"Set CostEffectiveDateID {costEffectiveID} as active for VersionID {currentVersionID}")
                         RollupDataAccess.RecalculateVersion(currentVersionID)
@@ -1085,6 +1093,26 @@ Public Class frmCreateEditProject
             UpdateStatus($"Error deleting lumber history: {ex.Message}")
             MessageBox.Show($"Error deleting lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    Private Sub btnOpenProjectBuilder_Click(sender As Object, e As EventArgs) Handles btnOpenProjectBuilder.Click
+        If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
+            Try
+                If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
+                    UpdateStatus($"No version selected for ProjectID {currentProject.ProjectID}")
+                    MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    Exit Sub
+                End If
+                AddFormToTabControl(GetType(ProjectBuilderForm), $"ProjectBuilder_{currentVersionID}", New Object() {currentVersionID})
+                UpdateStatus($"Opened Project Builder form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
+            Catch ex As Exception
+                UpdateStatus($"Error opening Project Builder form: {ex.Message}")
+                MessageBox.Show("Error opening Project Builder form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        Else
+            UpdateStatus("No valid project selected for Project Builder")
+            MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
     End Sub
 
 End Class

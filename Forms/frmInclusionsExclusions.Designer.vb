@@ -190,7 +190,7 @@ Partial Class frmInclusionsExclusions
         '
         Me.cboCorridorRimRibbon.FormattingEnabled = True
         Me.cboCorridorRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
-        Me.cboCorridorRimRibbon.Location = New System.Drawing.Point(287, 387)
+        Me.cboCorridorRimRibbon.Location = New System.Drawing.Point(230, 360)
         Me.cboCorridorRimRibbon.Name = "cboCorridorRimRibbon"
         Me.cboCorridorRimRibbon.Size = New System.Drawing.Size(121, 21)
         Me.cboCorridorRimRibbon.TabIndex = 43
@@ -199,7 +199,7 @@ Partial Class frmInclusionsExclusions
         '
         Me.cboIntRimRibbon.FormattingEnabled = True
         Me.cboIntRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
-        Me.cboIntRimRibbon.Location = New System.Drawing.Point(287, 360)
+        Me.cboIntRimRibbon.Location = New System.Drawing.Point(230, 333)
         Me.cboIntRimRibbon.Name = "cboIntRimRibbon"
         Me.cboIntRimRibbon.Size = New System.Drawing.Size(121, 21)
         Me.cboIntRimRibbon.TabIndex = 41
@@ -208,7 +208,7 @@ Partial Class frmInclusionsExclusions
         '
         Me.cboExtRimRibbon.FormattingEnabled = True
         Me.cboExtRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
-        Me.cboExtRimRibbon.Location = New System.Drawing.Point(287, 333)
+        Me.cboExtRimRibbon.Location = New System.Drawing.Point(230, 306)
         Me.cboExtRimRibbon.Name = "cboExtRimRibbon"
         Me.cboExtRimRibbon.Size = New System.Drawing.Size(121, 21)
         Me.cboExtRimRibbon.TabIndex = 39
@@ -216,7 +216,7 @@ Partial Class frmInclusionsExclusions
         'cmbCorridorWall
         '
         Me.cmbCorridorWall.FormattingEnabled = True
-        Me.cmbCorridorWall.Location = New System.Drawing.Point(103, 387)
+        Me.cmbCorridorWall.Location = New System.Drawing.Point(103, 360)
         Me.cmbCorridorWall.Name = "cmbCorridorWall"
         Me.cmbCorridorWall.Size = New System.Drawing.Size(121, 21)
         Me.cmbCorridorWall.TabIndex = 42
@@ -224,7 +224,7 @@ Partial Class frmInclusionsExclusions
         'lblCorridorWall
         '
         Me.lblCorridorWall.AutoSize = True
-        Me.lblCorridorWall.Location = New System.Drawing.Point(29, 390)
+        Me.lblCorridorWall.Location = New System.Drawing.Point(29, 363)
         Me.lblCorridorWall.Name = "lblCorridorWall"
         Me.lblCorridorWall.Size = New System.Drawing.Size(70, 13)
         Me.lblCorridorWall.TabIndex = 26
@@ -233,7 +233,7 @@ Partial Class frmInclusionsExclusions
         'cmbIntWall
         '
         Me.cmbIntWall.FormattingEnabled = True
-        Me.cmbIntWall.Location = New System.Drawing.Point(103, 360)
+        Me.cmbIntWall.Location = New System.Drawing.Point(103, 333)
         Me.cmbIntWall.Name = "cmbIntWall"
         Me.cmbIntWall.Size = New System.Drawing.Size(121, 21)
         Me.cmbIntWall.TabIndex = 40
@@ -241,7 +241,7 @@ Partial Class frmInclusionsExclusions
         'lblIntWall
         '
         Me.lblIntWall.AutoSize = True
-        Me.lblIntWall.Location = New System.Drawing.Point(29, 363)
+        Me.lblIntWall.Location = New System.Drawing.Point(29, 336)
         Me.lblIntWall.Name = "lblIntWall"
         Me.lblIntWall.Size = New System.Drawing.Size(46, 13)
         Me.lblIntWall.TabIndex = 24
@@ -250,7 +250,7 @@ Partial Class frmInclusionsExclusions
         'lblExtRim
         '
         Me.lblExtRim.AutoSize = True
-        Me.lblExtRim.Location = New System.Drawing.Point(284, 317)
+        Me.lblExtRim.Location = New System.Drawing.Point(227, 290)
         Me.lblExtRim.Name = "lblExtRim"
         Me.lblExtRim.Size = New System.Drawing.Size(67, 13)
         Me.lblExtRim.TabIndex = 23
@@ -259,7 +259,7 @@ Partial Class frmInclusionsExclusions
         'cmbExtWall
         '
         Me.cmbExtWall.FormattingEnabled = True
-        Me.cmbExtWall.Location = New System.Drawing.Point(103, 333)
+        Me.cmbExtWall.Location = New System.Drawing.Point(103, 306)
         Me.cmbExtWall.Name = "cmbExtWall"
         Me.cmbExtWall.Size = New System.Drawing.Size(121, 21)
         Me.cmbExtWall.TabIndex = 38
@@ -267,7 +267,7 @@ Partial Class frmInclusionsExclusions
         'lblExtWall
         '
         Me.lblExtWall.AutoSize = True
-        Me.lblExtWall.Location = New System.Drawing.Point(29, 336)
+        Me.lblExtWall.Location = New System.Drawing.Point(29, 309)
         Me.lblExtWall.Name = "lblExtWall"
         Me.lblExtWall.Size = New System.Drawing.Size(49, 13)
         Me.lblExtWall.TabIndex = 21
@@ -675,7 +675,7 @@ Partial Class frmInclusionsExclusions
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(210, 282)
+        Me.Label1.Location = New System.Drawing.Point(587, 256)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(71, 13)
         Me.Label1.TabIndex = 19
@@ -683,7 +683,7 @@ Partial Class frmInclusionsExclusions
         '
         'txtHeelHeights
         '
-        Me.txtHeelHeights.Location = New System.Drawing.Point(287, 279)
+        Me.txtHeelHeights.Location = New System.Drawing.Point(664, 253)
         Me.txtHeelHeights.Name = "txtHeelHeights"
         Me.txtHeelHeights.Size = New System.Drawing.Size(100, 20)
         Me.txtHeelHeights.TabIndex = 37
@@ -723,7 +723,7 @@ Partial Class frmInclusionsExclusions
         'lblRoofPitches
         '
         Me.lblRoofPitches.AutoSize = True
-        Me.lblRoofPitches.Location = New System.Drawing.Point(27, 282)
+        Me.lblRoofPitches.Location = New System.Drawing.Point(404, 256)
         Me.lblRoofPitches.Name = "lblRoofPitches"
         Me.lblRoofPitches.Size = New System.Drawing.Size(71, 13)
         Me.lblRoofPitches.TabIndex = 4
@@ -731,7 +731,7 @@ Partial Class frmInclusionsExclusions
         '
         'txtRoofPitches
         '
-        Me.txtRoofPitches.Location = New System.Drawing.Point(103, 279)
+        Me.txtRoofPitches.Location = New System.Drawing.Point(480, 253)
         Me.txtRoofPitches.Name = "txtRoofPitches"
         Me.txtRoofPitches.Size = New System.Drawing.Size(100, 20)
         Me.txtRoofPitches.TabIndex = 36
@@ -739,7 +739,7 @@ Partial Class frmInclusionsExclusions
         'lblOccupancy
         '
         Me.lblOccupancy.AutoSize = True
-        Me.lblOccupancy.Location = New System.Drawing.Point(216, 92)
+        Me.lblOccupancy.Location = New System.Drawing.Point(216, 74)
         Me.lblOccupancy.Name = "lblOccupancy"
         Me.lblOccupancy.Size = New System.Drawing.Size(65, 13)
         Me.lblOccupancy.TabIndex = 6
@@ -748,7 +748,7 @@ Partial Class frmInclusionsExclusions
         'cmbOccupancy
         '
         Me.cmbOccupancy.FormattingEnabled = True
-        Me.cmbOccupancy.Location = New System.Drawing.Point(287, 89)
+        Me.cmbOccupancy.Location = New System.Drawing.Point(287, 71)
         Me.cmbOccupancy.Name = "cmbOccupancy"
         Me.cmbOccupancy.Size = New System.Drawing.Size(100, 21)
         Me.cmbOccupancy.TabIndex = 6
@@ -756,7 +756,7 @@ Partial Class frmInclusionsExclusions
         'lblSnowLoad
         '
         Me.lblSnowLoad.AutoSize = True
-        Me.lblSnowLoad.Location = New System.Drawing.Point(6, 65)
+        Me.lblSnowLoad.Location = New System.Drawing.Point(6, 47)
         Me.lblSnowLoad.Name = "lblSnowLoad"
         Me.lblSnowLoad.Size = New System.Drawing.Size(91, 13)
         Me.lblSnowLoad.TabIndex = 8
@@ -765,7 +765,7 @@ Partial Class frmInclusionsExclusions
         'cmbSnowLoad
         '
         Me.cmbSnowLoad.FormattingEnabled = True
-        Me.cmbSnowLoad.Location = New System.Drawing.Point(103, 62)
+        Me.cmbSnowLoad.Location = New System.Drawing.Point(103, 44)
         Me.cmbSnowLoad.Name = "cmbSnowLoad"
         Me.cmbSnowLoad.Size = New System.Drawing.Size(100, 21)
         Me.cmbSnowLoad.TabIndex = 3
@@ -773,7 +773,7 @@ Partial Class frmInclusionsExclusions
         'lblWindSpeed
         '
         Me.lblWindSpeed.AutoSize = True
-        Me.lblWindSpeed.Location = New System.Drawing.Point(28, 92)
+        Me.lblWindSpeed.Location = New System.Drawing.Point(28, 74)
         Me.lblWindSpeed.Name = "lblWindSpeed"
         Me.lblWindSpeed.Size = New System.Drawing.Size(69, 13)
         Me.lblWindSpeed.TabIndex = 10
@@ -782,7 +782,7 @@ Partial Class frmInclusionsExclusions
         'cmbWindSpeed
         '
         Me.cmbWindSpeed.FormattingEnabled = True
-        Me.cmbWindSpeed.Location = New System.Drawing.Point(103, 89)
+        Me.cmbWindSpeed.Location = New System.Drawing.Point(103, 71)
         Me.cmbWindSpeed.Name = "cmbWindSpeed"
         Me.cmbWindSpeed.Size = New System.Drawing.Size(100, 21)
         Me.cmbWindSpeed.TabIndex = 5
@@ -790,7 +790,7 @@ Partial Class frmInclusionsExclusions
         'lblExposure
         '
         Me.lblExposure.AutoSize = True
-        Me.lblExposure.Location = New System.Drawing.Point(227, 65)
+        Me.lblExposure.Location = New System.Drawing.Point(227, 47)
         Me.lblExposure.Name = "lblExposure"
         Me.lblExposure.Size = New System.Drawing.Size(54, 13)
         Me.lblExposure.TabIndex = 12
@@ -799,7 +799,7 @@ Partial Class frmInclusionsExclusions
         'cmbExposure
         '
         Me.cmbExposure.FormattingEnabled = True
-        Me.cmbExposure.Location = New System.Drawing.Point(287, 62)
+        Me.cmbExposure.Location = New System.Drawing.Point(287, 44)
         Me.cmbExposure.Name = "cmbExposure"
         Me.cmbExposure.Size = New System.Drawing.Size(100, 21)
         Me.cmbExposure.TabIndex = 4
@@ -807,7 +807,7 @@ Partial Class frmInclusionsExclusions
         'lblImportance
         '
         Me.lblImportance.AutoSize = True
-        Me.lblImportance.Location = New System.Drawing.Point(218, 38)
+        Me.lblImportance.Location = New System.Drawing.Point(218, 20)
         Me.lblImportance.Name = "lblImportance"
         Me.lblImportance.Size = New System.Drawing.Size(63, 13)
         Me.lblImportance.TabIndex = 14
@@ -816,7 +816,7 @@ Partial Class frmInclusionsExclusions
         'cmbImportance
         '
         Me.cmbImportance.FormattingEnabled = True
-        Me.cmbImportance.Location = New System.Drawing.Point(287, 35)
+        Me.cmbImportance.Location = New System.Drawing.Point(287, 17)
         Me.cmbImportance.Name = "cmbImportance"
         Me.cmbImportance.Size = New System.Drawing.Size(100, 21)
         Me.cmbImportance.TabIndex = 2
@@ -824,7 +824,7 @@ Partial Class frmInclusionsExclusions
         'lblBuildingCode
         '
         Me.lblBuildingCode.AutoSize = True
-        Me.lblBuildingCode.Location = New System.Drawing.Point(22, 38)
+        Me.lblBuildingCode.Location = New System.Drawing.Point(22, 20)
         Me.lblBuildingCode.Name = "lblBuildingCode"
         Me.lblBuildingCode.Size = New System.Drawing.Size(75, 13)
         Me.lblBuildingCode.TabIndex = 16
@@ -833,7 +833,7 @@ Partial Class frmInclusionsExclusions
         'cmbBuildingCode
         '
         Me.cmbBuildingCode.FormattingEnabled = True
-        Me.cmbBuildingCode.Location = New System.Drawing.Point(103, 35)
+        Me.cmbBuildingCode.Location = New System.Drawing.Point(103, 17)
         Me.cmbBuildingCode.Name = "cmbBuildingCode"
         Me.cmbBuildingCode.Size = New System.Drawing.Size(100, 21)
         Me.cmbBuildingCode.TabIndex = 1

@@ -46,8 +46,8 @@
         Public Const UpdateRawUnit As String = "UPDATE RawUnits SET RawUnitName = @RawUnitName, BF = @BF, LF = @LF, EWPLF = @EWPLF, SqFt = @SqFt, FCArea = @FCArea, LumberCost = @LumberCost, PlateCost = @PlateCost, ManufLaborCost = @ManufLaborCost, DesignLabor = @DesignLabor, MGMTLabor = @MGMTLabor, JobSuppliesCost = @JobSuppliesCost, ManHours = @ManHours, ItemCost = @ItemCost, OverallCost = @OverallCost, DeliveryCost = @DeliveryCost, TotalSellPrice = @TotalSellPrice, AvgSPFNo2 = @AvgSPFNo2, SPFNo2BDFT = @SPFNo2BDFT, Avg241800 = @Avg241800, MSR241800BDFT = @MSR241800BDFT, Avg242400 = @Avg242400, MSR242400BDFT = @MSR242400BDFT, Avg261800 = @Avg261800, MSR261800BDFT = @MSR261800BDFT, Avg262400 = @Avg262400, MSR262400BDFT = @MSR262400BDFT WHERE RawUnitID = @RawUnitID"
 
         ' ActualUnits (updated to use VersionID)
-        Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder)"
-        Public Const UpdateActualUnit As String = "UPDATE ActualUnits SET UnitName = @UnitName, PlanSQFT = @PlanSQFT, UnitType = @UnitType, OptionalAdder = @OptionalAdder WHERE ActualUnitID = @ActualUnitID"
+        Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder, ColorCode) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder, @ColorCode)"
+        Public Const UpdateActualUnit As String = "UPDATE ActualUnits SET UnitName = @UnitName, PlanSQFT = @PlanSQFT, UnitType = @UnitType, OptionalAdder = @OptionalAdder, ColorCode = @ColorCode WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitsByVersion As String = "SELECT au.*, ru.RawUnitName FROM ActualUnits au JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID WHERE au.VersionID = @VersionID"
         Public Const DeleteActualUnit As String = "DELETE FROM ActualUnits WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitIDsByLevelID As String = "SELECT DISTINCT ActualUnitID FROM ActualToLevelMapping WHERE LevelID = @LevelID"
@@ -128,7 +128,8 @@
         Public Const CalculateRoofPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS RoofPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
         Public Const CalculateFloorBaseCost As String = "SELECT SUM(l.OverallCost) AS FloorBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 1"
         Public Const CalculateRoofBaseCost As String = "SELECT SUM(l.OverallCost) AS RoofBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 2"
-
+        Public Const CalculateWallPricePerBldg As String = "SELECT SUM(l.OverallPrice) AS WallPricePerBldg FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 3"
+        Public Const CalculateWallBaseCost As String = "SELECT SUM(l.OverallCost) AS WallBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 3"
 
 
         ' ProjectVersions Queries
@@ -216,18 +217,19 @@
         Public Const DeleteLumberHistory As String = "DELETE FROM RawUnitLumberHistory WHERE HistoryID = @HistoryID AND VersionID = @VersionID"
         ' New query for distinct CosteffectiveDate values
         Public Const SelectDistinctLumberHistoryDates As String = "SELECT rlh.CostEffectiveDateID, lce.CosteffectiveDate, " &
-                                                                 "CASE WHEN EXISTS (SELECT 1 FROM RawUnitLumberHistory rlh2 WHERE rlh2.CostEffectiveDateID = rlh.CostEffectiveDateID AND rlh2.VersionID = @VersionID AND rlh2.IsActive = 1) THEN 1 ELSE 0 END AS IsActive " &
-                                                                 "FROM RawUnitLumberHistory rlh " &
-                                                                 "JOIN LumberCostEffective lce ON rlh.CostEffectiveDateID = lce.CostEffectiveID " &
-                                                                 "WHERE rlh.VersionID = @VersionID " &
-                                                                 "GROUP BY rlh.CostEffectiveDateID, lce.CosteffectiveDate " &
-                                                                 "ORDER BY lce.CosteffectiveDate DESC"
+                                                         "CASE WHEN EXISTS (SELECT 1 FROM RawUnitLumberHistory rlh2 WHERE rlh2.CostEffectiveDateID = rlh.CostEffectiveDateID AND rlh2.VersionID = @VersionID AND rlh2.IsActive = 1) THEN 1 ELSE 0 END AS IsActive, " &
+                                                         "MAX(rlh.UpdateDate) AS UpdateDate " &
+                                                         "FROM RawUnitLumberHistory rlh " &
+                                                         "JOIN LumberCostEffective lce ON rlh.CostEffectiveDateID = lce.CostEffectiveID " &
+                                                         "WHERE rlh.VersionID = @VersionID " &
+                                                         "GROUP BY rlh.CostEffectiveDateID, lce.CosteffectiveDate " &
+                                                         "ORDER BY lce.CosteffectiveDate DESC"
 
         ' New query to find CostEffectiveDateID by cost
         Public Const SelectCostEffectiveDateIDByCost As String = "SELECT lc.CostEffectiveDateID " &
                                                                 "FROM LumberCost lc " &
                                                                 "JOIN LumberType lt ON lc.LumberTypeID = lt.LumberTypeID " &
-                                                                "WHERE lt.LumberTypeID = 1 AND lc.LumberCost = @LumberCost"
+                                                                "WHERE lt.LumberTypeID = 1 AND lc.LumberCost = @SPFLumberCost"
 
     End Module
 End Namespace

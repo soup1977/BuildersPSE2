@@ -36,6 +36,7 @@ Namespace DataAccess
                                                           {"@MilesToJobSite", proj.MilesToJobSite},
                                                           {"@TotalNetSqft", proj.TotalNetSqft},
                                                           {"@TotalGrossSqft", proj.TotalGrossSqft},
+                                                          {"@LastModifiedDate", Now},
                                                           {"@ArchitectID", If(proj.ArchitectID.HasValue, CType(proj.ArchitectID.Value, Object), DBNull.Value)},
                                                           {"@EngineerID", If(proj.EngineerID.HasValue, CType(proj.EngineerID.Value, Object), DBNull.Value)},
                                                           {"@ProjectNotes", If(String.IsNullOrEmpty(proj.ProjectNotes), DBNull.Value, CType(proj.ProjectNotes, Object))}
@@ -455,12 +456,13 @@ Namespace DataAccess
         End Function
 
         ' Updated: SaveBuilding (use VersionID)
-        Public Sub SaveBuilding(bldg As BuildingModel, versionID As Integer)
+        Public Shared Sub SaveBuilding(bldg As BuildingModel, versionID As Integer)
             Dim paramsDict As New Dictionary(Of String, Object) From {
                 {"@BuildingName", If(String.IsNullOrEmpty(bldg.BuildingName), DBNull.Value, CType(bldg.BuildingName, Object))},
                 {"@BuildingType", If(bldg.BuildingType.HasValue, CType(bldg.BuildingType.Value, Object), DBNull.Value)},
                 {"@ResUnits", If(bldg.ResUnits.HasValue, CType(bldg.ResUnits.Value, Object), DBNull.Value)},
                 {"@BldgQty", bldg.BldgQty},
+                {"@LastModifiedDate", Now},
                 {"@VersionID", versionID}
             }
 
@@ -480,12 +482,13 @@ Namespace DataAccess
         End Sub
 
         ' Updated: SaveLevel (use VersionID)
-        Public Sub SaveLevel(level As LevelModel, buildingID As Integer, versionID As Integer)
+        Public Shared Sub SaveLevel(level As LevelModel, buildingID As Integer, versionID As Integer)
             Dim paramsDict As New Dictionary(Of String, Object) From {
                 {"@VersionID", versionID},
                 {"@BuildingID", buildingID},
                 {"@ProductTypeID", level.ProductTypeID},
                 {"@LevelNumber", level.LevelNumber},
+                {"@LastModifiedDate", Now},
                 {"@LevelName", level.LevelName}
             }
 
@@ -568,6 +571,7 @@ Namespace DataAccess
                 {"@UnitName", actual.UnitName},
                 {"@PlanSQFT", actual.PlanSQFT},
                 {"@UnitType", actual.UnitType},
+                {"@ColorCode", actual.ColorCode},
                 {"@OptionalAdder", actual.OptionalAdder}
             }
 
@@ -659,6 +663,7 @@ Namespace DataAccess
                                                     .UnitType = reader.GetString(reader.GetOrdinal("UnitType")),
                                                     .OptionalAdder = reader.GetDecimal(reader.GetOrdinal("OptionalAdder")),
                                                     .RawUnitID = reader.GetInt32(reader.GetOrdinal("RawUnitID")),
+                                                    .ColorCode = If(Not reader.IsDBNull(reader.GetOrdinal("ColorCode")), reader.GetString(reader.GetOrdinal("ColorCode")), String.Empty),
                                                     .VersionID = versionID,
                                                     .ProductTypeID = reader.GetInt32(reader.GetOrdinal("ProductTypeID"))
                                                 }
@@ -685,6 +690,7 @@ Namespace DataAccess
                                                     .OptionalAdder = reader.GetDecimal(reader.GetOrdinal("OptionalAdder")),
                                                     .RawUnitID = reader.GetInt32(reader.GetOrdinal("RawUnitID")),
                                                     .VersionID = reader.GetInt32(reader.GetOrdinal("VersionID")),
+                                                    .ColorCode = If(Not reader.IsDBNull(reader.GetOrdinal("ColorCode")), reader.GetString(reader.GetOrdinal("ColorCode")), String.Empty),
                                                     .ProductTypeID = reader.GetInt32(reader.GetOrdinal("ProductTypeID")),
                                                     .ReferencedRawUnitName = If(Not reader.IsDBNull(reader.GetOrdinal("ReferencedRawUnitName")), reader.GetString(reader.GetOrdinal("ReferencedRawUnitName")), String.Empty),
                                                     .CalculatedComponents = GetCalculatedComponentsByActualUnitID(actualUnitID)
