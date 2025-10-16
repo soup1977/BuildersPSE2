@@ -22,7 +22,7 @@ Partial Class ProjectBuilderForm
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.DataGridView1 = New System.Windows.Forms.DataGridView()
+        Me.dgvProjBlder = New System.Windows.Forms.DataGridView()
         Me.colBuildingName = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colBldgQty = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colResUnits = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -31,19 +31,19 @@ Partial Class ProjectBuilderForm
         Me.colNumWalls = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.BtnSaveProjectBuilder = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvProjBlder, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
-        'DataGridView1
+        'dgvProjBlder
         '
-        Me.DataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
-        Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colBuildingName, Me.colBldgQty, Me.colResUnits, Me.colNumFloors, Me.colNumRoofs, Me.colNumWalls})
-        Me.DataGridView1.Dock = System.Windows.Forms.DockStyle.Top
-        Me.DataGridView1.Location = New System.Drawing.Point(0, 0)
-        Me.DataGridView1.Name = "DataGridView1"
-        Me.DataGridView1.Size = New System.Drawing.Size(800, 270)
-        Me.DataGridView1.TabIndex = 0
+        Me.dgvProjBlder.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
+        Me.dgvProjBlder.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvProjBlder.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colBuildingName, Me.colBldgQty, Me.colResUnits, Me.colNumFloors, Me.colNumRoofs, Me.colNumWalls})
+        Me.dgvProjBlder.Dock = System.Windows.Forms.DockStyle.Top
+        Me.dgvProjBlder.Location = New System.Drawing.Point(0, 0)
+        Me.dgvProjBlder.Name = "dgvProjBlder"
+        Me.dgvProjBlder.Size = New System.Drawing.Size(800, 270)
+        Me.dgvProjBlder.TabIndex = 0
         '
         'colBuildingName
         '
@@ -102,15 +102,15 @@ Partial Class ProjectBuilderForm
         Me.ClientSize = New System.Drawing.Size(800, 450)
         Me.Controls.Add(Me.btnClose)
         Me.Controls.Add(Me.BtnSaveProjectBuilder)
-        Me.Controls.Add(Me.DataGridView1)
+        Me.Controls.Add(Me.dgvProjBlder)
         Me.Name = "ProjectBuilderForm"
         Me.Text = "ProjectBuilderForm"
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvProjBlder, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
 
-    Friend WithEvents DataGridView1 As DataGridView
+    Friend WithEvents dgvProjBlder As DataGridView
     Friend WithEvents colBuildingName As DataGridViewTextBoxColumn
     Friend WithEvents colBldgQty As DataGridViewTextBoxColumn
     Friend WithEvents colResUnits As DataGridViewTextBoxColumn

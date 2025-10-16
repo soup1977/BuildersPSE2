@@ -1,6 +1,6 @@
 ﻿Imports System.Data.SqlClient
-Imports BuildersPSE2.BuildersPSE.Utilities
 Imports BuildersPSE2.BuildersPSE.Models
+Imports BuildersPSE2.BuildersPSE.Utilities
 
 Namespace DataAccess
 
@@ -135,19 +135,19 @@ Namespace DataAccess
 
                                                                        ' Define lumber types with exact database LumberTypeDesc values
                                                                        Dim lumberTypes As New Dictionary(Of String, Tuple(Of String, String, String)) From {
-            {"SPFNo2", Tuple.Create("2x4 SPF #2", "AvgSPFNo2", "SPFNo2BDFT")},
-            {"MSR241800", Tuple.Create("2x4 DF-N 1800F 1.6E", "Avg241800", "MSR241800BDFT")},
-            {"MSR242400", Tuple.Create("2x4 DF-N 2400F 2.0E", "Avg242400", "MSR242400BDFT")},
-            {"MSR261800", Tuple.Create("2x6 DF-N 1800F 1.6E", "Avg261800", "MSR261800BDFT")},
-            {"MSR262400", Tuple.Create("2x6 DF-N 2400F 2.0E", "Avg262400", "MSR262400BDFT")}
-        }
+                                                                            {"SPFNo2", Tuple.Create("2x4 SPF #2", "AvgSPFNo2", "SPFNo2BDFT")},
+                                                                            {"MSR241800", Tuple.Create("2x4 DF-N 1800F 1.6E", "Avg241800", "MSR241800BDFT")},
+                                                                            {"MSR242400", Tuple.Create("2x4 DF-N 2400F 2.0E", "Avg242400", "MSR242400BDFT")},
+                                                                            {"MSR261800", Tuple.Create("2x6 DF-N 1800F 1.6E", "Avg261800", "MSR261800BDFT")},
+                                                                            {"MSR262400", Tuple.Create("2x6 DF-N 2400F 2.0E", "Avg262400", "MSR262400BDFT")}
+                                                                        }
 
                                                                        Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
                                                                            conn.Open()
                                                                            Using transaction As SqlTransaction = conn.BeginTransaction()
                                                                                Try
                                                                                    For Each rawUnit In rawUnits
-                                                                                       Debug.WriteLine($"Processing RawUnitID: {rawUnit.RawUnitID}, Name: {rawUnit.RawUnitName}, BF: {If(rawUnit.BF.HasValue, rawUnit.BF.Value, "NULL")}, LumberCost: {If(rawUnit.LumberCost.HasValue, rawUnit.LumberCost.Value, "NULL")}")
+
                                                                                        Dim totalAdjustment As Decimal = 0D
                                                                                        Dim allocatedBDFT As Decimal = 0D
                                                                                        Dim newAvgPrices As New Dictionary(Of String, Decimal?)
@@ -171,9 +171,9 @@ Namespace DataAccess
 
                                                                                            ' Get new cost
                                                                                            Dim costParams As New Dictionary(Of String, Object) From {
-                                {"@LumberTypeID", lumberTypeID},
-                                {"@CostEffectiveDateID", costEffectiveDateID}
-                            }
+                                                                                                {"@LumberTypeID", lumberTypeID},
+                                                                                                {"@CostEffectiveDateID", costEffectiveDateID}
+                                                                                            }
                                                                                            Dim newCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectLumberCostByTypeAndDate, HelperDataAccess.BuildParameters(costParams))
                                                                                            If newCostObj Is DBNull.Value Then
                                                                                                Debug.WriteLine($"No LumberCost found for LumberTypeID {lumberTypeID} and CostEffectiveDateID {costEffectiveDateID} - skipping {typeKey}")
@@ -192,7 +192,7 @@ Namespace DataAccess
                                                                                            Dim oldCost As Decimal? = CType(CallByName(rawUnit, avgField, CallType.Get), Decimal?)
                                                                                            Dim bdft As Decimal? = CType(CallByName(rawUnit, bdftField, CallType.Get), Decimal?)
                                                                                            If Not oldCost.HasValue OrElse oldCost.Value <= 0 OrElse Not bdft.HasValue OrElse bdft.Value <= 0 Then
-                                                                                               Debug.WriteLine($"Invalid oldCost or bdft for {typeKey}: oldCost={If(oldCost.HasValue, oldCost.Value, "NULL")}, bdft={If(bdft.HasValue, bdft.Value, "NULL")} - skipping")
+
                                                                                                Continue For
                                                                                            End If
 
@@ -213,9 +213,9 @@ Namespace DataAccess
                                                                                                If lumberTypeIDObj IsNot DBNull.Value Then
                                                                                                    Dim lumberTypeID As Integer = CInt(lumberTypeIDObj)
                                                                                                    Dim costParams As New Dictionary(Of String, Object) From {
-                                        {"@LumberTypeID", lumberTypeID},
-                                        {"@CostEffectiveDateID", costEffectiveDateID}
-                                    }
+                                                                                                        {"@LumberTypeID", lumberTypeID},
+                                                                                                        {"@CostEffectiveDateID", costEffectiveDateID}
+                                                                                                    }
                                                                                                    Dim newCostObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectLumberCostByTypeAndDate, HelperDataAccess.BuildParameters(costParams))
                                                                                                    If newCostObj IsNot DBNull.Value Then
                                                                                                        Dim newCost As Decimal = CDec(newCostObj)
@@ -226,8 +226,7 @@ Namespace DataAccess
                                                                                                                Dim unallocatedAdjustment As Decimal = diffPerThousand * (unallocatedBDFT / 1000)
                                                                                                                totalAdjustment += unallocatedAdjustment
                                                                                                                Debug.WriteLine($"Unallocated adjustment: bdft={unallocatedBDFT}, diffPerThousand={diffPerThousand}, adjustment={unallocatedAdjustment}")
-                                                                                                           Else
-                                                                                                               Debug.WriteLine($"No valid AvgSPFNo2 ({If(oldCost.HasValue, oldCost.Value, "NULL")}) for unallocated BDFT in RawUnitID: {rawUnit.RawUnitID}")
+
                                                                                                            End If
                                                                                                        Else
                                                                                                            Debug.WriteLine($"Invalid newCost ({newCost}) for SPFNo2, CostEffectiveDateID: {costEffectiveDateID}")
@@ -246,7 +245,7 @@ Namespace DataAccess
                                                                                            Debug.WriteLine($"No changes for RawUnitID: {rawUnit.RawUnitID} - skipping history insert")
                                                                                            Continue For
                                                                                        End If
-                                                                                       Dim baseLumberCost As Decimal = If(rawUnit.LumberCost.HasValue, rawUnit.LumberCost.Value, 0D)
+                                                                                       Dim baseLumberCost As Decimal = If(rawUnit.LumberCost, 0D)
                                                                                        Dim updatedLumberCost As Decimal = baseLumberCost + totalAdjustment
                                                                                        If updatedLumberCost < 0 Then
                                                                                            Debug.WriteLine($"Warning: Negative LumberCost ({updatedLumberCost}) for RawUnitID: {rawUnit.RawUnitID}, baseLumberCost={baseLumberCost}, totalAdjustment={totalAdjustment}")
@@ -271,10 +270,10 @@ Namespace DataAccess
                                                                                             {"@Avg261800", If(newAvgPrices.ContainsKey("Avg261800") AndAlso newAvgPrices("Avg261800").HasValue, CType(newAvgPrices("Avg261800").Value, Object), DBNull.Value)},
                                                                                             {"@Avg262400", If(newAvgPrices.ContainsKey("Avg262400") AndAlso newAvgPrices("Avg262400").HasValue, CType(newAvgPrices("Avg262400").Value, Object), DBNull.Value)},
                                                                                             {"@IsActive", 1}
-                        }
+                                                                                          }
                                                                                        Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
-                            .CommandTimeout = 0
-                        }
+                                                                                            .CommandTimeout = 0
+                                                                                        }
                                                                                        cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
                                                                                        Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
                                                                                        Debug.WriteLine($"Inserted HistoryID {historyID} for RawUnitID {rawUnit.RawUnitID}: LumberCost={updatedLumberCost}, IsActive=1")
@@ -329,24 +328,42 @@ Namespace DataAccess
                                                                        Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader("SELECT TOP 1 * FROM RawUnitLumberHistory WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID AND IsActive = 1 ORDER BY UpdateDate DESC", params)
                                                                            If reader.Read() Then
                                                                                history = New RawUnitLumberHistoryModel With {
-                    .HistoryID = reader.GetInt32(reader.GetOrdinal("HistoryID")),
-                    .RawUnitID = reader.GetInt32(reader.GetOrdinal("RawUnitID")),
-                    .VersionID = reader.GetInt32(reader.GetOrdinal("VersionID")),
-                    .CostEffectiveDateID = If(Not reader.IsDBNull(reader.GetOrdinal("CostEffectiveDateID")), reader.GetInt32(reader.GetOrdinal("CostEffectiveDateID")), Nothing),
-                    .LumberCost = reader.GetDecimal(reader.GetOrdinal("LumberCost")),
-                    .AvgSPFNo2 = If(Not reader.IsDBNull(reader.GetOrdinal("AvgSPFNo2")), reader.GetDecimal(reader.GetOrdinal("AvgSPFNo2")), Nothing),
-                    .Avg241800 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg241800")), reader.GetDecimal(reader.GetOrdinal("Avg241800")), Nothing),
-                    .Avg242400 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg242400")), reader.GetDecimal(reader.GetOrdinal("Avg242400")), Nothing),
-                    .Avg261800 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg261800")), reader.GetDecimal(reader.GetOrdinal("Avg261800")), Nothing),
-                    .Avg262400 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg262400")), reader.GetDecimal(reader.GetOrdinal("Avg262400")), Nothing),
-                    .UpdateDate = reader.GetDateTime(reader.GetOrdinal("UpdateDate")),
-                    .IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive"))
-                }
+                                                                                    .HistoryID = reader.GetInt32(reader.GetOrdinal("HistoryID")),
+                                                                                    .RawUnitID = reader.GetInt32(reader.GetOrdinal("RawUnitID")),
+                                                                                    .VersionID = reader.GetInt32(reader.GetOrdinal("VersionID")),
+                                                                                    .CostEffectiveDateID = If(Not reader.IsDBNull(reader.GetOrdinal("CostEffectiveDateID")), reader.GetInt32(reader.GetOrdinal("CostEffectiveDateID")), Nothing),
+                                                                                    .LumberCost = reader.GetDecimal(reader.GetOrdinal("LumberCost")),
+                                                                                    .AvgSPFNo2 = If(Not reader.IsDBNull(reader.GetOrdinal("AvgSPFNo2")), reader.GetDecimal(reader.GetOrdinal("AvgSPFNo2")), Nothing),
+                                                                                    .Avg241800 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg241800")), reader.GetDecimal(reader.GetOrdinal("Avg241800")), Nothing),
+                                                                                    .Avg242400 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg242400")), reader.GetDecimal(reader.GetOrdinal("Avg242400")), Nothing),
+                                                                                    .Avg261800 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg261800")), reader.GetDecimal(reader.GetOrdinal("Avg261800")), Nothing),
+                                                                                    .Avg262400 = If(Not reader.IsDBNull(reader.GetOrdinal("Avg262400")), reader.GetDecimal(reader.GetOrdinal("Avg262400")), Nothing),
+                                                                                    .UpdateDate = reader.GetDateTime(reader.GetOrdinal("UpdateDate")),
+                                                                                    .IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive"))
+                                                                                }
                                                                            End If
                                                                        End Using
                                                                    End Sub, "Error fetching latest lumber history for RawUnitID " & rawUnitID & " and VersionID " & versionID)
             Return history
         End Function
 
+        Public Shared Function GetActiveSPFNo2ByProductType(versionID As Integer, productType As String) As Decimal
+            Dim params As SqlParameter() = {
+                New SqlParameter("@VersionID", versionID),
+                New SqlParameter("@ProductTypeName", productType)
+            }
+            Dim valObj As Object = Nothing
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       valObj = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(
+                                                                           "SELECT AVG(rlh.AvgSPFNo2) " &
+                                                                           "FROM RawUnitLumberHistory rlh " &
+                                                                           "JOIN RawUnits ru ON rlh.RawUnitID = ru.RawUnitID " &
+                                                                           "JOIN ProductType pt ON ru.ProductTypeID = pt.ProductTypeID " &
+                                                                           "WHERE rlh.VersionID = @VersionID AND pt.ProductTypeName = @ProductTypeName AND rlh.IsActive = 1",
+                                                                           params
+                                                                       )
+                                                                   End Sub, "Error fetching active SPFNo2 price for version " & versionID & " and product type " & productType)
+            Return If(valObj Is DBNull.Value OrElse valObj Is Nothing, 0D, CDec(valObj))
+        End Function
     End Class
 End Namespace

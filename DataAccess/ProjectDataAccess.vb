@@ -1032,9 +1032,9 @@ Namespace DataAccess
                 Dim lumberPer As Decimal = history.LumberCost / raw.SqFt.Value
                 display.LumberCost = lumberPer * extSqft
 
-                Dim effective As Decimal = LumberDataAccess.GetLumberAdder(versionID, productTypeID)
-                If effective > 0D Then
-                    display.LumberCost += (display.BDFT / 1000D) * effective
+                Dim lumberadder As Decimal = LumberDataAccess.GetLumberAdder(versionID, productTypeID)
+                If lumberadder > 0D Then
+                    display.LumberCost += (display.BDFT / 1000D) * lumberadder
                 End If
 
                 display.PlateCost = (raw.PlateCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft

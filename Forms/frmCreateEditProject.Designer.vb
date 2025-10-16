@@ -137,6 +137,10 @@ Partial Class frmCreateEditProject
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
+        Me.Label6 = New System.Windows.Forms.Label()
+        Me.Label7 = New System.Windows.Forms.Label()
+        Me.txtActiveRoofSPFPrice = New System.Windows.Forms.TextBox()
+        Me.txtActiveFloorSPFPrice = New System.Windows.Forms.TextBox()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -766,6 +770,10 @@ Partial Class frmCreateEditProject
         '
         'tabOverrides
         '
+        Me.tabOverrides.Controls.Add(Me.Label7)
+        Me.tabOverrides.Controls.Add(Me.txtActiveRoofSPFPrice)
+        Me.tabOverrides.Controls.Add(Me.txtActiveFloorSPFPrice)
+        Me.tabOverrides.Controls.Add(Me.Label6)
         Me.tabOverrides.Controls.Add(Me.Label5)
         Me.tabOverrides.Controls.Add(Me.Label4)
         Me.tabOverrides.Controls.Add(Me.btnDeleteLumberHistory)
@@ -849,24 +857,24 @@ Partial Class frmCreateEditProject
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(6, 183)
+        Me.Label3.Location = New System.Drawing.Point(44, 200)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(149, 13)
+        Me.Label3.Size = New System.Drawing.Size(111, 13)
         Me.Label3.TabIndex = 48
-        Me.Label3.Text = "Original SPF2 Roof Avg Price:"
+        Me.Label3.Text = "SPF2 Roof Avg Price:"
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(6, 154)
+        Me.Label2.Location = New System.Drawing.Point(44, 171)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(149, 13)
+        Me.Label2.Size = New System.Drawing.Size(111, 13)
         Me.Label2.TabIndex = 47
-        Me.Label2.Text = "Original SPF2 Floor Avg Price:"
+        Me.Label2.Text = "SPF2 Floor Avg Price:"
         '
         'txtRawRoofSPFPrice
         '
-        Me.txtRawRoofSPFPrice.Location = New System.Drawing.Point(161, 180)
+        Me.txtRawRoofSPFPrice.Location = New System.Drawing.Point(161, 197)
         Me.txtRawRoofSPFPrice.Name = "txtRawRoofSPFPrice"
         Me.txtRawRoofSPFPrice.ReadOnly = True
         Me.txtRawRoofSPFPrice.Size = New System.Drawing.Size(68, 20)
@@ -874,7 +882,7 @@ Partial Class frmCreateEditProject
         '
         'txtRawFloorSPFPrice
         '
-        Me.txtRawFloorSPFPrice.Location = New System.Drawing.Point(161, 151)
+        Me.txtRawFloorSPFPrice.Location = New System.Drawing.Point(161, 168)
         Me.txtRawFloorSPFPrice.Name = "txtRawFloorSPFPrice"
         Me.txtRawFloorSPFPrice.ReadOnly = True
         Me.txtRawFloorSPFPrice.Size = New System.Drawing.Size(68, 20)
@@ -890,16 +898,15 @@ Partial Class frmCreateEditProject
         '
         'btnSaveOverrides
         '
-        Me.btnSaveOverrides.Location = New System.Drawing.Point(452, 482)
+        Me.btnSaveOverrides.Location = New System.Drawing.Point(576, 482)
         Me.btnSaveOverrides.Name = "btnSaveOverrides"
-        Me.btnSaveOverrides.Size = New System.Drawing.Size(226, 30)
+        Me.btnSaveOverrides.Size = New System.Drawing.Size(102, 30)
         Me.btnSaveOverrides.TabIndex = 44
         Me.btnSaveOverrides.Text = "Save Overrides"
         '
         'tabRollup
         '
         Me.tabRollup.Controls.Add(Me.dgvRollup)
-        Me.tabRollup.Controls.Add(Me.btnRecalcRollup)
         Me.tabRollup.Location = New System.Drawing.Point(4, 22)
         Me.tabRollup.Name = "tabRollup"
         Me.tabRollup.Size = New System.Drawing.Size(681, 551)
@@ -916,9 +923,10 @@ Partial Class frmCreateEditProject
         '
         'btnRecalcRollup
         '
-        Me.btnRecalcRollup.Location = New System.Drawing.Point(0, 496)
+        Me.btnRecalcRollup.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnRecalcRollup.Location = New System.Drawing.Point(691, 398)
         Me.btnRecalcRollup.Name = "btnRecalcRollup"
-        Me.btnRecalcRollup.Size = New System.Drawing.Size(562, 30)
+        Me.btnRecalcRollup.Size = New System.Drawing.Size(104, 44)
         Me.btnRecalcRollup.TabIndex = 46
         Me.btnRecalcRollup.Text = "Recalculate Rollup"
         '
@@ -1209,6 +1217,7 @@ Partial Class frmCreateEditProject
         'SplitContainer1.Panel2
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnOpenProjectBuilder)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnRecalcRollup)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnPreviewIncExc)
         Me.SplitContainer1.Panel2.Controls.Add(Me.tabControlRight)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnGenerateProjectReport)
@@ -1230,6 +1239,40 @@ Partial Class frmCreateEditProject
         Me.btnOpenProjectBuilder.TabIndex = 27
         Me.btnOpenProjectBuilder.Text = "Open Project Builder"
         Me.btnOpenProjectBuilder.UseVisualStyleBackColor = True
+        '
+        'Label6
+        '
+        Me.Label6.AutoSize = True
+        Me.Label6.Location = New System.Drawing.Point(171, 152)
+        Me.Label6.Name = "Label6"
+        Me.Label6.Size = New System.Drawing.Size(45, 13)
+        Me.Label6.TabIndex = 56
+        Me.Label6.Text = "Original "
+        '
+        'Label7
+        '
+        Me.Label7.AutoSize = True
+        Me.Label7.Location = New System.Drawing.Point(245, 152)
+        Me.Label7.Name = "Label7"
+        Me.Label7.Size = New System.Drawing.Size(37, 13)
+        Me.Label7.TabIndex = 59
+        Me.Label7.Text = "Active"
+        '
+        'txtActiveRoofSPFPrice
+        '
+        Me.txtActiveRoofSPFPrice.Location = New System.Drawing.Point(235, 197)
+        Me.txtActiveRoofSPFPrice.Name = "txtActiveRoofSPFPrice"
+        Me.txtActiveRoofSPFPrice.ReadOnly = True
+        Me.txtActiveRoofSPFPrice.Size = New System.Drawing.Size(68, 20)
+        Me.txtActiveRoofSPFPrice.TabIndex = 58
+        '
+        'txtActiveFloorSPFPrice
+        '
+        Me.txtActiveFloorSPFPrice.Location = New System.Drawing.Point(235, 168)
+        Me.txtActiveFloorSPFPrice.Name = "txtActiveFloorSPFPrice"
+        Me.txtActiveFloorSPFPrice.ReadOnly = True
+        Me.txtActiveFloorSPFPrice.Size = New System.Drawing.Size(68, 20)
+        Me.txtActiveFloorSPFPrice.TabIndex = 57
         '
         'frmCreateEditProject
         '
@@ -1383,4 +1426,8 @@ Partial Class frmCreateEditProject
     Friend WithEvents Label5 As Label
     Friend WithEvents Label4 As Label
     Friend WithEvents btnOpenProjectBuilder As Button
+    Friend WithEvents Label7 As Label
+    Friend WithEvents txtActiveRoofSPFPrice As TextBox
+    Friend WithEvents txtActiveFloorSPFPrice As TextBox
+    Friend WithEvents Label6 As Label
 End Class

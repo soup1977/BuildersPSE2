@@ -11,8 +11,7 @@ Imports BuildersPSE2.DataAccess
 Public Class ProjectBuilderForm
     Inherits Form
 
-    Private dgv As New DataGridView()
-    Private btnApply As New Button()
+
     Private m_VersionID As Integer
 
     Public Sub New(versionID As Integer)
@@ -23,7 +22,7 @@ Public Class ProjectBuilderForm
 
 
     Private Sub btnApply_Click(sender As Object, e As EventArgs) Handles BtnSaveProjectBuilder.Click
-        For Each row As DataGridViewRow In dgv.Rows
+        For Each row As DataGridViewRow In dgvProjBlder.Rows
             If row.IsNewRow Then Continue For
 
             Dim buildingName As String = If(row.Cells("colBuildingName").Value?.ToString(), String.Empty)
@@ -114,7 +113,7 @@ Public Class ProjectBuilderForm
         Next
 
         MessageBox.Show("Buildings and levels created successfully.")
-        Me.Close()
+
     End Sub
 
     Private Function GetOrdinalSuffix(num As Integer) As String

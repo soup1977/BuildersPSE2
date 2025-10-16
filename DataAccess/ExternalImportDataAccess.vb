@@ -57,24 +57,24 @@ Namespace DataAccess
                                                                                    Dim salesID As Integer? = HelperDataAccess.GetOrInsertSales(salesName, conn, transaction)
 
                                                                                    Dim projectParams As New Dictionary(Of String, Object) From {
-                        {"@JBID", If(String.IsNullOrEmpty(jbid), DBNull.Value, CType(jbid, Object))},
-                        {"@ProjectTypeID", 1}, ' Hardcode to 1 for MultiFamily For Rent
-                        {"@ProjectName", If(String.IsNullOrEmpty(projectName), DBNull.Value, CType(projectName, Object))},
-                        {"@EstimatorID", If(estimatorID.HasValue, CType(estimatorID.Value, Object), DBNull.Value)},
-                        {"@Address", If(String.IsNullOrEmpty(address), DBNull.Value, CType(address, Object))},
-                        {"@City", If(String.IsNullOrEmpty(city), DBNull.Value, CType(city, Object))},
-                        {"@State", If(String.IsNullOrEmpty(state), DBNull.Value, CType(state, Object))},
-                        {"@Zip", If(String.IsNullOrEmpty(zip), DBNull.Value, CType(zip, Object))},
-                        {"@BidDate", If(bidDate.HasValue, CType(bidDate.Value, Object), DBNull.Value)},
-                        {"@ArchPlansDated", If(archPlansDated.HasValue, CType(archPlansDated.Value, Object), DBNull.Value)},
-                        {"@EngPlansDated", If(engPlansDated.HasValue, CType(engPlansDated.Value, Object), DBNull.Value)},
-                        {"@MilesToJobSite", If(milesToJobSite.HasValue, CType(milesToJobSite.Value, Object), DBNull.Value)},
-                        {"@TotalNetSqft", If(totalNetSqft.HasValue, CType(totalNetSqft.Value, Object), DBNull.Value)},
-                        {"@TotalGrossSqft", If(totalGrossSqft.HasValue, CType(totalGrossSqft.Value, Object), DBNull.Value)},
-                        {"@ArchitectID", If(architectID.HasValue, CType(architectID.Value, Object), DBNull.Value)},
-                        {"@EngineerID", If(engineerID.HasValue, CType(engineerID.Value, Object), DBNull.Value)},
-                        {"@ProjectNotes", DBNull.Value}
-                    }
+                                                                                        {"@JBID", If(String.IsNullOrEmpty(jbid), DBNull.Value, CType(jbid, Object))},
+                                                                                        {"@ProjectTypeID", 1}, ' Hardcode to 1 for MultiFamily For Rent
+                                                                                        {"@ProjectName", If(String.IsNullOrEmpty(projectName), DBNull.Value, CType(projectName, Object))},
+                                                                                        {"@EstimatorID", If(estimatorID.HasValue, CType(estimatorID.Value, Object), DBNull.Value)},
+                                                                                        {"@Address", If(String.IsNullOrEmpty(address), DBNull.Value, CType(address, Object))},
+                                                                                        {"@City", If(String.IsNullOrEmpty(city), DBNull.Value, CType(city, Object))},
+                                                                                        {"@State", If(String.IsNullOrEmpty(state), DBNull.Value, CType(state, Object))},
+                                                                                        {"@Zip", If(String.IsNullOrEmpty(zip), DBNull.Value, CType(zip, Object))},
+                                                                                        {"@BidDate", If(bidDate.HasValue, CType(bidDate.Value, Object), DBNull.Value)},
+                                                                                        {"@ArchPlansDated", If(archPlansDated.HasValue, CType(archPlansDated.Value, Object), DBNull.Value)},
+                                                                                        {"@EngPlansDated", If(engPlansDated.HasValue, CType(engPlansDated.Value, Object), DBNull.Value)},
+                                                                                        {"@MilesToJobSite", If(milesToJobSite.HasValue, CType(milesToJobSite.Value, Object), DBNull.Value)},
+                                                                                        {"@TotalNetSqft", If(totalNetSqft.HasValue, CType(totalNetSqft.Value, Object), DBNull.Value)},
+                                                                                        {"@TotalGrossSqft", If(totalGrossSqft.HasValue, CType(totalGrossSqft.Value, Object), DBNull.Value)},
+                                                                                        {"@ArchitectID", If(architectID.HasValue, CType(architectID.Value, Object), DBNull.Value)},
+                                                                                        {"@EngineerID", If(engineerID.HasValue, CType(engineerID.Value, Object), DBNull.Value)},
+                                                                                        {"@ProjectNotes", DBNull.Value}
+                                                                                    }
                                                                                    Dim projectID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProject, HelperDataAccess.BuildParameters(projectParams), conn, transaction)
                                                                                    importLog.AppendLine($"Project '{projectName}' created successfully with ID {projectID}.")
 
@@ -213,14 +213,15 @@ Namespace DataAccess
                                                                                                End If
                                                                                                Dim uniqueKey As String = If(String.IsNullOrEmpty(unitName), "Unknown_" & planSqftStr & "_" & col, unitName & "_" & planSqftStr & "_" & col)
                                                                                                Dim actualParams As New Dictionary(Of String, Object) From {
-                {"@VersionID", newVersionID},
-                {"@RawUnitID", rawID},
-                {"@ProductTypeID", productTypeID},
-                {"@UnitName", unitName},
-                {"@PlanSQFT", If(planSqft.HasValue, CType(planSqft.Value, Object), DBNull.Value)},
-                {"@UnitType", "Standard"},
-                {"@OptionalAdder", 1D}
-            }
+                                                                                                    {"@VersionID", newVersionID},
+                                                                                                    {"@RawUnitID", rawID},
+                                                                                                    {"@ProductTypeID", productTypeID},
+                                                                                                    {"@UnitName", unitName},
+                                                                                                    {"@PlanSQFT", If(planSqft.HasValue, CType(planSqft.Value, Object), DBNull.Value)},
+                                                                                                    {"@UnitType", "Standard"},
+                                                                                                    {"@OptionalAdder", 1D},
+                                                                                                    {"@colorcode", DBNull.Value}
+                                                                                                }
                                                                                                Dim newActualID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertActualUnit, HelperDataAccess.BuildParameters(actualParams), conn, transaction)
                                                                                                actualUnitMap.Add(uniqueKey, newActualID)
                                                                                                actualUnitSet.Add(uniqueCombo) ' Track unique combo
@@ -245,9 +246,9 @@ Namespace DataAccess
                                                                                        Dim planSqft As Decimal? = If(planSqftStr = "0", Nothing, CDec(planSqftStr))
                                                                                        ' Get RawUnitID from ActualUnits import
                                                                                        Dim actualParams As New Dictionary(Of String, Object) From {
-        {"@ActualUnitID", actualUnitID},
-        {"@VersionID", newVersionID}
-    }
+                                                                                            {"@ActualUnitID", actualUnitID},
+                                                                                            {"@VersionID", newVersionID}
+                                                                                        }
                                                                                        Dim rawUnitIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT RawUnitID FROM ActualUnits WHERE ActualUnitID = @ActualUnitID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(actualParams), conn, transaction)
                                                                                        If rawUnitIDObj Is DBNull.Value Then Continue For
                                                                                        Dim rawUnitID As Integer = CInt(rawUnitIDObj)
@@ -255,9 +256,9 @@ Namespace DataAccess
                                                                                        If rawUnitData.ContainsKey(rawUnitID) Then Continue For
                                                                                        ' Get RawUnit data
                                                                                        Dim rawParams As New Dictionary(Of String, Object) From {
-        {"@RawUnitID", rawUnitID},
-        {"@VersionID", newVersionID}
-    }
+                                                                                            {"@RawUnitID", rawUnitID},
+                                                                                            {"@VersionID", newVersionID}
+                                                                                        }
                                                                                        Dim rawReader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReaderTransactional("SELECT SqFt, LF, BF, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, TotalSellPrice FROM RawUnits WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(rawParams), conn, transaction)
                                                                                        If Not rawReader.Read() Then
                                                                                            rawReader.Close()
@@ -299,27 +300,27 @@ Namespace DataAccess
                                                                                        Dim marginPerSqft As Decimal = sellPerSqft - overallCostPerSqft
                                                                                        ' Insert components
                                                                                        Dim components As New List(Of Tuple(Of String, Decimal)) From {
-        Tuple.Create("LF/SQFT", lfPerSqft),
-        Tuple.Create("BDFT/SQFT", bdftPerSqft),
-        Tuple.Create("Lumber/SQFT", lumberPerSqft),
-        Tuple.Create("Plate/SQFT", platePerSqft),
-        Tuple.Create("ManufLabor/SQFT", manufLaborPerSqft),
-        Tuple.Create("DesignLabor/SQFT", designLaborPerSqft),
-        Tuple.Create("MGMTLabor/SQFT", mgmtLaborPerSqft),
-        Tuple.Create("JobSupplies/SQFT", jobSuppliesPerSqft),
-        Tuple.Create("ManHours/SQFT", manHoursPerSqft),
-        Tuple.Create("ItemCost/SQFT", itemCostPerSqft),
-        Tuple.Create("OverallCost/SQFT", overallCostPerSqft),
-        Tuple.Create("SellPrice/SQFT", sellPerSqft),
-        Tuple.Create("Margin/SQFT", marginPerSqft)
-    }
+                                                                                                Tuple.Create("LF/SQFT", lfPerSqft),
+                                                                                                Tuple.Create("BDFT/SQFT", bdftPerSqft),
+                                                                                                Tuple.Create("Lumber/SQFT", lumberPerSqft),
+                                                                                                Tuple.Create("Plate/SQFT", platePerSqft),
+                                                                                                Tuple.Create("ManufLabor/SQFT", manufLaborPerSqft),
+                                                                                                Tuple.Create("DesignLabor/SQFT", designLaborPerSqft),
+                                                                                                Tuple.Create("MGMTLabor/SQFT", mgmtLaborPerSqft),
+                                                                                                Tuple.Create("JobSupplies/SQFT", jobSuppliesPerSqft),
+                                                                                                Tuple.Create("ManHours/SQFT", manHoursPerSqft),
+                                                                                                Tuple.Create("ItemCost/SQFT", itemCostPerSqft),
+                                                                                                Tuple.Create("OverallCost/SQFT", overallCostPerSqft),
+                                                                                                Tuple.Create("SellPrice/SQFT", sellPerSqft),
+                                                                                                Tuple.Create("Margin/SQFT", marginPerSqft)
+                                                                                            }
                                                                                        For Each comp In components
                                                                                            Dim componentParams As New Dictionary(Of String, Object) From {
-            {"@VersionID", newVersionID},
-            {"@ActualUnitID", actualUnitID},
-            {"@ComponentType", comp.Item1},
-            {"@Value", comp.Item2}
-        }
+                                                                                                {"@VersionID", newVersionID},
+                                                                                                {"@ActualUnitID", actualUnitID},
+                                                                                                {"@ComponentType", comp.Item1},
+                                                                                                {"@Value", comp.Item2}
+                                                                                            }
                                                                                            SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertCalculatedComponent, HelperDataAccess.BuildParameters(componentParams), conn, transaction)
                                                                                            componentCount += 1
                                                                                        Next
@@ -337,12 +338,12 @@ Namespace DataAccess
                                                                                            Dim resUnits As Integer? = If(resUnitsObj Is DBNull.Value, Nothing, CInt(resUnitsObj))
                                                                                            Dim bldgQty As Integer = If(dt.Rows(i)(3) Is DBNull.Value, 0, CInt(dt.Rows(i)(3)))
                                                                                            Dim bldgParams As New Dictionary(Of String, Object) From {
-                                {"@BuildingName", buildingName},
-                                {"@BuildingType", 1},
-                                {"@ResUnits", If(resUnits.HasValue, CType(resUnits.Value, Object), DBNull.Value)},
-                                {"@BldgQty", bldgQty},
-                                {"@VersionID", newVersionID}
-                            }
+                                                                                                {"@BuildingName", buildingName},
+                                                                                                {"@BuildingType", 1},
+                                                                                                {"@ResUnits", If(resUnits.HasValue, CType(resUnits.Value, Object), DBNull.Value)},
+                                                                                                {"@BldgQty", bldgQty},
+                                                                                                {"@VersionID", newVersionID}
+                                                                                            }
                                                                                            Dim newBldgID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertBuilding, HelperDataAccess.BuildParameters(bldgParams), conn, transaction)
                                                                                            buildingMap.Add(buildingName, newBldgID)
                                                                                            buildingCount += 1
