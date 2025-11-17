@@ -157,6 +157,7 @@ Public Class frmCreateEditProject
             BindVersionsToCombo()
             LoadCostEffectiveDates()
             LoadVersionSpecificData()
+
         Catch ex As Exception
             isChangingVersion = False
             UpdateStatus("Status: Error loading versions: " & ex.Message)
@@ -236,6 +237,7 @@ Public Class frmCreateEditProject
             LoadProjectRollup()
             Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
             UpdateStatus($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
+            LoadFuturesIntoListBox(currentVersionID)
         Catch ex As Exception
             UpdateStatus($"Error loading version-specific data: {ex.Message}")
             MessageBox.Show("Error loading version-specific data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -630,11 +632,46 @@ Public Class frmCreateEditProject
         End Try
     End Sub
 
-    ' Refreshes all customer-related combo boxes.
+    ' Refreshes all customer-related combo boxes while preserving current selections.
     Private Sub RefreshCustomerComboboxes()
-        cboCustomer.DataSource = HelperDataAccess.GetCustomers(customerType:=1)
-        cboProjectArchitect.DataSource = HelperDataAccess.GetCustomers(customerType:=2)
-        cboProjectEngineer.DataSource = HelperDataAccess.GetCustomers(customerType:=3)
+        ' Store current selections
+        Dim currentCustomerID As Object = cboCustomer.SelectedValue
+        Dim currentArchitectID As Object = cboProjectArchitect.SelectedValue
+        Dim currentEngineerID As Object = cboProjectEngineer.SelectedValue
+
+        ' Refresh data sources
+        Dim customers As List(Of CustomerModel) = HelperDataAccess.GetCustomers(customerType:=1)
+        Dim architects As List(Of CustomerModel) = HelperDataAccess.GetCustomers(customerType:=2)
+        Dim engineers As List(Of CustomerModel) = HelperDataAccess.GetCustomers(customerType:=3)
+
+        ' Rebind
+        cboCustomer.DataSource = customers
+        cboProjectArchitect.DataSource = architects
+        cboProjectEngineer.DataSource = engineers
+
+        ' Restore selections if the ID still exists in the new list
+        If currentCustomerID IsNot Nothing AndAlso currentCustomerID IsNot DBNull.Value Then
+            If customers.Any(Function(c) c.CustomerID = CInt(currentCustomerID)) Then
+                cboCustomer.SelectedValue = currentCustomerID
+            End If
+        End If
+
+        If currentArchitectID IsNot Nothing AndAlso currentArchitectID IsNot DBNull.Value Then
+            If architects.Any(Function(c) c.CustomerID = CInt(currentArchitectID)) Then
+                cboProjectArchitect.SelectedValue = currentArchitectID
+            End If
+        End If
+
+        If currentEngineerID IsNot Nothing AndAlso currentEngineerID IsNot DBNull.Value Then
+            If engineers.Any(Function(c) c.CustomerID = CInt(currentEngineerID)) Then
+                cboProjectEngineer.SelectedValue = currentEngineerID
+            End If
+        End If
+
+        ' Fallback: if not found (e.g. deleted), select first item gracefully
+        If cboCustomer.SelectedValue Is Nothing AndAlso customers.Any() Then cboCustomer.SelectedIndex = 0
+        If cboProjectArchitect.SelectedValue Is Nothing AndAlso architects.Any() Then cboProjectArchitect.SelectedIndex = 0
+        If cboProjectEngineer.SelectedValue Is Nothing AndAlso engineers.Any() Then cboProjectEngineer.SelectedIndex = 0
     End Sub
 
     Private Sub btnSaveProjectInfo_Click(sender As Object, e As EventArgs) Handles btnSaveProjectInfo.Click
@@ -763,6 +800,8 @@ Public Class frmCreateEditProject
     Private Sub TvProjectTree_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles tvProjectTree.AfterSelect
         Try
             UpdateTabsForSelectedNode()
+            RefreshLevelVariance()
+            RefreshRollupSummary()
         Catch ex As Exception
             UpdateStatus($"Error selecting tree node: {ex.Message}")
             MessageBox.Show("Error selecting tree node: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -1415,5 +1454,481 @@ Public Class frmCreateEditProject
             UpdateStatus("No valid project selected for Project Builder")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
+    End Sub
+
+    Private Sub btnPullFutures_Click(sender As Object, e As EventArgs) Handles btnPullFutures.Click
+        Dim versionId As Integer = currentVersionID
+
+        If versionId <= 0 Then
+            MessageBox.Show("No valid version selected. Save the project and select a version first.", "Futures", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        Dim futures = LumberDataAccess.GetLumberFutures()
+        If futures.Count = 0 Then
+            Debug.WriteLine("No lumber futures data returned.")
+            MessageBox.Show("No data returned – check internet or page layout.", "Futures", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        Using conn As SqlConnection = SqlConnectionManager.Instance.GetConnection()
+            ' <<< NEW: open only when really needed >>>
+            If conn.State <> ConnectionState.Open Then
+                conn.Open()
+            End If
+
+            Using tran = conn.BeginTransaction()
+                Try
+                    LumberDataAccess.SaveLumberFutures(versionId, futures, conn, tran)
+                    tran.Commit()
+                    Debug.WriteLine($"Successfully saved {futures.Count} lumber futures for VersionID {versionId}")
+                Catch ex As Exception
+                    tran.Rollback()
+                    Debug.WriteLine("Transaction rollback: " & ex.Message)
+                    Throw                              ' safe – Using blocks still dispose everything
+                End Try
+            End Using
+        End Using                                     ' <<< conn.Dispose() always runs >>>
+
+        LoadFuturesIntoListBox(versionId)
+    End Sub
+
+
+    Private Sub LoadFuturesIntoListBox(versionId As Integer)
+        lstFutures.Items.Clear()
+
+        If versionId <= 0 Then
+            Debug.WriteLine("LoadFuturesIntoListBox: Invalid versionId")
+            Return
+        End If
+
+        Dim futures = LumberDataAccess.GetFuturesForVersion(versionId)
+
+        lstFutures.DisplayMember = NameOf(LumberFutures.ToString)   ' or just remove it
+        lstFutures.ValueMember = "ID"
+
+        ' ---- Add the LumberFutures objects directly ----
+        For Each f As LumberFutures In futures
+            lstFutures.Items.Add(f)          ' <-- ListBox now holds LumberFutures
+        Next
+
+        ' ---- Auto-select nearest expiry (no late binding) ----
+        If futures.Count > 0 Then
+            Dim today = DateTime.Today
+            Dim bestIdx = 0
+            Dim bestDiff = Double.MaxValue
+
+            For i = 0 To futures.Count - 1
+                Dim f = futures(i)                     ' <-- typed reference
+                Dim parts = f.ContractMonth.Split(" "c)
+                If parts.Length >= 2 Then
+                    Dim m = LumberDataAccess.MonthNameToNumber(parts(0))
+                    Dim y = CInt(parts(1))
+                    Dim yr = If(y < 50, 2000 + y, 1900 + y)
+                    If m > 0 Then
+                        Dim dt = New DateTime(yr, m, 1)
+                        Dim diff = Math.Abs((dt - today).TotalDays)
+                        If diff < bestDiff Then
+                            bestDiff = diff
+                            bestIdx = i
+                        End If
+                    End If
+                End If
+            Next
+            lstFutures.SelectedIndex = bestIdx
+        End If
+    End Sub
+    ''' <summary>
+    ''' Gets the current LevelID from the selected tree node
+    ''' </summary>
+    Private Function GetCurrentLevelID() As Integer
+        If tvProjectTree.SelectedNode Is Nothing Then Return 0
+        If TypeOf tvProjectTree.SelectedNode.Tag Is LevelModel Then
+            Return CType(tvProjectTree.SelectedNode.Tag, LevelModel).LevelID
+        End If
+        Return 0
+    End Function
+
+
+    ''' <summary>
+    ''' Refreshes the per-level variance grid — PIVOTED, MARGIN %, COLOR CODING, FORMATTING PRESERVED
+    ''' </summary>
+    Private Sub RefreshLevelVariance()
+        Dim levelID As Integer = GetCurrentLevelID()
+        If levelID <= 0 OrElse currentVersionID <= 0 Then
+            dgvLevelVariance.DataSource = Nothing
+            Exit Sub
+        End If
+
+        Dim dt As New DataTable()
+
+        Try
+            ' 1. GET ESTIMATE + PRODUCT TYPE
+            Dim estimateRow As DataRow = Nothing
+            Dim productTypeName As String = ""
+            Using reader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectLevelEstimateWithProductType, {
+            New SqlParameter("@LevelID", levelID),
+            New SqlParameter("@VersionID", currentVersionID)
+        })
+                Dim estTable As New DataTable()
+                estTable.Load(reader)
+                If estTable.Rows.Count > 0 Then
+                    estimateRow = estTable.Rows(0)
+                    productTypeName = estimateRow("ProductTypeName").ToString()
+                End If
+            End Using
+
+            If estimateRow Is Nothing Then
+                dgvLevelVariance.DataSource = Nothing
+                Exit Sub
+            End If
+
+            ' 2. GET AvgSPFNo2
+            Dim avgSPFNo2 As Decimal = LumberDataAccess.GetActiveSPFNo2ByProductType(currentVersionID, productTypeName)
+
+            ' 3. BUILD ESTIMATE DATA
+            Dim estData As New Dictionary(Of String, Decimal) From {
+            {"Sell Price", CDec(estimateRow("OverallPrice"))},
+            {"BDFT", CDec(estimateRow("OverallBDFT"))},
+            {"AvgSPF2", avgSPFNo2},
+            {"LumberCost", CDec(estimateRow("LumberCost"))},
+            {"PlateCost", CDec(estimateRow("PlateCost"))},
+            {"ManufLaborCost", CDec(estimateRow("LaborCost"))},
+            {"ManufLaborMH", CDec(estimateRow("LaborMH"))},
+            {"ItemCost", CDec(estimateRow("ItemsCost"))},
+            {"DeliveryCost", CDec(estimateRow("DeliveryCost"))},
+            {"MiscLaborCost", CDec(estimateRow("DesignCost")) + CDec(estimateRow("MGMTCost")) + CDec(estimateRow("JobSuppliesCost"))},
+            {"Total Cost", CDec(estimateRow("OverallCost"))}
+        }
+
+            ' Initialize DataTable
+            dt.Columns.Add("Metric", GetType(String))
+            dt.Columns.Add("Estimate", GetType(Decimal))
+
+            For Each kvp In estData
+                Dim row As DataRow = dt.NewRow()
+                row("Metric") = kvp.Key
+                row("Estimate") = kvp.Value
+                dt.Rows.Add(row)
+            Next
+
+            ' 4. GET ALL ACTUALS — WITH REAL JOB/SO HEADERS
+            Dim actuals As New List(Of (Source As String, Data As Dictionary(Of String, Decimal), Header As String))()
+            Using reader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectAllActualsForLevel, {
+    New SqlParameter("@LevelID", levelID),
+    New SqlParameter("@VersionID", currentVersionID)
+})
+                Dim indexDesign As Integer = 1
+                Dim indexInvoice As Integer = 1
+
+                While reader.Read()
+                    Dim stageType As Integer = CInt(reader("StageType"))
+                    Dim miTekJobNumber As String = If(reader("MiTekJobNumber") Is DBNull.Value, "", reader("MiTekJobNumber").ToString().Trim())
+                    Dim bisTrackSO As String = If(reader("BisTrackSalesOrder") Is DBNull.Value, "", reader("BisTrackSalesOrder").ToString().Trim())
+
+                    ' BUILD HEADER
+                    Dim header As String = ""
+                    If stageType = 1 Then ' Design
+                        header = If(String.IsNullOrEmpty(miTekJobNumber), $"Design{indexDesign}", $"Des - {miTekJobNumber}")
+                        indexDesign += 1
+                    Else ' Invoice
+                        header = If(String.IsNullOrEmpty(bisTrackSO), $"Invoice{indexInvoice}", $"BT - {bisTrackSO}")
+                        indexInvoice += 1
+                    End If
+
+                    Dim data As New Dictionary(Of String, Decimal) From {
+            {"Sell Price", If(reader("ActualSoldAmount") Is DBNull.Value, 0D, CDec(reader("ActualSoldAmount")))},
+            {"BDFT", If(reader("ActualBDFT") Is DBNull.Value, 0D, CDec(reader("ActualBDFT")))},
+            {"AvgSPF2", If(reader("AvgSPFNo2Actual") Is DBNull.Value, 0D, CDec(reader("AvgSPFNo2Actual")))},
+            {"LumberCost", If(reader("ActualLumberCost") Is DBNull.Value, 0D, CDec(reader("ActualLumberCost")))},
+            {"PlateCost", If(reader("ActualPlateCost") Is DBNull.Value, 0D, CDec(reader("ActualPlateCost")))},
+            {"ManufLaborCost", If(reader("ActualManufLaborCost") Is DBNull.Value, 0D, CDec(reader("ActualManufLaborCost")))},
+            {"ManufLaborMH", If(reader("ActualManufMH") Is DBNull.Value, 0D, CDec(reader("ActualManufMH")))},
+            {"ItemCost", If(reader("ActualItemCost") Is DBNull.Value, 0D, CDec(reader("ActualItemCost")))},
+            {"DeliveryCost", If(reader("ActualDeliveryCost") Is DBNull.Value, 0D, CDec(reader("ActualDeliveryCost")))},
+            {"MiscLaborCost", If(reader("ActualMiscLaborCost") Is DBNull.Value, 0D, CDec(reader("ActualMiscLaborCost")))},
+            {"Total Cost", If(reader("ActualTotalCost") Is DBNull.Value, 0D, CDec(reader("ActualTotalCost")))}
+        }
+
+                    actuals.Add((header, data, header)) ' Source and Header are the same
+                End While
+            End Using
+
+            ' Add actual columns using REAL HEADERS
+            For Each act In actuals
+                If Not dt.Columns.Contains(act.Header) Then
+                    dt.Columns.Add(act.Header, GetType(Decimal))
+                End If
+                For Each row As DataRow In dt.Rows
+                    Dim metric = row("Metric").ToString()
+                    If act.Data.ContainsKey(metric) Then
+                        row(act.Header) = act.Data(metric)
+                    End If
+                Next
+            Next
+
+            ' === ADD MARGIN % ROW (BEFORE TOTAL COST) ===
+            Dim marginRow As DataRow = dt.NewRow()
+            marginRow("Metric") = "Margin %"
+            dt.Rows.InsertAt(marginRow, dt.Rows.Count)
+
+            ' === CALCULATE MARGIN % FOR ALL COLUMNS (INCLUDING ESTIMATE) ===
+            For i = 1 To dt.Columns.Count - 1
+                Dim colName = dt.Columns(i).ColumnName
+
+                ' Get Sell Price and Total Cost
+                Dim sellPrice As Decimal = 0D
+                Dim totalCost As Decimal = 0D
+
+                Dim sellRow = dt.AsEnumerable().FirstOrDefault(Function(r) r.Field(Of String)("Metric") = "Sell Price")
+                If sellRow IsNot Nothing AndAlso Not sellRow.IsNull(colName) Then
+                    sellPrice = CDec(sellRow(colName))
+                End If
+
+                Dim costRow = dt.AsEnumerable().FirstOrDefault(Function(r) r.Field(Of String)("Metric") = "Total Cost")
+                If costRow IsNot Nothing AndAlso Not costRow.IsNull(colName) Then
+                    totalCost = CDec(costRow(colName))
+                End If
+
+                ' Calculate Margin %
+                Dim marginPct As Decimal = If(sellPrice = 0, 0D, (sellPrice - totalCost) / sellPrice)
+                marginRow(colName) = marginPct
+            Next
+
+            ' === BIND TO GRID FIRST ===
+            dgvLevelVariance.DataSource = dt
+
+            ' === FORMATTING (RESTORED) ===
+            For Each row As DataGridViewRow In dgvLevelVariance.Rows
+                If row.Cells("Metric").Value Is Nothing Then Continue For
+                Dim metric = row.Cells("Metric").Value.ToString()
+
+                For i = 1 To dgvLevelVariance.Columns.Count - 1
+                    Dim cell = row.Cells(i)
+                    If cell.Value Is Nothing OrElse cell.Value Is DBNull.Value Then
+                        cell.Value = 0
+                    End If
+
+                    Select Case metric
+                        Case "Margin %"
+                            cell.Style.Format = "P2"
+                        Case "Sell Price", "LumberCost", "PlateCost", "ManufLaborCost", "ItemCost",
+                         "DeliveryCost", "MiscLaborCost", "Total Cost"
+                            cell.Style.Format = "C2"
+                        Case "BDFT"
+                            cell.Style.Format = "N0"
+                        Case Else
+                            cell.Style.Format = "N2"
+                    End Select
+                Next
+            Next
+
+            ' Right-align numeric columns
+            For i = 1 To dgvLevelVariance.Columns.Count - 1
+                dgvLevelVariance.Columns(i).DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+                dgvLevelVariance.Columns(i).MinimumWidth = 100
+            Next
+
+            ' Bold Metric column
+            If dgvLevelVariance.Columns.Contains("Metric") Then
+                dgvLevelVariance.Columns("Metric").DefaultCellStyle.Font = New Font(dgvLevelVariance.Font, FontStyle.Bold)
+                dgvLevelVariance.Columns("Metric").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft
+                dgvLevelVariance.Columns("Metric").MinimumWidth = 140
+                dgvLevelVariance.Columns("Metric").DefaultCellStyle.Padding = New Padding(8, 0, 8, 0)
+            End If
+
+            ' === RESIZING ===
+            dgvLevelVariance.AutoResizeColumns()
+            Dim totalWidth As Integer = dgvLevelVariance.ClientSize.Width
+            Dim metricWidth As Integer = If(dgvLevelVariance.Columns.Contains("Metric"), dgvLevelVariance.Columns("Metric").Width, 140)
+            Dim remainingWidth As Integer = totalWidth - metricWidth - SystemInformation.VerticalScrollBarWidth
+            Dim valueColumnCount As Integer = dgvLevelVariance.Columns.Count - 1
+            If valueColumnCount > 0 Then
+                Dim idealWidth As Integer = remainingWidth \ valueColumnCount
+                For i = 1 To dgvLevelVariance.Columns.Count - 1
+                    dgvLevelVariance.Columns(i).Width = Math.Max(idealWidth, 100)
+                Next
+            End If
+
+            ' === COLOR CODING: > +5% RED, < -5% GREEN ===
+            For Each row As DataGridViewRow In dgvLevelVariance.Rows
+                If row.Cells("Metric").Value Is Nothing Then Continue For
+                Dim metric = row.Cells("Metric").Value.ToString()
+
+
+                Dim estimateValue As Decimal = 0D
+                If Not row.Cells(1).Value Is DBNull.Value Then
+                    estimateValue = CDec(row.Cells(1).Value)
+                End If
+                If estimateValue = 0 Then Continue For
+
+                For colIndex = 2 To dgvLevelVariance.Columns.Count - 1
+                    Dim cell = row.Cells(colIndex)
+                    If cell.Value Is Nothing OrElse cell.Value Is DBNull.Value Then
+                        cell.Style.BackColor = Color.White
+                        Continue For
+                    End If
+
+                    Dim actualValue As Decimal = CDec(cell.Value)
+                    Dim pctDiff As Decimal = (actualValue - estimateValue) / estimateValue
+
+                    ' REVERSE LOGIC FOR MARGIN %
+                    If metric = "Margin %" Then
+                        If pctDiff < -0.05D Then
+                            cell.Style.BackColor = Color.LightCoral   ' Margin DOWN >5% = RED
+                        ElseIf pctDiff > 0.05D Then
+                            cell.Style.BackColor = Color.LightGreen   ' Margin UP >5% = GREEN
+                        Else
+                            cell.Style.BackColor = Color.White
+                        End If
+                    Else
+                        ' NORMAL LOGIC FOR ALL OTHER METRICS
+                        If pctDiff > 0.05D Then
+                            cell.Style.BackColor = Color.LightCoral   ' Cost UP >5% = RED
+                        ElseIf pctDiff < -0.05D Then
+                            cell.Style.BackColor = Color.LightGreen   ' Cost DOWN >5% = GREEN
+                        Else
+                            cell.Style.BackColor = Color.White
+                        End If
+                    End If
+
+                Next
+            Next
+
+        Catch ex As Exception
+            Dim stackTrace As New Diagnostics.StackTrace(ex, True)
+            Dim frame As Diagnostics.StackFrame = stackTrace.GetFrame(0)
+            Dim lineNumber As Integer = If(frame IsNot Nothing, frame.GetFileLineNumber(), 0)
+            Dim methodName As String = If(frame IsNot Nothing, frame.GetMethod().Name, "Unknown")
+
+            Dim fullError As String = $"ERROR in {methodName}() at line {lineNumber}:{vbCrLf}{ex.Message}{vbCrLf}{vbCrLf}Stack:{vbCrLf}{ex.StackTrace}"
+
+            dgvLevelVariance.DataSource = Nothing
+            MessageBox.Show(fullError, "Variance Load Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
+
+            Try
+                IO.File.AppendAllText(
+                IO.Path.Combine(Application.StartupPath, "VarianceErrors.log"),
+                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {fullError}{vbCrLf}{vbCrLf}")
+            Catch
+            End Try
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Refreshes the project-level variance summary — SAFE FOR NO RECORDS
+    ''' </summary>
+    Private Sub RefreshRollupSummary()
+        If currentVersionID <= 0 Then
+            lblSumShipmentsVal.Text = "0"
+            lblSumBDFTVarVal.Text = "0"
+            lblSumCostVarVal.Text = "$0.00"
+            Exit Sub
+        End If
+
+        Dim params() As SqlParameter = {New SqlParameter("@VersionID", currentVersionID)}
+
+        Try
+            Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjectShipmentSummary, params)
+                If reader.HasRows AndAlso reader.Read() Then
+                    lblSumShipmentsVal.Text = reader("TotalShipments").ToString()
+                    lblSumBDFTVarVal.Text = If(reader("NetBDFTVar") Is DBNull.Value, "0", reader("NetBDFTVar").ToString())
+                    lblSumCostVarVal.Text = "$" & Format(If(reader("NetCostVar") Is DBNull.Value, 0D, CDec(reader("NetCostVar"))), "N2")
+                Else
+                    ' No records = all zeros
+                    lblSumShipmentsVal.Text = "0"
+                    lblSumBDFTVarVal.Text = "0"
+                    lblSumCostVarVal.Text = "$0.00"
+                End If
+            End Using
+
+            ' After all formatting and resizing
+            ColorVarianceCells()
+
+        Catch ex As Exception
+            ' Never crash — show clean zeros
+            lblSumShipmentsVal.Text = "0"
+            lblSumBDFTVarVal.Text = "0"
+            lblSumCostVarVal.Text = "$0.00"
+            ' Optional: log to status
+            ' UpdateStatus("Rollup error: " & ex.Message)
+        End Try
+    End Sub
+
+
+    Private Sub ColorVarianceCells()
+        If dgvLevelVariance.DataSource Is Nothing Then Exit Sub
+
+        ' Find Estimate column index (always 1)
+        Dim estimateColIndex As Integer = 1 ' "Estimate" is column 1
+
+        ' Loop through all rows
+        For Each row As DataGridViewRow In dgvLevelVariance.Rows
+            If row.Cells("Metric").Value Is Nothing Then Continue For
+            Dim metric = row.Cells("Metric").Value.ToString()
+
+            ' Only color numeric rows (not headers or variance rows)
+            If metric.Contains("Variance") OrElse metric.Contains("Margin") OrElse metric = "Metric" Then
+                Continue For
+            End If
+
+            Dim estimateValue As Decimal = 0D
+            If Not row.Cells(estimateColIndex).Value Is DBNull.Value Then
+                estimateValue = CDec(row.Cells(estimateColIndex).Value)
+            End If
+
+            If estimateValue = 0 Then
+                ' Skip if estimate is zero (avoid divide-by-zero)
+                Continue For
+            End If
+
+            ' Loop through all value columns (skip Metric and Estimate)
+            For colIndex = 2 To dgvLevelVariance.Columns.Count - 1
+                Dim cell = row.Cells(colIndex)
+                If cell.Value Is Nothing OrElse cell.Value Is DBNull.Value Then
+                    cell.Style.BackColor = Color.White
+                    Continue For
+                End If
+
+                Dim actualValue As Decimal = CDec(cell.Value)
+                Dim pctDiff As Decimal = (actualValue - estimateValue) / estimateValue
+
+                If pctDiff > 0.05D Then
+                    cell.Style.BackColor = Color.LightCoral ' +5% or more = RED
+                ElseIf pctDiff < -0.05D Then
+                    cell.Style.BackColor = Color.LightGreen ' -5% or more = GREEN
+                Else
+                    cell.Style.BackColor = Color.White ' Within ±5% = WHITE
+                End If
+            Next
+        Next
+    End Sub
+
+    ' REPLACE YOUR OLD btnImportMiTek_Click
+    Private Sub btnImportMiTek_Click(sender As Object, e As EventArgs) Handles btnImportMiTek.Click
+        Using dlg As New OpenFileDialog With {.Filter = "CSV files|*.csv", .Title = "Select MiTek Design Export"}
+            If dlg.ShowDialog() = DialogResult.OK Then
+                Dim frm As New frmActualsMatcher(currentVersionID, 1, dlg.FileName) ' 1 = Design
+                If frm.ShowDialog() = DialogResult.OK Then
+                    RefreshLevelVariance()
+                    RefreshRollupSummary()
+                    MessageBox.Show("MiTek actuals imported successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                End If
+            End If
+        End Using
+    End Sub
+
+    ' REPLACE YOUR OLD btnImportBisTrack_Click
+    Private Sub btnImportBisTrack_Click(sender As Object, e As EventArgs) Handles btnImportBisTrack.Click
+        Using dlg As New OpenFileDialog With {.Filter = "CSV files|*.csv", .Title = "Select BisTrack Invoice Export"}
+            If dlg.ShowDialog() = DialogResult.OK Then
+                Dim frm As New frmActualsMatcher(currentVersionID, 2, dlg.FileName) ' 2 = Invoice
+                If frm.ShowDialog() = DialogResult.OK Then
+                    RefreshLevelVariance()
+                    RefreshRollupSummary()
+                    MessageBox.Show("BisTrack invoice imported successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                End If
+            End If
+        End Using
     End Sub
 End Class

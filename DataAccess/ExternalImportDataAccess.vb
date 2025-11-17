@@ -2,6 +2,7 @@
 Imports System.Data.SqlClient
 Imports System.Globalization
 Imports System.Text
+Imports System.Text.RegularExpressions
 Imports BuildersPSE2.BuildersPSE.Models ' Adjust if your models are in a different namespace
 Imports BuildersPSE2.BuildersPSE.Utilities
 Imports Microsoft.VisualBasic.FileIO
@@ -184,51 +185,129 @@ Namespace DataAccess
 
 
 
+                                                                                   '=====================================================================
                                                                                    ' Step 3.3: Import ActualUnits
-                                                                                   Dim actualUnitMap As New Dictionary(Of String, Integer) ' Key: uniqueKey (unitName_planSqft_col), Value: New ActualUnitID
-                                                                                   Dim actualUnitSet As New HashSet(Of String) ' Track unique unitName_planSqft_rawID
+                                                                                   '=====================================================================
+                                                                                   Dim actualUnitMap As New Dictionary(Of String, Integer)   ' Key: unitName_planSqft_col
+                                                                                   Dim actualUnitSet As New HashSet(Of String)               ' unitName_planSqft_rawID (duplicate guard)
+
+
                                                                                    For Each sheet In {"Floor Unit Data", "Roof Unit Data"}
-                                                                                       If spreadsheetData.ContainsKey(sheet) Then
-                                                                                           Dim dt As DataTable = spreadsheetData(sheet)
-                                                                                           For col As Integer = 46 To dt.Columns.Count - 1
-                                                                                               Dim unitName As String = If(dt.Rows(0)(col) Is DBNull.Value, String.Empty, CStr(dt.Rows(0)(col)))
-                                                                                               If String.IsNullOrEmpty(unitName) OrElse unitName = "<select>" Then Continue For
-                                                                                               Dim productTypeID As Integer = If(sheet.Contains("Floor"), 1, 2)
-                                                                                               Dim rawName As String = dt.Columns(col).ColumnName.Replace("Models-", "").Split("_"c)(0) ' Strip Models- prefix and _x suffix
-                                                                                               Dim rawID As Integer = 0
-                                                                                               For Each key As String In rawUnitMap.Keys
-                                                                                                   If key.StartsWith(rawName & "_") Then
-                                                                                                       rawID = rawUnitMap(key)
+                                                                                       If Not spreadsheetData.ContainsKey(sheet) Then Continue For
+
+                                                                                       Dim dt As DataTable = spreadsheetData(sheet)
+                                                                                       Dim productTypeID As Integer = If(sheet.Contains("Floor"), 1, 2)
+
+                                                                                       For col As Integer = 46 To dt.Columns.Count - 1
+                                                                                           '--- Header (row 0) = RawUnit name (used for lookup)
+                                                                                           Dim rawName As String = dt.Columns(col).ColumnName.Trim()
+
+                                                                                           '--- Row 0 = Actual unit name (stored in ActualUnits.UnitName)
+                                                                                           Dim unitName As String = If(dt.Rows(0)(col) Is DBNull.Value,
+                                   String.Empty,
+                                   CStr(dt.Rows(0)(col)).Trim())
+
+                                                                                           If String.IsNullOrEmpty(unitName) OrElse unitName = "<select>" Then Continue For
+
+                                                                                           '--- Strip leading "Models-" from the RawUnit name (case-insensitive)
+                                                                                           Dim planName As String = Regex.Replace(rawName, "^Models-?", "", RegexOptions.IgnoreCase).Trim()
+                                                                                           planName = Regex.Replace(planName, "[._]\d+$", "").Trim()
+                                                                                           '--- Find the matching JobNumber in the Import sheet
+                                                                                           Dim importSheetName As String = If(productTypeID = 1, "FloorImport", "RoofImport")
+                                                                                           Dim jobNumber As String = String.Empty
+
+                                                                                           If spreadsheetData.ContainsKey(importSheetName) Then
+                                                                                               Dim importDt As DataTable = spreadsheetData(importSheetName)
+                                                                                               For Each r As DataRow In importDt.Rows
+                                                                                                   If r("Elevation") Is DBNull.Value Then Continue For
+                                                                                                   If CStr(r("Elevation")).Trim() = planName Then
+                                                                                                       jobNumber = CStr(r("JobNumber"))
                                                                                                        Exit For
                                                                                                    End If
                                                                                                Next
-                                                                                               If rawID = 0 Then Continue For
-                                                                                               Dim planSqftObj As Object = dt.Rows(1)(col)
-                                                                                               Dim planSqft As Decimal? = If(planSqftObj Is DBNull.Value, Nothing, CDec(planSqftObj))
-                                                                                               Dim planSqftStr As String = If(planSqft.HasValue, planSqft.Value.ToString(), "0")
-                                                                                               Dim uniqueCombo As String = unitName & "_" & planSqftStr & "_" & rawID
-                                                                                               If actualUnitSet.Contains(uniqueCombo) Then
-                                                                                                   Debug.WriteLine($"Skipped duplicate actual unit: {unitName}, PlanSQFT={planSqftStr}, RawID={rawID}")
-                                                                                                   Continue For ' Skip as duplicate
+                                                                                           End If
+
+                                                                                           '--- Build the exact key used in rawUnitMap
+                                                                                           Dim lookupKey As String = If(String.IsNullOrEmpty(planName),
+                                    "Unknown_" & jobNumber,
+                                    planName & "_" & jobNumber)
+
+                                                                                           Dim rawID As Integer = 0
+                                                                                           If rawUnitMap.ContainsKey(lookupKey) Then
+                                                                                               rawID = rawUnitMap(lookupKey)
+                                                                                           Else
+                                                                                               Debug.WriteLine($"[ActualUnit] No RawUnit for planName='{planName}', jobNumber='{jobNumber}' (col {col + 1})")
+                                                                                               Continue For
+                                                                                           End If
+
+                                                                                           '--- PlanSQFT – row 1 (index 1) in the Unit Data sheet
+                                                                                           Dim planSqftObj As Object = dt.Rows(1)(col)
+                                                                                           Dim planSqft As Decimal? = Nothing
+                                                                                           Dim planSqftStr As String = "0"
+
+                                                                                           If planSqftObj IsNot DBNull.Value Then
+                                                                                               Dim s As String = CStr(planSqftObj).Trim()
+                                                                                               If Not String.IsNullOrEmpty(s) Then
+                                                                                                   planSqftStr = s  ' Use original string for key/guard consistency
+                                                                                                   Dim d As Decimal
+                                                                                                   If Decimal.TryParse(s, d) Then
+                                                                                                       planSqft = d
+                                                                                                   Else
+                                                                                                       Debug.WriteLine($"[ActualUnit] PlanSQFT non-numeric in {sheet} col {col + 1}: '{s}'")
+                                                                                                   End If
                                                                                                End If
-                                                                                               Dim uniqueKey As String = If(String.IsNullOrEmpty(unitName), "Unknown_" & planSqftStr & "_" & col, unitName & "_" & planSqftStr & "_" & col)
-                                                                                               Dim actualParams As New Dictionary(Of String, Object) From {
-                                                                                                    {"@VersionID", newVersionID},
-                                                                                                    {"@RawUnitID", rawID},
-                                                                                                    {"@ProductTypeID", productTypeID},
-                                                                                                    {"@UnitName", unitName},
-                                                                                                    {"@PlanSQFT", If(planSqft.HasValue, CType(planSqft.Value, Object), DBNull.Value)},
-                                                                                                    {"@UnitType", "Standard"},
-                                                                                                    {"@OptionalAdder", 1D},
-                                                                                                    {"@colorcode", DBNull.Value}
-                                                                                                }
-                                                                                               Dim newActualID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertActualUnit, HelperDataAccess.BuildParameters(actualParams), conn, transaction)
-                                                                                               actualUnitMap.Add(uniqueKey, newActualID)
-                                                                                               actualUnitSet.Add(uniqueCombo) ' Track unique combo
-                                                                                               actualUnitCount += 1
-                                                                                           Next
-                                                                                       End If
+                                                                                           End If
+                                                                                           If Not planSqft.HasValue Then
+                                                                                               Debug.WriteLine($"[ActualUnit] PlanSQFT MISSING in {sheet} col {col + 1} – using 0")
+                                                                                           End If
+
+                                                                                           '--- UnitType – row 4 (index 3) in the Unit Data sheet
+                                                                                           Dim unitTypeObj As Object = dt.Rows(3)(col)
+                                                                                           Dim unitType As String = "Standard"
+
+                                                                                           If unitTypeObj IsNot DBNull.Value Then
+                                                                                               Dim s As String = CStr(unitTypeObj).Trim()
+                                                                                               If s = "Res" OrElse s = "Nonres" Then
+                                                                                                   unitType = s
+                                                                                               Else
+                                                                                                   Debug.WriteLine($"[ActualUnit] Unexpected UnitType in {sheet} col {col + 1}: '{s}' – using 'Standard'")
+                                                                                               End If
+                                                                                           End If
+
+                                                                                           '--- Duplicate guard (same actual name + same sqft + same rawID)
+                                                                                           Dim uniqueCombo As String = unitName & "_" & planSqftStr & "_" & rawID
+                                                                                           If actualUnitSet.Contains(uniqueCombo) Then
+                                                                                               Debug.WriteLine($"Skipped duplicate actual unit: {unitName}, PlanSQFT={planSqftStr}, RawID={rawID}")
+                                                                                               Continue For
+                                                                                           End If
+
+                                                                                           '--- Unique map key includes column index
+                                                                                           Dim cleanUnitName As String = Regex.Replace(unitName.Trim(), "actual$", "", RegexOptions.IgnoreCase).Trim()
+                                                                                           Dim uniqueKey As String = $"{cleanUnitName}_{planSqftStr}_{col}"
+
+                                                                                           '--- INSERT
+                                                                                           Dim actualParams As New Dictionary(Of String, Object) From {
+            {"@VersionID", newVersionID},
+            {"@RawUnitID", rawID},
+            {"@ProductTypeID", productTypeID},
+            {"@UnitName", unitName},
+            {"@PlanSQFT", If(planSqft.HasValue, CType(planSqft.Value, Object), DBNull.Value)},
+            {"@UnitType", unitType},
+            {"@OptionalAdder", 1D},
+            {"@colorcode", DBNull.Value}
+        }
+
+                                                                                           Dim newActualID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(
+                                         Queries.InsertActualUnit,
+                                         HelperDataAccess.BuildParameters(actualParams),
+                                         conn, transaction)
+
+                                                                                           actualUnitMap.Add(uniqueKey, newActualID)
+                                                                                           actualUnitSet.Add(uniqueCombo)
+                                                                                           actualUnitCount += 1
+                                                                                       Next
                                                                                    Next
+
                                                                                    importLog.AppendLine($"Imported {actualUnitCount} actual units from Floor and Roof Unit Data.")
 
 
@@ -405,7 +484,8 @@ Namespace DataAccess
                                                                                                For colIdx As Integer = 46 To dt.Columns.Count - 1
                                                                                                    Dim qtyObj As Object = dt.Rows(rowIdx)(colIdx)
                                                                                                    If qtyObj Is DBNull.Value OrElse CInt(qtyObj) <= 0 Then Continue For
-                                                                                                   Dim unitName As String = If(dt.Rows(0)(colIdx) Is DBNull.Value, String.Empty, CStr(dt.Rows(0)(colIdx)))
+                                                                                                   Dim rawUnitName As String = If(dt.Rows(0)(colIdx) Is DBNull.Value, String.Empty, CStr(dt.Rows(0)(colIdx))).Trim()
+                                                                                                   Dim unitName As String = Regex.Replace(rawUnitName, "actual$", "", RegexOptions.IgnoreCase).Trim()
                                                                                                    If String.IsNullOrEmpty(unitName) Then Continue For
                                                                                                    Dim planSqftObj As Object = dt.Rows(1)(colIdx)
                                                                                                    Dim planSqft As String = If(planSqftObj Is DBNull.Value, "0", CStr(planSqftObj))
@@ -702,7 +782,7 @@ Namespace DataAccess
                                                                                        ' ActualUnit
                                                                                        Dim actualParams As New Dictionary(Of String, Object) From {
                                                                                    {"@VersionID", versionID}, {"@RawUnitID", newRawUnitID}, {"@ProductTypeID", productTypeID}, {"@UnitName", elevation},
-                                                                                   {"@PlanSQFT", sqFt}, {"@UnitType", "Res"}, {"@OptionalAdder", 1D}
+                                                                                   {"@PlanSQFT", sqFt}, {"@UnitType", "Res"}, {"@OptionalAdder", 1D}, {"@ColorCode", DBNull.Value}
                                                                                }
                                                                                        Dim cmdActual As New SqlCommand(Queries.InsertActualUnit, conn, transaction) With {
                                                                                    .CommandTimeout = 0

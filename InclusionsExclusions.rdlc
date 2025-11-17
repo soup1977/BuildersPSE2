@@ -13,7 +13,6 @@
                 <Style>
                   <FontStyle>Normal</FontStyle>
                   <FontFamily>Times New Roman</FontFamily>
-                  <FontSize>12pt</FontSize>
                   <FontWeight>Normal</FontWeight>
                   <TextDecoration>None</TextDecoration>
                   <Color>#000000</Color>
@@ -26,7 +25,7 @@
         <rd:DefaultName>Textbox1</rd:DefaultName>
         <Top>0.35292in</Top>
         <Left>0.37375in</Left>
-        <Height>0.25in</Height>
+        <Height>0.21875in</Height>
         <Width>4.02083in</Width>
         <Style>
           <Border>
@@ -49,7 +48,6 @@
                 <Style>
                   <FontStyle>Normal</FontStyle>
                   <FontFamily>Times New Roman</FontFamily>
-                  <FontSize>12pt</FontSize>
                   <FontWeight>Normal</FontWeight>
                   <TextDecoration>None</TextDecoration>
                   <Color>#000000</Color>
@@ -62,7 +60,7 @@
         <rd:DefaultName>Textbox1</rd:DefaultName>
         <Top>0.67236in</Top>
         <Left>0.37375in</Left>
-        <Height>0.25in</Height>
+        <Height>0.21875in</Height>
         <Width>4.02083in</Width>
         <ZIndex>1</ZIndex>
         <Style>
@@ -86,7 +84,6 @@
                 <Style>
                   <FontStyle>Normal</FontStyle>
                   <FontFamily>Times New Roman</FontFamily>
-                  <FontSize>12pt</FontSize>
                   <FontWeight>Normal</FontWeight>
                   <TextDecoration>None</TextDecoration>
                   <Color>#000000</Color>
@@ -99,7 +96,7 @@
         <rd:DefaultName>Textbox1</rd:DefaultName>
         <Top>0.35292in</Top>
         <Left>4.46403in</Left>
-        <Height>0.25in</Height>
+        <Height>0.21875in</Height>
         <Width>1.75in</Width>
         <ZIndex>2</ZIndex>
         <Style>
@@ -123,7 +120,6 @@
                 <Style>
                   <FontStyle>Normal</FontStyle>
                   <FontFamily>Times New Roman</FontFamily>
-                  <FontSize>12pt</FontSize>
                   <FontWeight>Normal</FontWeight>
                   <TextDecoration>None</TextDecoration>
                   <Color>#000000</Color>
@@ -136,7 +132,7 @@
         <rd:DefaultName>Textbox1</rd:DefaultName>
         <Top>0.99181in</Top>
         <Left>0.37375in</Left>
-        <Height>0.25in</Height>
+        <Height>0.21875in</Height>
         <Width>4.02083in</Width>
         <ZIndex>3</ZIndex>
         <Style>
@@ -160,7 +156,6 @@
                 <Style>
                   <FontStyle>Normal</FontStyle>
                   <FontFamily>Times New Roman</FontFamily>
-                  <FontSize>12pt</FontSize>
                   <FontWeight>Normal</FontWeight>
                   <TextDecoration>None</TextDecoration>
                   <Color>#000000</Color>
@@ -173,7 +168,7 @@
         <rd:DefaultName>Textbox1</rd:DefaultName>
         <Top>1.31125in</Top>
         <Left>0.37375in</Left>
-        <Height>0.25in</Height>
+        <Height>0.21875in</Height>
         <Width>4.02083in</Width>
         <ZIndex>4</ZIndex>
         <Style>
@@ -197,7 +192,6 @@
                 <Style>
                   <FontStyle>Normal</FontStyle>
                   <FontFamily>Times New Roman</FontFamily>
-                  <FontSize>12pt</FontSize>
                   <FontWeight>Normal</FontWeight>
                   <TextDecoration>None</TextDecoration>
                   <Color>#000000</Color>
@@ -210,7 +204,7 @@
         <rd:DefaultName>Textbox1</rd:DefaultName>
         <Top>0.99181in</Top>
         <Left>4.46403in</Left>
-        <Height>0.25in</Height>
+        <Height>0.21875in</Height>
         <Width>2.63541in</Width>
         <ZIndex>5</ZIndex>
         <Style>
@@ -234,7 +228,6 @@
                 <Style>
                   <FontStyle>Normal</FontStyle>
                   <FontFamily>Times New Roman</FontFamily>
-                  <FontSize>12pt</FontSize>
                   <FontWeight>Normal</FontWeight>
                   <TextDecoration>None</TextDecoration>
                   <Color>#000000</Color>
@@ -247,7 +240,7 @@
         <rd:DefaultName>Textbox1</rd:DefaultName>
         <Top>1.31125in</Top>
         <Left>4.46403in</Left>
-        <Height>0.25in</Height>
+        <Height>0.21875in</Height>
         <Width>2.63541in</Width>
         <ZIndex>6</ZIndex>
         <Style>
@@ -709,10 +702,10 @@
           </TablixMembers>
         </TablixRowHierarchy>
         <DataSetName>IncExcItemsDataSet</DataSetName>
-        <Top>3.89806in</Top>
-        <Left>0.12375in</Left>
-        <Height>0.53125in</Height>
-        <Width>7.38194in</Width>
+        <Top>3.60292in</Top>
+        <Left>0.12374in</Left>
+        <Height>0.53124in</Height>
+        <Width>7.38196in</Width>
         <ZIndex>8</ZIndex>
         <Style>
           <Border>
@@ -1473,7 +1466,6 @@
                       <PaddingBottom>2pt</PaddingBottom>
                     </Style>
                   </Textbox>
-                  <rd:Selected>true</rd:Selected>
                 </CellContents>
               </TablixHeader>
               <TablixMembers>
@@ -1534,10 +1526,10 @@
           </TablixMembers>
         </TablixRowHierarchy>
         <DataSetName>ProjectLoadsDataSet</DataSetName>
-        <Top>3.07861in</Top>
-        <Left>0.155in</Left>
+        <Top>2.88764in</Top>
+        <Left>0.12375in</Left>
         <Height>0.64583in</Height>
-        <Width>7.15069in</Width>
+        <Width>7.1507in</Width>
         <ZIndex>9</ZIndex>
         <Style>
           <Border>
@@ -1553,7 +1545,9 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!BuildingCode.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
@@ -1562,7 +1556,7 @@
         <rd:DefaultName>BuildingCode</rd:DefaultName>
         <Top>1.79042in</Top>
         <Left>0.33208in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1in</Width>
         <ZIndex>10</ZIndex>
         <Style>
@@ -1583,7 +1577,9 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!Importance.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
@@ -1592,7 +1588,7 @@
         <rd:DefaultName>Importance</rd:DefaultName>
         <Top>1.79042in</Top>
         <Left>1.40153in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1in</Width>
         <ZIndex>11</ZIndex>
         <Style>
@@ -1613,7 +1609,9 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!ExposureCategory.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
@@ -1622,7 +1620,7 @@
         <rd:DefaultName>ExposureCategory</rd:DefaultName>
         <Top>1.79736in</Top>
         <Left>2.47097in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1in</Width>
         <ZIndex>12</ZIndex>
         <Style>
@@ -1643,16 +1641,18 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!WindSpeed.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
           </Paragraph>
         </Paragraphs>
         <rd:DefaultName>WindSpeed</rd:DefaultName>
-        <Top>2.10986in</Top>
+        <Top>2.07514in</Top>
         <Left>0.33208in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1in</Width>
         <ZIndex>13</ZIndex>
         <Style>
@@ -1673,16 +1673,18 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!SnowLoadType.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
           </Paragraph>
         </Paragraphs>
         <rd:DefaultName>SnowLoadType</rd:DefaultName>
-        <Top>2.10986in</Top>
+        <Top>2.07514in</Top>
         <Left>1.40153in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1in</Width>
         <ZIndex>14</ZIndex>
         <Style>
@@ -1703,16 +1705,18 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!OccupancyCategory.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
           </Paragraph>
         </Paragraphs>
         <rd:DefaultName>OccupancyCategory</rd:DefaultName>
-        <Top>2.11681in</Top>
+        <Top>2.08209in</Top>
         <Left>2.47097in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1in</Width>
         <ZIndex>15</ZIndex>
         <Style>
@@ -1733,7 +1737,9 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!RoofPitches.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
@@ -1742,7 +1748,7 @@
         <rd:DefaultName>RoofPitches</rd:DefaultName>
         <Top>1.79736in</Top>
         <Left>3.69667in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1.80902in</Width>
         <ZIndex>16</ZIndex>
         <Style>
@@ -1763,16 +1769,18 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!FloorDepths.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
           </Paragraph>
         </Paragraphs>
         <rd:DefaultName>FloorDepths</rd:DefaultName>
-        <Top>2.10986in</Top>
+        <Top>2.07514in</Top>
         <Left>3.69667in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1.80902in</Width>
         <ZIndex>17</ZIndex>
         <Style>
@@ -1793,7 +1801,9 @@
             <TextRuns>
               <TextRun>
                 <Value>=First(Fields!WallHeights.Value, "ProjectHeaderDataSet")</Value>
-                <Style />
+                <Style>
+                  <FontSize>8pt</FontSize>
+                </Style>
               </TextRun>
             </TextRuns>
             <Style />
@@ -1802,7 +1812,7 @@
         <rd:DefaultName>WallHeights</rd:DefaultName>
         <Top>1.79736in</Top>
         <Left>5.57514in</Left>
-        <Height>0.25in</Height>
+        <Height>0.20833in</Height>
         <Width>1.52431in</Width>
         <ZIndex>18</ZIndex>
         <Style>
@@ -2255,10 +2265,10 @@
           </TablixMembers>
         </TablixRowHierarchy>
         <DataSetName>ProjectBearingStylesDataSet</DataSetName>
-        <Top>2.49875in</Top>
-        <Left>0.155in</Left>
+        <Top>2.39459in</Top>
+        <Left>0.12375in</Left>
         <Height>0.4375in</Height>
-        <Width>6.59306in</Width>
+        <Width>6.59305in</Width>
         <ZIndex>19</ZIndex>
         <Style>
           <Border>
@@ -2283,10 +2293,10 @@
           </Paragraph>
         </Paragraphs>
         <rd:DefaultName>Notes</rd:DefaultName>
-        <Top>4.57167in</Top>
-        <Left>0.25917in</Left>
+        <Top>4.2036in</Top>
+        <Left>0.12374in</Left>
         <Height>0.79167in</Height>
-        <Width>7.24653in</Width>
+        <Width>7.38196in</Width>
         <ZIndex>20</ZIndex>
         <Style>
           <Border>

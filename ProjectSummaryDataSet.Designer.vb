@@ -303,6 +303,24 @@ Partial Public Class ProjectSummaryDataSet
         
         Private columnProductTypeName As Global.System.Data.DataColumn
         
+        Private columnSalesname As Global.System.Data.DataColumn
+        
+        Private columnCity As Global.System.Data.DataColumn
+        
+        Private columnState As Global.System.Data.DataColumn
+        
+        Private columnArchitect As Global.System.Data.DataColumn
+        
+        Private columnEngineer As Global.System.Data.DataColumn
+        
+        Private columnArchPlansDated As Global.System.Data.DataColumn
+        
+        Private columnEngPlansDated As Global.System.Data.DataColumn
+        
+        Private columnJBID As Global.System.Data.DataColumn
+        
+        Private columnTotalBldgQty As Global.System.Data.DataColumn
+        
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
         Public Sub New()
@@ -419,6 +437,78 @@ Partial Public Class ProjectSummaryDataSet
         End Property
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property SalesnameColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnSalesname
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property CityColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnCity
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property StateColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnState
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property ArchitectColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnArchitect
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property EngineerColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnEngineer
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property ArchPlansDatedColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnArchPlansDated
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property EngPlansDatedColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnEngPlansDated
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property JBIDColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnJBID
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property TotalBldgQtyColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnTotalBldgQty
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0"),  _
          Global.System.ComponentModel.Browsable(false)>  _
         Public ReadOnly Property Count() As Integer
@@ -455,9 +545,28 @@ Partial Public Class ProjectSummaryDataSet
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Overloads Function AddProjectSummaryTableRow(ByVal ProjectName As String, ByVal VersionName As String, ByVal CustomerName As String, ByVal BuildingName As String, ByVal BldgQty As Integer, ByVal OverallPrice As Decimal, ByVal LevelName As String, ByVal OverallSQFT As Decimal, ByVal OverallPrice_Level As Decimal, ByVal ProductTypeName As String) As ProjectSummaryTableRow
+        Public Overloads Function AddProjectSummaryTableRow( _
+                    ByVal ProjectName As String,  _
+                    ByVal VersionName As String,  _
+                    ByVal CustomerName As String,  _
+                    ByVal BuildingName As String,  _
+                    ByVal BldgQty As Integer,  _
+                    ByVal OverallPrice As Decimal,  _
+                    ByVal LevelName As String,  _
+                    ByVal OverallSQFT As Decimal,  _
+                    ByVal OverallPrice_Level As Decimal,  _
+                    ByVal ProductTypeName As String,  _
+                    ByVal Salesname As String,  _
+                    ByVal City As String,  _
+                    ByVal State As String,  _
+                    ByVal Architect As String,  _
+                    ByVal Engineer As String,  _
+                    ByVal ArchPlansDated As Date,  _
+                    ByVal EngPlansDated As Date,  _
+                    ByVal JBID As String,  _
+                    ByVal TotalBldgQty As Integer) As ProjectSummaryTableRow
             Dim rowProjectSummaryTableRow As ProjectSummaryTableRow = CType(Me.NewRow,ProjectSummaryTableRow)
-            Dim columnValuesArray() As Object = New Object() {ProjectName, VersionName, CustomerName, BuildingName, BldgQty, OverallPrice, LevelName, OverallSQFT, OverallPrice_Level, ProductTypeName}
+            Dim columnValuesArray() As Object = New Object() {ProjectName, VersionName, CustomerName, BuildingName, BldgQty, OverallPrice, LevelName, OverallSQFT, OverallPrice_Level, ProductTypeName, Salesname, City, State, Architect, Engineer, ArchPlansDated, EngPlansDated, JBID, TotalBldgQty}
             rowProjectSummaryTableRow.ItemArray = columnValuesArray
             Me.Rows.Add(rowProjectSummaryTableRow)
             Return rowProjectSummaryTableRow
@@ -490,6 +599,15 @@ Partial Public Class ProjectSummaryDataSet
             Me.columnOverallSQFT = MyBase.Columns("OverallSQFT")
             Me.columnOverallPrice_Level = MyBase.Columns("OverallPrice_Level")
             Me.columnProductTypeName = MyBase.Columns("ProductTypeName")
+            Me.columnSalesname = MyBase.Columns("Salesname")
+            Me.columnCity = MyBase.Columns("City")
+            Me.columnState = MyBase.Columns("State")
+            Me.columnArchitect = MyBase.Columns("Architect")
+            Me.columnEngineer = MyBase.Columns("Engineer")
+            Me.columnArchPlansDated = MyBase.Columns("ArchPlansDated")
+            Me.columnEngPlansDated = MyBase.Columns("EngPlansDated")
+            Me.columnJBID = MyBase.Columns("JBID")
+            Me.columnTotalBldgQty = MyBase.Columns("TotalBldgQty")
         End Sub
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
@@ -515,6 +633,24 @@ Partial Public Class ProjectSummaryDataSet
             MyBase.Columns.Add(Me.columnOverallPrice_Level)
             Me.columnProductTypeName = New Global.System.Data.DataColumn("ProductTypeName", GetType(String), Nothing, Global.System.Data.MappingType.Element)
             MyBase.Columns.Add(Me.columnProductTypeName)
+            Me.columnSalesname = New Global.System.Data.DataColumn("Salesname", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnSalesname)
+            Me.columnCity = New Global.System.Data.DataColumn("City", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnCity)
+            Me.columnState = New Global.System.Data.DataColumn("State", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnState)
+            Me.columnArchitect = New Global.System.Data.DataColumn("Architect", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnArchitect)
+            Me.columnEngineer = New Global.System.Data.DataColumn("Engineer", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnEngineer)
+            Me.columnArchPlansDated = New Global.System.Data.DataColumn("ArchPlansDated", GetType(Date), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnArchPlansDated)
+            Me.columnEngPlansDated = New Global.System.Data.DataColumn("EngPlansDated", GetType(Date), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnEngPlansDated)
+            Me.columnJBID = New Global.System.Data.DataColumn("JBID", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnJBID)
+            Me.columnTotalBldgQty = New Global.System.Data.DataColumn("TotalBldgQty", GetType(Integer), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnTotalBldgQty)
         End Sub
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
@@ -812,6 +948,141 @@ Partial Public Class ProjectSummaryDataSet
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property Salesname() As String
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.SalesnameColumn),String)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'Salesname' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.SalesnameColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property City() As String
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.CityColumn),String)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'City' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.CityColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property State() As String
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.StateColumn),String)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'State' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.StateColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property Architect() As String
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.ArchitectColumn),String)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'Architect' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.ArchitectColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property Engineer() As String
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.EngineerColumn),String)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'Engineer' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.EngineerColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property ArchPlansDated() As Date
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.ArchPlansDatedColumn),Date)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'ArchPlansDated' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.ArchPlansDatedColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property EngPlansDated() As Date
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.EngPlansDatedColumn),Date)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'EngPlansDated' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.EngPlansDatedColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property JBID() As String
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.JBIDColumn),String)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'JBID' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.JBIDColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property TotalBldgQty() As Integer
+            Get
+                Try 
+                    Return CType(Me(Me.tableProjectSummaryTable.TotalBldgQtyColumn),Integer)
+                Catch e As Global.System.InvalidCastException
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'TotalBldgQty' in table 'ProjectSummaryTable' is DBNull.", e)
+                End Try
+            End Get
+            Set
+                Me(Me.tableProjectSummaryTable.TotalBldgQtyColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
         Public Function IsProjectNameNull() As Boolean
             Return Me.IsNull(Me.tableProjectSummaryTable.ProjectNameColumn)
         End Function
@@ -928,6 +1199,114 @@ Partial Public Class ProjectSummaryDataSet
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
         Public Sub SetProductTypeNameNull()
             Me(Me.tableProjectSummaryTable.ProductTypeNameColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsSalesnameNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.SalesnameColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetSalesnameNull()
+            Me(Me.tableProjectSummaryTable.SalesnameColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsCityNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.CityColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetCityNull()
+            Me(Me.tableProjectSummaryTable.CityColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsStateNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.StateColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetStateNull()
+            Me(Me.tableProjectSummaryTable.StateColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsArchitectNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.ArchitectColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetArchitectNull()
+            Me(Me.tableProjectSummaryTable.ArchitectColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsEngineerNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.EngineerColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetEngineerNull()
+            Me(Me.tableProjectSummaryTable.EngineerColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsArchPlansDatedNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.ArchPlansDatedColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetArchPlansDatedNull()
+            Me(Me.tableProjectSummaryTable.ArchPlansDatedColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsEngPlansDatedNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.EngPlansDatedColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetEngPlansDatedNull()
+            Me(Me.tableProjectSummaryTable.EngPlansDatedColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsJBIDNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.JBIDColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetJBIDNull()
+            Me(Me.tableProjectSummaryTable.JBIDColumn) = Global.System.Convert.DBNull
+        End Sub
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Function IsTotalBldgQtyNull() As Boolean
+            Return Me.IsNull(Me.tableProjectSummaryTable.TotalBldgQtyColumn)
+        End Function
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Sub SetTotalBldgQtyNull()
+            Me(Me.tableProjectSummaryTable.TotalBldgQtyColumn) = Global.System.Convert.DBNull
         End Sub
     End Class
     

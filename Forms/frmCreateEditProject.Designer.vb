@@ -89,6 +89,12 @@ Partial Class frmCreateEditProject
         Me.lblVersionDate = New System.Windows.Forms.Label()
         Me.dtpCreatedDate = New System.Windows.Forms.DateTimePicker()
         Me.tabOverrides = New System.Windows.Forms.TabPage()
+        Me.lstFutures = New System.Windows.Forms.ListBox()
+        Me.btnPullFutures = New System.Windows.Forms.Button()
+        Me.Label7 = New System.Windows.Forms.Label()
+        Me.txtActiveRoofSPFPrice = New System.Windows.Forms.TextBox()
+        Me.txtActiveFloorSPFPrice = New System.Windows.Forms.TextBox()
+        Me.Label6 = New System.Windows.Forms.Label()
         Me.Label5 = New System.Windows.Forms.Label()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.btnDeleteLumberHistory = New System.Windows.Forms.Button()
@@ -103,8 +109,13 @@ Partial Class frmCreateEditProject
         Me.dgvOverrides = New System.Windows.Forms.DataGridView()
         Me.btnSaveOverrides = New System.Windows.Forms.Button()
         Me.tabRollup = New System.Windows.Forms.TabPage()
+        Me.lblSumCostVarVal = New System.Windows.Forms.Label()
+        Me.lblSumBDFTVarVal = New System.Windows.Forms.Label()
+        Me.lblSumShipmentsVal = New System.Windows.Forms.Label()
+        Me.lblSumCostVar = New System.Windows.Forms.Label()
+        Me.lblSumBDFTVar = New System.Windows.Forms.Label()
+        Me.lblSumShipments = New System.Windows.Forms.Label()
         Me.dgvRollup = New System.Windows.Forms.DataGridView()
-        Me.btnRecalcRollup = New System.Windows.Forms.Button()
         Me.tabBuildingInfo = New System.Windows.Forms.TabPage()
         Me.pnlBuildingInfo = New System.Windows.Forms.Panel()
         Me.lblPlanUnits = New System.Windows.Forms.Label()
@@ -120,6 +131,9 @@ Partial Class frmCreateEditProject
         Me.btnSaveBuildingInfo = New System.Windows.Forms.Button()
         Me.tabLevelInfo = New System.Windows.Forms.TabPage()
         Me.pnlLevelInfo = New System.Windows.Forms.Panel()
+        Me.btnImportBisTrack = New System.Windows.Forms.Button()
+        Me.btnImportMiTek = New System.Windows.Forms.Button()
+        Me.dgvLevelVariance = New System.Windows.Forms.DataGridView()
         Me.nudLevelNumber = New System.Windows.Forms.NumericUpDown()
         Me.lblLevelName = New System.Windows.Forms.Label()
         Me.txtLevelName = New System.Windows.Forms.TextBox()
@@ -127,6 +141,7 @@ Partial Class frmCreateEditProject
         Me.cmbLevelType = New System.Windows.Forms.ComboBox()
         Me.lblLevelNumber = New System.Windows.Forms.Label()
         Me.btnSaveLevelInfo = New System.Windows.Forms.Button()
+        Me.btnRecalcRollup = New System.Windows.Forms.Button()
         Me.btnPreviewIncExc = New System.Windows.Forms.Button()
         Me.btnGenerateProjectReport = New System.Windows.Forms.Button()
         Me.btnDeleteProject = New System.Windows.Forms.Button()
@@ -137,10 +152,7 @@ Partial Class frmCreateEditProject
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
-        Me.Label6 = New System.Windows.Forms.Label()
-        Me.Label7 = New System.Windows.Forms.Label()
-        Me.txtActiveRoofSPFPrice = New System.Windows.Forms.TextBox()
-        Me.txtActiveFloorSPFPrice = New System.Windows.Forms.TextBox()
+        Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -158,11 +170,13 @@ Partial Class frmCreateEditProject
         CType(Me.nudNbrUnits, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.tabLevelInfo.SuspendLayout()
         Me.pnlLevelInfo.SuspendLayout()
+        CType(Me.dgvLevelVariance, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudLevelNumber, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
         Me.SplitContainer1.Panel2.SuspendLayout()
         Me.SplitContainer1.SuspendLayout()
+        CType(Me.FileSystemWatcher1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'tvProjectTree
@@ -319,7 +333,7 @@ Partial Class frmCreateEditProject
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(9, 19)
+        Me.Label1.Location = New System.Drawing.Point(11, 16)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(81, 13)
         Me.Label1.TabIndex = 55
@@ -498,7 +512,7 @@ Partial Class frmCreateEditProject
         'lblProjectType
         '
         Me.lblProjectType.AutoSize = True
-        Me.lblProjectType.Location = New System.Drawing.Point(297, 42)
+        Me.lblProjectType.Location = New System.Drawing.Point(301, 42)
         Me.lblProjectType.Name = "lblProjectType"
         Me.lblProjectType.Size = New System.Drawing.Size(70, 13)
         Me.lblProjectType.TabIndex = 2
@@ -573,7 +587,7 @@ Partial Class frmCreateEditProject
         'lblState
         '
         Me.lblState.AutoSize = True
-        Me.lblState.Location = New System.Drawing.Point(332, 123)
+        Me.lblState.Location = New System.Drawing.Point(336, 121)
         Me.lblState.Name = "lblState"
         Me.lblState.Size = New System.Drawing.Size(35, 13)
         Me.lblState.TabIndex = 14
@@ -582,7 +596,7 @@ Partial Class frmCreateEditProject
         'lblZip
         '
         Me.lblZip.AutoSize = True
-        Me.lblZip.Location = New System.Drawing.Point(432, 123)
+        Me.lblZip.Location = New System.Drawing.Point(432, 121)
         Me.lblZip.Name = "lblZip"
         Me.lblZip.Size = New System.Drawing.Size(25, 13)
         Me.lblZip.TabIndex = 16
@@ -598,7 +612,7 @@ Partial Class frmCreateEditProject
         'lblBidDate
         '
         Me.lblBidDate.AutoSize = True
-        Me.lblBidDate.Location = New System.Drawing.Point(41, 150)
+        Me.lblBidDate.Location = New System.Drawing.Point(41, 145)
         Me.lblBidDate.Name = "lblBidDate"
         Me.lblBidDate.Size = New System.Drawing.Size(51, 13)
         Me.lblBidDate.TabIndex = 18
@@ -632,7 +646,7 @@ Partial Class frmCreateEditProject
         'lblEngPlansDated
         '
         Me.lblEngPlansDated.AutoSize = True
-        Me.lblEngPlansDated.Location = New System.Drawing.Point(341, 175)
+        Me.lblEngPlansDated.Location = New System.Drawing.Point(341, 172)
         Me.lblEngPlansDated.Name = "lblEngPlansDated"
         Me.lblEngPlansDated.Size = New System.Drawing.Size(90, 13)
         Me.lblEngPlansDated.TabIndex = 22
@@ -649,7 +663,7 @@ Partial Class frmCreateEditProject
         'lblCustomerName
         '
         Me.lblCustomerName.AutoSize = True
-        Me.lblCustomerName.Location = New System.Drawing.Point(38, 254)
+        Me.lblCustomerName.Location = New System.Drawing.Point(38, 253)
         Me.lblCustomerName.Name = "lblCustomerName"
         Me.lblCustomerName.Size = New System.Drawing.Size(54, 13)
         Me.lblCustomerName.TabIndex = 24
@@ -658,7 +672,7 @@ Partial Class frmCreateEditProject
         'lblMilesToJobSite
         '
         Me.lblMilesToJobSite.AutoSize = True
-        Me.lblMilesToJobSite.Location = New System.Drawing.Point(4, 176)
+        Me.lblMilesToJobSite.Location = New System.Drawing.Point(4, 172)
         Me.lblMilesToJobSite.Name = "lblMilesToJobSite"
         Me.lblMilesToJobSite.Size = New System.Drawing.Size(88, 13)
         Me.lblMilesToJobSite.TabIndex = 26
@@ -692,7 +706,7 @@ Partial Class frmCreateEditProject
         'lblTotalGrossSqft
         '
         Me.lblTotalGrossSqft.AutoSize = True
-        Me.lblTotalGrossSqft.Location = New System.Drawing.Point(285, 226)
+        Me.lblTotalGrossSqft.Location = New System.Drawing.Point(285, 225)
         Me.lblTotalGrossSqft.Name = "lblTotalGrossSqft"
         Me.lblTotalGrossSqft.Size = New System.Drawing.Size(86, 13)
         Me.lblTotalGrossSqft.TabIndex = 30
@@ -709,7 +723,7 @@ Partial Class frmCreateEditProject
         'lblProjectArchitect
         '
         Me.lblProjectArchitect.AutoSize = True
-        Me.lblProjectArchitect.Location = New System.Drawing.Point(4, 282)
+        Me.lblProjectArchitect.Location = New System.Drawing.Point(9, 280)
         Me.lblProjectArchitect.Name = "lblProjectArchitect"
         Me.lblProjectArchitect.Size = New System.Drawing.Size(88, 13)
         Me.lblProjectArchitect.TabIndex = 32
@@ -718,7 +732,7 @@ Partial Class frmCreateEditProject
         'lblProjectEngineer
         '
         Me.lblProjectEngineer.AutoSize = True
-        Me.lblProjectEngineer.Location = New System.Drawing.Point(4, 308)
+        Me.lblProjectEngineer.Location = New System.Drawing.Point(4, 305)
         Me.lblProjectEngineer.Name = "lblProjectEngineer"
         Me.lblProjectEngineer.Size = New System.Drawing.Size(88, 13)
         Me.lblProjectEngineer.TabIndex = 34
@@ -727,7 +741,7 @@ Partial Class frmCreateEditProject
         'lblProjectNotes
         '
         Me.lblProjectNotes.AutoSize = True
-        Me.lblProjectNotes.Location = New System.Drawing.Point(18, 333)
+        Me.lblProjectNotes.Location = New System.Drawing.Point(18, 330)
         Me.lblProjectNotes.Name = "lblProjectNotes"
         Me.lblProjectNotes.Size = New System.Drawing.Size(74, 13)
         Me.lblProjectNotes.TabIndex = 36
@@ -770,6 +784,8 @@ Partial Class frmCreateEditProject
         '
         'tabOverrides
         '
+        Me.tabOverrides.Controls.Add(Me.lstFutures)
+        Me.tabOverrides.Controls.Add(Me.btnPullFutures)
         Me.tabOverrides.Controls.Add(Me.Label7)
         Me.tabOverrides.Controls.Add(Me.txtActiveRoofSPFPrice)
         Me.tabOverrides.Controls.Add(Me.txtActiveFloorSPFPrice)
@@ -792,6 +808,57 @@ Partial Class frmCreateEditProject
         Me.tabOverrides.Size = New System.Drawing.Size(681, 551)
         Me.tabOverrides.TabIndex = 0
         Me.tabOverrides.Text = "Overrides"
+        '
+        'lstFutures
+        '
+        Me.lstFutures.FormattingEnabled = True
+        Me.lstFutures.Location = New System.Drawing.Point(458, 312)
+        Me.lstFutures.Name = "lstFutures"
+        Me.lstFutures.Size = New System.Drawing.Size(162, 108)
+        Me.lstFutures.TabIndex = 61
+        '
+        'btnPullFutures
+        '
+        Me.btnPullFutures.Location = New System.Drawing.Point(529, 426)
+        Me.btnPullFutures.Name = "btnPullFutures"
+        Me.btnPullFutures.Size = New System.Drawing.Size(91, 34)
+        Me.btnPullFutures.TabIndex = 60
+        Me.btnPullFutures.Text = "Pull Futures"
+        Me.btnPullFutures.UseVisualStyleBackColor = True
+        '
+        'Label7
+        '
+        Me.Label7.AutoSize = True
+        Me.Label7.Location = New System.Drawing.Point(245, 152)
+        Me.Label7.Name = "Label7"
+        Me.Label7.Size = New System.Drawing.Size(37, 13)
+        Me.Label7.TabIndex = 59
+        Me.Label7.Text = "Active"
+        '
+        'txtActiveRoofSPFPrice
+        '
+        Me.txtActiveRoofSPFPrice.Location = New System.Drawing.Point(235, 197)
+        Me.txtActiveRoofSPFPrice.Name = "txtActiveRoofSPFPrice"
+        Me.txtActiveRoofSPFPrice.ReadOnly = True
+        Me.txtActiveRoofSPFPrice.Size = New System.Drawing.Size(68, 20)
+        Me.txtActiveRoofSPFPrice.TabIndex = 58
+        '
+        'txtActiveFloorSPFPrice
+        '
+        Me.txtActiveFloorSPFPrice.Location = New System.Drawing.Point(235, 168)
+        Me.txtActiveFloorSPFPrice.Name = "txtActiveFloorSPFPrice"
+        Me.txtActiveFloorSPFPrice.ReadOnly = True
+        Me.txtActiveFloorSPFPrice.Size = New System.Drawing.Size(68, 20)
+        Me.txtActiveFloorSPFPrice.TabIndex = 57
+        '
+        'Label6
+        '
+        Me.Label6.AutoSize = True
+        Me.Label6.Location = New System.Drawing.Point(171, 152)
+        Me.Label6.Name = "Label6"
+        Me.Label6.Size = New System.Drawing.Size(45, 13)
+        Me.Label6.TabIndex = 56
+        Me.Label6.Text = "Original "
         '
         'Label5
         '
@@ -839,7 +906,7 @@ Partial Class frmCreateEditProject
         '
         'btnUpdateLumber
         '
-        Me.btnUpdateLumber.Location = New System.Drawing.Point(304, 243)
+        Me.btnUpdateLumber.Location = New System.Drawing.Point(304, 246)
         Me.btnUpdateLumber.Name = "btnUpdateLumber"
         Me.btnUpdateLumber.Size = New System.Drawing.Size(103, 29)
         Me.btnUpdateLumber.TabIndex = 50
@@ -898,7 +965,8 @@ Partial Class frmCreateEditProject
         '
         'btnSaveOverrides
         '
-        Me.btnSaveOverrides.Location = New System.Drawing.Point(576, 482)
+        Me.btnSaveOverrides.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnSaveOverrides.Location = New System.Drawing.Point(576, 151)
         Me.btnSaveOverrides.Name = "btnSaveOverrides"
         Me.btnSaveOverrides.Size = New System.Drawing.Size(102, 30)
         Me.btnSaveOverrides.TabIndex = 44
@@ -906,6 +974,12 @@ Partial Class frmCreateEditProject
         '
         'tabRollup
         '
+        Me.tabRollup.Controls.Add(Me.lblSumCostVarVal)
+        Me.tabRollup.Controls.Add(Me.lblSumBDFTVarVal)
+        Me.tabRollup.Controls.Add(Me.lblSumShipmentsVal)
+        Me.tabRollup.Controls.Add(Me.lblSumCostVar)
+        Me.tabRollup.Controls.Add(Me.lblSumBDFTVar)
+        Me.tabRollup.Controls.Add(Me.lblSumShipments)
         Me.tabRollup.Controls.Add(Me.dgvRollup)
         Me.tabRollup.Location = New System.Drawing.Point(4, 22)
         Me.tabRollup.Name = "tabRollup"
@@ -913,22 +987,67 @@ Partial Class frmCreateEditProject
         Me.tabRollup.TabIndex = 0
         Me.tabRollup.Text = "Rollup Data"
         '
+        'lblSumCostVarVal
+        '
+        Me.lblSumCostVarVal.AutoSize = True
+        Me.lblSumCostVarVal.Location = New System.Drawing.Point(169, 466)
+        Me.lblSumCostVarVal.Name = "lblSumCostVarVal"
+        Me.lblSumCostVarVal.Size = New System.Drawing.Size(10, 13)
+        Me.lblSumCostVarVal.TabIndex = 51
+        Me.lblSumCostVarVal.Text = "."
+        '
+        'lblSumBDFTVarVal
+        '
+        Me.lblSumBDFTVarVal.AutoSize = True
+        Me.lblSumBDFTVarVal.Location = New System.Drawing.Point(169, 446)
+        Me.lblSumBDFTVarVal.Name = "lblSumBDFTVarVal"
+        Me.lblSumBDFTVarVal.Size = New System.Drawing.Size(10, 13)
+        Me.lblSumBDFTVarVal.TabIndex = 50
+        Me.lblSumBDFTVarVal.Text = "."
+        '
+        'lblSumShipmentsVal
+        '
+        Me.lblSumShipmentsVal.AutoSize = True
+        Me.lblSumShipmentsVal.Location = New System.Drawing.Point(169, 426)
+        Me.lblSumShipmentsVal.Name = "lblSumShipmentsVal"
+        Me.lblSumShipmentsVal.Size = New System.Drawing.Size(10, 13)
+        Me.lblSumShipmentsVal.TabIndex = 49
+        Me.lblSumShipmentsVal.Text = "."
+        '
+        'lblSumCostVar
+        '
+        Me.lblSumCostVar.AutoSize = True
+        Me.lblSumCostVar.Location = New System.Drawing.Point(55, 466)
+        Me.lblSumCostVar.Name = "lblSumCostVar"
+        Me.lblSumCostVar.Size = New System.Drawing.Size(96, 13)
+        Me.lblSumCostVar.TabIndex = 48
+        Me.lblSumCostVar.Text = "Net Cost Variance:"
+        '
+        'lblSumBDFTVar
+        '
+        Me.lblSumBDFTVar.AutoSize = True
+        Me.lblSumBDFTVar.Location = New System.Drawing.Point(55, 446)
+        Me.lblSumBDFTVar.Name = "lblSumBDFTVar"
+        Me.lblSumBDFTVar.Size = New System.Drawing.Size(103, 13)
+        Me.lblSumBDFTVar.TabIndex = 47
+        Me.lblSumBDFTVar.Text = "Net BDFT Variance:"
+        '
+        'lblSumShipments
+        '
+        Me.lblSumShipments.AutoSize = True
+        Me.lblSumShipments.Location = New System.Drawing.Point(55, 426)
+        Me.lblSumShipments.Name = "lblSumShipments"
+        Me.lblSumShipments.Size = New System.Drawing.Size(86, 13)
+        Me.lblSumShipments.TabIndex = 46
+        Me.lblSumShipments.Text = "Total Shipments:"
+        '
         'dgvRollup
         '
         Me.dgvRollup.Dock = System.Windows.Forms.DockStyle.Top
         Me.dgvRollup.Location = New System.Drawing.Point(0, 0)
         Me.dgvRollup.Name = "dgvRollup"
-        Me.dgvRollup.Size = New System.Drawing.Size(681, 490)
+        Me.dgvRollup.Size = New System.Drawing.Size(681, 406)
         Me.dgvRollup.TabIndex = 45
-        '
-        'btnRecalcRollup
-        '
-        Me.btnRecalcRollup.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnRecalcRollup.Location = New System.Drawing.Point(691, 398)
-        Me.btnRecalcRollup.Name = "btnRecalcRollup"
-        Me.btnRecalcRollup.Size = New System.Drawing.Size(104, 44)
-        Me.btnRecalcRollup.TabIndex = 46
-        Me.btnRecalcRollup.Text = "Recalculate Rollup"
         '
         'tabBuildingInfo
         '
@@ -1064,18 +1183,55 @@ Partial Class frmCreateEditProject
         '
         'pnlLevelInfo
         '
+        Me.pnlLevelInfo.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.pnlLevelInfo.AutoScroll = True
+        Me.pnlLevelInfo.Controls.Add(Me.btnImportMiTek)
+        Me.pnlLevelInfo.Controls.Add(Me.dgvLevelVariance)
+        Me.pnlLevelInfo.Controls.Add(Me.btnImportBisTrack)
         Me.pnlLevelInfo.Controls.Add(Me.nudLevelNumber)
         Me.pnlLevelInfo.Controls.Add(Me.lblLevelName)
         Me.pnlLevelInfo.Controls.Add(Me.txtLevelName)
         Me.pnlLevelInfo.Controls.Add(Me.lblLevelType)
         Me.pnlLevelInfo.Controls.Add(Me.cmbLevelType)
         Me.pnlLevelInfo.Controls.Add(Me.lblLevelNumber)
-        Me.pnlLevelInfo.Dock = System.Windows.Forms.DockStyle.Top
         Me.pnlLevelInfo.Location = New System.Drawing.Point(0, 0)
         Me.pnlLevelInfo.Name = "pnlLevelInfo"
         Me.pnlLevelInfo.Size = New System.Drawing.Size(681, 489)
         Me.pnlLevelInfo.TabIndex = 0
+        '
+        'btnImportBisTrack
+        '
+        Me.btnImportBisTrack.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnImportBisTrack.Location = New System.Drawing.Point(532, 60)
+        Me.btnImportBisTrack.Name = "btnImportBisTrack"
+        Me.btnImportBisTrack.Size = New System.Drawing.Size(130, 30)
+        Me.btnImportBisTrack.TabIndex = 9
+        Me.btnImportBisTrack.Text = "Import Bistrack"
+        Me.btnImportBisTrack.UseVisualStyleBackColor = True
+        '
+        'btnImportMiTek
+        '
+        Me.btnImportMiTek.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnImportMiTek.Location = New System.Drawing.Point(396, 60)
+        Me.btnImportMiTek.Name = "btnImportMiTek"
+        Me.btnImportMiTek.Size = New System.Drawing.Size(130, 30)
+        Me.btnImportMiTek.TabIndex = 8
+        Me.btnImportMiTek.Text = "Import Mitek"
+        Me.btnImportMiTek.UseVisualStyleBackColor = True
+        '
+        'dgvLevelVariance
+        '
+        Me.dgvLevelVariance.AllowUserToAddRows = False
+        Me.dgvLevelVariance.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
+        Me.dgvLevelVariance.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvLevelVariance.Dock = System.Windows.Forms.DockStyle.Bottom
+        Me.dgvLevelVariance.Location = New System.Drawing.Point(0, 96)
+        Me.dgvLevelVariance.Name = "dgvLevelVariance"
+        Me.dgvLevelVariance.ReadOnly = True
+        Me.dgvLevelVariance.Size = New System.Drawing.Size(681, 393)
+        Me.dgvLevelVariance.TabIndex = 7
         '
         'nudLevelNumber
         '
@@ -1129,11 +1285,21 @@ Partial Class frmCreateEditProject
         '
         'btnSaveLevelInfo
         '
-        Me.btnSaveLevelInfo.Location = New System.Drawing.Point(0, 495)
+        Me.btnSaveLevelInfo.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnSaveLevelInfo.Location = New System.Drawing.Point(532, 495)
         Me.btnSaveLevelInfo.Name = "btnSaveLevelInfo"
-        Me.btnSaveLevelInfo.Size = New System.Drawing.Size(562, 30)
+        Me.btnSaveLevelInfo.Size = New System.Drawing.Size(146, 30)
         Me.btnSaveLevelInfo.TabIndex = 6
         Me.btnSaveLevelInfo.Text = "Save Level Info"
+        '
+        'btnRecalcRollup
+        '
+        Me.btnRecalcRollup.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnRecalcRollup.Location = New System.Drawing.Point(691, 398)
+        Me.btnRecalcRollup.Name = "btnRecalcRollup"
+        Me.btnRecalcRollup.Size = New System.Drawing.Size(104, 44)
+        Me.btnRecalcRollup.TabIndex = 46
+        Me.btnRecalcRollup.Text = "Recalculate Rollup"
         '
         'btnPreviewIncExc
         '
@@ -1240,39 +1406,10 @@ Partial Class frmCreateEditProject
         Me.btnOpenProjectBuilder.Text = "Open Project Builder"
         Me.btnOpenProjectBuilder.UseVisualStyleBackColor = True
         '
-        'Label6
+        'FileSystemWatcher1
         '
-        Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(171, 152)
-        Me.Label6.Name = "Label6"
-        Me.Label6.Size = New System.Drawing.Size(45, 13)
-        Me.Label6.TabIndex = 56
-        Me.Label6.Text = "Original "
-        '
-        'Label7
-        '
-        Me.Label7.AutoSize = True
-        Me.Label7.Location = New System.Drawing.Point(245, 152)
-        Me.Label7.Name = "Label7"
-        Me.Label7.Size = New System.Drawing.Size(37, 13)
-        Me.Label7.TabIndex = 59
-        Me.Label7.Text = "Active"
-        '
-        'txtActiveRoofSPFPrice
-        '
-        Me.txtActiveRoofSPFPrice.Location = New System.Drawing.Point(235, 197)
-        Me.txtActiveRoofSPFPrice.Name = "txtActiveRoofSPFPrice"
-        Me.txtActiveRoofSPFPrice.ReadOnly = True
-        Me.txtActiveRoofSPFPrice.Size = New System.Drawing.Size(68, 20)
-        Me.txtActiveRoofSPFPrice.TabIndex = 58
-        '
-        'txtActiveFloorSPFPrice
-        '
-        Me.txtActiveFloorSPFPrice.Location = New System.Drawing.Point(235, 168)
-        Me.txtActiveFloorSPFPrice.Name = "txtActiveFloorSPFPrice"
-        Me.txtActiveFloorSPFPrice.ReadOnly = True
-        Me.txtActiveFloorSPFPrice.Size = New System.Drawing.Size(68, 20)
-        Me.txtActiveFloorSPFPrice.TabIndex = 57
+        Me.FileSystemWatcher1.EnableRaisingEvents = True
+        Me.FileSystemWatcher1.SynchronizingObject = Me
         '
         'frmCreateEditProject
         '
@@ -1294,6 +1431,7 @@ Partial Class frmCreateEditProject
         Me.tabOverrides.PerformLayout()
         CType(Me.dgvOverrides, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabRollup.ResumeLayout(False)
+        Me.tabRollup.PerformLayout()
         CType(Me.dgvRollup, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabBuildingInfo.ResumeLayout(False)
         Me.pnlBuildingInfo.ResumeLayout(False)
@@ -1303,11 +1441,13 @@ Partial Class frmCreateEditProject
         Me.tabLevelInfo.ResumeLayout(False)
         Me.pnlLevelInfo.ResumeLayout(False)
         Me.pnlLevelInfo.PerformLayout()
+        CType(Me.dgvLevelVariance, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.nudLevelNumber, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainer1.Panel1.ResumeLayout(False)
         Me.SplitContainer1.Panel2.ResumeLayout(False)
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainer1.ResumeLayout(False)
+        CType(Me.FileSystemWatcher1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
@@ -1430,4 +1570,16 @@ Partial Class frmCreateEditProject
     Friend WithEvents txtActiveRoofSPFPrice As TextBox
     Friend WithEvents txtActiveFloorSPFPrice As TextBox
     Friend WithEvents Label6 As Label
+    Friend WithEvents lstFutures As ListBox
+    Friend WithEvents btnPullFutures As Button
+    Friend WithEvents btnImportMiTek As Button
+    Friend WithEvents dgvLevelVariance As DataGridView
+    Friend WithEvents FileSystemWatcher1 As IO.FileSystemWatcher
+    Friend WithEvents btnImportBisTrack As Button
+    Friend WithEvents lblSumCostVarVal As Label
+    Friend WithEvents lblSumBDFTVarVal As Label
+    Friend WithEvents lblSumShipmentsVal As Label
+    Friend WithEvents lblSumCostVar As Label
+    Friend WithEvents lblSumBDFTVar As Label
+    Friend WithEvents lblSumShipments As Label
 End Class

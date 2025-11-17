@@ -11,7 +11,7 @@ Imports BuildersPSE2.DataAccess
 Public Class ProjectBuilderForm
     Inherits Form
 
-
+    Private ReadOnly pda As New ProjectDataAccess()
     Private m_VersionID As Integer
 
     Public Sub New(versionID As Integer)

@@ -90,57 +90,57 @@ Namespace DataAccess
                                                                                Try
                                                                                    ' Create new version
                                                                                    Dim params As New Dictionary(Of String, Object) From {
-                        {"@ProjectID", projectID},
-                        {"@VersionName", newVersionName},
-                        {"@VersionDate", Date.Now},
-                        {"@LastModifiedDate", Date.Now},
-                        {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
-                        {"@CustomerID", DBNull.Value},
-                        {"@SalesID", DBNull.Value}
-                    }
+                                                                                        {"@ProjectID", projectID},
+                                                                                        {"@VersionName", newVersionName},
+                                                                                        {"@VersionDate", Date.Now},
+                                                                                        {"@LastModifiedDate", Date.Now},
+                                                                                        {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
+                                                                                        {"@CustomerID", DBNull.Value},
+                                                                                        {"@SalesID", DBNull.Value}
+                                                                                    }
                                                                                    Dim newVersionID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectVersion, HelperDataAccess.BuildParameters(params), conn, transaction)
 
                                                                                    ' Duplicate ProjectProductSettings
                                                                                    params = New Dictionary(Of String, Object) From {
-                        {"@OriginalVersionID", originalVersionID},
-                        {"@NewVersionID", newVersionID}
-                    }
+                                                                                        {"@OriginalVersionID", originalVersionID},
+                                                                                        {"@NewVersionID", newVersionID}
+                                                                                    }
                                                                                    SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.DuplicateProjectProductSettings, HelperDataAccess.BuildParameters(params), conn, transaction)
 
                                                                                    ' Duplicate RawUnits and create map
                                                                                    Dim rawIdMap As New Dictionary(Of Integer, Integer)
                                                                                    For Each raw In uniqueRawUnits
                                                                                        params = New Dictionary(Of String, Object) From {
-        {"@RawUnitName", raw.RawUnitName},
-        {"@VersionID", newVersionID},
-        {"@ProductTypeID", raw.ProductTypeID},
-        {"@BF", If(raw.BF.HasValue, CType(raw.BF.Value, Object), DBNull.Value)},
-        {"@LF", If(raw.LF.HasValue, CType(raw.LF.Value, Object), DBNull.Value)},
-        {"@EWPLF", If(raw.EWPLF.HasValue, CType(raw.EWPLF.Value, Object), DBNull.Value)},
-        {"@SqFt", If(raw.SqFt.HasValue, CType(raw.SqFt.Value, Object), DBNull.Value)},
-        {"@FCArea", If(raw.FCArea.HasValue, CType(raw.FCArea.Value, Object), DBNull.Value)},
-        {"@LumberCost", If(raw.LumberCost.HasValue, CType(raw.LumberCost.Value, Object), DBNull.Value)},
-        {"@PlateCost", If(raw.PlateCost.HasValue, CType(raw.PlateCost.Value, Object), DBNull.Value)},
-        {"@ManufLaborCost", If(raw.ManufLaborCost.HasValue, CType(raw.ManufLaborCost.Value, Object), DBNull.Value)},
-        {"@DesignLabor", If(raw.DesignLabor.HasValue, CType(raw.DesignLabor.Value, Object), DBNull.Value)},
-        {"@MGMTLabor", If(raw.MGMTLabor.HasValue, CType(raw.MGMTLabor.Value, Object), DBNull.Value)},
-        {"@JobSuppliesCost", If(raw.JobSuppliesCost.HasValue, CType(raw.JobSuppliesCost.Value, Object), DBNull.Value)},
-        {"@ManHours", If(raw.ManHours.HasValue, CType(raw.ManHours.Value, Object), DBNull.Value)},
-        {"@ItemCost", If(raw.ItemCost.HasValue, CType(raw.ItemCost.Value, Object), DBNull.Value)},
-        {"@OverallCost", If(raw.OverallCost.HasValue, CType(raw.OverallCost.Value, Object), DBNull.Value)},
-        {"@DeliveryCost", If(raw.DeliveryCost.HasValue, CType(raw.DeliveryCost.Value, Object), DBNull.Value)},
-        {"@TotalSellPrice", If(raw.TotalSellPrice.HasValue, CType(raw.TotalSellPrice.Value, Object), DBNull.Value)},
-        {"@AvgSPFNo2", If(raw.AvgSPFNo2.HasValue, CType(raw.AvgSPFNo2.Value, Object), DBNull.Value)},
-        {"@SPFNo2BDFT", If(raw.SPFNo2BDFT.HasValue, CType(raw.SPFNo2BDFT.Value, Object), DBNull.Value)},
-        {"@Avg241800", If(raw.Avg241800.HasValue, CType(raw.Avg241800.Value, Object), DBNull.Value)},
-        {"@MSR241800BDFT", If(raw.MSR241800BDFT.HasValue, CType(raw.MSR241800BDFT.Value, Object), DBNull.Value)},
-        {"@Avg242400", If(raw.Avg242400.HasValue, CType(raw.Avg242400.Value, Object), DBNull.Value)},
-        {"@MSR242400BDFT", If(raw.MSR242400BDFT.HasValue, CType(raw.MSR242400BDFT.Value, Object), DBNull.Value)},
-        {"@Avg261800", If(raw.Avg261800.HasValue, CType(raw.Avg261800.Value, Object), DBNull.Value)},
-        {"@MSR261800BDFT", If(raw.MSR261800BDFT.HasValue, CType(raw.MSR261800BDFT.Value, Object), DBNull.Value)},
-        {"@Avg262400", If(raw.Avg262400.HasValue, CType(raw.Avg262400.Value, Object), DBNull.Value)},
-        {"@MSR262400BDFT", If(raw.MSR262400BDFT.HasValue, CType(raw.MSR262400BDFT.Value, Object), DBNull.Value)}
-    }
+                                                                                            {"@RawUnitName", raw.RawUnitName},
+                                                                                            {"@VersionID", newVersionID},
+                                                                                            {"@ProductTypeID", raw.ProductTypeID},
+                                                                                            {"@BF", If(raw.BF.HasValue, CType(raw.BF.Value, Object), DBNull.Value)},
+                                                                                            {"@LF", If(raw.LF.HasValue, CType(raw.LF.Value, Object), DBNull.Value)},
+                                                                                            {"@EWPLF", If(raw.EWPLF.HasValue, CType(raw.EWPLF.Value, Object), DBNull.Value)},
+                                                                                            {"@SqFt", If(raw.SqFt.HasValue, CType(raw.SqFt.Value, Object), DBNull.Value)},
+                                                                                            {"@FCArea", If(raw.FCArea.HasValue, CType(raw.FCArea.Value, Object), DBNull.Value)},
+                                                                                            {"@LumberCost", If(raw.LumberCost.HasValue, CType(raw.LumberCost.Value, Object), DBNull.Value)},
+                                                                                            {"@PlateCost", If(raw.PlateCost.HasValue, CType(raw.PlateCost.Value, Object), DBNull.Value)},
+                                                                                            {"@ManufLaborCost", If(raw.ManufLaborCost.HasValue, CType(raw.ManufLaborCost.Value, Object), DBNull.Value)},
+                                                                                            {"@DesignLabor", If(raw.DesignLabor.HasValue, CType(raw.DesignLabor.Value, Object), DBNull.Value)},
+                                                                                            {"@MGMTLabor", If(raw.MGMTLabor.HasValue, CType(raw.MGMTLabor.Value, Object), DBNull.Value)},
+                                                                                            {"@JobSuppliesCost", If(raw.JobSuppliesCost.HasValue, CType(raw.JobSuppliesCost.Value, Object), DBNull.Value)},
+                                                                                            {"@ManHours", If(raw.ManHours.HasValue, CType(raw.ManHours.Value, Object), DBNull.Value)},
+                                                                                            {"@ItemCost", If(raw.ItemCost.HasValue, CType(raw.ItemCost.Value, Object), DBNull.Value)},
+                                                                                            {"@OverallCost", If(raw.OverallCost.HasValue, CType(raw.OverallCost.Value, Object), DBNull.Value)},
+                                                                                            {"@DeliveryCost", If(raw.DeliveryCost.HasValue, CType(raw.DeliveryCost.Value, Object), DBNull.Value)},
+                                                                                            {"@TotalSellPrice", If(raw.TotalSellPrice.HasValue, CType(raw.TotalSellPrice.Value, Object), DBNull.Value)},
+                                                                                            {"@AvgSPFNo2", If(raw.AvgSPFNo2.HasValue, CType(raw.AvgSPFNo2.Value, Object), DBNull.Value)},
+                                                                                            {"@SPFNo2BDFT", If(raw.SPFNo2BDFT.HasValue, CType(raw.SPFNo2BDFT.Value, Object), DBNull.Value)},
+                                                                                            {"@Avg241800", If(raw.Avg241800.HasValue, CType(raw.Avg241800.Value, Object), DBNull.Value)},
+                                                                                            {"@MSR241800BDFT", If(raw.MSR241800BDFT.HasValue, CType(raw.MSR241800BDFT.Value, Object), DBNull.Value)},
+                                                                                            {"@Avg242400", If(raw.Avg242400.HasValue, CType(raw.Avg242400.Value, Object), DBNull.Value)},
+                                                                                            {"@MSR242400BDFT", If(raw.MSR242400BDFT.HasValue, CType(raw.MSR242400BDFT.Value, Object), DBNull.Value)},
+                                                                                            {"@Avg261800", If(raw.Avg261800.HasValue, CType(raw.Avg261800.Value, Object), DBNull.Value)},
+                                                                                            {"@MSR261800BDFT", If(raw.MSR261800BDFT.HasValue, CType(raw.MSR261800BDFT.Value, Object), DBNull.Value)},
+                                                                                            {"@Avg262400", If(raw.Avg262400.HasValue, CType(raw.Avg262400.Value, Object), DBNull.Value)},
+                                                                                            {"@MSR262400BDFT", If(raw.MSR262400BDFT.HasValue, CType(raw.MSR262400BDFT.Value, Object), DBNull.Value)}
+                                                                                        }
                                                                                        Dim newRawUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertRawUnit, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                        rawIdMap.Add(raw.RawUnitID, newRawUnitID)
                                                                                    Next
@@ -149,14 +149,15 @@ Namespace DataAccess
                                                                                    Dim actualIdMap As New Dictionary(Of Integer, Integer)
                                                                                    For Each actual In uniqueActualUnits
                                                                                        params = New Dictionary(Of String, Object) From {
-                            {"@VersionID", newVersionID},
-                            {"@RawUnitID", rawIdMap(actual.RawUnitID)},
-                            {"@ProductTypeID", actual.ProductTypeID},
-                            {"@UnitName", actual.UnitName},
-                            {"@PlanSQFT", actual.PlanSQFT},
-                            {"@UnitType", actual.UnitType},
-                            {"@OptionalAdder", actual.OptionalAdder}
-                        }
+                                                                                                    {"@VersionID", newVersionID},
+                                                                                                    {"@RawUnitID", rawIdMap(actual.RawUnitID)},
+                                                                                                    {"@ProductTypeID", actual.ProductTypeID},
+                                                                                                    {"@UnitName", actual.UnitName},
+                                                                                                    {"@PlanSQFT", actual.PlanSQFT},
+                                                                                                    {"@UnitType", actual.UnitType},
+                                                                                                    {"@OptionalAdder", actual.OptionalAdder},
+                                                                                                    {"@colorcode", DBNull.Value}
+                                                                                                           }
                                                                                        Dim newActualUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertActualUnit, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                        actualIdMap.Add(actual.ActualUnitID, newActualUnitID)
                                                                                    Next
@@ -166,11 +167,11 @@ Namespace DataAccess
                                                                                        Dim newActualUnitID As Integer = actualIdMap(actual.ActualUnitID)
                                                                                        For Each comp In actual.CalculatedComponents
                                                                                            params = New Dictionary(Of String, Object) From {
-                                {"@VersionID", newVersionID},
-                                {"@ActualUnitID", newActualUnitID},
-                                {"@ComponentType", comp.ComponentType},
-                                {"@Value", comp.Value}
-                            }
+                                                                                                {"@VersionID", newVersionID},
+                                                                                                {"@ActualUnitID", newActualUnitID},
+                                                                                                {"@ComponentType", comp.ComponentType},
+                                                                                                {"@Value", comp.Value}
+                                                                                            }
                                                                                            SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.InsertCalculatedComponent, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                        Next
                                                                                    Next
@@ -179,12 +180,12 @@ Namespace DataAccess
                                                                                    Dim buildingIdMap As New Dictionary(Of Integer, Integer)
                                                                                    For Each origBldg In origBuildings
                                                                                        params = New Dictionary(Of String, Object) From {
-                            {"@BuildingName", If(String.IsNullOrEmpty(origBldg.BuildingName), DBNull.Value, CType(origBldg.BuildingName, Object))},
-                            {"@BuildingType", If(origBldg.BuildingType.HasValue, CType(origBldg.BuildingType.Value, Object), DBNull.Value)},
-                            {"@ResUnits", If(origBldg.ResUnits.HasValue, CType(origBldg.ResUnits.Value, Object), DBNull.Value)},
-                            {"@BldgQty", origBldg.BldgQty},
-                            {"@VersionID", newVersionID}
-                        }
+                                                                                            {"@BuildingName", If(String.IsNullOrEmpty(origBldg.BuildingName), DBNull.Value, CType(origBldg.BuildingName, Object))},
+                                                                                            {"@BuildingType", If(origBldg.BuildingType.HasValue, CType(origBldg.BuildingType.Value, Object), DBNull.Value)},
+                                                                                            {"@ResUnits", If(origBldg.ResUnits.HasValue, CType(origBldg.ResUnits.Value, Object), DBNull.Value)},
+                                                                                            {"@BldgQty", origBldg.BldgQty},
+                                                                                            {"@VersionID", newVersionID}
+                                                                                        }
                                                                                        Dim newBldgID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertBuilding, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                        buildingIdMap.Add(origBldg.BuildingID, newBldgID)
                                                                                    Next
@@ -195,12 +196,12 @@ Namespace DataAccess
                                                                                        Dim newBldgID As Integer = buildingIdMap(origBldg.BuildingID)
                                                                                        For Each origLevel In origBldg.Levels
                                                                                            params = New Dictionary(Of String, Object) From {
-                                {"@VersionID", newVersionID},
-                                {"@BuildingID", newBldgID},
-                                {"@ProductTypeID", origLevel.ProductTypeID},
-                                {"@LevelNumber", origLevel.LevelNumber},
-                                {"@LevelName", origLevel.LevelName}
-                            }
+                                                                                                {"@VersionID", newVersionID},
+                                                                                                {"@BuildingID", newBldgID},
+                                                                                                {"@ProductTypeID", origLevel.ProductTypeID},
+                                                                                                {"@LevelNumber", origLevel.LevelNumber},
+                                                                                                {"@LevelName", origLevel.LevelName}
+                                                                                            }
                                                                                            Dim newLevelID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertLevel, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                            levelIdMap.Add(origLevel.LevelID, newLevelID)
                                                                                        Next
@@ -212,11 +213,11 @@ Namespace DataAccess
                                                                                            Dim newLevelID As Integer = levelIdMap(origLevel.LevelID)
                                                                                            For Each origMapping In origLevel.ActualUnitMappings
                                                                                                params = New Dictionary(Of String, Object) From {
-                                    {"@VersionID", newVersionID},
-                                    {"@ActualUnitID", actualIdMap(origMapping.ActualUnitID)},
-                                    {"@LevelID", newLevelID},
-                                    {"@Quantity", origMapping.Quantity}
-                                }
+                                                                                                    {"@VersionID", newVersionID},
+                                                                                                    {"@ActualUnitID", actualIdMap(origMapping.ActualUnitID)},
+                                                                                                    {"@LevelID", newLevelID},
+                                                                                                    {"@Quantity", origMapping.Quantity}
+                                                                                                }
                                                                                                SqlConnectionManager.Instance.ExecuteNonQueryTransactional(Queries.InsertActualToLevelMapping, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                            Next
                                                                                        Next

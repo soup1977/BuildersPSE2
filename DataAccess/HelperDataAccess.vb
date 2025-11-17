@@ -33,7 +33,7 @@ Namespace DataAccess
                 {"@CustomerName", customerName},
                 {"@CustomerType", customerType}
             }
-            Dim customerIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT CustomerID FROM Customer WHERE CustomerName = @CustomerName AND CustomerType = @CustomerType", BuildParameters(params), conn, transaction)
+            Dim customerIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)("SELECT CustomerID FROM Customer WHERE CustomerName = @CustomerName AND CustomerType = @CustomerType order by CustomerName", BuildParameters(params), conn, transaction)
             If customerIDObj Is DBNull.Value OrElse customerIDObj Is Nothing Then
                 params = New Dictionary(Of String, Object) From {
                     {"@CustomerName", customerName},

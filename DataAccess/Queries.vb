@@ -18,7 +18,31 @@
         Public Const DeleteLevel As String = "DELETE FROM Levels WHERE LevelID = @LevelID"
         Public Const GetBuildingIDByLevelID As String = "SELECT BuildingID FROM Levels WHERE LevelID = @LevelID"
         Public Const SelectLevelsByVersionID As String = "SELECT LevelID, BuildingID, ProductTypeID, LevelNumber, LevelName FROM Levels WHERE VersionID = @VersionID"
-
+        Public Const SelectLevelByID As String = "SELECT * FROM Levels WHERE LevelID = @LevelID"
+        Public Const SelectLevelEstimateWithProductType As String = "
+    SELECT 
+        l.OverallPrice,
+        l.OverallBDFT,
+        l.LumberCost,
+        l.PlateCost,
+        l.LaborCost,
+        l.LaborMH,
+        l.ItemsCost,
+        l.DeliveryCost,
+        l.DesignCost,
+        l.MGMTCost,
+        l.JobSuppliesCost,
+        l.OverallCost,
+        pt.ProductTypeName
+    FROM Levels l
+    JOIN ActualToLevelMapping alm ON l.LevelID = alm.LevelID
+    JOIN ActualUnits au ON alm.ActualUnitID = au.ActualUnitID
+    JOIN ProductType pt ON au.ProductTypeID = pt.ProductTypeID
+    WHERE l.LevelID = @LevelID AND l.VersionID = @VersionID
+    GROUP BY 
+        l.OverallPrice, l.OverallBDFT, l.LumberCost, l.PlateCost, l.LaborCost, l.LaborMH,
+        l.ItemsCost, l.DeliveryCost, l.DesignCost, l.MGMTCost, l.JobSuppliesCost,
+        l.OverallCost, pt.ProductTypeName"
 
         ' Product Types (unchanged)
         Public Const SelectProductTypes As String = "SELECT * FROM ProductType"
@@ -29,7 +53,7 @@
         Public Const UpdateProjectProductSetting As String = "UPDATE ProjectProductSettings SET MarginPercent = @MarginPercent, LumberAdder = @LumberAdder WHERE SettingID = @SettingID"
 
         ' Customers (unchanged)
-        Public Const SelectCustomers As String = "SELECT c.*, ct.CustomerTypeName FROM Customer c LEFT JOIN CustomerType ct ON c.CustomerType = ct.CustomerTypeID WHERE (@CustomerType IS NULL OR c.CustomerType = @CustomerType)"
+        Public Const SelectCustomers As String = "SELECT c.*, ct.CustomerTypeName FROM Customer c LEFT JOIN CustomerType ct ON c.CustomerType = ct.CustomerTypeID WHERE (@CustomerType IS NULL OR c.CustomerType = @CustomerType) order by CustomerName"
         Public Const InsertCustomer As String = "INSERT INTO Customer (CustomerName, CustomerType) OUTPUT INSERTED.CustomerID VALUES (@CustomerName, @CustomerType)"
         Public Const UpdateCustomer As String = "UPDATE Customer SET CustomerName = @CustomerName, CustomerType = @CustomerType WHERE CustomerID = @CustomerID"
         Public Const SelectCustomerTypes As String = "SELECT CustomerTypeID, CustomerTypeName FROM CustomerType ORDER BY CustomerTypeName"
@@ -216,20 +240,166 @@
         ' New query to delete a history record
         Public Const DeleteLumberHistory As String = "DELETE FROM RawUnitLumberHistory WHERE HistoryID = @HistoryID AND VersionID = @VersionID"
         ' New query for distinct CosteffectiveDate values
-        Public Const SelectDistinctLumberHistoryDates As String = "SELECT rlh.CostEffectiveDateID, lce.CosteffectiveDate, " &
-                                                         "CASE WHEN EXISTS (SELECT 1 FROM RawUnitLumberHistory rlh2 WHERE rlh2.CostEffectiveDateID = rlh.CostEffectiveDateID AND rlh2.VersionID = @VersionID AND rlh2.IsActive = 1) THEN 1 ELSE 0 END AS IsActive, " &
-                                                         "MAX(rlh.UpdateDate) AS UpdateDate " &
-                                                         "FROM RawUnitLumberHistory rlh " &
-                                                         "JOIN LumberCostEffective lce ON rlh.CostEffectiveDateID = lce.CostEffectiveID " &
-                                                         "WHERE rlh.VersionID = @VersionID " &
-                                                         "GROUP BY rlh.CostEffectiveDateID, lce.CosteffectiveDate " &
-                                                         "ORDER BY lce.CosteffectiveDate DESC"
+        Public Const SelectDistinctLumberHistoryDates As String = "SELECT rlh.CostEffectiveDateID, lce.CosteffectiveDate, CASE WHEN EXISTS (SELECT 1 FROM RawUnitLumberHistory rlh2 WHERE rlh2.CostEffectiveDateID = rlh.CostEffectiveDateID AND rlh2.VersionID = @VersionID AND rlh2.IsActive = 1) THEN 1 ELSE 0 END AS IsActive, MAX(rlh.UpdateDate) AS UpdateDate FROM RawUnitLumberHistory rlh JOIN LumberCostEffective lce ON rlh.CostEffectiveDateID = lce.CostEffectiveID WHERE rlh.VersionID = @VersionID GROUP BY rlh.CostEffectiveDateID, lce.CosteffectiveDate ORDER BY lce.CosteffectiveDate DESC"
 
         ' New query to find CostEffectiveDateID by cost
-        Public Const SelectCostEffectiveDateIDByCost As String = "SELECT lc.CostEffectiveDateID " &
-                                                                "FROM LumberCost lc " &
-                                                                "JOIN LumberType lt ON lc.LumberTypeID = lt.LumberTypeID " &
-                                                                "WHERE lt.LumberTypeID = 1 AND lc.LumberCost = @SPFLumberCost"
+        Public Const SelectCostEffectiveDateIDByCost As String = "SELECT lc.CostEffectiveDateID FROM LumberCost lc JOIN LumberType lt ON lc.LumberTypeID = lt.LumberTypeID WHERE lt.LumberTypeID = 1 AND lc.LumberCost = @SPFLumberCost"
+
+
+        '--- Lumber Futures -------------------------------------------------
+        Public Const SelectLumberFuturesByVersion As String = "SELECT LumberFutureID, ContractMonth, PriorSettle FROM LumberFutures WHERE VersionID = @VersionID ORDER BY PullDate"
+        Public Const UpsertLumberFuture As String = "IF EXISTS (SELECT 1 FROM LumberFutures WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth) UPDATE LumberFutures SET PriorSettle = @PriorSettle, PullDate = GETDATE() WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth ELSE INSERT INTO LumberFutures (VersionID, ContractMonth, PriorSettle) VALUES (@VersionID, @ContractMonth, @PriorSettle)"
+        Public Const UpdateProjectProductSettingLumberAdder As String = "UPDATE ProjectProductSettings SET LumberAdder = @LumberAdder WHERE VersionID = @VersionID AND ProductTypeID = @ProductTypeID"
+
+        ' Project summary – includes City, State, Architect, Engineer, plan dates and Salesman
+        'Public Const SelectProjectSummary As String = "SELECT p.ProjectName, p.JBID,  pv.VersionName, c.CustomerName, s.SalesName, p.City, p.State, ca.CustomerName As Architect, ce.CustomerName As Engineer, p.ArchPlansDated, p.EngPlansDated, b.BuildingName, b.BldgQty, b.OverallPrice, l.LevelName, l.OverallSQFT, l.OverallPrice As OverallPrice_Level, pt.ProductTypeName, SUM(b.BldgQty) OVER (PARTITION BY p.ProjectID) AS TotalBldgQty FROM Projects p INNER JOIN ProjectVersions pv On p.ProjectID = pv.ProjectID And pv.VersionID = @VersionID LEFT JOIN Customer c On pv.CustomerID = c.CustomerID And c.CustomerType = 1 LEFT JOIN Sales s On pv.SalesID = s.SalesID LEFT JOIN Customer ca On p.ArchitectID = ca.CustomerID And ca.CustomerType = 2 LEFT JOIN Customer ce On p.EngineerID = ce.CustomerID And ce.CustomerType = 3 LEFT JOIN Buildings b On pv.VersionID = b.VersionID LEFT JOIN Levels l On b.BuildingID = l.BuildingID LEFT JOIN ProductType pt On l.ProductTypeID = pt.ProductTypeID  WHERE p.ProjectID = @ProjectID"
+        Public Const SelectProjectSummary As String = "
+SELECT 
+    p.ProjectName, 
+    p.JBID, 
+    pv.VersionName, 
+    c.CustomerName, 
+    s.SalesName,
+    p.City, 
+    p.State, 
+    ca.CustomerName AS Architect, 
+    ce.CustomerName AS Engineer, 
+    p.ArchPlansDated, 
+    p.EngPlansDated,
+    b.BuildingName, 
+    b.BldgQty,
+    b.OverallPrice,
+    l.LevelName, 
+    l.OverallSQFT, 
+    l.OverallPrice AS OverallPrice_Level,
+    pt.ProductTypeName,
+    -- TOTAL: Sum BldgQty once per Building (from distinct buildings)
+    (SELECT SUM(b2.BldgQty) 
+     FROM Buildings b2 
+     WHERE b2.VersionID = pv.VersionID) AS TotalBldgQty
+FROM Projects p
+INNER JOIN ProjectVersions pv ON p.ProjectID = pv.ProjectID AND pv.VersionID = @VersionID
+LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1
+LEFT JOIN Sales s ON pv.SalesID = s.SalesID
+LEFT JOIN Customer ca ON p.ArchitectID = ca.CustomerID AND ca.CustomerType = 2
+LEFT JOIN Customer ce ON p.EngineerID = ce.CustomerID AND ce.CustomerType = 3
+LEFT JOIN Buildings b ON pv.VersionID = b.VersionID
+LEFT JOIN Levels l ON b.BuildingID = l.BuildingID
+LEFT JOIN ProductType pt ON l.ProductTypeID = pt.ProductTypeID
+WHERE p.ProjectID = @ProjectID"
+
+        ' ===============================================================
+        ' LEVELACTUALS – FINAL PRODUCTION QUERIES (MULTI-SHIPMENT READY)
+        ' ===============================================================
+
+        ' 1. Insert new actuals row (Design or Invoice) – used by both MiTek CSV and BisTrack pull
+        Public Const InsertLevelActual As String = "
+INSERT INTO LevelActuals
+    (LevelID, VersionID, StageType,
+     ActualBDFT, ActualLumberCost, ActualPlateCost, ActualManufLaborCost,
+     ActualItemCost, ActualDeliveryCost, ActualMiscLaborCost, ActualTotalCost,
+     ActualSoldAmount, ActualMarginPercent, AvgSPFNo2Actual,
+     MiTekJobNumber, BistrackWorksOrder, BisTrackSalesOrder,ActualManufMH, ImportedBy, Notes)
+OUTPUT INSERTED.ActualID
+VALUES
+    (@LevelID, @VersionID, @StageType,
+     @ActualBDFT, @ActualLumberCost, @ActualPlateCost, @ActualManufLaborCost,
+     @ActualItemCost, @ActualDeliveryCost, @ActualMiscLaborCost, @ActualTotalCost,
+     @ActualSoldAmount, @ActualMarginPercent, @AvgSPFNo2Actual,
+     @MiTekJobNumber, @BistrackWorksOrder, @BisTrackSalesOrder,@ActualManufMH, @ImportedBy, @Notes)"
+
+        ' 2. Get ALL actuals for a specific Level (shows every shipment)
+        Public Const SelectAllActualsForLevel As String = "
+    SELECT
+        ActualID, StageType, ImportDate, MiTekJobNumber, BistrackWorksOrder, BisTrackSalesOrder,
+        ActualBDFT, ActualLumberCost, ActualPlateCost, ActualManufLaborCost,
+        ActualItemCost, ActualDeliveryCost, ActualMiscLaborCost, ActualTotalCost,
+        ActualSoldAmount, ActualMarginPercent, AvgSPFNo2Actual,ActualManufMH, Notes
+    FROM LevelActuals
+    WHERE LevelID = @LevelID AND VersionID = @VersionID
+    ORDER BY ImportDate DESC"
+
+        ' 3. HOLY GRAIL: Multi-shipment variance grid (Estimate vs. every actual shipment)
+        Public Const SelectMultiShipmentVariance As String = "
+    SELECT 
+        l.LevelID,
+        l.LevelName,
+        b.BldgQty,
+        la.BisTrackSalesOrder AS [Shipment SO],
+        la.ImportDate AS [Ship Date],
+        l.OverallBDFT AS [Est BDFT per Bldg],
+        la.ActualBDFT AS [Actual BDFT],
+        ISNULL(la.ActualBDFT, 0) - l.OverallBDFT AS [BDFT Var],
+        l.LumberCost AS [Est Lumber per Bldg],
+        la.ActualLumberCost AS [Actual Lumber],
+        ISNULL(la.ActualLumberCost, 0) - l.LumberCost AS [Lumber Var],
+        l.OverallCost AS [Est Cost per Bldg],
+        la.ActualTotalCost AS [Actual Cost],
+        ISNULL(la.ActualTotalCost, 0) - l.OverallCost AS [Cost Var],
+        l.OverallPrice AS [Est Sold per Bldg],
+        la.ActualSoldAmount AS [Actual Sold],
+        ISNULL(la.ActualSoldAmount, 0) - l.OverallPrice AS [Sold Var],
+        la.ActualMarginPercent AS [Actual Margin %],
+        l.AvgSPFNo2 AS [Est SPF#2],
+        la.AvgSPFNo2Actual AS [Actual SPF#2]
+    FROM Levels l
+    JOIN Buildings b ON l.BuildingID = b.BuildingID
+    LEFT JOIN LevelActuals la ON l.LevelID = la.LevelID 
+                             AND l.VersionID = la.VersionID
+                             AND la.StageType = 2   -- 2 = Invoice (change to 1 for Design)
+    WHERE l.VersionID = @VersionID
+    ORDER BY l.LevelName, la.ImportDate DESC"
+
+        ' 4. Project-level summary across ALL shipments
+        Public Const SelectProjectShipmentSummary As String = "
+    SELECT 
+        COUNT(DISTINCT la.BisTrackSalesOrder) AS TotalShipments,
+        SUM(l.OverallBDFT * b.BldgQty) AS TotalEstBDFT,
+        SUM(la.ActualBDFT) AS TotalActualBDFT,
+        SUM(la.ActualBDFT) - SUM(l.OverallBDFT * b.BldgQty) AS NetBDFTVar,
+        SUM(l.OverallCost * b.BldgQty) AS TotalEstCost,
+        SUM(la.ActualTotalCost) AS TotalActualCost,
+        SUM(la.ActualTotalCost) - SUM(l.OverallCost * b.BldgQty) AS NetCostVar,
+        SUM(l.OverallPrice * b.BldgQty) AS TotalEstSold,
+        SUM(la.ActualSoldAmount) AS TotalActualSold,
+        SUM(la.ActualSoldAmount) - SUM(l.OverallPrice * b.BldgQty) AS NetSoldVar
+    FROM Levels l
+    JOIN Buildings b ON l.BuildingID = b.BuildingID
+    LEFT JOIN LevelActuals la ON l.LevelID = la.LevelID 
+                             AND l.VersionID = la.VersionID
+                             AND la.StageType = 2
+    WHERE l.VersionID = @VersionID"
+
+        ' 5. Design-stage only variance (MiTek actuals vs. Estimate)
+        Public Const SelectDesignVariance As String = "
+    SELECT 
+        l.LevelName,
+        l.OverallBDFT AS EstBDFT,
+        la.ActualBDFT AS DesignBDFT,
+        la.ActualBDFT - l.OverallBDFT AS DesignBDFTVar,
+        la.ActualTotalCost - l.OverallCost AS DesignCostVar
+    FROM Levels l
+    LEFT JOIN LevelActuals la ON l.LevelID = la.LevelID 
+                             AND l.VersionID = la.VersionID
+                             AND la.StageType = 1
+    WHERE l.VersionID = @VersionID"
+
+        ' 6. Check if a specific shipment already exists (prevents duplicates on re-import)
+        Public Const SelectExistingShipment As String = "
+    SELECT ActualID 
+    FROM LevelActuals 
+    WHERE LevelID = @LevelID 
+      AND VersionID = @VersionID 
+      AND BisTrackSalesOrder = @BisTrackSalesOrder 
+      AND StageType = 2"
+
+        ' 7. Delete a specific shipment row (for corrections)
+        Public Const DeleteShipmentActual As String = "
+    DELETE FROM LevelActuals 
+    WHERE ActualID = @ActualID"
+
+
+
 
     End Module
 End Namespace

@@ -6,6 +6,7 @@ Imports BuildersPSE2.DataAccess
 Imports Microsoft.VisualBasic.FileIO
 
 Public Class frmMain
+    Private ReadOnly eida As New ExternalImportDataAccess
     Private m_ChildFormNumber As Integer
     Private m_previousTab As TabPage ' Track the previously selected tab
     Private m_isRemovingTab As Boolean = False ' Suppress events during removal
@@ -217,7 +218,7 @@ Public Class frmMain
                                          Try
                                              Dim dataAccess As New ProjectDataAccess()
                                              Dim projectID As Integer
-                                             If isFullImport Then
+                                             If isfullimport Then
                                                  projectID = ExternalImportDataAccess.ImportProjectFromCSV(csvPath, projName, custName, estID, salID, address, city, state, zip, biddate, archdate, engdate, miles)
                                              Else
                                                  projectID = ExternalImportDataAccess.ImportProjectInfoFromCSV(csvPath, projName, custName, estID, salID, address, city, state, zip, biddate, archdate, engdate, miles)

@@ -1,6 +1,17 @@
-﻿Imports System.Data.SqlClient
+﻿Imports System.Collections.ObjectModel
+Imports System.Data.SqlClient
+Imports System.Globalization
+Imports System.Net.Http
+Imports System.Text.RegularExpressions
 Imports BuildersPSE2.BuildersPSE.Models
 Imports BuildersPSE2.BuildersPSE.Utilities
+Imports DocumentFormat.OpenXml.Bibliography
+Imports HtmlAgilityPack
+Imports OpenQA.Selenium
+Imports OpenQA.Selenium.Edge
+Imports OpenQA.Selenium.Support.UI
+
+
 
 Namespace DataAccess
 
@@ -365,5 +376,137 @@ Namespace DataAccess
                                                                    End Sub, "Error fetching active SPFNo2 price for version " & versionID & " and product type " & productType)
             Return If(valObj Is DBNull.Value OrElse valObj Is Nothing, 0D, CDec(valObj))
         End Function
+
+        ''' <summary>
+        ''' Scrapes lumber futures settle prices by month from CME Group (free, no key).
+        ''' Returns list of (Month, Settle). Runs headless for daily pulls.
+        ''' </summary>https://www.cmegroup.com/markets/agriculture/lumber-and-softs/lumber.settlements.html
+
+        Public Shared Function GetLumberFutures() As List(Of LumberFutures)
+            Dim futuresData As New List(Of LumberFutures)
+
+            Dim options As New EdgeOptions()
+            options.AddArgument("--no-sandbox")
+            options.AddArgument("--disable-dev-shm-usage")
+            options.AddArgument("--disable-gpu")
+            options.AddArgument("--disable-software-rasterizer")
+            options.AddArgument("--window-size=1920,1080")
+
+            Dim driverService = EdgeDriverService.CreateDefaultService()
+            driverService.HideCommandPromptWindow = True
+
+            Using driver As IWebDriver = New EdgeDriver(driverService, options)
+                driver.Navigate().GoToUrl("https://www.cmegroup.com/markets/agriculture/lumber-and-softs/lumber.settlements.html")
+
+                Dim wait As New WebDriverWait(driver, TimeSpan.FromSeconds(7))
+                Dim tableElement As IWebElement = Nothing
+
+                Try
+                    tableElement = wait.Until(Function(d)
+                                                  Dim tables = d.FindElements(By.CssSelector("div.table-container table, table"))
+                                                  Return If(tables.Count > 0, tables(0), Nothing)
+                                              End Function)
+                Catch
+                    tableElement = wait.Until(Function(d)
+                                                  Dim els = d.FindElements(By.XPath("//table[.//th[contains(text(), 'Settle') or contains(text(), 'Change')]]"))
+                                                  Return If(els.Count > 0, els(0), Nothing)
+                                              End Function)
+                End Try
+
+                If tableElement Is Nothing Then Return futuresData
+
+                ' Extract rows
+                Dim rows = tableElement.FindElements(By.CssSelector("tbody tr"))
+                For Each row In rows
+                    Dim cells = row.FindElements(By.TagName("td"))
+                    If cells.Count >= 7 Then
+                        Dim monthText = cells(0).Text.Trim()
+                        If String.IsNullOrEmpty(monthText) OrElse monthText.Contains("Month") Then Continue For
+
+                        Dim settleText = cells(6).Text.Trim()
+                        Dim settle As Decimal? = Nothing
+                        Dim parsed As Decimal = 0D
+                        If Decimal.TryParse(settleText, parsed) Then settle = parsed
+
+                        futuresData.Add(New LumberFutures With {
+                    .ContractMonth = monthText,
+                    .PriorSettle = settle
+                })
+                    End If
+                Next
+            End Using
+
+            Return futuresData
+        End Function
+
+        ''' <summary>
+        ''' Saves or updates lumber futures data for a version using the LumberFutures class.
+        ''' </summary>
+        Public Shared Sub SaveLumberFutures(versionId As Integer, futures As List(Of LumberFutures), conn As SqlConnection, tran As SqlTransaction)
+            For Each f As LumberFutures In futures
+                Using cmd As New SqlCommand(Queries.UpsertLumberFuture, conn, tran)
+                    cmd.Parameters.AddWithValue("@VersionID", versionId)
+                    cmd.Parameters.AddWithValue("@ContractMonth", f.ContractMonth)
+                    cmd.Parameters.AddWithValue("@PriorSettle", f.PriorSettle) ' Nothing → DBNull automatically
+                    cmd.ExecuteNonQuery()
+                End Using
+            Next
+        End Sub
+        ''' <summary>
+        ''' Returns sorted list of futures for display: (Text, ID, Price)
+        ''' </summary>
+        Public Shared Function GetFuturesForVersion(versionId As Integer) As List(Of LumberFutures)
+            Dim result As New List(Of LumberFutures)
+
+            If versionId <= 0 Then
+                Debug.WriteLine("GetFuturesForVersion: Invalid versionId")
+                Return result
+            End If
+
+            Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                conn.Open()
+                Using cmd As New SqlCommand(Queries.SelectLumberFuturesByVersion, conn)
+                    cmd.Parameters.AddWithValue("@VersionID", versionId)
+                    Using rdr = cmd.ExecuteReader()
+                        While rdr.Read()
+                            Dim id = rdr.GetInt32(0)
+                            Dim month = rdr.GetString(1).Trim()
+                            Dim price = If(rdr.IsDBNull(2), Nothing, CDec(rdr.GetDecimal(2)))
+
+                            result.Add(New LumberFutures With {
+                                   .ContractMonth = month,
+                                   .ID = id,
+                                   .PriorSettle = price
+                               })
+                        End While
+                    End Using
+                End Using
+            End Using
+
+            If result.Count = 0 Then
+                Debug.WriteLine($"No futures found for VersionID {versionId}")
+            End If
+
+            Return result
+        End Function
+
+        Public Shared Function MonthNameToNumber(name As String) As Integer
+            Select Case name
+                Case "JAN" : Return 1
+                Case "FEB" : Return 2
+                Case "MAR" : Return 3
+                Case "APR" : Return 4
+                Case "MAY" : Return 5
+                Case "JUN" : Return 6
+                Case "JLY" : Return 7
+                Case "AUG" : Return 8
+                Case "SEP" : Return 9
+                Case "OCT" : Return 10
+                Case "NOV" : Return 11
+                Case "DEC" : Return 12
+                Case Else : Return 0
+            End Select
+        End Function
+
     End Class
 End Namespace
