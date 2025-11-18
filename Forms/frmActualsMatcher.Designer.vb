@@ -24,9 +24,7 @@ Partial Class frmActualsMatcher
     Private Sub InitializeComponent()
         Me.dgvMitek = New System.Windows.Forms.DataGridView()
         Me.dgvProject = New System.Windows.Forms.DataGridView()
-        Me.chkMatchAllSameName = New System.Windows.Forms.CheckBox()
         Me.btnMatchSelected = New System.Windows.Forms.Button()
-        Me.btnAutoMatchByName = New System.Windows.Forms.Button()
         Me.btnClearMatches = New System.Windows.Forms.Button()
         Me.btnImportMatched = New System.Windows.Forms.Button()
         Me.btnCancel = New System.Windows.Forms.Button()
@@ -58,33 +56,14 @@ Partial Class frmActualsMatcher
         Me.dgvProject.Size = New System.Drawing.Size(475, 475)
         Me.dgvProject.TabIndex = 1
         '
-        'chkMatchAllSameName
-        '
-        Me.chkMatchAllSameName.AutoSize = True
-        Me.chkMatchAllSameName.Location = New System.Drawing.Point(12, 12)
-        Me.chkMatchAllSameName.Name = "chkMatchAllSameName"
-        Me.chkMatchAllSameName.Size = New System.Drawing.Size(131, 17)
-        Me.chkMatchAllSameName.TabIndex = 2
-        Me.chkMatchAllSameName.Text = "Match All Same Name"
-        Me.chkMatchAllSameName.UseVisualStyleBackColor = True
-        '
         'btnMatchSelected
         '
-        Me.btnMatchSelected.Location = New System.Drawing.Point(410, 525)
+        Me.btnMatchSelected.Location = New System.Drawing.Point(534, 525)
         Me.btnMatchSelected.Name = "btnMatchSelected"
         Me.btnMatchSelected.Size = New System.Drawing.Size(105, 29)
         Me.btnMatchSelected.TabIndex = 3
         Me.btnMatchSelected.Text = "Match Selected"
         Me.btnMatchSelected.UseVisualStyleBackColor = True
-        '
-        'btnAutoMatchByName
-        '
-        Me.btnAutoMatchByName.Location = New System.Drawing.Point(521, 525)
-        Me.btnAutoMatchByName.Name = "btnAutoMatchByName"
-        Me.btnAutoMatchByName.Size = New System.Drawing.Size(118, 29)
-        Me.btnAutoMatchByName.TabIndex = 4
-        Me.btnAutoMatchByName.Text = "Auto Match by Name"
-        Me.btnAutoMatchByName.UseVisualStyleBackColor = True
         '
         'btnClearMatches
         '
@@ -121,9 +100,7 @@ Partial Class frmActualsMatcher
         Me.Controls.Add(Me.btnCancel)
         Me.Controls.Add(Me.btnImportMatched)
         Me.Controls.Add(Me.btnClearMatches)
-        Me.Controls.Add(Me.btnAutoMatchByName)
         Me.Controls.Add(Me.btnMatchSelected)
-        Me.Controls.Add(Me.chkMatchAllSameName)
         Me.Controls.Add(Me.dgvProject)
         Me.Controls.Add(Me.dgvMitek)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
@@ -133,15 +110,12 @@ Partial Class frmActualsMatcher
         CType(Me.dgvMitek, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvProject, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
-        Me.PerformLayout()
 
     End Sub
 
     Friend WithEvents dgvMitek As DataGridView
     Friend WithEvents dgvProject As DataGridView
-    Friend WithEvents chkMatchAllSameName As CheckBox
     Friend WithEvents btnMatchSelected As Button
-    Friend WithEvents btnAutoMatchByName As Button
     Friend WithEvents btnClearMatches As Button
     Friend WithEvents btnImportMatched As Button
     Friend WithEvents btnCancel As Button

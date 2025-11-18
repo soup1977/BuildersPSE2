@@ -111,7 +111,25 @@ Namespace BuildersPSE.Utilities
                 Return CType(cmd.ExecuteScalar(), T)
             End Using
         End Function
-
+        ''' <summary>
+        ''' Closes ALL open SqlDataReaders on the current connection.
+        ''' Use this before any import that might have a lingering reader.
+        ''' This is the "I don't care, just make it work" fix — and it's perfect.
+        ''' </summary>
+        Public Shared Sub CloseAllDataReaders()
+            Try
+                ' Get the current connection from the singleton (or however you manage it)
+                Dim conn = SqlConnectionManager.Instance.GetConnection()
+                If conn IsNot Nothing AndAlso conn.State = ConnectionState.Open Then
+                    ' This forces SQL Server to close all readers on this connection
+                    conn.Close()
+                    conn.Open() ' Reopen it clean
+                End If
+            Catch ex As Exception
+                ' If it fails, we don't care — we're just trying to clean up
+                Debug.WriteLine("CloseAllDataReaders cleanup failed: " & ex.Message)
+            End Try
+        End Sub
 
     End Class
 End Namespace

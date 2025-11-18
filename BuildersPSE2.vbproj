@@ -271,6 +271,12 @@
     <Compile Include="Forms\ProjectBuilderForm.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\WallImportMappingForm.Designer.vb">
+      <DependentUpon>WallImportMappingForm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\WallImportMappingForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="IncExcDataSet.Designer.vb">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -377,6 +383,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ProjectBuilderForm.resx">
       <DependentUpon>ProjectBuilderForm.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\WallImportMappingForm.resx">
+      <DependentUpon>WallImportMappingForm.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InclusionsExclusions.rdlc" />
     <EmbeddedResource Include="My Project\Resources.resx">

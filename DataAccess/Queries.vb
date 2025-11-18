@@ -237,6 +237,7 @@
         Public Const SelectLumberCostByTypeAndDate As String = "SELECT LumberCost FROM LumberCost WHERE LumberTypeID = @LumberTypeID AND CostEffectiveDateID = @CostEffectiveDateID"
         Public Const SetLumberHistoryActive As String = "UPDATE RawUnitLumberHistory SET IsActive = 0 WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID; UPDATE RawUnitLumberHistory SET IsActive = 1 WHERE HistoryID = @HistoryID"
 
+
         ' New query to delete a history record
         Public Const DeleteLumberHistory As String = "DELETE FROM RawUnitLumberHistory WHERE HistoryID = @HistoryID AND VersionID = @VersionID"
         ' New query for distinct CosteffectiveDate values

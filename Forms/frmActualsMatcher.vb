@@ -10,6 +10,9 @@ Public Class frmActualsMatcher
     Private miTekData As DataTable
     Private projectLevels As DataTable
     Private matches As New Dictionary(Of Integer, Integer)() ' MiTekRowIndex → LevelID
+    ' Global dictionary to track colors per LevelID (add at class level)
+    Private matchColors As New Dictionary(Of Integer, Color)()
+    Private random As New Random()
 
     Public Sub New(versionID As Integer, stageType As Integer, csvPath As String)
         InitializeComponent()
@@ -63,7 +66,15 @@ Public Class frmActualsMatcher
 
         ' Bind to grid
         dgvMitek.DataSource = miTekData
-        ColorMiTekRows()
+
+
+        ' === HIDE COLUMNS ===
+        Dim columnsToHide As String() = {"CustomerName", "JobName", "StructureName", "Project"}
+        For Each colName In columnsToHide
+            If dgvMitek.Columns.Contains(colName) Then
+                dgvMitek.Columns(colName).Visible = False
+            End If
+        Next
 
         ' Friendly message if nothing qualified
         If miTekData.Rows.Count = 0 Then
@@ -74,6 +85,8 @@ Public Class frmActualsMatcher
         Else
             btnImportMatched.Enabled = True
         End If
+        ColorMiTekRows()
+        HighlightAlreadyImportedRows()
     End Sub
 
     Private Sub LoadProjectLevels()
@@ -89,6 +102,36 @@ Public Class frmActualsMatcher
         End Using
         dgvProject.DataSource = projectLevels
     End Sub
+    ' Helper to get unique color for each LevelID
+    Private Function GetColorForLevel(levelID As Integer) As Color
+        If Not matchColors.ContainsKey(levelID) Then
+            ' Generate pastel color
+            Dim hue As Integer = (levelID * 137) Mod 360
+            matchColors(levelID) = ColorFromHSV(hue, 0.4, 0.95)
+        End If
+        Return matchColors(levelID)
+    End Function
+
+    ' HSV to RGB converter
+    Private Function ColorFromHSV(hue As Double, saturation As Double, value As Double) As Color
+        Dim hi As Integer = Convert.ToInt32(Math.Floor(hue / 60)) Mod 6
+        Dim f As Double = hue / 60 - Math.Floor(hue / 60)
+
+        value *= 255
+        Dim v As Integer = Convert.ToInt32(value)
+        Dim p As Integer = Convert.ToInt32(value * (1 - saturation))
+        Dim q As Integer = Convert.ToInt32(value * (1 - f * saturation))
+        Dim t As Integer = Convert.ToInt32(value * (1 - (1 - f) * saturation))
+
+        Select Case hi
+            Case 0 : Return Color.FromArgb(255, v, t, p)
+            Case 1 : Return Color.FromArgb(255, q, v, p)
+            Case 2 : Return Color.FromArgb(255, p, v, t)
+            Case 3 : Return Color.FromArgb(255, p, q, v)
+            Case 4 : Return Color.FromArgb(255, t, p, v)
+            Case Else : Return Color.FromArgb(255, v, p, q)
+        End Select
+    End Function
 
     Private Sub dgvMiTek_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvMitek.CellDoubleClick
         If e.RowIndex < 0 Then Exit Sub
@@ -98,9 +141,20 @@ Public Class frmActualsMatcher
             Exit Sub
         End If
         Dim levelID = CInt(dgvProject.SelectedRows(0).Cells("LevelID").Value)
+        Dim levelName = dgvProject.SelectedRows(0).Cells("LevelName").Value.ToString()
+
         matches(e.RowIndex) = levelID
-        row.DefaultCellStyle.BackColor = Color.LightGreen
-        row.Cells(0).ToolTipText = "Matched to: " & dgvProject.SelectedRows(0).Cells("LevelName").Value.ToString()
+        Dim color = GetColorForLevel(levelID)
+        row.DefaultCellStyle.BackColor = color
+        row.Cells(0).ToolTipText = $"Matched to: {levelName}"
+
+        ' Also color the project row for visual confirmation
+        For Each projRow As DataGridViewRow In dgvProject.Rows
+            If projRow.Cells("LevelID").Value IsNot Nothing AndAlso CInt(projRow.Cells("LevelID").Value) = levelID Then
+                projRow.DefaultCellStyle.BackColor = color
+                Exit For
+            End If
+        Next
     End Sub
 
     Private Sub btnMatchSelected_Click(sender As Object, e As EventArgs) Handles btnMatchSelected.Click
@@ -108,25 +162,26 @@ Public Class frmActualsMatcher
             MessageBox.Show("Select one row from each grid.")
             Exit Sub
         End If
+
         Dim miTekRow = dgvMitek.SelectedRows(0).Index
         Dim levelID = CInt(dgvProject.SelectedRows(0).Cells("LevelID").Value)
-        matches(miTekRow) = levelID
-        dgvMitek.Rows(miTekRow).DefaultCellStyle.BackColor = Color.LightGreen
-    End Sub
+        Dim levelName = dgvProject.SelectedRows(0).Cells("LevelName").Value.ToString()
 
-    Private Sub btnAutoMatchByName_Click(sender As Object, e As EventArgs) Handles btnAutoMatchByName.Click
-        For Each row As DataGridViewRow In dgvMitek.Rows
-            Dim name = row.Cells("LevelName").Value?.ToString().Trim()
-            If String.IsNullOrEmpty(name) Then Continue For
-            Dim match = projectLevels.AsEnumerable().
-                FirstOrDefault(Function(r) r.Field(Of String)("LevelName").Trim() = name)
-            If match IsNot Nothing Then
-                matches(row.Index) = CInt(match("LevelID"))
-                row.DefaultCellStyle.BackColor = Color.LightGreen
+        matches(miTekRow) = levelID
+        Dim color = GetColorForLevel(levelID)
+        dgvMitek.Rows(miTekRow).DefaultCellStyle.BackColor = color
+        dgvMitek.Rows(miTekRow).Cells(0).ToolTipText = $"Matched to: {levelName}"
+
+        ' Color matching project row
+        For Each projRow As DataGridViewRow In dgvProject.Rows
+            If projRow.Cells("LevelID").Value IsNot Nothing AndAlso CInt(projRow.Cells("LevelID").Value) = levelID Then
+                projRow.DefaultCellStyle.BackColor = color
+                Exit For
             End If
         Next
-        MessageBox.Show($"Auto-matched {matches.Count} levels by name.")
     End Sub
+
+
 
     Private Sub btnClearMatches_Click(sender As Object, e As EventArgs) Handles btnClearMatches.Click
         matches.Clear()
@@ -222,4 +277,50 @@ Public Class frmActualsMatcher
         Me.DialogResult = DialogResult.Cancel
         Me.Close()
     End Sub
+    Private Sub HighlightAlreadyImportedRows()
+        ' Build list of already-imported MiTekJobNumbers for this VersionID
+        Dim importedJobNumbers As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+
+        Dim sql As String = "
+        SELECT DISTINCT MiTekJobNumber 
+        FROM LevelActuals 
+        WHERE VersionID = @VersionID 
+          AND MiTekJobNumber IS NOT NULL 
+          AND MiTekJobNumber <> ''"
+
+        Using reader = SqlConnectionManager.Instance.ExecuteReader(sql, {New SqlParameter("@VersionID", versionID)})
+            While reader.Read()
+                Dim jobNum = reader("MiTekJobNumber").ToString().Trim()
+                If Not String.IsNullOrEmpty(jobNum) Then
+                    importedJobNumbers.Add(jobNum)
+                End If
+            End While
+        End Using
+
+        If Me.IsHandleCreated Then
+            ' Run on UI thread
+            Me.Invoke(Sub()
+                          For Each row As DataGridViewRow In dgvMitek.Rows
+                              If row.Cells("JobNumber").Value Is Nothing OrElse row.Cells("JobNumber").Value Is DBNull.Value Then
+                                  Continue For
+                              End If
+
+                              Dim jobNum = row.Cells("JobNumber").Value.ToString().Trim()
+
+                              If importedJobNumbers.Contains(jobNum) Then
+                                  row.DefaultCellStyle.BackColor = Color.LightPink
+                                  row.DefaultCellStyle.SelectionBackColor = Color.IndianRed
+                                  row.Cells("JobNumber").ToolTipText = "ALREADY IMPORTED"
+                                  row.Cells("JobNumber").Style.ForeColor = Color.DarkRed
+                                  row.Cells("JobNumber").Style.Font = New Font(dgvMitek.Font, FontStyle.Bold)
+                              End If
+                          Next
+                          dgvMitek.Invalidate()
+                      End Sub)
+        Else
+            ' Handle not created yet — defer until form is shown
+            AddHandler Me.Shown, Sub() HighlightAlreadyImportedRows()
+        End If
+    End Sub
+
 End Class

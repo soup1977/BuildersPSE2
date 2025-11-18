@@ -9,6 +9,44 @@ Imports Microsoft.VisualBasic.FileIO
 
 
 Namespace DataAccess
+    '=====================================================================
+    ' Result class for Wall Import – place this at the TOP of the file
+    '=====================================================================
+    Public Class ImportWallSummary
+        Public Property VersionID As Integer
+        Public Property Success As Boolean = False
+        Public Property WasCancelled As Boolean = False
+        Public Property StartTime As Date
+        Public Property EndTime As Date
+        Public Property TotalWallRows As Integer = 0
+        Public Property SkippedRows As Integer = 0
+        Public Property BuildingsCreated As Integer = 0
+        Public Property LevelsCreated As Integer = 0
+        Public Property RawUnitsImported As Integer = 0
+        Public Property ActualUnitsImported As Integer = 0
+        Public Property MappingsCreated As Integer = 0
+        Public Property BuildingMappingsApplied As Integer = 0
+        Public Property Log As New Text.StringBuilder()
+
+        Public Function GetSummaryText() As String
+            Dim sb As New Text.StringBuilder()
+            sb.AppendLine("=== Wall Import Summary ===")
+            sb.AppendLine($"Version ID: {VersionID}")
+            sb.AppendLine($"Status     : {(If(Success, "SUCCESS", "FAILED"))}")
+            If WasCancelled Then sb.AppendLine("CANCELLED by user")
+            sb.AppendLine($"Duration   : {(If(EndTime > StartTime, (EndTime - StartTime).TotalSeconds, 0)):F1} seconds")
+            sb.AppendLine($"Wall rows  : {TotalWallRows} (skipped {SkippedRows})")
+            sb.AppendLine($"Buildings created : {BuildingsCreated}")
+            sb.AppendLine($"Wall levels created: {LevelsCreated}")
+            sb.AppendLine($"Units imported     : {ActualUnitsImported}")
+            sb.AppendLine($"Mappings created   : {MappingsCreated}")
+            sb.AppendLine($"Building mappings  : {BuildingMappingsApplied}")
+            sb.AppendLine()
+            sb.AppendLine(Log.ToString())
+            Return sb.ToString()
+        End Function
+    End Class
+
     Public Class ExternalImportDataAccess
 
         Public Shared Function ParseDate(value As String) As Date?
@@ -914,6 +952,307 @@ Namespace DataAccess
                                                                    End Sub, "Error importing project from CSV: " & csvFilePath)
             Return newProjectID
         End Function
+        Private Shared Sub ExecuteWallImportWithDetailedErrors(action As Action, csvFilePath As String)
+            Dim currentRow As Integer = 0
+            Try
+                action()
+            Catch ex As Exception
+                Dim rowInfo As String = If(currentRow > 0, $"Row {currentRow} in CSV", "During CSV processing (before row loop or in header)")
+                Dim fileInfo As String = $"File: {System.IO.Path.GetFileName(csvFilePath)}"
+
+                Dim detailedMessage As New Text.StringBuilder()
+                detailedMessage.AppendLine("=== WALL IMPORT FAILED ===")
+                detailedMessage.AppendLine(fileInfo)
+                detailedMessage.AppendLine(rowInfo)
+                detailedMessage.AppendLine()
+                detailedMessage.AppendLine("Error: " & ex.Message)
+                detailedMessage.AppendLine()
+                detailedMessage.AppendLine("Stack Trace:")
+                detailedMessage.AppendLine(ex.StackTrace)
+
+                MessageBox.Show(detailedMessage.ToString(), "Wall Import Error - DEBUG MODE",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error)
+
+                ' Re-throw so you still know it failed
+                Throw
+            End Try
+        End Sub
+        Public Shared Function ImportWallsInteractive(csvFilePath As String, versionID As Integer) As ImportWallSummary
+            Dim summary As New ImportWallSummary With {
+       .VersionID = versionID,
+       .StartTime = Date.Now
+   }
+            SqlConnectionManager.CloseAllDataReaders()
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                           conn.Open()
+                                                                           Using transaction As SqlTransaction = conn.BeginTransaction()
+                                                                               Try
+                                                                                   ' === 1. Parse CSV - Wall rows only ===
+                                                                                   Dim wallRows As New List(Of String())
+                                                                                   Dim buildingKeysFromCsv As New HashSet(Of String)
+                                                                                   Dim skippedRows As Integer = 0
+                                                                                   Using parser As New TextFieldParser(csvFilePath)
+                                                                                       parser.TextFieldType = FieldType.Delimited
+                                                                                       parser.SetDelimiters(",")
+                                                                                       parser.ReadLine() ' Skip header
+                                                                                       While Not parser.EndOfData
+                                                                                           Dim fields As String() = parser.ReadFields()
+                                                                                           If fields.Length < 26 Then
+                                                                                               skippedRows += 1 : Continue While
+                                                                                           End If
+                                                                                           ' Skip header rows that slipped through
+                                                                                           If fields(0).Trim().Equals("JobNumber", StringComparison.OrdinalIgnoreCase) OrElse
+                              fields(1).Trim().Equals("Product", StringComparison.OrdinalIgnoreCase) Then
+                                                                                               Continue While
+                                                                                           End If
+                                                                                           If Not String.Equals(fields(1).Trim(), "Wall", StringComparison.OrdinalIgnoreCase) Then
+                                                                                               Continue While
+                                                                                           End If
+                                                                                           Dim fullJobNumber = fields(0).Trim()
+                                                                                           Dim jobNumberPrefix = fullJobNumber.Split("-"c)(0).Trim()
+                                                                                           Dim plan = fields(6).Trim()
+                                                                                           Dim buildingKey = jobNumberPrefix & "_" & plan
+                                                                                           buildingKeysFromCsv.Add(buildingKey)
+                                                                                           wallRows.Add(fields)
+                                                                                       End While
+                                                                                   End Using
+                                                                                   If wallRows.Count = 0 Then
+                                                                                       summary.Log.AppendLine("No Wall rows found in CSV.")
+                                                                                       MessageBox.Show("No Wall data found to import.", "Wall Import", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                                                                                       Return
+                                                                                   End If
+                                                                                   summary.TotalWallRows = wallRows.Count
+                                                                                   summary.SkippedRows = skippedRows
+                                                                                   ' === 2. Load existing buildings ===
+                                                                                   Dim existingBuildings As New Dictionary(Of String, Integer)(StringComparer.OrdinalIgnoreCase)
+                                                                                   Dim buildingList As New List(Of (Integer, String))
+                                                                                   Using cmd As New SqlCommand(Queries.SelectBuildingsByVersionID, conn, transaction)
+                                                                                       cmd.Parameters.AddWithValue("@VersionID", versionID)
+                                                                                       Using reader = cmd.ExecuteReader()
+                                                                                           While reader.Read()
+                                                                                               Dim id = CInt(reader("BuildingID"))
+                                                                                               Dim name = reader("BuildingName").ToString().Trim()
+                                                                                               buildingList.Add((id, name))
+                                                                                               existingBuildings(name) = id
+                                                                                           End While
+                                                                                       End Using
+                                                                                   End Using
+                                                                                   ' === 3. Interactive mapping ===
+                                                                                   Dim mappingForm As New WallImportMappingForm(buildingKeysFromCsv, buildingList, existingBuildings, wallRows.Count)
+                                                                                   If mappingForm.ShowDialog() = DialogResult.Cancel Then
+                                                                                       summary.WasCancelled = True
+                                                                                       Return
+                                                                                   End If
+                                                                                   Dim buildingIdMap As Dictionary(Of String, Integer) = mappingForm.FinalMapping
+                                                                                   Dim createMissingLevels As Boolean = mappingForm.CreateMissingLevels
+                                                                                   summary.BuildingMappingsApplied = buildingIdMap.Count
+                                                                                   ' === 4. Process wall rows - EXACTLY like your full import ===
+                                                                                   Dim levelIdMap As New Dictionary(Of String, Integer)()
+                                                                                   Dim levelCount As Integer = 0
+                                                                                   Dim rawUnitCount As Integer = 0
+                                                                                   Dim actualUnitCount As Integer = 0
+                                                                                   Dim mappingCount As Integer = 0
+                                                                                   For Each fields In wallRows
+                                                                                       Dim fullJobNumber = fields(0).Trim()
+                                                                                       Dim jobNumberPrefix = fullJobNumber.Split("-"c)(0).Trim()
+                                                                                       Dim plan = fields(6).Trim()
+                                                                                       Dim buildingKey = jobNumberPrefix & "_" & plan
+                                                                                       Dim elevation = fields(7).Trim()
+                                                                                       Dim rawUnitName = fullJobNumber & " Wall"
+                                                                                       ' Resolve building
+                                                                                       Dim buildingID As Integer
+                                                                                       If Not buildingIdMap.TryGetValue(buildingKey, buildingID) Then
+                                                                                           summary.SkippedRows += 1 : Continue For
+                                                                                       End If
+                                                                                       ' Create building if needed (-1 = create new)
+                                                                                       If buildingID = -1 Then
+                                                                                           Using cmdBldg As New SqlCommand(Queries.InsertBuilding, conn, transaction)
+                                                                                               cmdBldg.Parameters.AddRange(HelperDataAccess.BuildParameters(New Dictionary(Of String, Object) From {
+                                   {"@BuildingName", plan}, {"@BuildingType", 1}, {"@ResUnits", 0}, {"@BldgQty", 1}, {"@VersionID", versionID}
+                               }))
+                                                                                               buildingID = CInt(cmdBldg.ExecuteScalar())
+                                                                                           End Using
+                                                                                           buildingIdMap(buildingKey) = buildingID
+                                                                                           summary.BuildingsCreated += 1
+                                                                                       End If
+                                                                                       ' Level key: BuildingID + Elevation
+                                                                                       Dim levelKey = $"{buildingID}_{elevation}"
+                                                                                       Dim levelID As Integer
+                                                                                       If Not levelIdMap.ContainsKey(levelKey) AndAlso createMissingLevels Then
+                                                                                           Using cmdLevel As New SqlCommand(Queries.InsertLevel, conn, transaction)
+                                                                                               cmdLevel.Parameters.AddRange(HelperDataAccess.BuildParameters(New Dictionary(Of String, Object) From {
+                                   {"@VersionID", versionID}, {"@BuildingID", buildingID},
+                                   {"@ProductTypeID", 3}, {"@LevelNumber", 1}, {"@LevelName", elevation}
+                               }))
+                                                                                               levelID = CInt(cmdLevel.ExecuteScalar())
+                                                                                           End Using
+                                                                                           levelIdMap(levelKey) = levelID
+                                                                                           levelCount += 1
+                                                                                       Else
+                                                                                           levelID = levelIdMap(levelKey)
+                                                                                       End If
+                                                                                       ' Safe SqFt
+                                                                                       Dim sqFt As Decimal = If(Decimal.TryParse(fields(11), Nothing), CDec(fields(11)), 1D)
+                                                                                       If sqFt <= 0 Then sqFt = 1D
+                                                                                       ' === RawUnit - same as full import ===
+                                                                                       Dim rawParams As Dictionary(Of String, Object) = BuildRawUnitParams(rawUnitName, versionID, sqFt, fields)
+                                                                                       Dim newRawUnitID As Integer
+                                                                                       Using cmdRaw As New SqlCommand(Queries.InsertRawUnit, conn, transaction)
+                                                                                           cmdRaw.Parameters.AddRange(HelperDataAccess.BuildParameters(rawParams))
+                                                                                           newRawUnitID = CInt(cmdRaw.ExecuteScalar())
+                                                                                       End Using
+                                                                                       rawUnitCount += 1
+                                                                                       ' === INSERT RawUnitLumberHistory RECORD (Same pattern as ImportProjectFromCSV) ===
+                                                                                       Dim avgSPFNo2 As Decimal? = Nothing
+                                                                                       Dim lumberCost As Decimal? = Nothing
+                                                                                       Dim avg241800 As Decimal? = Nothing
+                                                                                       Dim avg242400 As Decimal? = Nothing
+                                                                                       Dim avg261800 As Decimal? = Nothing
+                                                                                       Dim avg262400 As Decimal? = Nothing
+
+                                                                                       ' Extract from rawParams (safe, Option Strict On compliant)
+                                                                                       If rawParams("@AvgSPFNo2") IsNot DBNull.Value Then avgSPFNo2 = CDec(rawParams("@AvgSPFNo2"))
+                                                                                       If rawParams("@LumberCost") IsNot DBNull.Value Then lumberCost = CDec(rawParams("@LumberCost"))
+                                                                                       If rawParams("@Avg241800") IsNot DBNull.Value Then avg241800 = CDec(rawParams("@Avg241800"))
+                                                                                       If rawParams("@Avg242400") IsNot DBNull.Value Then avg242400 = CDec(rawParams("@Avg242400"))
+                                                                                       If rawParams("@Avg261800") IsNot DBNull.Value Then avg261800 = CDec(rawParams("@Avg261800"))
+                                                                                       If rawParams("@Avg262400") IsNot DBNull.Value Then avg262400 = CDec(rawParams("@Avg262400"))
+
+                                                                                       ' Get the most recent CostEffectiveDateID (fallback to NULL)
+                                                                                       Dim costEffectiveID As Object = DBNull.Value
+                                                                                       Using fetchCmd As New SqlCommand(Queries.SelectCostEffectiveDateIDByCost, conn, transaction)
+                                                                                           Dim result = fetchCmd.ExecuteScalar()
+                                                                                           If result IsNot Nothing Then costEffectiveID = result
+                                                                                       End Using
+
+                                                                                       ' Build and insert history record
+                                                                                       Dim historyParams As New Dictionary(Of String, Object) From {
+    {"@RawUnitID", newRawUnitID},
+    {"@VersionID", versionID},
+    {"@CostEffectiveDateID", costEffectiveID},
+    {"@LumberCost", If(lumberCost.HasValue, CType(lumberCost.Value, Object), DBNull.Value)},
+    {"@AvgSPFNo2", If(avgSPFNo2.HasValue, CType(avgSPFNo2.Value, Object), DBNull.Value)},
+    {"@Avg241800", If(avg241800.HasValue, CType(avg241800.Value, Object), DBNull.Value)},
+    {"@Avg242400", If(avg242400.HasValue, CType(avg242400.Value, Object), DBNull.Value)},
+    {"@Avg261800", If(avg261800.HasValue, CType(avg261800.Value, Object), DBNull.Value)},
+    {"@Avg262400", If(avg262400.HasValue, CType(avg262400.Value, Object), DBNull.Value)}
+}
+
+                                                                                       Using cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {.CommandTimeout = 0}
+                                                                                           cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
+                                                                                           cmdHistory.ExecuteNonQuery()  ' No need for OUTPUT ID
+                                                                                       End Using
+                                                                                       ' === END RawUnitLumberHistory INSERT ===
+
+
+                                                                                       ' === ActualUnit ===
+                                                                                       Using cmdActual As New SqlCommand(Queries.InsertActualUnit, conn, transaction)
+                                                                                           cmdActual.Parameters.AddRange(HelperDataAccess.BuildParameters(New Dictionary(Of String, Object) From {
+                               {"@VersionID", versionID}, {"@RawUnitID", newRawUnitID}, {"@ProductTypeID", 3},
+                               {"@UnitName", elevation}, {"@PlanSQFT", sqFt}, {"@UnitType", "Res"},
+                               {"@OptionalAdder", 1D}, {"@ColorCode", DBNull.Value}
+                           }))
+                                                                                           Dim newActualUnitID = CInt(cmdActual.ExecuteScalar())
+                                                                                           actualUnitCount += 1
+                                                                                           ' === CalculatedComponents - EXACTLY like your working full import ===
+                                                                                           Dim sqFtRaw As Decimal = If(rawParams("@SqFt") Is DBNull.Value, 0D, CDec(rawParams("@SqFt")))
+                                                                                           If sqFtRaw > 0 Then
+                                                                                               Dim values As Decimal() = {
+                                                                                                  If(rawParams("@LF") Is DBNull.Value, 0D, CDec(rawParams("@LF"))),
+                                                                                                  If(rawParams("@BF") Is DBNull.Value, 0D, CDec(rawParams("@BF"))),
+                                                                                                  If(rawParams("@LumberCost") Is DBNull.Value, 0D, CDec(rawParams("@LumberCost"))),
+                                                                                                  If(rawParams("@PlateCost") Is DBNull.Value, 0D, CDec(rawParams("@PlateCost"))),
+                                                                                                  If(rawParams("@ManufLaborCost") Is DBNull.Value, 0D, CDec(rawParams("@ManufLaborCost"))),
+                                                                                                  If(rawParams("@DesignLabor") Is DBNull.Value, 0D, CDec(rawParams("@DesignLabor"))),
+                                                                                                  If(rawParams("@MGMTLabor") Is DBNull.Value, 0D, CDec(rawParams("@MGMTLabor"))),
+                                                                                                  If(rawParams("@JobSuppliesCost") Is DBNull.Value, 0D, CDec(rawParams("@JobSuppliesCost"))),
+                                                                                                  If(rawParams("@ManHours") Is DBNull.Value, 0D, CDec(rawParams("@ManHours"))),
+                                                                                                  If(rawParams("@ItemCost") Is DBNull.Value, 0D, CDec(rawParams("@ItemCost"))),
+                                                                                                  If(rawParams("@OverallCost") Is DBNull.Value, 0D, CDec(rawParams("@OverallCost"))),
+                                                                                                  If(rawParams("@TotalSellPrice") Is DBNull.Value, 0D, CDec(rawParams("@TotalSellPrice")))
+                                                                                              }
+                                                                                               Dim types As String() = {"LF/SQFT", "BDFT/SQFT", "Lumber/SQFT", "Plate/SQFT", "ManufLabor/SQFT", "DesignLabor/SQFT", "MGMTLabor/SQFT", "JobSupplies/SQFT", "ManHours/SQFT", "ItemCost/SQFT", "OverallCost/SQFT", "SellPrice/SQFT"}
+                                                                                               For i = 0 To types.Length - 1
+                                                                                                   ExecuteComponentInsert(conn, transaction, versionID, newActualUnitID, types(i), values(i) / sqFtRaw)
+                                                                                               Next
+                                                                                               Dim margin As Decimal = (values(11) - values(10)) / sqFtRaw
+                                                                                               ExecuteComponentInsert(conn, transaction, versionID, newActualUnitID, "Margin/SQFT", margin)
+                                                                                           End If
+                                                                                           ' === Mapping ===
+                                                                                           Using cmdMap As New SqlCommand(Queries.InsertActualToLevelMapping, conn, transaction)
+                                                                                               cmdMap.Parameters.AddRange(HelperDataAccess.BuildParameters(New Dictionary(Of String, Object) From {
+                                   {"@VersionID", versionID}, {"@ActualUnitID", newActualUnitID}, {"@LevelID", levelID}, {"@Quantity", 1}
+                               }))
+                                                                                               cmdMap.ExecuteNonQuery()
+                                                                                               mappingCount += 1
+                                                                                           End Using
+                                                                                       End Using
+                                                                                   Next
+                                                                                   summary.LevelsCreated = levelCount
+                                                                                   summary.RawUnitsImported = rawUnitCount
+                                                                                   summary.ActualUnitsImported = actualUnitCount
+                                                                                   summary.MappingsCreated = mappingCount
+                                                                                   transaction.Commit()
+                                                                                   RollupDataAccess.RecalculateVersion(versionID)
+                                                                                   summary.Success = True
+                                                                                   summary.EndTime = Date.Now
+                                                                               Catch ex As Exception
+                                                                                   transaction.Rollback()
+                                                                                   summary.Success = False
+                                                                                   summary.Log.AppendLine("ERROR: " & ex.Message & vbCrLf & ex.StackTrace)
+                                                                                   Throw
+                                                                               End Try
+                                                                           End Using
+                                                                       End Using
+                                                                       MessageBox.Show(summary.GetSummaryText(), "Wall Import Complete", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                                                                   End Sub, "Error importing walls from CSV")
+            Return summary
+        End Function
+
+        ' Helper to avoid code duplication
+        Private Shared Sub ExecuteComponentInsert(conn As SqlConnection, trans As SqlTransaction, versionID As Integer, actualUnitID As Integer, compType As String, value As Decimal)
+            Using cmd As New SqlCommand(Queries.InsertCalculatedComponent, conn, trans)
+                cmd.Parameters.AddRange(HelperDataAccess.BuildParameters(New Dictionary(Of String, Object) From {
+            {"@VersionID", versionID}, {"@ActualUnitID", actualUnitID}, {"@ComponentType", compType}, {"@Value", value}
+        }))
+                cmd.ExecuteNonQuery()
+            End Using
+        End Sub
+
+        Private Shared Function BuildRawUnitParams(name As String, verID As Integer, sqFt As Decimal, fields As String()) As Dictionary(Of String, Object)
+            Return New Dictionary(Of String, Object) From {
+        {"@RawUnitName", name}, {"@VersionID", verID}, {"@ProductTypeID", 3},
+        {"@BF", If(Decimal.TryParse(fields(8), Nothing), CType(CDec(fields(8)) + CDec(fields(37)), Object), DBNull.Value)},
+        {"@LF", If(Decimal.TryParse(fields(9), Nothing), CType(CDec(fields(9)), Object), DBNull.Value)},
+        {"@EWPLF", If(Decimal.TryParse(fields(10), Nothing), CType(CDec(fields(10)), Object), DBNull.Value)},
+        {"@SqFt", sqFt},
+        {"@FCArea", If(Decimal.TryParse(fields(12), Nothing), CType(CDec(fields(12)), Object), DBNull.Value)},
+        {"@LumberCost", If(Decimal.TryParse(fields(13), Nothing), CType(CDec(fields(13)), Object), DBNull.Value)},
+        {"@PlateCost", If(Decimal.TryParse(fields(14), Nothing), CType(CDec(fields(14)), Object), DBNull.Value)},
+        {"@ManufLaborCost", If(Decimal.TryParse(fields(15), Nothing), CType(CDec(fields(15)), Object), DBNull.Value)},
+        {"@DesignLabor", If(Decimal.TryParse(fields(16), Nothing), CType(CDec(fields(16)), Object), DBNull.Value)},
+        {"@MGMTLabor", If(Decimal.TryParse(fields(17), Nothing), CType(CDec(fields(17)), Object), DBNull.Value)},
+        {"@JobSuppliesCost", If(Decimal.TryParse(fields(18), Nothing), CType(CDec(fields(18)), Object), DBNull.Value)},
+        {"@ManHours", If(Decimal.TryParse(fields(19), Nothing), CType(CDec(fields(19)), Object), DBNull.Value)},
+        {"@ItemCost", If(Decimal.TryParse(fields(20), Nothing), CType(CDec(fields(20)), Object), DBNull.Value)},
+        {"@OverallCost", If(Decimal.TryParse(fields(21), Nothing), CType(CDec(fields(21)), Object), DBNull.Value)},
+        {"@DeliveryCost", If(Decimal.TryParse(fields(22), Nothing), CType(CDec(fields(22)), Object), DBNull.Value)},
+        {"@TotalSellPrice", If(Decimal.TryParse(fields(23), Nothing), CType(CDec(fields(23)), Object), DBNull.Value)},
+        {"@AvgSPFNo2", If(Decimal.TryParse(fields(24), Nothing), CType(CDec(fields(24)), Object), DBNull.Value)},
+        {"@SPFNo2BDFT", If(Decimal.TryParse(fields(25), Nothing), CType(CDec(fields(25)), Object), DBNull.Value)},
+        {"@Avg241800", If(Decimal.TryParse(fields(26), Nothing), CType(CDec(fields(26)), Object), DBNull.Value)},
+        {"@MSR241800BDFT", If(Decimal.TryParse(fields(27), Nothing), CType(CDec(fields(27)), Object), DBNull.Value)},
+        {"@Avg242400", If(Decimal.TryParse(fields(28), Nothing), CType(CDec(fields(28)), Object), DBNull.Value)},
+        {"@MSR242400BDFT", If(Decimal.TryParse(fields(29), Nothing), CType(CDec(fields(29)), Object), DBNull.Value)},
+        {"@Avg261800", If(Decimal.TryParse(fields(30), Nothing), CType(CDec(fields(30)), Object), DBNull.Value)},
+        {"@MSR261800BDFT", If(Decimal.TryParse(fields(31), Nothing), CType(CDec(fields(31)), Object), DBNull.Value)},
+        {"@Avg262400", If(Decimal.TryParse(fields(32), Nothing), CType(CDec(fields(32)), Object), DBNull.Value)},
+        {"@MSR262400BDFT", If(Decimal.TryParse(fields(33), Nothing), CType(CDec(fields(33)), Object), DBNull.Value)}
+    }
+        End Function
+
+
 
         'Imports project info only (no units or mappings) from a CSV file
         Public Shared Function ImportProjectInfoFromCSV(csvFilePath As String, projectName As String, customerName As String, Optional estimatorID As Integer? = Nothing, Optional salesID As Integer? = Nothing, Optional address As String = Nothing, Optional city As String = Nothing, Optional state As String = Nothing, Optional zip As String = Nothing, Optional biddate As Date? = Nothing, Optional archdate As Date? = Nothing, Optional engdate As Date? = Nothing, Optional miles As Integer? = Nothing) As Integer

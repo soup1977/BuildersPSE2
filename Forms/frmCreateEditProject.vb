@@ -1757,7 +1757,7 @@ Public Class frmCreateEditProject
 
 
                 Dim estimateValue As Decimal = 0D
-                If Not row.Cells(1).Value Is DBNull.Value Then
+                If row.Cells(1).Value IsNot DBNull.Value Then
                     estimateValue = CDec(row.Cells(1).Value)
                 End If
                 If estimateValue = 0 Then Continue For
@@ -1873,7 +1873,7 @@ Public Class frmCreateEditProject
             End If
 
             Dim estimateValue As Decimal = 0D
-            If Not row.Cells(estimateColIndex).Value Is DBNull.Value Then
+            If row.Cells(estimateColIndex).Value IsNot DBNull.Value Then
                 estimateValue = CDec(row.Cells(estimateColIndex).Value)
             End If
 
@@ -1929,6 +1929,64 @@ Public Class frmCreateEditProject
                     MessageBox.Show("BisTrack invoice imported successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 End If
             End If
+        End Using
+    End Sub
+
+    Private Sub btnImportWalls_Click(sender As Object, e As EventArgs) Handles btnImportWalls.Click
+        ' ------------------------------------------------------------------
+        ' 1. Make sure we have a valid VersionID to import into
+        ' ------------------------------------------------------------------
+        Dim versionID As Integer
+
+        If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
+            MessageBox.Show("Please select or create a project version first.", "Wall Import", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return
+        End If
+
+        versionID = currentVersionID  ' <-- however you expose the current version
+
+        ' ------------------------------------------------------------------
+        ' 2. Let the user pick the CSV file
+        ' ------------------------------------------------------------------
+        Using ofd As New OpenFileDialog()
+            ofd.Title = "Select Wall Costing CSV Export"
+            ofd.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*"
+            ofd.Multiselect = False
+
+            If ofd.ShowDialog() <> DialogResult.OK Then
+                Return ' user cancelled
+            End If
+
+            Dim csvFilePath As String = ofd.FileName
+
+            ' ------------------------------------------------------------------
+            ' 3. Run the import (your new function)
+            ' ------------------------------------------------------------------
+            Try
+                Dim summary As ImportWallSummary = ExternalImportDataAccess.ImportWallsInteractive(csvFilePath, versionID)
+
+                If summary.WasCancelled Then
+                    ' Nothing to do – user hit Cancel in the mapping form
+                    Return
+                End If
+
+                If summary.Success Then
+                    MessageBox.Show("Walls imported successfully!" & vbCrLf & vbCrLf & summary.GetSummaryText(),
+                                "Wall Import Complete", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Else
+                    MessageBox.Show("Wall import failed. See details below:" & vbCrLf & vbCrLf & summary.GetSummaryText(),
+                                "Wall Import Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                End If
+
+                ' ------------------------------------------------------------------
+                ' 4. Refresh whatever UI you have (grid, tree, etc.)
+                ' ------------------------------------------------------------------
+                RefreshRollupData()
+                SqlConnectionManager.CloseAllDataReaders()
+            Catch ex As Exception
+                MessageBox.Show("Unexpected error during wall import:" & vbCrLf & ex.Message,
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         End Using
     End Sub
 End Class

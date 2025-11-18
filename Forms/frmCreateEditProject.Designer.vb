@@ -131,9 +131,9 @@ Partial Class frmCreateEditProject
         Me.btnSaveBuildingInfo = New System.Windows.Forms.Button()
         Me.tabLevelInfo = New System.Windows.Forms.TabPage()
         Me.pnlLevelInfo = New System.Windows.Forms.Panel()
-        Me.btnImportBisTrack = New System.Windows.Forms.Button()
         Me.btnImportMiTek = New System.Windows.Forms.Button()
         Me.dgvLevelVariance = New System.Windows.Forms.DataGridView()
+        Me.btnImportBisTrack = New System.Windows.Forms.Button()
         Me.nudLevelNumber = New System.Windows.Forms.NumericUpDown()
         Me.lblLevelName = New System.Windows.Forms.Label()
         Me.txtLevelName = New System.Windows.Forms.TextBox()
@@ -151,6 +151,7 @@ Partial Class frmCreateEditProject
         Me.btnSaveProjectInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.btnImportWalls = New System.Windows.Forms.Button()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
         Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
         Me.cmsTreeMenu.SuspendLayout()
@@ -1201,16 +1202,6 @@ Partial Class frmCreateEditProject
         Me.pnlLevelInfo.Size = New System.Drawing.Size(681, 489)
         Me.pnlLevelInfo.TabIndex = 0
         '
-        'btnImportBisTrack
-        '
-        Me.btnImportBisTrack.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnImportBisTrack.Location = New System.Drawing.Point(532, 60)
-        Me.btnImportBisTrack.Name = "btnImportBisTrack"
-        Me.btnImportBisTrack.Size = New System.Drawing.Size(130, 30)
-        Me.btnImportBisTrack.TabIndex = 9
-        Me.btnImportBisTrack.Text = "Import Bistrack"
-        Me.btnImportBisTrack.UseVisualStyleBackColor = True
-        '
         'btnImportMiTek
         '
         Me.btnImportMiTek.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
@@ -1232,6 +1223,16 @@ Partial Class frmCreateEditProject
         Me.dgvLevelVariance.ReadOnly = True
         Me.dgvLevelVariance.Size = New System.Drawing.Size(681, 393)
         Me.dgvLevelVariance.TabIndex = 7
+        '
+        'btnImportBisTrack
+        '
+        Me.btnImportBisTrack.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnImportBisTrack.Location = New System.Drawing.Point(532, 60)
+        Me.btnImportBisTrack.Name = "btnImportBisTrack"
+        Me.btnImportBisTrack.Size = New System.Drawing.Size(130, 30)
+        Me.btnImportBisTrack.TabIndex = 9
+        Me.btnImportBisTrack.Text = "Import Bistrack"
+        Me.btnImportBisTrack.UseVisualStyleBackColor = True
         '
         'nudLevelNumber
         '
@@ -1304,7 +1305,7 @@ Partial Class frmCreateEditProject
         'btnPreviewIncExc
         '
         Me.btnPreviewIncExc.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnPreviewIncExc.Location = New System.Drawing.Point(695, 257)
+        Me.btnPreviewIncExc.Location = New System.Drawing.Point(695, 275)
         Me.btnPreviewIncExc.Name = "btnPreviewIncExc"
         Me.btnPreviewIncExc.Size = New System.Drawing.Size(100, 27)
         Me.btnPreviewIncExc.TabIndex = 26
@@ -1314,7 +1315,7 @@ Partial Class frmCreateEditProject
         'btnGenerateProjectReport
         '
         Me.btnGenerateProjectReport.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnGenerateProjectReport.Location = New System.Drawing.Point(695, 290)
+        Me.btnGenerateProjectReport.Location = New System.Drawing.Point(695, 308)
         Me.btnGenerateProjectReport.Name = "btnGenerateProjectReport"
         Me.btnGenerateProjectReport.Size = New System.Drawing.Size(100, 27)
         Me.btnGenerateProjectReport.TabIndex = 25
@@ -1334,7 +1335,7 @@ Partial Class frmCreateEditProject
         'btnIEOpen
         '
         Me.btnIEOpen.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnIEOpen.Location = New System.Drawing.Point(695, 219)
+        Me.btnIEOpen.Location = New System.Drawing.Point(695, 167)
         Me.btnIEOpen.Name = "btnIEOpen"
         Me.btnIEOpen.Size = New System.Drawing.Size(100, 27)
         Me.btnIEOpen.TabIndex = 23
@@ -1354,7 +1355,7 @@ Partial Class frmCreateEditProject
         'btnOpenPSE
         '
         Me.btnOpenPSE.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnOpenPSE.Location = New System.Drawing.Point(695, 186)
+        Me.btnOpenPSE.Location = New System.Drawing.Point(695, 134)
         Me.btnOpenPSE.Name = "btnOpenPSE"
         Me.btnOpenPSE.Size = New System.Drawing.Size(100, 27)
         Me.btnOpenPSE.TabIndex = 21
@@ -1382,6 +1383,7 @@ Partial Class frmCreateEditProject
         '
         'SplitContainer1.Panel2
         '
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportWalls)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnOpenProjectBuilder)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnRecalcRollup)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnPreviewIncExc)
@@ -1396,10 +1398,20 @@ Partial Class frmCreateEditProject
         Me.SplitContainer1.SplitterDistance = 224
         Me.SplitContainer1.TabIndex = 2
         '
+        'btnImportWalls
+        '
+        Me.btnImportWalls.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnImportWalls.Location = New System.Drawing.Point(695, 199)
+        Me.btnImportWalls.Name = "btnImportWalls"
+        Me.btnImportWalls.Size = New System.Drawing.Size(99, 24)
+        Me.btnImportWalls.TabIndex = 47
+        Me.btnImportWalls.Text = "Import Walls"
+        Me.btnImportWalls.UseVisualStyleBackColor = True
+        '
         'btnOpenProjectBuilder
         '
         Me.btnOpenProjectBuilder.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnOpenProjectBuilder.Location = New System.Drawing.Point(695, 143)
+        Me.btnOpenProjectBuilder.Location = New System.Drawing.Point(695, 91)
         Me.btnOpenProjectBuilder.Name = "btnOpenProjectBuilder"
         Me.btnOpenProjectBuilder.Size = New System.Drawing.Size(100, 37)
         Me.btnOpenProjectBuilder.TabIndex = 27
@@ -1582,4 +1594,5 @@ Partial Class frmCreateEditProject
     Friend WithEvents lblSumCostVar As Label
     Friend WithEvents lblSumBDFTVar As Label
     Friend WithEvents lblSumShipments As Label
+    Friend WithEvents btnImportWalls As Button
 End Class
