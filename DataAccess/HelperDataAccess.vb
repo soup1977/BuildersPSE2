@@ -1,6 +1,6 @@
 ﻿Imports System.Data.SqlClient
 Imports BuildersPSE2.BuildersPSE.Models
-Imports BuildersPSE2.BuildersPSE.Utilities
+Imports BuildersPSE2.Utilities
 
 Namespace DataAccess
 

@@ -1,12 +1,9 @@
-﻿Imports System.Collections.ObjectModel
+﻿
 Imports System.Data.SqlClient
-Imports System.Globalization
-Imports System.Net.Http
-Imports System.Text.RegularExpressions
+
 Imports BuildersPSE2.BuildersPSE.Models
-Imports BuildersPSE2.BuildersPSE.Utilities
-Imports DocumentFormat.OpenXml.Bibliography
-Imports HtmlAgilityPack
+Imports BuildersPSE2.Utilities
+
 Imports OpenQA.Selenium
 Imports OpenQA.Selenium.Edge
 Imports OpenQA.Selenium.Support.UI
@@ -444,10 +441,11 @@ Namespace DataAccess
         ''' </summary>
         Public Shared Sub SaveLumberFutures(versionId As Integer, futures As List(Of LumberFutures), conn As SqlConnection, tran As SqlTransaction)
             For Each f As LumberFutures In futures
-                Using cmd As New SqlCommand(Queries.UpsertLumberFuture, conn, tran)
+                Using cmd As New SqlCommand(Queries.InsertLumberFuture, conn, tran)
                     cmd.Parameters.AddWithValue("@VersionID", versionId)
                     cmd.Parameters.AddWithValue("@ContractMonth", f.ContractMonth)
-                    cmd.Parameters.AddWithValue("@PriorSettle", f.PriorSettle) ' Nothing → DBNull automatically
+                    cmd.Parameters.AddWithValue("@PriorSettle", If(f.PriorSettle.HasValue, CType(f.PriorSettle.Value, Object), DBNull.Value))
+                    ' PullDate is set by GETDATE() in the query → always current
                     cmd.ExecuteNonQuery()
                 End Using
             Next
@@ -457,7 +455,6 @@ Namespace DataAccess
         ''' </summary>
         Public Shared Function GetFuturesForVersion(versionId As Integer) As List(Of LumberFutures)
             Dim result As New List(Of LumberFutures)
-
             If versionId <= 0 Then
                 Debug.WriteLine("GetFuturesForVersion: Invalid versionId")
                 Return result
@@ -469,15 +466,13 @@ Namespace DataAccess
                     cmd.Parameters.AddWithValue("@VersionID", versionId)
                     Using rdr = cmd.ExecuteReader()
                         While rdr.Read()
-                            Dim id = rdr.GetInt32(0)
-                            Dim month = rdr.GetString(1).Trim()
-                            Dim price = If(rdr.IsDBNull(2), Nothing, CDec(rdr.GetDecimal(2)))
-
-                            result.Add(New LumberFutures With {
-                                   .ContractMonth = month,
-                                   .ID = id,
-                                   .PriorSettle = price
-                               })
+                            Dim f As New LumberFutures With {
+                        .ID = rdr.GetInt32(0),           ' Primary key
+                        .ContractMonth = rdr.GetString(1).Trim(),
+                        .PriorSettle = If(rdr.IsDBNull(2), Nothing, CDec(rdr.GetDecimal(2))),
+                        .PullDate = rdr.GetDateTime(3)               ' This is the key line
+                    }
+                            result.Add(f)
                         End While
                     End Using
                 End Using

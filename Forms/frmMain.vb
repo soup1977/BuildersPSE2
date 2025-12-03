@@ -10,6 +10,17 @@ Public Class frmMain
     Private m_ChildFormNumber As Integer
     Private m_previousTab As TabPage ' Track the previously selected tab
     Private m_isRemovingTab As Boolean = False ' Suppress events during removal
+    Private ReadOnly StatusHistory As New List(Of String)
+    Private Const MaxHistory As Integer = 25
+
+    Public Sub New()
+
+        ' This call is required by the designer.
+        InitializeComponent()
+        SetupStatusHistory()
+
+    End Sub
+
     Public ReadOnly Property PreviousTab As TabPage
         Get
             Return m_previousTab
@@ -24,36 +35,49 @@ Public Class frmMain
         End Set
     End Property
 
-    ' In frmMain.vb: Fix StatusLabel property to use correct name
-    Public ReadOnly Property StatusLabel As ToolStripStatusLabel
-        Get
-            Return CType(StatusStrip.Items("ToolStripStatusLabel"), ToolStripStatusLabel)
-        End Get
-    End Property
 
-    Private Sub TabControl1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TabControl1.SelectedIndexChanged
-        If m_isRemovingTab Then
-            Exit Sub
-        End If
-        If TabControl1.SelectedTab IsNot Nothing AndAlso TabControl1.SelectedTab.Tag IsNot Nothing Then
-            ' Update previous tab only if switching to a different tab
-            If m_previousTab IsNot TabControl1.SelectedTab Then
-                m_previousTab = If(TabControl1.SelectedIndex >= 0, TabControl1.TabPages(TabControl1.SelectedIndex), Nothing)
-            End If
-        End If
+    Private Sub SetupStatusHistory()
+        ' Only create once
+        If StatusHistoryListBox IsNot Nothing Then Return
+
+        ' --- Create the ListBox ---
+        StatusHistoryListBox = New ListBox()
+        With StatusHistoryListBox
+            .BorderStyle = BorderStyle.None
+            .Font = New Font("Consolas", 9.0F)
+            .Width = 780
+            .Height = 380
+            .IntegralHeight = False
+        End With
+
+        ' --- Create ContextMenuStrip ---
+        cmsStatusHistory = New ContextMenuStrip With {
+            .RenderMode = ToolStripRenderMode.System
+        }
+
+        Dim host As New ToolStripControlHost(StatusHistoryListBox) With {
+            .AutoSize = False,
+            .Width = 780,
+            .Height = 380
+        }
+        cmsStatusHistory.Items.Add(host)
+
+        ' --- Create dropdown button ---
+        tsbStatusHistory = New ToolStripDropDownButton()
+        With tsbStatusHistory
+            .DisplayStyle = ToolStripItemDisplayStyle.Text
+            .Text = "History"
+            .DropDown = cmsStatusHistory
+            .Alignment = ToolStripItemAlignment.Right
+        End With
+
+        ' --- Add to StatusStrip ---
+        StatusStrip.Items.Clear()
+        StatusStrip.Items.Add(ToolStripStatusLabel)
+        StatusStrip.Items.Add(tsbStatusHistory)
     End Sub
 
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ' Initialize status label
-        Dim lbl As New ToolStripStatusLabel("Ready") With {
-            .Name = "ToolStripStatusLabel",
-            .Spring = True,
-            .TextAlign = ContentAlignment.MiddleLeft
-        }
-        StatusStrip.Items.Clear()
-        StatusStrip.Items.Add(lbl)
-        StatusStrip.BringToFront()
-
         ' Open frmMainProjectList as a tab on load
         AddFormToTabControl(GetType(frmMainProjectList), "ProjectList")
     End Sub
@@ -144,6 +168,7 @@ Public Class frmMain
                 MessageBox.Show("No file selected.", "Import Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information)
             End If
         End Using
+        frmMainProjectList.LoadProjects()
     End Sub
 
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles btnMondayList.Click
@@ -220,8 +245,6 @@ Public Class frmMain
                                              Dim projectID As Integer
                                              If isfullimport Then
                                                  projectID = ExternalImportDataAccess.ImportProjectFromCSV(csvPath, projName, custName, estID, salID, address, city, state, zip, biddate, archdate, engdate, miles)
-                                             Else
-                                                 projectID = ExternalImportDataAccess.ImportProjectInfoFromCSV(csvPath, projName, custName, estID, salID, address, city, state, zip, biddate, archdate, engdate, miles)
                                              End If
                                              Me.Invoke(Sub()
                                                            Debug.WriteLine($"Import completed successfully for ProjectID: {projectID}")
@@ -244,6 +267,7 @@ Public Class frmMain
                     MessageBox.Show("No file selected.", "Import Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 End If
             End Using
+            frmMainProjectList.LoadProjects()
         Catch ex As Exception
             Debug.WriteLine($"Import error in btnImportCSV_Click: {ex.Message}")
             MessageBox.Show($"Error importing project: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)

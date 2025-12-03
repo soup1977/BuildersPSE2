@@ -2,7 +2,7 @@
 
 Imports System.Data.SqlClient
 Imports BuildersPSE2.DataAccess
-Imports BuildersPSE2.BuildersPSE.Utilities
+Imports BuildersPSE2.Utilities
 
 Public Class frmImportProjectDialog
     Private Sub frmImportProjectDialog_Load(sender As Object, e As EventArgs) Handles MyBase.Load

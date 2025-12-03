@@ -33,6 +33,70 @@ Public Class MondaycomAccess
         End Using
     End Function
 
+    ''' <summary>
+    ''' Search monday.com items by text — BoardId is passed in directly
+    ''' </summary>
+    Public Function SearchMondayItems(boardId As String, searchText As String) As List(Of MondayBoardItem)
+        If String.IsNullOrWhiteSpace(searchText) OrElse searchText.Trim.Length < 2 Then
+            Return New List(Of MondayBoardItem)()
+        End If
+
+        Dim safeText As String = searchText.Trim()
+
+        ' THIS IS THE ONLY QUERY THAT WORKS FOR FULL-TEXT SEARCH IN 2024
+        Dim query As String = "query { " &
+                          "boards(ids: " & boardId & ") { " &
+                              "items_page(limit: 500) { " &
+                                  "items { " &
+                                      "id " &
+                                      "name " &
+                                      "column_values { id text } " &
+                                  "} " &
+                              "} " &
+                          "} " &
+                          "}"
+
+        Dim requestBody = New Dictionary(Of String, String) From {{"query", query}}
+        Using client As New HttpClient()
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " & _apiToken)
+            client.DefaultRequestHeaders.Add("API-Version", "2023-10")
+
+            Dim content = New StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+            Dim response = client.PostAsync("https://api.monday.com/v2", content).Result
+            response.EnsureSuccessStatusCode()
+
+            Dim rawJson As String = response.Content.ReadAsStringAsync().Result
+
+            ' Now filter locally — this is the ONLY reliable way to get partial matches
+            Dim allItems As List(Of MondayBoardItem) = ParseBoardItems(rawJson)
+
+            Dim lowerSearch As String = safeText.ToLowerInvariant()
+            Dim results As New List(Of MondayBoardItem)
+
+            For Each item As MondayBoardItem In allItems
+                Dim found As Boolean = False
+
+                ' Search in item name
+                If item.Name IsNot Nothing AndAlso item.Name.ToLowerInvariant().Contains(lowerSearch) Then
+                    found = True
+                Else
+                    ' Search in any column text
+                    For Each kvp In item.ColumnValues
+                        If kvp.Value IsNot Nothing AndAlso kvp.Value.ToLowerInvariant().Contains(lowerSearch) Then
+                            found = True
+                            Exit For
+                        End If
+                    Next
+                End If
+
+                If found Then results.Add(item)
+            Next
+
+            Return results
+        End Using
+    End Function
+
+
     Private Function ParseBoardItems(json As String) As List(Of MondayBoardItem)
         Dim items As New List(Of MondayBoardItem)
         Try
@@ -64,4 +128,12 @@ Public Class MondaycomAccess
         End Try
         Return items
     End Function
+
+    Public Shared Function GetMondayItemUrl(itemId As String) As String
+        Const BoardId As String = "6930311385"           ' your board
+        Const Subdomain As String = "builderswarehouse"       ' ← CHANGE THIS to your actual subdomain
+        Return $"https://{Subdomain}.monday.com/boards/{BoardId}/pulses/{itemId}"
+    End Function
+
 End Class
+

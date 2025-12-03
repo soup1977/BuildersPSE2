@@ -19,8 +19,6 @@ Partial Class frmMain
     Private components As System.ComponentModel.IContainer
 
     'NOTE: The following procedure is required by the Windows Form Designer
-    'It can be modified using the Windows Form Designer.  
-    'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
@@ -29,6 +27,8 @@ Partial Class frmMain
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.StatusStrip = New System.Windows.Forms.StatusStrip()
         Me.ToolStripStatusLabel = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.tsbStatusHistory = New System.Windows.Forms.ToolStripDropDownButton()
+        Me.cmsStatusHistory = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
         Me.btnImportCSV = New System.Windows.Forms.Button()
@@ -37,6 +37,13 @@ Partial Class frmMain
         Me.btnImportPSE = New System.Windows.Forms.Button()
         Me.btnCreateProject = New System.Windows.Forms.Button()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.ToolsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EditLumberToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EditConfigurationToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EditIEPulldownsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CreateProjectToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ImportMGMTProjectToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ImportPSEProjectToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.MenuStrip.SuspendLayout()
         Me.StatusStrip.SuspendLayout()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -47,17 +54,15 @@ Partial Class frmMain
         '
         'MenuStrip
         '
-        Me.MenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileMenu})
+        Me.MenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileMenu, Me.ToolsToolStripMenuItem})
         Me.MenuStrip.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip.Name = "MenuStrip"
         Me.MenuStrip.Size = New System.Drawing.Size(1384, 24)
         Me.MenuStrip.TabIndex = 5
-        Me.MenuStrip.Text = "MenuStrip"
         '
         'FileMenu
         '
-        Me.FileMenu.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ExitToolStripMenuItem})
-        Me.FileMenu.ImageTransparentColor = System.Drawing.SystemColors.ActiveBorder
+        Me.FileMenu.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CreateProjectToolStripMenuItem, Me.ImportPSEProjectToolStripMenuItem, Me.ImportMGMTProjectToolStripMenuItem, Me.ExitToolStripMenuItem})
         Me.FileMenu.Name = "FileMenu"
         Me.FileMenu.Size = New System.Drawing.Size(37, 20)
         Me.FileMenu.Text = "&File"
@@ -65,23 +70,38 @@ Partial Class frmMain
         'ExitToolStripMenuItem
         '
         Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(92, 22)
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(190, 22)
         Me.ExitToolStripMenuItem.Text = "E&xit"
         '
         'StatusStrip
         '
-        Me.StatusStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel})
+        Me.StatusStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel, Me.tsbStatusHistory})
         Me.StatusStrip.Location = New System.Drawing.Point(0, 689)
         Me.StatusStrip.Name = "StatusStrip"
         Me.StatusStrip.Size = New System.Drawing.Size(1384, 22)
         Me.StatusStrip.TabIndex = 7
-        Me.StatusStrip.Text = "StatusStrip"
         '
         'ToolStripStatusLabel
         '
         Me.ToolStripStatusLabel.Name = "ToolStripStatusLabel"
-        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(39, 17)
-        Me.ToolStripStatusLabel.Text = "Status"
+        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(1311, 17)
+        Me.ToolStripStatusLabel.Spring = True
+        Me.ToolStripStatusLabel.Text = "Ready"
+        Me.ToolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'tsbStatusHistory
+        '
+        Me.tsbStatusHistory.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.tsbStatusHistory.DropDown = Me.cmsStatusHistory
+        Me.tsbStatusHistory.Name = "tsbStatusHistory"
+        Me.tsbStatusHistory.Size = New System.Drawing.Size(58, 20)
+        Me.tsbStatusHistory.Text = "History"
+        '
+        'cmsStatusHistory
+        '
+        Me.cmsStatusHistory.Name = "cmsStatusHistory"
+        Me.cmsStatusHistory.OwnerItem = Me.tsbStatusHistory
+        Me.cmsStatusHistory.Size = New System.Drawing.Size(61, 4)
         '
         'SplitContainer1
         '
@@ -106,48 +126,43 @@ Partial Class frmMain
         '
         'btnImportCSV
         '
-        Me.btnImportCSV.Location = New System.Drawing.Point(19, 139)
+        Me.btnImportCSV.Location = New System.Drawing.Point(12, 139)
         Me.btnImportCSV.Name = "btnImportCSV"
         Me.btnImportCSV.Size = New System.Drawing.Size(127, 31)
-        Me.btnImportCSV.TabIndex = 4
+        Me.btnImportCSV.TabIndex = 0
         Me.btnImportCSV.Text = "Import MGMT Project"
-        Me.btnImportCSV.UseVisualStyleBackColor = True
         '
         'btnEditLumber
         '
-        Me.btnEditLumber.Location = New System.Drawing.Point(19, 261)
+        Me.btnEditLumber.Location = New System.Drawing.Point(12, 261)
         Me.btnEditLumber.Name = "btnEditLumber"
         Me.btnEditLumber.Size = New System.Drawing.Size(127, 31)
-        Me.btnEditLumber.TabIndex = 3
+        Me.btnEditLumber.TabIndex = 1
         Me.btnEditLumber.Text = "Edit Lumber"
-        Me.btnEditLumber.UseVisualStyleBackColor = True
         '
         'btnMondayList
         '
-        Me.btnMondayList.Location = New System.Drawing.Point(19, 224)
+        Me.btnMondayList.Location = New System.Drawing.Point(12, 224)
         Me.btnMondayList.Name = "btnMondayList"
         Me.btnMondayList.Size = New System.Drawing.Size(127, 31)
         Me.btnMondayList.TabIndex = 2
         Me.btnMondayList.Text = "Monday List"
-        Me.btnMondayList.UseVisualStyleBackColor = True
         '
         'btnImportPSE
         '
-        Me.btnImportPSE.Location = New System.Drawing.Point(19, 176)
+        Me.btnImportPSE.Location = New System.Drawing.Point(12, 176)
         Me.btnImportPSE.Name = "btnImportPSE"
         Me.btnImportPSE.Size = New System.Drawing.Size(127, 31)
-        Me.btnImportPSE.TabIndex = 1
+        Me.btnImportPSE.TabIndex = 3
         Me.btnImportPSE.Text = "Import PSE"
-        Me.btnImportPSE.UseVisualStyleBackColor = True
         '
         'btnCreateProject
         '
-        Me.btnCreateProject.Location = New System.Drawing.Point(19, 102)
+        Me.btnCreateProject.Location = New System.Drawing.Point(12, 102)
         Me.btnCreateProject.Name = "btnCreateProject"
         Me.btnCreateProject.Size = New System.Drawing.Size(127, 31)
-        Me.btnCreateProject.TabIndex = 0
+        Me.btnCreateProject.TabIndex = 4
         Me.btnCreateProject.Text = "Create Project"
-        Me.btnCreateProject.UseVisualStyleBackColor = True
         '
         'TabControl1
         '
@@ -158,14 +173,57 @@ Partial Class frmMain
         Me.TabControl1.Size = New System.Drawing.Size(1223, 665)
         Me.TabControl1.TabIndex = 0
         '
+        'ToolsToolStripMenuItem
+        '
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EditLumberToolStripMenuItem, Me.EditConfigurationToolStripMenuItem, Me.EditIEPulldownsToolStripMenuItem})
+        Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
+        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(47, 20)
+        Me.ToolsToolStripMenuItem.Text = "Tools"
+        '
+        'EditLumberToolStripMenuItem
+        '
+        Me.EditLumberToolStripMenuItem.Name = "EditLumberToolStripMenuItem"
+        Me.EditLumberToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.EditLumberToolStripMenuItem.Text = "Edit Lumber"
+        '
+        'EditConfigurationToolStripMenuItem
+        '
+        Me.EditConfigurationToolStripMenuItem.Name = "EditConfigurationToolStripMenuItem"
+        Me.EditConfigurationToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.EditConfigurationToolStripMenuItem.Text = "Edit Configuration"
+        '
+        'EditIEPulldownsToolStripMenuItem
+        '
+        Me.EditIEPulldownsToolStripMenuItem.Name = "EditIEPulldownsToolStripMenuItem"
+        Me.EditIEPulldownsToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.EditIEPulldownsToolStripMenuItem.Text = "Edit IE Pulldowns"
+        '
+        'CreateProjectToolStripMenuItem
+        '
+        Me.CreateProjectToolStripMenuItem.Name = "CreateProjectToolStripMenuItem"
+        Me.CreateProjectToolStripMenuItem.Size = New System.Drawing.Size(190, 22)
+        Me.CreateProjectToolStripMenuItem.Text = "Create Project"
+        '
+        'ImportMGMTProjectToolStripMenuItem
+        '
+        Me.ImportMGMTProjectToolStripMenuItem.Name = "ImportMGMTProjectToolStripMenuItem"
+        Me.ImportMGMTProjectToolStripMenuItem.Size = New System.Drawing.Size(190, 22)
+        Me.ImportMGMTProjectToolStripMenuItem.Text = "Import MGMT Project"
+        '
+        'ImportPSEProjectToolStripMenuItem
+        '
+        Me.ImportPSEProjectToolStripMenuItem.Name = "ImportPSEProjectToolStripMenuItem"
+        Me.ImportPSEProjectToolStripMenuItem.Size = New System.Drawing.Size(190, 22)
+        Me.ImportPSEProjectToolStripMenuItem.Text = "Import PSE Project"
+        '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1384, 711)
         Me.Controls.Add(Me.SplitContainer1)
-        Me.Controls.Add(Me.MenuStrip)
         Me.Controls.Add(Me.StatusStrip)
+        Me.Controls.Add(Me.MenuStrip)
         Me.MainMenuStrip = Me.MenuStrip
         Me.Name = "frmMain"
         Me.Text = "Builders PSE"
@@ -181,17 +239,28 @@ Partial Class frmMain
         Me.PerformLayout()
 
     End Sub
-    Friend WithEvents ToolTip As System.Windows.Forms.ToolTip
-    Friend WithEvents ToolStripStatusLabel As System.Windows.Forms.ToolStripStatusLabel
-    Friend WithEvents StatusStrip As System.Windows.Forms.StatusStrip
-    Friend WithEvents ExitToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents FileMenu As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents MenuStrip As System.Windows.Forms.MenuStrip
+
+    Friend WithEvents MenuStrip As MenuStrip
+    Friend WithEvents FileMenu As ToolStripMenuItem
+    Friend WithEvents ExitToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents StatusStrip As StatusStrip
+    Friend WithEvents ToolStripStatusLabel As ToolStripStatusLabel
+    Friend WithEvents tsbStatusHistory As ToolStripDropDownButton
+    Friend WithEvents cmsStatusHistory As ContextMenuStrip
+    Friend WithEvents StatusHistoryListBox As ListBox
+    Friend WithEvents ToolTip As ToolTip
     Friend WithEvents SplitContainer1 As SplitContainer
+    Friend WithEvents btnImportCSV As Button
+    Friend WithEvents btnEditLumber As Button
+    Friend WithEvents btnMondayList As Button
+    Friend WithEvents btnImportPSE As Button
     Friend WithEvents btnCreateProject As Button
     Friend WithEvents TabControl1 As TabControl
-    Friend WithEvents btnImportPSE As Button
-    Friend WithEvents btnMondayList As Button
-    Friend WithEvents btnEditLumber As Button
-    Friend WithEvents btnImportCSV As Button
+    Friend WithEvents CreateProjectToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ImportPSEProjectToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ImportMGMTProjectToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ToolsToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents EditLumberToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents EditConfigurationToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents EditIEPulldownsToolStripMenuItem As ToolStripMenuItem
 End Class

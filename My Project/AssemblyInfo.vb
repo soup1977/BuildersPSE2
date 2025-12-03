@@ -8,10 +8,10 @@ Imports System.Runtime.InteropServices
 
 ' Review the values of the assembly attributes
 
-<Assembly: AssemblyTitle("BuildersPSE2")>
+<Assembly: AssemblyTitle("BuildersPSE")>
 <Assembly: AssemblyDescription("")>
-<Assembly: AssemblyCompany("Builders Warehouse")>
-<Assembly: AssemblyProduct("BuildersPSE2")>
+<Assembly: AssemblyCompany("Builders")>
+<Assembly: AssemblyProduct("BuildersPSE")>
 <Assembly: AssemblyCopyright("Copyright © Builders Warehouse 2025")>
 <Assembly: AssemblyTrademark("")>
 

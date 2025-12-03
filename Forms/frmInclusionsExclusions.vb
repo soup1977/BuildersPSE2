@@ -1,6 +1,7 @@
 ﻿Option Strict On
 
 Imports BuildersPSE2.DataAccess
+Imports BuildersPSE2.Utilities
 
 
 
@@ -17,19 +18,7 @@ Public Class frmInclusionsExclusions
         Me.Text = $"Inclusions/Exclusions - Project {Project.jbid}"
     End Sub
 
-    ' In frmCreateEditProject.vb: Update UpdateStatus for robustness
-    Private Sub UpdateStatus(message As String)
-        Try
-            Dim parentForm As frmMain = TryCast(Me.ParentForm, frmMain)
-            If parentForm IsNot Nothing AndAlso parentForm.StatusLabel IsNot Nothing Then
-                parentForm.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
-            Else
-                Debug.WriteLine($"Status update skipped: Parent form or StatusLabel is null. Message: {message}")
-            End If
-        Catch ex As Exception
-            Debug.WriteLine($"Error updating status: {ex.Message}")
-        End Try
-    End Sub
+
     Private Sub frmInclusionsExclusions_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
@@ -153,7 +142,7 @@ Public Class frmInclusionsExclusions
     Private Sub LoadData()
         Try
 
-            UpdateStatus("Loading Inclusions/Exclusions data...")
+            StatusLogger.Add("Loading Inclusions/Exclusions data...")
             ' Load Design Info
             Dim info = ieda.GetProjectDesignInfo(ProjectID)
             If info IsNot Nothing Then
@@ -247,16 +236,16 @@ Public Class frmInclusionsExclusions
                     End If
                 Next
             Next
-            UpdateStatus("Inclusions/Exclusions data loaded successfully.")
+            StatusLogger.Add("Inclusions/Exclusions data loaded successfully.")
         Catch ex As Exception
-            UpdateStatus("Error loading Inclusions/Exclusions data: " & ex.Message)
+            StatusLogger.Add("Error loading Inclusions/Exclusions data: " & ex.Message)
             MessageBox.Show("Error loading data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub SaveData(sender As Object, e As EventArgs) Handles btnSave.Click
         Try
-            UpdateStatus("Saving Inclusions/Exclusions data...")
+            StatusLogger.Add("Saving Inclusions/Exclusions data...")
             ' Save Design Info
             Dim info As New ProjectDesignInfoModel With {
             .ProjectID = ProjectID,
@@ -369,10 +358,10 @@ Public Class frmInclusionsExclusions
             Next
             ieda.SaveProjectItems(ProjectID, items)
 
-            UpdateStatus("Inclusions/Exclusions data saved successfully.")
+            StatusLogger.Add("Inclusions/Exclusions data saved successfully.")
             MessageBox.Show("Data saved successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
-            UpdateStatus("Error saving Inclusions/Exclusions data: " & ex.Message)
+            StatusLogger.Add("Error saving Inclusions/Exclusions data: " & ex.Message)
             MessageBox.Show("Error saving: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub

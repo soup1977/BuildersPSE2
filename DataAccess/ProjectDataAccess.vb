@@ -2,7 +2,7 @@
 
 Imports System.Data.SqlClient
 Imports BuildersPSE2.BuildersPSE.Models
-Imports BuildersPSE2.BuildersPSE.Utilities
+Imports BuildersPSE2.Utilities
 
 
 
@@ -10,88 +10,106 @@ Imports BuildersPSE2.BuildersPSE.Utilities
 Namespace DataAccess
     Public Class ProjectDataAccess
 
-        ' Updated: SaveProject (validates ArchitectID and EngineerID for CustomerType=2 and 3)
+        'Refactored: SaveProject
         Public Sub SaveProject(proj As ProjectModel)
             ' Validate CustomerType for ArchitectID (2) and EngineerID (3)
-            If proj.ArchitectID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(proj.ArchitectID, 2) Then
+            If proj.ArchitectID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(proj.ArchitectID.Value, 2) Then
                 Throw New ArgumentException("ArchitectID must reference a customer with CustomerType=2 (Architect).")
             End If
-            If proj.EngineerID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(proj.EngineerID, 3) Then
+            If proj.EngineerID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(proj.EngineerID.Value, 3) Then
                 Throw New ArgumentException("EngineerID must reference a customer with CustomerType=3 (Engineer).")
             End If
 
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Dim paramsDict As New Dictionary(Of String, Object) From {
-                                                          {"@JBID", If(String.IsNullOrEmpty(proj.JBID), DBNull.Value, CType(proj.JBID, Object))},
-                                                          {"@ProjectTypeID", proj.ProjectType.ProjectTypeID},
-                                                          {"@ProjectName", If(String.IsNullOrEmpty(proj.ProjectName), DBNull.Value, CType(proj.ProjectName, Object))},
-                                                          {"@EstimatorID", proj.Estimator.EstimatorID},
-                                                          {"@Address", If(String.IsNullOrEmpty(proj.Address), DBNull.Value, CType(proj.Address, Object))},
-                                                          {"@City", If(String.IsNullOrEmpty(proj.City), DBNull.Value, CType(proj.City, Object))},
-                                                          {"@State", If(String.IsNullOrEmpty(proj.State), DBNull.Value, CType(proj.State, Object))},
-                                                          {"@Zip", If(String.IsNullOrEmpty(proj.Zip), DBNull.Value, CType(proj.Zip, Object))},
-                                                          {"@BidDate", If(proj.BidDate.HasValue, CType(proj.BidDate.Value, Object), DBNull.Value)},
-                                                          {"@ArchPlansDated", If(proj.ArchPlansDated.HasValue, CType(proj.ArchPlansDated.Value, Object), DBNull.Value)},
-                                                          {"@EngPlansDated", If(proj.EngPlansDated.HasValue, CType(proj.EngPlansDated.Value, Object), DBNull.Value)},
-                                                          {"@MilesToJobSite", proj.MilesToJobSite},
-                                                          {"@TotalNetSqft", proj.TotalNetSqft},
-                                                          {"@TotalGrossSqft", proj.TotalGrossSqft},
-                                                          {"@LastModifiedDate", Now},
-                                                          {"@ArchitectID", If(proj.ArchitectID.HasValue, CType(proj.ArchitectID.Value, Object), DBNull.Value)},
-                                                          {"@EngineerID", If(proj.EngineerID.HasValue, CType(proj.EngineerID.Value, Object), DBNull.Value)},
-                                                          {"@ProjectNotes", If(String.IsNullOrEmpty(proj.ProjectNotes), DBNull.Value, CType(proj.ProjectNotes, Object))}
-                                                      }
+                                                                       Dim paramsDict As Dictionary(Of String, Object) = ModelParams.ForProject(proj)
+
                                                                        If proj.ProjectID = 0 Then
-                                                                           Dim newID As Integer = SqlConnectionManager.Instance.ExecuteScalar(Of Integer)(Queries.InsertProject, HelperDataAccess.BuildParameters(paramsDict))
+                                                                           Dim newID As Integer = SqlConnectionManager.Instance.ExecuteScalar(Of Integer)(
+                                                                            Queries.InsertProject,
+                                                                            HelperDataAccess.BuildParameters(paramsDict))
                                                                            proj.ProjectID = newID
                                                                        Else
-                                                                           paramsDict.Add("@ProjectID", proj.ProjectID)
-                                                                           SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateProject, HelperDataAccess.BuildParameters(paramsDict))
+                                                                           paramsDict.Add("@ProjectID", proj.ProjectID)   ' safe – key does not exist yet
+                                                                           SqlConnectionManager.Instance.ExecuteNonQuery(
+                                                                            Queries.UpdateProject,
+                                                                            HelperDataAccess.BuildParameters(paramsDict))
                                                                        End If
-                                                                   End Sub, "Error saving project " & proj.ProjectID)
+                                                                   End Sub, "Error saving project " & If(proj.ProjectID = 0, "(new)", proj.ProjectID.ToString()))
         End Sub
 
-        ' Updated: GetProjects (use VersionID for details)
+        ' === PRIVATE SHARED MAPPER (single source of truth) ===
+        Private Function MapProjectFromReader(reader As SqlDataReader) As ProjectModel
+            ' Cache ordinals once – fast and Option Strict safe
+            Dim ordProjectID As Integer = reader.GetOrdinal("ProjectID")
+            Dim ordJBID As Integer = reader.GetOrdinal("JBID")
+            Dim ordProjectTypeID As Integer = reader.GetOrdinal("ProjectTypeID")
+            Dim ordProjectType As Integer = reader.GetOrdinal("ProjectType")
+            Dim ordProjectName As Integer = reader.GetOrdinal("ProjectName")
+            Dim ordEstimatorID As Integer = reader.GetOrdinal("EstimatorID")
+            Dim ordEstimator As Integer = reader.GetOrdinal("Estimator")
+            Dim ordAddress As Integer = reader.GetOrdinal("Address")
+            Dim ordCity As Integer = reader.GetOrdinal("City")
+            Dim ordState As Integer = reader.GetOrdinal("State")
+            Dim ordZip As Integer = reader.GetOrdinal("Zip")
+            Dim ordBidDate As Integer = reader.GetOrdinal("BidDate")
+            Dim ordArchPlansDated As Integer = reader.GetOrdinal("ArchPlansDated")
+            Dim ordEngPlansDated As Integer = reader.GetOrdinal("EngPlansDated")
+            Dim ordMilesToJobSite As Integer = reader.GetOrdinal("MilesToJobSite")
+            Dim ordTotalNetSqft As Integer = reader.GetOrdinal("TotalNetSqft")
+            Dim ordTotalGrossSqft As Integer = reader.GetOrdinal("TotalGrossSqft")
+            Dim ordArchitectID As Integer = reader.GetOrdinal("ArchitectID")
+            Dim ordEngineerID As Integer = reader.GetOrdinal("EngineerID")
+            Dim ordProjectNotes As Integer = reader.GetOrdinal("ProjectNotes")
+            Dim ordLastModifiedDate As Integer = reader.GetOrdinal("LastModifiedDate")
+            Dim ordCreatedDate As Integer = reader.GetOrdinal("createddate")
+            Dim ordArchitectName As Integer = reader.GetOrdinal("ArchitectName")
+            Dim ordEngineerName As Integer = reader.GetOrdinal("EngineerName")
+
+            Return New ProjectModel With {
+        .ProjectID = reader.GetInt32(ordProjectID),
+        .JBID = If(reader.IsDBNull(ordJBID), String.Empty, reader.GetString(ordJBID)),
+        .ProjectType = New ProjectTypeModel With {
+            .ProjectTypeID = reader.GetInt32(ordProjectTypeID),
+            .ProjectTypeName = If(reader.IsDBNull(ordProjectType), String.Empty, reader.GetString(ordProjectType))
+        },
+        .ProjectName = If(reader.IsDBNull(ordProjectName), String.Empty, reader.GetString(ordProjectName)),
+        .Estimator = New EstimatorModel With {
+            .EstimatorID = reader.GetInt32(ordEstimatorID),
+            .EstimatorName = If(reader.IsDBNull(ordEstimator), String.Empty, reader.GetString(ordEstimator))
+        },
+        .Address = If(reader.IsDBNull(ordAddress), String.Empty, reader.GetString(ordAddress)),
+        .City = If(reader.IsDBNull(ordCity), String.Empty, reader.GetString(ordCity)),
+        .State = If(reader.IsDBNull(ordState), String.Empty, reader.GetString(ordState)),
+        .Zip = If(reader.IsDBNull(ordZip), String.Empty, reader.GetString(ordZip)),
+        .BidDate = If(reader.IsDBNull(ordBidDate), CType(Nothing, Date?), reader.GetDateTime(ordBidDate)),
+        .ArchPlansDated = If(reader.IsDBNull(ordArchPlansDated), CType(Nothing, Date?), reader.GetDateTime(ordArchPlansDated)),
+        .EngPlansDated = If(reader.IsDBNull(ordEngPlansDated), CType(Nothing, Date?), reader.GetDateTime(ordEngPlansDated)),
+        .MilesToJobSite = If(reader.IsDBNull(ordMilesToJobSite), 0, reader.GetInt32(ordMilesToJobSite)),
+        .TotalNetSqft = If(reader.IsDBNull(ordTotalNetSqft), CType(Nothing, Integer?), reader.GetInt32(ordTotalNetSqft)),
+        .TotalGrossSqft = If(reader.IsDBNull(ordTotalGrossSqft), 0, reader.GetInt32(ordTotalGrossSqft)),
+        .ArchitectID = If(reader.IsDBNull(ordArchitectID), CType(Nothing, Integer?), reader.GetInt32(ordArchitectID)),
+        .EngineerID = If(reader.IsDBNull(ordEngineerID), CType(Nothing, Integer?), reader.GetInt32(ordEngineerID)),
+        .ProjectNotes = If(reader.IsDBNull(ordProjectNotes), String.Empty, reader.GetString(ordProjectNotes)),
+        .LastModifiedDate = If(reader.IsDBNull(ordLastModifiedDate), Date.MinValue, reader.GetDateTime(ordLastModifiedDate)),
+        .CreatedDate = If(reader.IsDBNull(ordCreatedDate), Date.MinValue, reader.GetDateTime(ordCreatedDate)),
+        .ArchitectName = If(reader.IsDBNull(ordArchitectName), String.Empty, reader.GetString(ordArchitectName)),
+        .EngineerName = If(reader.IsDBNull(ordEngineerName), String.Empty, reader.GetString(ordEngineerName))
+    }
+        End Function
+
+        ' === REFACTORED: GetProjects ===
         Public Function GetProjects(Optional includeDetails As Boolean = True) As List(Of ProjectModel)
             Dim projects As New List(Of ProjectModel)
+
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
                                                                        Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjects)
                                                                            While reader.Read()
-                                                                               Dim proj As New ProjectModel With {
-                                                                          .ProjectID = reader.GetInt32(reader.GetOrdinal("ProjectID")),
-                                                                          .JBID = If(Not reader.IsDBNull(reader.GetOrdinal("JBID")), reader.GetString(reader.GetOrdinal("JBID")), String.Empty),
-                                                                          .ProjectType = New ProjectTypeModel With {
-                                                                              .ProjectTypeID = reader.GetInt32(reader.GetOrdinal("ProjectTypeID")),
-                                                                              .ProjectTypeName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectType")), reader.GetString(reader.GetOrdinal("ProjectType")), String.Empty)
-                                                                          },
-                                                                          .ProjectName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectName")), reader.GetString(reader.GetOrdinal("ProjectName")), String.Empty),
-                                                                          .Estimator = New EstimatorModel With {
-                                                                              .EstimatorID = reader.GetInt32(reader.GetOrdinal("EstimatorID")),
-                                                                              .EstimatorName = If(Not reader.IsDBNull(reader.GetOrdinal("Estimator")), reader.GetString(reader.GetOrdinal("Estimator")), String.Empty)
-                                                                          },
-                                                                          .Address = If(Not reader.IsDBNull(reader.GetOrdinal("Address")), reader.GetString(reader.GetOrdinal("Address")), String.Empty),
-                                                                          .City = If(Not reader.IsDBNull(reader.GetOrdinal("City")), reader.GetString(reader.GetOrdinal("City")), String.Empty),
-                                                                          .State = If(Not reader.IsDBNull(reader.GetOrdinal("State")), reader.GetString(reader.GetOrdinal("State")), String.Empty),
-                                                                          .Zip = If(Not reader.IsDBNull(reader.GetOrdinal("Zip")), reader.GetString(reader.GetOrdinal("Zip")), String.Empty),
-                                                                          .BidDate = If(Not reader.IsDBNull(reader.GetOrdinal("BidDate")), reader.GetDateTime(reader.GetOrdinal("BidDate")), Nothing),
-                                                                          .ArchPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("ArchPlansDated")), reader.GetDateTime(reader.GetOrdinal("ArchPlansDated")), Nothing),
-                                                                          .EngPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("EngPlansDated")), reader.GetDateTime(reader.GetOrdinal("EngPlansDated")), Nothing),
-                                                                          .MilesToJobSite = If(Not reader.IsDBNull(reader.GetOrdinal("MilesToJobSite")), reader.GetInt32(reader.GetOrdinal("MilesToJobSite")), 0),
-                                                                          .TotalNetSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalNetSqft")), reader.GetInt32(reader.GetOrdinal("TotalNetSqft")), Nothing),
-                                                                          .TotalGrossSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalGrossSqft")), reader.GetInt32(reader.GetOrdinal("TotalGrossSqft")), 0),
-                                                                          .ArchitectID = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectID")), reader.GetInt32(reader.GetOrdinal("ArchitectID")), Nothing),
-                                                                          .EngineerID = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerID")), reader.GetInt32(reader.GetOrdinal("EngineerID")), Nothing),
-                                                                          .ProjectNotes = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectNotes")), reader.GetString(reader.GetOrdinal("ProjectNotes")), String.Empty),
-                                                                          .LastModifiedDate = If(Not reader.IsDBNull(reader.GetOrdinal("LastModifiedDate")), reader.GetDateTime(reader.GetOrdinal("LastModifiedDate")), Nothing),
-                                                                          .CreatedDate = If(Not reader.IsDBNull(reader.GetOrdinal("createddate")), reader.GetDateTime(reader.GetOrdinal("createddate")), Nothing),
-                                                                          .ArchitectName = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectName")), reader.GetString(reader.GetOrdinal("ArchitectName")), String.Empty),
-                                                                          .EngineerName = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerName")), reader.GetString(reader.GetOrdinal("EngineerName")), String.Empty)
-                                                                      }
+                                                                               Dim proj As ProjectModel = MapProjectFromReader(reader)
 
                                                                                If includeDetails Then
-                                                                                   Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(proj.ProjectID)
+                                                                                   Dim versions = ProjVersionDataAccess.GetProjectVersions(proj.ProjectID)
                                                                                    If versions.Any() Then
-                                                                                       Dim latestVersionID As Integer = versions.First().VersionID
+                                                                                       Dim latestVersionID = versions.OrderByDescending(Function(v) v.VersionDate).First().VersionID
                                                                                        proj.Buildings = GetBuildingsByVersionID(latestVersionID)
                                                                                        proj.Settings = GetProjectProductSettings(latestVersionID)
                                                                                    End If
@@ -100,58 +118,136 @@ Namespace DataAccess
                                                                                projects.Add(proj)
                                                                            End While
                                                                        End Using
-                                                                   End Sub, "Error loading Project")
+                                                                   End Sub, "Error loading projects")
+
             Return projects
         End Function
 
-        ' Updated: GetProjectByID (use VersionID for details)
+        ' === REFACTORED: GetProjectByID ===
         Public Function GetProjectByID(projectID As Integer) As ProjectModel
             Dim proj As ProjectModel = Nothing
-            Dim params As SqlParameter() = {New SqlParameter("@ProjectID", projectID)}
+            Dim param As New SqlParameter("@ProjectID", projectID)
+
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjectByID, params)
+                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjectByID, {param})
                                                                            If reader.Read() Then
-                                                                               proj = New ProjectModel With {
-                                                                          .ProjectID = reader.GetInt32(reader.GetOrdinal("ProjectID")),
-                                                                          .JBID = If(Not reader.IsDBNull(reader.GetOrdinal("JBID")), reader.GetString(reader.GetOrdinal("JBID")), String.Empty),
-                                                                          .ProjectType = New ProjectTypeModel With {
-                                                                              .ProjectTypeID = reader.GetInt32(reader.GetOrdinal("ProjectTypeID")),
-                                                                              .ProjectTypeName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectType")), reader.GetString(reader.GetOrdinal("ProjectType")), String.Empty)
-                                                                          },
-                                                                          .ProjectName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectName")), reader.GetString(reader.GetOrdinal("ProjectName")), String.Empty),
-                                                                          .Estimator = New EstimatorModel With {
-                                                                              .EstimatorID = reader.GetInt32(reader.GetOrdinal("EstimatorID")),
-                                                                              .EstimatorName = If(Not reader.IsDBNull(reader.GetOrdinal("Estimator")), reader.GetString(reader.GetOrdinal("Estimator")), String.Empty)
-                                                                          },
-                                                                          .Address = If(Not reader.IsDBNull(reader.GetOrdinal("Address")), reader.GetString(reader.GetOrdinal("Address")), String.Empty),
-                                                                          .City = If(Not reader.IsDBNull(reader.GetOrdinal("City")), reader.GetString(reader.GetOrdinal("City")), String.Empty),
-                                                                          .State = If(Not reader.IsDBNull(reader.GetOrdinal("State")), reader.GetString(reader.GetOrdinal("State")), String.Empty),
-                                                                          .Zip = If(Not reader.IsDBNull(reader.GetOrdinal("Zip")), reader.GetString(reader.GetOrdinal("Zip")), String.Empty),
-                                                                          .BidDate = If(Not reader.IsDBNull(reader.GetOrdinal("BidDate")), reader.GetDateTime(reader.GetOrdinal("BidDate")), Nothing),
-                                                                          .ArchPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("ArchPlansDated")), reader.GetDateTime(reader.GetOrdinal("ArchPlansDated")), Nothing),
-                                                                          .EngPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("EngPlansDated")), reader.GetDateTime(reader.GetOrdinal("EngPlansDated")), Nothing),
-                                                                          .MilesToJobSite = If(Not reader.IsDBNull(reader.GetOrdinal("MilesToJobSite")), reader.GetInt32(reader.GetOrdinal("MilesToJobSite")), 0),
-                                                                          .TotalNetSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalNetSqft")), reader.GetInt32(reader.GetOrdinal("TotalNetSqft")), Nothing),
-                                                                          .TotalGrossSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalGrossSqft")), reader.GetInt32(reader.GetOrdinal("TotalGrossSqft")), 0),
-                                                                          .ArchitectID = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectID")), reader.GetInt32(reader.GetOrdinal("ArchitectID")), Nothing),
-                                                                          .EngineerID = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerID")), reader.GetInt32(reader.GetOrdinal("EngineerID")), Nothing),
-                                                                          .ProjectNotes = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectNotes")), reader.GetString(reader.GetOrdinal("ProjectNotes")), String.Empty),
-                                                                          .LastModifiedDate = If(Not reader.IsDBNull(reader.GetOrdinal("LastModifiedDate")), reader.GetDateTime(reader.GetOrdinal("LastModifiedDate")), Nothing),
-                                                                          .CreatedDate = If(Not reader.IsDBNull(reader.GetOrdinal("createddate")), reader.GetDateTime(reader.GetOrdinal("createddate")), Nothing),
-                                                                          .ArchitectName = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectName")), reader.GetString(reader.GetOrdinal("ArchitectName")), String.Empty),
-                                                                          .EngineerName = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerName")), reader.GetString(reader.GetOrdinal("EngineerName")), String.Empty)
-                                                                      }
-                                                                               Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(proj.ProjectID)
+                                                                               proj = MapProjectFromReader(reader)
+
+                                                                               Dim versions = ProjVersionDataAccess.GetProjectVersions(proj.ProjectID)
                                                                                If versions.Any() Then
-                                                                                   Dim latestVersionID As Integer = versions.First().VersionID
+                                                                                   Dim latestVersionID = versions.OrderByDescending(Function(v) v.VersionDate).First().VersionID
                                                                                    proj.Buildings = GetBuildingsByVersionID(latestVersionID)
                                                                                    proj.Settings = GetProjectProductSettings(latestVersionID)
                                                                                End If
                                                                            End If
                                                                        End Using
                                                                    End Sub, "Error loading project by ID " & projectID)
+
             Return proj
         End Function
+
+
+        ' Updated: GetProjects (use VersionID for details)
+        'Public Function GetProjects(Optional includeDetails As Boolean = True) As List(Of ProjectModel)
+        '    Dim projects As New List(Of ProjectModel)
+        '    SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+        '                                                               Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjects)
+        '                                                                   While reader.Read()
+        '                                                                       Dim proj As New ProjectModel With {
+        '                                                                  .ProjectID = reader.GetInt32(reader.GetOrdinal("ProjectID")),
+        '                                                                  .JBID = If(Not reader.IsDBNull(reader.GetOrdinal("JBID")), reader.GetString(reader.GetOrdinal("JBID")), String.Empty),
+        '                                                                  .ProjectType = New ProjectTypeModel With {
+        '                                                                      .ProjectTypeID = reader.GetInt32(reader.GetOrdinal("ProjectTypeID")),
+        '                                                                      .ProjectTypeName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectType")), reader.GetString(reader.GetOrdinal("ProjectType")), String.Empty)
+        '                                                                  },
+        '                                                                  .ProjectName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectName")), reader.GetString(reader.GetOrdinal("ProjectName")), String.Empty),
+        '                                                                  .Estimator = New EstimatorModel With {
+        '                                                                      .EstimatorID = reader.GetInt32(reader.GetOrdinal("EstimatorID")),
+        '                                                                      .EstimatorName = If(Not reader.IsDBNull(reader.GetOrdinal("Estimator")), reader.GetString(reader.GetOrdinal("Estimator")), String.Empty)
+        '                                                                  },
+        '                                                                  .Address = If(Not reader.IsDBNull(reader.GetOrdinal("Address")), reader.GetString(reader.GetOrdinal("Address")), String.Empty),
+        '                                                                  .City = If(Not reader.IsDBNull(reader.GetOrdinal("City")), reader.GetString(reader.GetOrdinal("City")), String.Empty),
+        '                                                                  .State = If(Not reader.IsDBNull(reader.GetOrdinal("State")), reader.GetString(reader.GetOrdinal("State")), String.Empty),
+        '                                                                  .Zip = If(Not reader.IsDBNull(reader.GetOrdinal("Zip")), reader.GetString(reader.GetOrdinal("Zip")), String.Empty),
+        '                                                                  .BidDate = If(Not reader.IsDBNull(reader.GetOrdinal("BidDate")), reader.GetDateTime(reader.GetOrdinal("BidDate")), Nothing),
+        '                                                                  .ArchPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("ArchPlansDated")), reader.GetDateTime(reader.GetOrdinal("ArchPlansDated")), Nothing),
+        '                                                                  .EngPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("EngPlansDated")), reader.GetDateTime(reader.GetOrdinal("EngPlansDated")), Nothing),
+        '                                                                  .MilesToJobSite = If(Not reader.IsDBNull(reader.GetOrdinal("MilesToJobSite")), reader.GetInt32(reader.GetOrdinal("MilesToJobSite")), 0),
+        '                                                                  .TotalNetSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalNetSqft")), reader.GetInt32(reader.GetOrdinal("TotalNetSqft")), Nothing),
+        '                                                                  .TotalGrossSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalGrossSqft")), reader.GetInt32(reader.GetOrdinal("TotalGrossSqft")), 0),
+        '                                                                  .ArchitectID = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectID")), reader.GetInt32(reader.GetOrdinal("ArchitectID")), Nothing),
+        '                                                                  .EngineerID = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerID")), reader.GetInt32(reader.GetOrdinal("EngineerID")), Nothing),
+        '                                                                  .ProjectNotes = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectNotes")), reader.GetString(reader.GetOrdinal("ProjectNotes")), String.Empty),
+        '                                                                  .LastModifiedDate = If(Not reader.IsDBNull(reader.GetOrdinal("LastModifiedDate")), reader.GetDateTime(reader.GetOrdinal("LastModifiedDate")), Nothing),
+        '                                                                  .CreatedDate = If(Not reader.IsDBNull(reader.GetOrdinal("createddate")), reader.GetDateTime(reader.GetOrdinal("createddate")), Nothing),
+        '                                                                  .ArchitectName = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectName")), reader.GetString(reader.GetOrdinal("ArchitectName")), String.Empty),
+        '                                                                  .EngineerName = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerName")), reader.GetString(reader.GetOrdinal("EngineerName")), String.Empty)
+        '                                                              }
+
+        '                                                                       If includeDetails Then
+        '                                                                           Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(proj.ProjectID)
+        '                                                                           If versions.Any() Then
+        '                                                                               Dim latestVersionID As Integer = versions.First().VersionID
+        '                                                                               proj.Buildings = GetBuildingsByVersionID(latestVersionID)
+        '                                                                               proj.Settings = GetProjectProductSettings(latestVersionID)
+        '                                                                           End If
+        '                                                                       End If
+
+        '                                                                       projects.Add(proj)
+        '                                                                   End While
+        '                                                               End Using
+        '                                                           End Sub, "Error loading Project")
+        '    Return projects
+        'End Function
+
+        '' Updated: GetProjectByID (use VersionID for details)
+        'Public Function GetProjectByID(projectID As Integer) As ProjectModel
+        '    Dim proj As ProjectModel = Nothing
+        '    Dim params As SqlParameter() = {New SqlParameter("@ProjectID", projectID)}
+        '    SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+        '                                                               Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjectByID, params)
+        '                                                                   If reader.Read() Then
+        '                                                                       proj = New ProjectModel With {
+        '                                                                  .ProjectID = reader.GetInt32(reader.GetOrdinal("ProjectID")),
+        '                                                                  .JBID = If(Not reader.IsDBNull(reader.GetOrdinal("JBID")), reader.GetString(reader.GetOrdinal("JBID")), String.Empty),
+        '                                                                  .ProjectType = New ProjectTypeModel With {
+        '                                                                      .ProjectTypeID = reader.GetInt32(reader.GetOrdinal("ProjectTypeID")),
+        '                                                                      .ProjectTypeName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectType")), reader.GetString(reader.GetOrdinal("ProjectType")), String.Empty)
+        '                                                                  },
+        '                                                                  .ProjectName = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectName")), reader.GetString(reader.GetOrdinal("ProjectName")), String.Empty),
+        '                                                                  .Estimator = New EstimatorModel With {
+        '                                                                      .EstimatorID = reader.GetInt32(reader.GetOrdinal("EstimatorID")),
+        '                                                                      .EstimatorName = If(Not reader.IsDBNull(reader.GetOrdinal("Estimator")), reader.GetString(reader.GetOrdinal("Estimator")), String.Empty)
+        '                                                                  },
+        '                                                                  .Address = If(Not reader.IsDBNull(reader.GetOrdinal("Address")), reader.GetString(reader.GetOrdinal("Address")), String.Empty),
+        '                                                                  .City = If(Not reader.IsDBNull(reader.GetOrdinal("City")), reader.GetString(reader.GetOrdinal("City")), String.Empty),
+        '                                                                  .State = If(Not reader.IsDBNull(reader.GetOrdinal("State")), reader.GetString(reader.GetOrdinal("State")), String.Empty),
+        '                                                                  .Zip = If(Not reader.IsDBNull(reader.GetOrdinal("Zip")), reader.GetString(reader.GetOrdinal("Zip")), String.Empty),
+        '                                                                  .BidDate = If(Not reader.IsDBNull(reader.GetOrdinal("BidDate")), reader.GetDateTime(reader.GetOrdinal("BidDate")), Nothing),
+        '                                                                  .ArchPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("ArchPlansDated")), reader.GetDateTime(reader.GetOrdinal("ArchPlansDated")), Nothing),
+        '                                                                  .EngPlansDated = If(Not reader.IsDBNull(reader.GetOrdinal("EngPlansDated")), reader.GetDateTime(reader.GetOrdinal("EngPlansDated")), Nothing),
+        '                                                                  .MilesToJobSite = If(Not reader.IsDBNull(reader.GetOrdinal("MilesToJobSite")), reader.GetInt32(reader.GetOrdinal("MilesToJobSite")), 0),
+        '                                                                  .TotalNetSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalNetSqft")), reader.GetInt32(reader.GetOrdinal("TotalNetSqft")), Nothing),
+        '                                                                  .TotalGrossSqft = If(Not reader.IsDBNull(reader.GetOrdinal("TotalGrossSqft")), reader.GetInt32(reader.GetOrdinal("TotalGrossSqft")), 0),
+        '                                                                  .ArchitectID = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectID")), reader.GetInt32(reader.GetOrdinal("ArchitectID")), Nothing),
+        '                                                                  .EngineerID = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerID")), reader.GetInt32(reader.GetOrdinal("EngineerID")), Nothing),
+        '                                                                  .ProjectNotes = If(Not reader.IsDBNull(reader.GetOrdinal("ProjectNotes")), reader.GetString(reader.GetOrdinal("ProjectNotes")), String.Empty),
+        '                                                                  .LastModifiedDate = If(Not reader.IsDBNull(reader.GetOrdinal("LastModifiedDate")), reader.GetDateTime(reader.GetOrdinal("LastModifiedDate")), Nothing),
+        '                                                                  .CreatedDate = If(Not reader.IsDBNull(reader.GetOrdinal("createddate")), reader.GetDateTime(reader.GetOrdinal("createddate")), Nothing),
+        '                                                                  .ArchitectName = If(Not reader.IsDBNull(reader.GetOrdinal("ArchitectName")), reader.GetString(reader.GetOrdinal("ArchitectName")), String.Empty),
+        '                                                                  .EngineerName = If(Not reader.IsDBNull(reader.GetOrdinal("EngineerName")), reader.GetString(reader.GetOrdinal("EngineerName")), String.Empty)
+        '                                                              }
+        '                                                                       Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(proj.ProjectID)
+        '                                                                       If versions.Any() Then
+        '                                                                           Dim latestVersionID As Integer = versions.First().VersionID
+        '                                                                           proj.Buildings = GetBuildingsByVersionID(latestVersionID)
+        '                                                                           proj.Settings = GetProjectProductSettings(latestVersionID)
+        '                                                                       End If
+        '                                                                   End If
+        '                                                               End Using
+        '                                                           End Sub, "Error loading project by ID " & projectID)
+        '    Return proj
+        'End Function
         ' Added: GetBuildingsByVersionID (use VersionID)
         Public Shared Function GetBuildingsByVersionID(versionID As Integer) As List(Of BuildingModel)
             Dim buildings As New List(Of BuildingModel)
@@ -181,191 +277,30 @@ Namespace DataAccess
                                                                    End Sub, "Error loading buildings for version " & versionID)
             Return buildings
         End Function
-        ' Updated: ImportRawUnits (use VersionID)
-        ' Updated: ImportRawUnits (use VersionID)
-        Public Sub ImportRawUnits(versionID As Integer, csvPath As String, productTypeID As Integer)
-            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Using parser As New Microsoft.VisualBasic.FileIO.TextFieldParser(csvPath)
-                                                                           parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited
-                                                                           parser.Delimiters = New String() {","}
-                                                                           parser.HasFieldsEnclosedInQuotes = True
-                                                                           parser.TrimWhiteSpace = True
-                                                                           If Not parser.EndOfData Then
-                                                                               Dim headers As String() = parser.ReadFields()
-                                                                               Dim skippedHeaders As New HashSet(Of String) From {"JOBNUMBER", "PROJECT", "CUSTOMER", "JOBNAME", "STRUCTURENAME", "PLAN"}
-                                                                               While Not parser.EndOfData
-                                                                                   Dim fields As String() = parser.ReadFields()
-                                                                                   If fields.Length <> headers.Length Then Continue While
-                                                                                   Dim rawUnit As New RawUnitModel With {
-                        .VersionID = versionID,
-                        .ProductTypeID = productTypeID
-                    }
-                                                                                   Dim elevation As String = String.Empty
-                                                                                   Dim productStr As String = String.Empty
-                                                                                   For i As Integer = 0 To headers.Length - 1
-                                                                                       Dim header As String = headers(i).Trim().ToUpper()
-                                                                                       Dim valueStr As String = fields(i).Trim()
-                                                                                       If skippedHeaders.Contains(header) Then Continue For
-                                                                                       If header = "ELEVATION" Then
-                                                                                           elevation = valueStr
-                                                                                       ElseIf header = "PRODUCT" Then
-                                                                                           productStr = valueStr
-                                                                                           If String.Equals(productStr, "Floor", StringComparison.OrdinalIgnoreCase) Then rawUnit.ProductTypeID = 1
-                                                                                           If String.Equals(productStr, "Roof", StringComparison.OrdinalIgnoreCase) Then rawUnit.ProductTypeID = 2
-                                                                                       Else
-                                                                                           Dim tempVal As Decimal
-                                                                                           If Decimal.TryParse(valueStr, tempVal) Then
-                                                                                               Dim val As Decimal? = tempVal
-                                                                                               Select Case header
-                                                                                                   Case "BF" : rawUnit.BF = val
-                                                                                                   Case "LF" : rawUnit.LF = val
-                                                                                                   Case "EWPLF" : rawUnit.EWPLF = val
-                                                                                                   Case "SQFT" : rawUnit.SqFt = val
-                                                                                                   Case "FCAREA" : rawUnit.FCArea = val
-                                                                                                   Case "LUMBERCOST" : rawUnit.LumberCost = val
-                                                                                                   Case "PLATECOST" : rawUnit.PlateCost = val
-                                                                                                   Case "MANUFLABORCOST" : rawUnit.ManufLaborCost = val
-                                                                                                   Case "DESIGNLABOR" : rawUnit.DesignLabor = val
-                                                                                                   Case "MGMTLABOR" : rawUnit.MGMTLabor = val
-                                                                                                   Case "JOBSUPPLIESCOST" : rawUnit.JobSuppliesCost = val
-                                                                                                   Case "MANHOURS" : rawUnit.ManHours = val
-                                                                                                   Case "ITEMCOST" : rawUnit.ItemCost = val
-                                                                                                   Case "OVERALLCOST" : rawUnit.OverallCost = val
-                                                                                                   Case "DELIVERYCOST" : rawUnit.DeliveryCost = val
-                                                                                                   Case "TOTALSELLPRICE" : rawUnit.TotalSellPrice = val
-                                                                                                   Case "AVGSPFNO2" : rawUnit.AvgSPFNo2 = val
-                                                                                                   Case "SPFNO2BDFT" : rawUnit.SPFNo2BDFT = val
-                                                                                                   Case "AVG2X4-1800" : rawUnit.Avg241800 = val
-                                                                                                   Case "2X4-1800BDFT" : rawUnit.MSR241800BDFT = val
-                                                                                                   Case "AVG2X4-2400" : rawUnit.Avg242400 = val
-                                                                                                   Case "2X4-2400BDFT" : rawUnit.MSR242400BDFT = val
-                                                                                                   Case "AVG2X6-1800" : rawUnit.Avg261800 = val
-                                                                                                   Case "2X6-1800BDFT" : rawUnit.MSR261800BDFT = val
-                                                                                                   Case "AVG2X6-2400" : rawUnit.Avg262400 = val
-                                                                                                   Case "2X6-2400BDFT" : rawUnit.MSR262400BDFT = val
-                                                                                               End Select
-                                                                                           End If
-                                                                                       End If
-                                                                                   Next
-                                                                                   If Not String.IsNullOrEmpty(elevation) Then
-                                                                                       rawUnit.RawUnitName = If(Not String.IsNullOrEmpty(productStr), elevation & " " & productStr, elevation)
-                                                                                   End If
-                                                                                   Dim insertParams As New Dictionary(Of String, Object) From {
-                        {"@RawUnitName", If(String.IsNullOrEmpty(rawUnit.RawUnitName), DBNull.Value, CType(rawUnit.RawUnitName, Object))},
-                        {"@VersionID", rawUnit.VersionID},
-                        {"@ProductTypeID", rawUnit.ProductTypeID},
-                        {"@BF", If(rawUnit.BF.HasValue, CType(rawUnit.BF.Value, Object), DBNull.Value)},
-                        {"@LF", If(rawUnit.LF.HasValue, CType(rawUnit.LF.Value, Object), DBNull.Value)},
-                        {"@EWPLF", If(rawUnit.EWPLF.HasValue, CType(rawUnit.EWPLF.Value, Object), DBNull.Value)},
-                        {"@SqFt", If(rawUnit.SqFt.HasValue, CType(rawUnit.SqFt.Value, Object), DBNull.Value)},
-                        {"@FCArea", If(rawUnit.FCArea.HasValue, CType(rawUnit.FCArea.Value, Object), DBNull.Value)},
-                        {"@LumberCost", If(rawUnit.LumberCost.HasValue, CType(rawUnit.LumberCost.Value, Object), DBNull.Value)},
-                        {"@PlateCost", If(rawUnit.PlateCost.HasValue, CType(rawUnit.PlateCost.Value, Object), DBNull.Value)},
-                        {"@ManufLaborCost", If(rawUnit.ManufLaborCost.HasValue, CType(rawUnit.ManufLaborCost.Value, Object), DBNull.Value)},
-                        {"@DesignLabor", If(rawUnit.DesignLabor.HasValue, CType(rawUnit.DesignLabor.Value, Object), DBNull.Value)},
-                        {"@MGMTLabor", If(rawUnit.MGMTLabor.HasValue, CType(rawUnit.MGMTLabor.Value, Object), DBNull.Value)},
-                        {"@JobSuppliesCost", If(rawUnit.JobSuppliesCost.HasValue, CType(rawUnit.JobSuppliesCost.Value, Object), DBNull.Value)},
-                        {"@ManHours", If(rawUnit.ManHours.HasValue, CType(rawUnit.ManHours.Value, Object), DBNull.Value)},
-                        {"@ItemCost", If(rawUnit.ItemCost.HasValue, CType(rawUnit.ItemCost.Value, Object), DBNull.Value)},
-                        {"@OverallCost", If(rawUnit.OverallCost.HasValue, CType(rawUnit.OverallCost.Value, Object), DBNull.Value)},
-                        {"@DeliveryCost", If(rawUnit.DeliveryCost.HasValue, CType(rawUnit.DeliveryCost.Value, Object), DBNull.Value)},
-                        {"@TotalSellPrice", If(rawUnit.TotalSellPrice.HasValue, CType(rawUnit.TotalSellPrice.Value, Object), DBNull.Value)},
-                        {"@AvgSPFNo2", If(rawUnit.AvgSPFNo2.HasValue, CType(rawUnit.AvgSPFNo2.Value, Object), DBNull.Value)},
-                        {"@SPFNo2BDFT", If(rawUnit.SPFNo2BDFT.HasValue, CType(rawUnit.SPFNo2BDFT.Value, Object), DBNull.Value)},
-                        {"@Avg241800", If(rawUnit.Avg241800.HasValue, CType(rawUnit.Avg241800.Value, Object), DBNull.Value)},
-                        {"@MSR241800BDFT", If(rawUnit.MSR241800BDFT.HasValue, CType(rawUnit.MSR241800BDFT.Value, Object), DBNull.Value)},
-                        {"@Avg242400", If(rawUnit.Avg242400.HasValue, CType(rawUnit.Avg242400.Value, Object), DBNull.Value)},
-                        {"@MSR242400BDFT", If(rawUnit.MSR242400BDFT.HasValue, CType(rawUnit.MSR242400BDFT.Value, Object), DBNull.Value)},
-                        {"@Avg261800", If(rawUnit.Avg261800.HasValue, CType(rawUnit.Avg261800.Value, Object), DBNull.Value)},
-                        {"@MSR261800BDFT", If(rawUnit.MSR261800BDFT.HasValue, CType(rawUnit.MSR261800BDFT.Value, Object), DBNull.Value)},
-                        {"@Avg262400", If(rawUnit.Avg262400.HasValue, CType(rawUnit.Avg262400.Value, Object), DBNull.Value)},
-                        {"@MSR262400BDFT", If(rawUnit.MSR262400BDFT.HasValue, CType(rawUnit.MSR262400BDFT.Value, Object), DBNull.Value)}
-                    }
-                                                                                   Dim rawIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertRawUnit, HelperDataAccess.BuildParameters(insertParams))
-                                                                                   If rawIDObj Is DBNull.Value OrElse rawIDObj Is Nothing Then
-                                                                                       Throw New Exception("Failed to insert RawUnit for " & rawUnit.RawUnitName)
-                                                                                   End If
-                                                                                   rawUnit.RawUnitID = CInt(rawIDObj)
-                                                                               End While
-                                                                           End If
-                                                                       End Using
-                                                                   End Sub, "RawUnits import failed for version " & versionID)
-        End Sub
-        ' Add to DataAccess.vb
+
         Public Function InsertRawUnit(model As RawUnitModel) As Integer
             Dim newRawUnitID As Integer
+
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Dim params As New Dictionary(Of String, Object) From {
-            {"@RawUnitName", model.RawUnitName},
-            {"@VersionID", model.VersionID},
-            {"@ProductTypeID", model.ProductTypeID},
-            {"@BF", If(model.BF.HasValue, CType(model.BF.Value, Object), DBNull.Value)},
-            {"@LF", If(model.LF.HasValue, CType(model.LF.Value, Object), DBNull.Value)},
-            {"@EWPLF", If(model.EWPLF.HasValue, CType(model.EWPLF.Value, Object), DBNull.Value)},
-            {"@SqFt", If(model.SqFt.HasValue, CType(model.SqFt.Value, Object), DBNull.Value)},
-            {"@FCArea", If(model.FCArea.HasValue, CType(model.FCArea.Value, Object), DBNull.Value)},
-            {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-            {"@PlateCost", If(model.PlateCost.HasValue, CType(model.PlateCost.Value, Object), DBNull.Value)},
-            {"@ManufLaborCost", If(model.ManufLaborCost.HasValue, CType(model.ManufLaborCost.Value, Object), DBNull.Value)},
-            {"@DesignLabor", If(model.DesignLabor.HasValue, CType(model.DesignLabor.Value, Object), DBNull.Value)},
-            {"@MGMTLabor", If(model.MGMTLabor.HasValue, CType(model.MGMTLabor.Value, Object), DBNull.Value)},
-            {"@JobSuppliesCost", If(model.JobSuppliesCost.HasValue, CType(model.JobSuppliesCost.Value, Object), DBNull.Value)},
-            {"@ManHours", If(model.ManHours.HasValue, CType(model.ManHours.Value, Object), DBNull.Value)},
-            {"@ItemCost", If(model.ItemCost.HasValue, CType(model.ItemCost.Value, Object), DBNull.Value)},
-            {"@OverallCost", If(model.OverallCost.HasValue, CType(model.OverallCost.Value, Object), DBNull.Value)},
-            {"@DeliveryCost", If(model.DeliveryCost.HasValue, CType(model.DeliveryCost.Value, Object), DBNull.Value)},
-            {"@TotalSellPrice", If(model.TotalSellPrice.HasValue, CType(model.TotalSellPrice.Value, Object), DBNull.Value)},
-            {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-            {"@SPFNo2BDFT", If(model.SPFNo2BDFT.HasValue, CType(model.SPFNo2BDFT.Value, Object), DBNull.Value)},
-            {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-            {"@MSR241800BDFT", If(model.MSR241800BDFT.HasValue, CType(model.MSR241800BDFT.Value, Object), DBNull.Value)},
-            {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-            {"@MSR242400BDFT", If(model.MSR242400BDFT.HasValue, CType(model.MSR242400BDFT.Value, Object), DBNull.Value)},
-            {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-            {"@MSR261800BDFT", If(model.MSR261800BDFT.HasValue, CType(model.MSR261800BDFT.Value, Object), DBNull.Value)},
-            {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)},
-            {"@MSR262400BDFT", If(model.MSR262400BDFT.HasValue, CType(model.MSR262400BDFT.Value, Object), DBNull.Value)}
-        }
-                                                                       newRawUnitID = SqlConnectionManager.Instance.ExecuteScalar(Of Integer)(Queries.InsertRawUnit, HelperDataAccess.BuildParameters(params))
+                                                                       Dim paramsDict As Dictionary(Of String, Object) = ModelParams.ForRawUnit(model, model.VersionID)
+                                                                       newRawUnitID = SqlConnectionManager.Instance.ExecuteScalar(Of Integer)(Queries.InsertRawUnit, HelperDataAccess.BuildParameters(paramsDict))
                                                                    End Sub, "Error inserting RawUnit " & model.RawUnitName)
+
             Return newRawUnitID
         End Function
 
         Public Sub UpdateRawUnit(model As RawUnitModel)
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Dim params As New Dictionary(Of String, Object) From {
-            {"@RawUnitID", model.RawUnitID},
-            {"@RawUnitName", model.RawUnitName},
-            {"@BF", If(model.BF.HasValue, CType(model.BF.Value, Object), DBNull.Value)},
-            {"@LF", If(model.LF.HasValue, CType(model.LF.Value, Object), DBNull.Value)},
-            {"@EWPLF", If(model.EWPLF.HasValue, CType(model.EWPLF.Value, Object), DBNull.Value)},
-            {"@SqFt", If(model.SqFt.HasValue, CType(model.SqFt.Value, Object), DBNull.Value)},
-            {"@FCArea", If(model.FCArea.HasValue, CType(model.FCArea.Value, Object), DBNull.Value)},
-            {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-            {"@PlateCost", If(model.PlateCost.HasValue, CType(model.PlateCost.Value, Object), DBNull.Value)},
-            {"@ManufLaborCost", If(model.ManufLaborCost.HasValue, CType(model.ManufLaborCost.Value, Object), DBNull.Value)},
-            {"@DesignLabor", If(model.DesignLabor.HasValue, CType(model.DesignLabor.Value, Object), DBNull.Value)},
-            {"@MGMTLabor", If(model.MGMTLabor.HasValue, CType(model.MGMTLabor.Value, Object), DBNull.Value)},
-            {"@JobSuppliesCost", If(model.JobSuppliesCost.HasValue, CType(model.JobSuppliesCost.Value, Object), DBNull.Value)},
-            {"@ManHours", If(model.ManHours.HasValue, CType(model.ManHours.Value, Object), DBNull.Value)},
-            {"@ItemCost", If(model.ItemCost.HasValue, CType(model.ItemCost.Value, Object), DBNull.Value)},
-            {"@OverallCost", If(model.OverallCost.HasValue, CType(model.OverallCost.Value, Object), DBNull.Value)},
-            {"@DeliveryCost", If(model.DeliveryCost.HasValue, CType(model.DeliveryCost.Value, Object), DBNull.Value)},
-            {"@TotalSellPrice", If(model.TotalSellPrice.HasValue, CType(model.TotalSellPrice.Value, Object), DBNull.Value)},
-            {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-            {"@SPFNo2BDFT", If(model.SPFNo2BDFT.HasValue, CType(model.SPFNo2BDFT.Value, Object), DBNull.Value)},
-            {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-            {"@MSR241800BDFT", If(model.MSR241800BDFT.HasValue, CType(model.MSR241800BDFT.Value, Object), DBNull.Value)},
-            {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-            {"@MSR242400BDFT", If(model.MSR242400BDFT.HasValue, CType(model.MSR242400BDFT.Value, Object), DBNull.Value)},
-            {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-            {"@MSR261800BDFT", If(model.MSR261800BDFT.HasValue, CType(model.MSR261800BDFT.Value, Object), DBNull.Value)},
-            {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)},
-            {"@MSR262400BDFT", If(model.MSR262400BDFT.HasValue, CType(model.MSR262400BDFT.Value, Object), DBNull.Value)}
-        }
-                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateRawUnit, HelperDataAccess.BuildParameters(params))
+                                                                       Dim paramsDict As Dictionary(Of String, Object) = ModelParams.ForRawUnit(model, model.VersionID) ' VersionID is ignored by UPDATE but harmless
+                                                                       paramsDict.Remove("@VersionID")   ' clean – not required for UPDATE
+                                                                       paramsDict.Remove("@ProductTypeID") ' clean – not required for UPDATE
+                                                                       paramsDict.Add("@RawUnitID", model.RawUnitID)
+
+                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateRawUnit, HelperDataAccess.BuildParameters(paramsDict))
                                                                    End Sub, "Error updating RawUnit " & model.RawUnitName)
         End Sub
+
+
 
         ' GetLevelsByBuildingID (unchanged, uses BuildingID)
         Public Shared Function GetLevelsByBuildingID(buildingID As Integer) As List(Of LevelModel)
@@ -539,26 +474,6 @@ Namespace DataAccess
                                                                        End Using
                                                                    End Sub, "Error loading project types")
             Return types
-        End Function
-
-        ' SaveProjectType (unchanged)
-        Public Function SaveProjectType(projectType As ProjectTypeModel) As Integer
-            Dim paramsDict As New Dictionary(Of String, Object) From {
-                {"@ProjectTypeName", If(String.IsNullOrEmpty(projectType.ProjectTypeName), DBNull.Value, CType(projectType.ProjectTypeName, Object))},
-                {"@Description", If(String.IsNullOrEmpty(projectType.Description), DBNull.Value, CType(projectType.Description, Object))}
-            }
-
-            Dim result As Integer = 0
-            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       If projectType.ProjectTypeID = 0 Then
-                                                                           result = CInt(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertProjectType, HelperDataAccess.BuildParameters(paramsDict)))
-                                                                       Else
-                                                                           paramsDict.Add("@ProjectTypeID", projectType.ProjectTypeID)
-                                                                           SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateProjectType, HelperDataAccess.BuildParameters(paramsDict))
-                                                                           result = projectType.ProjectTypeID
-                                                                       End If
-                                                                   End Sub, "Error saving project type")
-            Return result
         End Function
 
 

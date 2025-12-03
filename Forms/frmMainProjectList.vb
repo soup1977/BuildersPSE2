@@ -1,7 +1,7 @@
 ﻿Option Strict On
 Imports BuildersPSE2.BuildersPSE.Models
 Imports BuildersPSE2.DataAccess
-Imports System.Data
+Imports BuildersPSE2.Utilities
 
 Public Class frmMainProjectList
     Private da As New ProjectDataAccess() ' DAL instance - servant-simple dependency
@@ -12,18 +12,12 @@ Public Class frmMainProjectList
     Private Sub FrmMainProjectList_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Me.SuspendLayout()
         LoadProjects()
-        UpdateStatus("Project list loaded")
+        StatusLogger.Add("Project list loaded")
         Me.ResumeLayout()
     End Sub
 
-    Private Sub UpdateStatus(message As String)
-        Dim mdiParent As frmMain = TryCast(Me.MdiParent, frmMain)
-        If mdiParent IsNot Nothing Then
-            mdiParent.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
-        End If
-    End Sub
 
-    Private Sub LoadProjects()
+    Public Sub LoadProjects()
         Try
             ' Fetch projects and versions, taking the latest version (first in sorted list)
             projects = da.GetProjects(includeDetails:=False)
@@ -68,9 +62,9 @@ Public Class frmMainProjectList
             dvProjects = New DataView(dtProjects)
             DataGridViewProjects.DataSource = dvProjects
             ConfigureGridColumns()
-            UpdateStatus($"Loaded {dtProjects.Rows.Count} projects")
+            StatusLogger.Add($"Loaded {dtProjects.Rows.Count} projects")
         Catch ex As Exception
-            UpdateStatus($"Error loading projects: {ex.Message}")
+            StatusLogger.Add($"Error loading projects: {ex.Message}")
             MessageBox.Show("Error loading projects: " & ex.Message, "Truss Alert", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -97,13 +91,13 @@ Public Class frmMainProjectList
                 Dim latestVersionID As Integer = CInt(DataGridViewProjects.CurrentRow.Cells("VersionID").Value)
                 Dim selectedProj As ProjectModel = da.GetProjectByID(projectID)
                 AddFormToTabControl(GetType(frmCreateEditProject), $"EditProject_{projectID}", New Object() {selectedProj, latestVersionID})
-                UpdateStatus($"Opened edit project form for ProjectID {projectID}")
+                StatusLogger.Add($"Opened edit project form for ProjectID {projectID}")
             Else
-                UpdateStatus("No project selected for editing")
+                StatusLogger.Add("No project selected for editing")
                 MessageBox.Show("Select a project row to edit.", "Truss Tip", MessageBoxButtons.OK, MessageBoxIcon.Information)
             End If
         Catch ex As Exception
-            UpdateStatus($"Error opening edit project form: {ex.Message}")
+            StatusLogger.Add($"Error opening edit project form: {ex.Message}")
             MessageBox.Show($"Error opening edit project form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub

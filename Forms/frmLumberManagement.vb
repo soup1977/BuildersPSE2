@@ -1,6 +1,6 @@
 ﻿Imports System.Windows.Forms
 Imports BuildersPSE2.DataAccess
-
+Imports BuildersPSE2.Utilities
 Imports System.Data
 
 Public Class frmLumberManagement
@@ -99,18 +99,6 @@ Public Class frmLumberManagement
             MessageBox.Show("Error loading lumber costs: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-    Private Sub UpdateStatus(message As String)
-        Try
-            Dim parentForm As frmMain = TryCast(Me.ParentForm, frmMain)
-            If parentForm IsNot Nothing AndAlso parentForm.StatusLabel IsNot Nothing Then
-                parentForm.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
-            Else
-                Debug.WriteLine($"Status update skipped: Parent form or StatusLabel is null. Message: {message}")
-            End If
-        Catch ex As Exception
-            Debug.WriteLine($"Error updating status: {ex.Message}")
-        End Try
-    End Sub
     Private Sub lstCostEffective_SelectedIndexChanged(sender As Object, e As EventArgs) Handles lstCostEffective.SelectedIndexChanged
         If lstCostEffective.SelectedValue IsNot Nothing AndAlso lstCostEffective.SelectedValue IsNot DBNull.Value Then
             Dim costEffectiveDateID As Integer
@@ -189,9 +177,9 @@ Public Class frmLumberManagement
                 Throw New Exception("Tab tag not found.")
             End If
             RemoveTabFromTabControl(tagValue)
-            UpdateStatus($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
+            StatusLogger.Add($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
         Catch ex As Exception
-            UpdateStatus($"Error closing tab: {ex.Message} at {DateTime.Now:HH:mm:ss}")
+            StatusLogger.Add($"Error closing tab: {ex.Message} at {DateTime.Now:HH:mm:ss}")
             MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub

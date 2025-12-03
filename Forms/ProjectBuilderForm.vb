@@ -5,7 +5,6 @@
 ' Minimal changes: Only adding this new form class; no modifications to existing code.
 
 Imports BuildersPSE2.BuildersPSE.Models
-Imports BuildersPSE2.BuildersPSE.Utilities
 Imports BuildersPSE2.DataAccess
 
 Public Class ProjectBuilderForm

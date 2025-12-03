@@ -1,11 +1,9 @@
 ﻿Option Strict On
-Imports System.Windows.Forms
 Imports BuildersPSE2.DataAccess
 Imports BuildersPSE2.BuildersPSE.Models
 Imports Microsoft.Reporting.WinForms
-Imports System.IO
+Imports BuildersPSE2.Utilities
 Imports System.Data.SqlClient
-Imports BuildersPSE2.BuildersPSE.Utilities
 
 Public Class frmCreateEditProject
     Private ReadOnly da As New ProjectDataAccess()
@@ -70,7 +68,7 @@ Public Class frmCreateEditProject
             cmbLevelType.DisplayMember = "ProductTypeName"
             cmbLevelType.ValueMember = "ProductTypeID"
         Catch ex As Exception
-            UpdateStatus($"Error initializing combo boxes: {ex.Message}")
+            StatusLogger.Add($"Error initializing combo boxes: {ex.Message}")
             MessageBox.Show($"Error initializing combo boxes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -89,7 +87,7 @@ Public Class frmCreateEditProject
                 InitializeProjectSettings()
             End If
         Catch ex As Exception
-            UpdateStatus($"Error initializing project: {ex.Message}")
+            StatusLogger.Add($"Error initializing project: {ex.Message}")
             MessageBox.Show($"Error initializing project: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -116,19 +114,8 @@ Public Class frmCreateEditProject
         End If
     End Sub
 
-    ' Updates the status label with a timestamped message.
-    Private Sub UpdateStatus(message As String)
-        Try
-            Dim parentForm As frmMain = TryCast(Me.ParentForm, frmMain)
-            If parentForm IsNot Nothing AndAlso parentForm.StatusLabel IsNot Nothing Then
-                parentForm.StatusLabel.Text = $"{message} at {DateTime.Now:HH:mm:ss}"
-            Else
-                Debug.WriteLine($"Status update skipped: Parent form or StatusLabel is null. Message: {message}")
-            End If
-        Catch ex As Exception
-            Debug.WriteLine($"Error updating status: {ex.Message}")
-        End Try
-    End Sub
+
+
 
     ' Initializes the tab control based on project state.
     Private Sub InitializeTabControl()
@@ -141,9 +128,9 @@ Public Class frmCreateEditProject
                 tabControlRight.TabPages.Add(tabBuildingInfo)
                 tabControlRight.TabPages.Add(tabLevelInfo)
             End If
-            UpdateStatus($"Initialized {tabControlRight.TabPages.Count} tab(s) for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
+            StatusLogger.Add($"Initialized {tabControlRight.TabPages.Count} tab(s) for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
         Catch ex As Exception
-            UpdateStatus($"Error initializing tab control: {ex.Message}")
+            StatusLogger.Add($"Error initializing tab control: {ex.Message}")
             MessageBox.Show($"Error initializing tab control: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -160,7 +147,7 @@ Public Class frmCreateEditProject
 
         Catch ex As Exception
             isChangingVersion = False
-            UpdateStatus("Status: Error loading versions: " & ex.Message)
+            StatusLogger.Add("Status: Error loading versions: " & ex.Message)
             MessageBox.Show("Error loading versions: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -168,7 +155,7 @@ Public Class frmCreateEditProject
     ' Clears the version combo box and project tree for new projects.
     Private Sub ClearVersionComboAndTree()
         cboVersion.DataSource = New List(Of ProjectVersionModel)()
-        UpdateStatus("Status: Save the project to create a version.")
+        StatusLogger.Add("Status: Save the project to create a version.")
         tvProjectTree.Nodes.Clear()
         tvProjectTree.Nodes.Add(New TreeNode(currentProject.ProjectName & "-No Version") With {.Tag = currentProject})
     End Sub
@@ -187,7 +174,7 @@ Public Class frmCreateEditProject
             currentVersionID = CInt(cboVersion.SelectedValue)
         Else
             currentVersionID = 0
-            UpdateStatus("Status: No versions found. Save the project to create a base version.")
+            StatusLogger.Add("Status: No versions found. Save the project to create a base version.")
         End If
         isChangingVersion = False
     End Sub
@@ -208,9 +195,9 @@ Public Class frmCreateEditProject
             LoadProjectInfo(currentProject)
             LoadVersionSpecificData()
             LoadRollupForSelectedNode()
-            UpdateStatus($"Loaded data for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
+            StatusLogger.Add($"Loaded data for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
         Catch ex As Exception
-            UpdateStatus($"Error loading project data: {ex.Message}")
+            StatusLogger.Add($"Error loading project data: {ex.Message}")
             MessageBox.Show($"Error loading project data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -226,7 +213,7 @@ Public Class frmCreateEditProject
 
     Private Sub LoadVersionSpecificData()
         Try
-            UpdateStatus("Loading version...")
+            StatusLogger.Add("Loading version...")
             LoadProjectSettingsAndOverrides()
             LoadProjectBuildings()
             RefreshProjectTree()
@@ -236,10 +223,10 @@ Public Class frmCreateEditProject
             LoadLumberHistory()
             LoadProjectRollup()
             Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
-            UpdateStatus($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
+            StatusLogger.Add($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
             LoadFuturesIntoListBox(currentVersionID)
         Catch ex As Exception
-            UpdateStatus($"Error loading version-specific data: {ex.Message}")
+            StatusLogger.Add($"Error loading version-specific data: {ex.Message}")
             MessageBox.Show("Error loading version-specific data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -281,6 +268,7 @@ Public Class frmCreateEditProject
             cboCustomer.SelectedValue = If(selectedVersion.CustomerID, 0)
             cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
             cboVersion.SelectedValue = currentVersionID
+            txtMondayItemId.Text = selectedVersion.MondayID
         End If
     End Sub
 
@@ -346,7 +334,7 @@ Public Class frmCreateEditProject
         Try
             PopulateProjectInfoControls(proj)
         Catch ex As Exception
-            UpdateStatus($"Error loading project info: {ex.Message}")
+            StatusLogger.Add($"Error loading project info: {ex.Message}")
             MessageBox.Show($"Error loading project info: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -379,7 +367,7 @@ Public Class frmCreateEditProject
             BindOverridesGrid(settings)
             ConfigureOverridesGridColumns()
         Catch ex As Exception
-            UpdateStatus($"Error loading overrides: {ex.Message}")
+            StatusLogger.Add($"Error loading overrides: {ex.Message}")
             MessageBox.Show($"Error loading overrides: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -436,7 +424,7 @@ Public Class frmCreateEditProject
             End Select
             dgvRollup.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         Catch ex As Exception
-            UpdateStatus($"Error loading rollup: {ex.Message}")
+            StatusLogger.Add($"Error loading rollup: {ex.Message}")
             MessageBox.Show($"Error loading rollup: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -494,14 +482,47 @@ Public Class frmCreateEditProject
     ' Loads rollup data for a building.
     Private Sub LoadBuildingRollupData(item As Object)
         Dim bldg As BuildingModel = CType(item, BuildingModel)
-        dgvRollup.Rows.Add("Floor Cost Per Bldg", CDec(If(bldg.FloorCostPerBldg, 0D)).ToString("C2"))
-        dgvRollup.Rows.Add("Roof Cost Per Bldg", CDec(If(bldg.RoofCostPerBldg, 0D)).ToString("C2"))
-        dgvRollup.Rows.Add("Wall Cost Per Bldg", CDec(If(bldg.WallCostPerBldg, 0D)).ToString("C2"))
-        dgvRollup.Rows.Add("Extended Floor Cost", CDec(If(bldg.ExtendedFloorCost, 0D)).ToString("C2"))
-        dgvRollup.Rows.Add("Extended Roof Cost", CDec(If(bldg.ExtendedRoofCost, 0D)).ToString("C2"))
-        dgvRollup.Rows.Add("Extended Wall Cost", CDec(If(bldg.ExtendedWallCost, 0D)).ToString("C2"))
-        dgvRollup.Rows.Add("Overall Price", CDec(If(bldg.OverallPrice, 0D)).ToString("C2"))
-        dgvRollup.Rows.Add("Overall Cost", CDec(If(bldg.OverallCost, 0D)).ToString("C2"))
+
+        If bldg.Levels Is Nothing OrElse bldg.Levels.Count = 0 Then
+            dgvRollup.Rows.Add("Status", "No levels defined yet. Add levels and assign units for rollup data.")
+            Return
+        End If
+
+        ' Bottom-up from levels – identical to project logic
+        Dim perBldgSqft As Decimal = bldg.Levels.Sum(Function(l) If(l.OverallSQFT, 0D))
+        Dim perBldgBdft As Decimal = bldg.Levels.Sum(Function(l) If(l.OverallBDFT, 0D))
+        Dim perBldgCost As Decimal = bldg.Levels.Sum(Function(l) If(l.OverallCost, 0D))
+        Dim perBldgDelivery As Decimal = bldg.Levels.Sum(Function(l) If(l.DeliveryCost, 0D))
+        Dim perBldgSell As Decimal = bldg.Levels.Sum(Function(l) If(l.OverallPrice, 0D))
+
+        Dim extendedSqft As Decimal = perBldgSqft * bldg.BldgQty
+        Dim extendedBdft As Decimal = perBldgBdft * bldg.BldgQty
+        Dim extendedCost As Decimal = perBldgCost * bldg.BldgQty
+        Dim extendedDelivery As Decimal = perBldgDelivery * bldg.BldgQty
+        Dim extendedSell As Decimal = perBldgSell * bldg.BldgQty
+
+        If perBldgSqft > 0 OrElse perBldgBdft > 0 OrElse perBldgCost > 0 OrElse perBldgSell > 0 Then
+            dgvRollup.Rows.Add("Ext. Overall Sell", extendedSell.ToString("C2"))
+            dgvRollup.Rows.Add("Ext. Overall Cost", extendedCost.ToString("C2"))
+            dgvRollup.Rows.Add("Ext. Overall Delivery", extendedDelivery.ToString("C2"))
+            dgvRollup.Rows.Add("Ext. Overall SQFT", extendedSqft.ToString("N2"))
+            dgvRollup.Rows.Add("Ext. Overall BDFT", extendedBdft.ToString("N2"))
+            dgvRollup.Rows.Add("Calculated Gross SQFT (Per Bldg)", perBldgSqft.ToString("N0"))
+
+            Dim margin As Decimal = If(extendedSell - extendedDelivery = 0D, 0D, (extendedSell - extendedDelivery - extendedCost) / (extendedSell - extendedDelivery))
+            dgvRollup.Rows.Add("Margin", margin.ToString("P1"))
+
+            Dim marginWithDelivery As Decimal = If(extendedSell = 0D, 0D, (extendedSell - extendedCost - extendedDelivery) / extendedSell)
+            dgvRollup.Rows.Add("Margin w/ Delivery", marginWithDelivery.ToString("P1"))
+
+            Dim pricePerBDFT As Decimal = If(extendedBdft = 0D, 0D, extendedSell / extendedBdft)
+            dgvRollup.Rows.Add("PricePerBDFT", pricePerBDFT.ToString("C2"))
+
+            Dim pricePerSQFT As Decimal = If(extendedSqft = 0D, 0D, extendedSell / extendedSqft)
+            dgvRollup.Rows.Add("PricePerSQFT", pricePerSQFT.ToString("C2"))
+        Else
+            dgvRollup.Rows.Add("Status", "No rollup data available yet. Assign units to levels for calculations.")
+        End If
     End Sub
 
     ' Loads rollup data for a level.
@@ -530,7 +551,7 @@ Public Class frmCreateEditProject
         Try
             PopulateBuildingInfoControls(bldg)
         Catch ex As Exception
-            UpdateStatus($"Error loading building info: {ex.Message}")
+            StatusLogger.Add($"Error loading building info: {ex.Message}")
             MessageBox.Show($"Error loading building info: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -552,7 +573,7 @@ Public Class frmCreateEditProject
         Try
             PopulateLevelInfoControls(level)
         Catch ex As Exception
-            UpdateStatus($"Error loading level info: {ex.Message}")
+            StatusLogger.Add($"Error loading level info: {ex.Message}")
             MessageBox.Show($"Error loading level info: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -592,14 +613,14 @@ Public Class frmCreateEditProject
     Private Sub OpenCustomerDialog(defaultTypeID As Integer, role As String)
         Try
             Using frm As New FrmCustomerDialog(defaultTypeID:=defaultTypeID)
-                UpdateStatus($"Opened {role} dialog for new {role}")
+                StatusLogger.Add($"Opened {role} dialog for new {role}")
                 If frm.ShowDialog() = DialogResult.OK Then
                     RefreshCustomerComboboxes()
-                    UpdateStatus($"{role} added")
+                    StatusLogger.Add($"{role} added")
                 End If
             End Using
         Catch ex As Exception
-            UpdateStatus($"Error opening {role} dialog: {ex.Message}")
+            StatusLogger.Add($"Error opening {role} dialog: {ex.Message}")
             MessageBox.Show($"Error opening {role} dialog: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -612,22 +633,22 @@ Public Class frmCreateEditProject
                 Dim selectedCustomer As CustomerModel = HelperDataAccess.GetCustomers(customerType:=customerType).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
                 If selectedCustomer IsNot Nothing Then
                     Using frm As New FrmCustomerDialog(selectedCustomer)
-                        UpdateStatus($"Opened {role} dialog for CustomerID {selectedCustomerID}")
+                        StatusLogger.Add($"Opened {role} dialog for CustomerID {selectedCustomerID}")
                         If frm.ShowDialog() = DialogResult.OK Then
                             RefreshCustomerComboboxes()
-                            UpdateStatus($"{role} updated")
+                            StatusLogger.Add($"{role} updated")
                         End If
                     End Using
                 Else
-                    UpdateStatus($"No {role} found for CustomerID {selectedCustomerID}")
+                    StatusLogger.Add($"No {role} found for CustomerID {selectedCustomerID}")
                     MessageBox.Show($"No {role} found for the selected ID.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 End If
             Else
-                UpdateStatus($"No {role} selected for editing")
+                StatusLogger.Add($"No {role} selected for editing")
                 MessageBox.Show($"Select a {role} to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             End If
         Catch ex As Exception
-            UpdateStatus($"Error editing {role}: {ex.Message}")
+            StatusLogger.Add($"Error editing {role}: {ex.Message}")
             MessageBox.Show($"Error editing {role}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -682,7 +703,7 @@ Public Class frmCreateEditProject
             LoadVersions()
             LoadProjectData()
         Catch ex As Exception
-            UpdateStatus($"Error saving project info: {ex.Message}")
+            StatusLogger.Add($"Error saving project info: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -718,7 +739,7 @@ Public Class frmCreateEditProject
         If isNewProject AndAlso currentVersionID = 0 Then
             CreateInitialVersion(customerID, salesID)
         ElseIf currentVersionID > 0 Then
-            ProjVersionDataAccess.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtProjectNotes.Text, customerID, salesID)
+            ProjVersionDataAccess.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtProjectNotes.Text, txtMondayItemId.Text, customerID, salesID)
         End If
     End Sub
 
@@ -745,7 +766,7 @@ Public Class frmCreateEditProject
             LoadOverrides(currentProject.Settings)
             btnRecalcRollup.PerformClick()
         Catch ex As Exception
-            UpdateStatus($"Error saving overrides: {ex.Message}")
+            StatusLogger.Add($"Error saving overrides: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -766,7 +787,7 @@ Public Class frmCreateEditProject
             ProjectDataAccess.SaveBuilding(bldg, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
-            UpdateStatus($"Error saving building info: {ex.Message}")
+            StatusLogger.Add($"Error saving building info: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -784,7 +805,7 @@ Public Class frmCreateEditProject
             ProjectDataAccess.SaveLevel(level, level.BuildingID, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
-            UpdateStatus($"Error saving level info: {ex.Message}")
+            StatusLogger.Add($"Error saving level info: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -801,49 +822,78 @@ Public Class frmCreateEditProject
         Try
             UpdateTabsForSelectedNode()
             RefreshLevelVariance()
-            RefreshRollupSummary()
+            RefreshBuildingVariance()
+
         Catch ex As Exception
-            UpdateStatus($"Error selecting tree node: {ex.Message}")
+            StatusLogger.Add($"Error selecting tree node: {ex.Message}")
             MessageBox.Show("Error selecting tree node: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     ' Updates tabs and data based on the selected tree node.
     Private Sub UpdateTabsForSelectedNode()
-        Dim selected As Object = tvProjectTree.SelectedNode.Tag
+        Dim selected As Object = tvProjectTree.SelectedNode?.Tag
         If selected Is Nothing Then
             tabControlRight.TabPages.Clear()
             Return
         End If
+
+        ' Remember the currently selected tab (by name, not reference – safer)
+        Dim previouslySelectedTabName As String = If(tabControlRight.SelectedTab?.Name, String.Empty)
+
+        ' Clear and rebuild tabs based on selected node type
         tabControlRight.TabPages.Clear()
+
         Select Case True
             Case TypeOf selected Is ProjectModel
                 tabControlRight.TabPages.Add(tabProjectInfo)
                 tabControlRight.TabPages.Add(tabOverrides)
                 tabControlRight.TabPages.Add(tabRollup)
+
                 LoadProjectInfo(CType(selected, ProjectModel))
                 LoadOverrides(currentProject.Settings)
                 LoadRollup(selected)
+
+                ' Prefer Rollup if it was selected before, else default to ProjectInfo
+                tabControlRight.SelectedTab = If(tabControlRight.TabPages.Contains(tabRollup) AndAlso
+                                           previouslySelectedTabName = tabRollup.Name,
+                                           tabRollup, tabProjectInfo)
+
             Case TypeOf selected Is BuildingModel
                 tabControlRight.TabPages.Add(tabBuildingInfo)
                 tabControlRight.TabPages.Add(tabRollup)
+
                 LoadBuildingInfo(CType(selected, BuildingModel))
                 LoadRollup(selected)
-                Me.BeginInvoke(Sub()
-                                   tabControlRight.SelectedTab = tabBuildingInfo
-                                   txtBuildingName.Focus()
-                                   txtBuildingName.SelectAll()
-                               End Sub)
+
+                ' Try to restore previous tab: Rollup if available and was selected
+                If previouslySelectedTabName = tabRollup.Name AndAlso tabControlRight.TabPages.Contains(tabRollup) Then
+                    tabControlRight.SelectedTab = tabRollup
+                Else
+                    tabControlRight.SelectedTab = tabBuildingInfo
+                    Me.BeginInvoke(Sub()
+                                       txtBuildingName.Focus()
+                                       txtBuildingName.SelectAll()
+                                   End Sub)
+                End If
+
             Case TypeOf selected Is LevelModel
                 tabControlRight.TabPages.Add(tabLevelInfo)
                 tabControlRight.TabPages.Add(tabRollup)
+
                 LoadLevelInfo(CType(selected, LevelModel))
                 LoadRollup(selected)
-                Me.BeginInvoke(Sub()
-                                   tabControlRight.SelectedTab = tabLevelInfo
-                                   txtLevelName.Focus()
-                                   txtLevelName.SelectAll()
-                               End Sub)
+
+                ' Try to restore previous tab: Rollup if available and was selected
+                If previouslySelectedTabName = tabRollup.Name AndAlso tabControlRight.TabPages.Contains(tabRollup) Then
+                    tabControlRight.SelectedTab = tabRollup
+                Else
+                    tabControlRight.SelectedTab = tabLevelInfo
+                    Me.BeginInvoke(Sub()
+                                       txtLevelName.Focus()
+                                       txtLevelName.SelectAll()
+                                   End Sub)
+                End If
         End Select
     End Sub
 
@@ -876,7 +926,7 @@ Public Class frmCreateEditProject
             AddNewBuilding()
             LoadProjectData()
         Catch ex As Exception
-            UpdateStatus($"Error adding building: {ex.Message}")
+            StatusLogger.Add($"Error adding building: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -893,7 +943,7 @@ Public Class frmCreateEditProject
             AddNewLevel()
             LoadProjectData()
         Catch ex As Exception
-            UpdateStatus($"Error adding level: {ex.Message}")
+            StatusLogger.Add($"Error adding level: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -918,7 +968,7 @@ Public Class frmCreateEditProject
                 LoadProjectData()
             End If
         Catch ex As Exception
-            UpdateStatus($"Error deleting item: {ex.Message}")
+            StatusLogger.Add($"Error deleting item: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -942,7 +992,7 @@ Public Class frmCreateEditProject
         Try
             CopyLevels()
         Catch ex As Exception
-            UpdateStatus($"Error copying levels: {ex.Message}")
+            StatusLogger.Add($"Error copying levels: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -967,7 +1017,7 @@ Public Class frmCreateEditProject
             PasteLevels()
             LoadProjectData()
         Catch ex As Exception
-            UpdateStatus($"Error pasting levels: {ex.Message}")
+            StatusLogger.Add($"Error pasting levels: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1004,18 +1054,18 @@ Public Class frmCreateEditProject
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
             Try
                 If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
-                    UpdateStatus($"No version selected for ProjectID {currentProject.ProjectID}")
+                    StatusLogger.Add($"No version selected for ProjectID {currentProject.ProjectID}")
                     MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Exit Sub
                 End If
                 AddFormToTabControl(GetType(FrmPSE), $"PSE_{currentProject.ProjectID}_{currentVersionID}", New Object() {currentProject.ProjectID, currentVersionID})
-                UpdateStatus($"Opened PSE form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
+                StatusLogger.Add($"Opened PSE form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
             Catch ex As Exception
-                UpdateStatus($"Error opening PSE form: {ex.Message}")
+                StatusLogger.Add($"Error opening PSE form: {ex.Message}")
                 MessageBox.Show("Error opening PSE form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Try
         Else
-            UpdateStatus("No valid project selected for PSE")
+            StatusLogger.Add("No valid project selected for PSE")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
@@ -1025,7 +1075,7 @@ Public Class frmCreateEditProject
             UpdateVersionAndSettings()
             LoadVersionSpecificData()
         Catch ex As Exception
-            UpdateStatus($"Error refreshing rollup data: {ex.Message}")
+            StatusLogger.Add($"Error refreshing rollup data: {ex.Message}")
             MessageBox.Show($"Error refreshing rollup data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1040,6 +1090,7 @@ Public Class frmCreateEditProject
             cboCustomer.SelectedValue = If(selectedVersion.CustomerID, 0)
             cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
             cboVersion.SelectedValue = currentVersionID
+            txtMondayItemId.Text = selectedVersion.MondayID
         End If
     End Sub
 
@@ -1047,15 +1098,15 @@ Public Class frmCreateEditProject
         Try
             Dim currentTab As TabPage = tabControlRight.SelectedTab
             Dim selectedNode As TreeNode = tvProjectTree.SelectedNode
-            UpdateStatus("Recalculating rollup...")
+            StatusLogger.Add("Recalculating rollup...")
             Me.Cursor = Cursors.WaitCursor
             SaveOverrides()
             RollupDataAccess.RecalculateVersion(currentVersionID)
             RefreshRollupData()
             RestoreRollupGrid(currentTab, selectedNode)
-            UpdateStatus("Rollup recalculated successfully")
+            StatusLogger.Add("Rollup recalculated successfully")
         Catch ex As Exception
-            UpdateStatus($"Error recalculating rollup: {ex.Message}")
+            StatusLogger.Add($"Error recalculating rollup: {ex.Message}")
             MessageBox.Show($"Error recalculating rollup: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             Me.Cursor = Cursors.Default
@@ -1083,7 +1134,7 @@ Public Class frmCreateEditProject
                 End If
             End Using
         Catch ex As Exception
-            UpdateStatus($"Error creating version: {ex.Message}")
+            StatusLogger.Add($"Error creating version: {ex.Message}")
             MessageBox.Show("Error creating version: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1109,10 +1160,10 @@ Public Class frmCreateEditProject
                 End If
             End Using
         Catch ex As ArgumentException
-            UpdateStatus($"Cannot duplicate version: {ex.Message}")
+            StatusLogger.Add($"Cannot duplicate version: {ex.Message}")
             MessageBox.Show($"Cannot duplicate version: {ex.Message}", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Catch ex As Exception
-            UpdateStatus($"Error duplicating version: {ex.Message}")
+            StatusLogger.Add($"Error duplicating version: {ex.Message}")
             MessageBox.Show($"Error duplicating version: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1137,7 +1188,7 @@ Public Class frmCreateEditProject
         Try
             CloseForm()
         Catch ex As Exception
-            UpdateStatus($"Error closing tab: {ex.Message}")
+            StatusLogger.Add($"Error closing tab: {ex.Message}")
             MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1148,15 +1199,17 @@ Public Class frmCreateEditProject
         If String.IsNullOrEmpty(tagValue) Then
             Throw New Exception("Tab tag not found.")
         End If
+        frmMainProjectList.LoadProjects()
+
         RemoveTabFromTabControl(tagValue)
-        UpdateStatus($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
+        StatusLogger.Add($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
     End Sub
 
     Private Sub btnIEOpen_Click(sender As Object, e As EventArgs) Handles btnIEOpen.Click
         Try
             OpenInclusionsExclusionsForm()
         Catch ex As Exception
-            UpdateStatus($"Error opening Inclusions/Exclusions form: {ex.Message}")
+            StatusLogger.Add($"Error opening Inclusions/Exclusions form: {ex.Message}")
             MessageBox.Show("Error opening Inclusions/Exclusions form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1165,9 +1218,9 @@ Public Class frmCreateEditProject
     Private Sub OpenInclusionsExclusionsForm()
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
             AddFormToTabControl(GetType(frmInclusionsExclusions), $"IE_{currentProject.ProjectID}", New Object() {currentProject.ProjectID})
-            UpdateStatus($"Opened Inclusions/Exclusions form for ProjectID {currentProject.ProjectID}")
+            StatusLogger.Add($"Opened Inclusions/Exclusions form for ProjectID {currentProject.ProjectID}")
         Else
-            UpdateStatus("No valid project selected for Inclusions/Exclusions")
+            StatusLogger.Add("No valid project selected for Inclusions/Exclusions")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
@@ -1176,7 +1229,7 @@ Public Class frmCreateEditProject
         Try
             CopyBuilding()
         Catch ex As Exception
-            UpdateStatus($"Error copying building: {ex.Message}")
+            StatusLogger.Add($"Error copying building: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1207,7 +1260,7 @@ Public Class frmCreateEditProject
             PasteBuilding()
             LoadProjectData()
         Catch ex As Exception
-            UpdateStatus($"Error pasting building: {ex.Message}")
+            StatusLogger.Add($"Error pasting building: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1254,7 +1307,7 @@ Public Class frmCreateEditProject
                 DeleteProject()
             End If
         Catch ex As Exception
-            UpdateStatus($"Error deleting project: {ex.Message}")
+            StatusLogger.Add($"Error deleting project: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1274,7 +1327,7 @@ Public Class frmCreateEditProject
         Try
             GenerateProjectReport()
         Catch ex As Exception
-            UpdateStatus($"Error generating project report: {ex.Message}")
+            StatusLogger.Add($"Error generating project report: {ex.Message}")
             MessageBox.Show("Error generating project report: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1282,24 +1335,24 @@ Public Class frmCreateEditProject
     ' Generates and displays the project summary report.
     Private Sub GenerateProjectReport()
         If currentProject Is Nothing OrElse currentProject.ProjectID <= 0 OrElse currentVersionID <= 0 Then
-            UpdateStatus("No valid project or version selected for report")
+            StatusLogger.Add("No valid project or version selected for report")
             MessageBox.Show("No valid project or version selected. Save the project and select a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
-        UpdateStatus("Opening Project Summary Preview...")
+        StatusLogger.Add("Opening Project Summary Preview...")
         Dim dataSources As New List(Of ReportDataSource) From {
             New ReportDataSource("ProjectSummaryDataSet", ReportsDataAccess.GetProjectSummaryData(currentProject.ProjectID, currentVersionID))
         }
         Dim previewForm As New frmReportPreview("BuildersPSE2.ProjectSummary.rdlc", dataSources)
         previewForm.ShowDialog()
-        UpdateStatus("Project Summary Preview opened")
+        StatusLogger.Add("Project Summary Preview opened")
     End Sub
 
     Private Sub btnPreviewIncExc_Click(sender As Object, e As EventArgs) Handles btnPreviewIncExc.Click
         Try
             GenerateInclusionsExclusionsReport()
         Catch ex As Exception
-            UpdateStatus($"Error generating Inclusions/Exclusions report: {ex.Message}")
+            StatusLogger.Add($"Error generating Inclusions/Exclusions report: {ex.Message}")
             MessageBox.Show("Error generating Inclusions/Exclusions report: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1307,11 +1360,11 @@ Public Class frmCreateEditProject
     ' Generates and displays the Inclusions/Exclusions report.
     Private Sub GenerateInclusionsExclusionsReport()
         If currentProject Is Nothing OrElse currentProject.ProjectID <= 0 OrElse currentVersionID <= 0 Then
-            UpdateStatus("No valid project or version selected for report")
+            StatusLogger.Add("No valid project or version selected for report")
             MessageBox.Show("No valid project or version selected. Save the project and select a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
-        UpdateStatus("Opening Inclusions/Exclusions Preview...")
+        StatusLogger.Add("Opening Inclusions/Exclusions Preview...")
         Dim dataSources As New List(Of ReportDataSource) From {
             New ReportDataSource("ProjectHeaderDataSet", ReportsDataAccess.GetProjectHeaderData(currentProject.ProjectID, currentVersionID)),
             New ReportDataSource("IncExcItemsDataSet", IEDataAccess.GetProjectItems(currentProject.ProjectID)),
@@ -1320,17 +1373,17 @@ Public Class frmCreateEditProject
         }
         Dim previewForm As New frmReportPreview("BuildersPSE2.InclusionsExclusions.rdlc", dataSources)
         previewForm.ShowDialog()
-        UpdateStatus("Inclusions/Exclusions Preview opened")
+        StatusLogger.Add("Inclusions/Exclusions Preview opened")
     End Sub
 
     Private Sub btnUpdateLumber_Click(sender As Object, e As EventArgs) Handles btnUpdateLumber.Click
         Try
             UpdateLumberPrices()
-            UpdateStatus("Lumber prices updated successfully for version " & currentVersionID)
+            StatusLogger.Add("Lumber prices updated successfully for version " & currentVersionID)
             MessageBox.Show("Lumber prices updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
             LoadVersionSpecificData()
         Catch ex As Exception
-            UpdateStatus($"Error updating lumber prices: {ex.Message}")
+            StatusLogger.Add($"Error updating lumber prices: {ex.Message}")
             MessageBox.Show("Error updating lumber prices: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1338,12 +1391,12 @@ Public Class frmCreateEditProject
     ' Updates lumber prices for the selected cost-effective date.
     Private Sub UpdateLumberPrices()
         If currentVersionID <= 0 Then
-            UpdateStatus("No valid version selected for lumber update")
+            StatusLogger.Add("No valid version selected for lumber update")
             MessageBox.Show("No valid version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
         If cboCostEffective.SelectedValue Is Nothing OrElse CInt(cboCostEffective.SelectedValue) <= 0 Then
-            UpdateStatus("No cost-effective date selected for lumber update")
+            StatusLogger.Add("No cost-effective date selected for lumber update")
             MessageBox.Show("Please select a cost-effective date.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
@@ -1355,7 +1408,7 @@ Public Class frmCreateEditProject
         Try
             SetActiveLumberHistory()
         Catch ex As Exception
-            UpdateStatus($"Error setting active lumber history: {ex.Message}")
+            StatusLogger.Add($"Error setting active lumber history: {ex.Message}")
             MessageBox.Show($"Error setting active lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1386,12 +1439,12 @@ Public Class frmCreateEditProject
                     }
                     SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 1, UpdateDate = GETDATE() WHERE CostEffectiveDateID = @CostEffectiveDateID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(activateParams), conn, transaction)
                     transaction.Commit()
-                    UpdateStatus($"Set CostEffectiveDateID {costEffectiveID} as active for VersionID {currentVersionID}")
+                    StatusLogger.Add($"Set CostEffectiveDateID {costEffectiveID} as active for VersionID {currentVersionID}")
                     RollupDataAccess.RecalculateVersion(currentVersionID)
                     LoadVersionSpecificData()
                 Catch ex As Exception
                     transaction.Rollback()
-                    UpdateStatus($"Error setting active lumber history: {ex.Message}")
+                    StatusLogger.Add($"Error setting active lumber history: {ex.Message}")
                     Throw
                 End Try
             End Using
@@ -1402,7 +1455,7 @@ Public Class frmCreateEditProject
         Try
             DeleteLumberHistory()
         Catch ex As Exception
-            UpdateStatus($"Error deleting lumber history: {ex.Message}")
+            StatusLogger.Add($"Error deleting lumber history: {ex.Message}")
             MessageBox.Show($"Error deleting lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1425,7 +1478,7 @@ Public Class frmCreateEditProject
                 {"@VersionID", currentVersionID}
             }
             SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteLumberHistory, HelperDataAccess.BuildParameters(params))
-            UpdateStatus($"Deleted lumber history for CostEffectiveDateID {costEffectiveID}")
+            StatusLogger.Add($"Deleted lumber history for CostEffectiveDateID {costEffectiveID}")
             RollupDataAccess.RecalculateVersion(currentVersionID)
             LoadVersionSpecificData()
         End If
@@ -1435,7 +1488,7 @@ Public Class frmCreateEditProject
         Try
             OpenProjectBuilderForm()
         Catch ex As Exception
-            UpdateStatus($"Error opening Project Builder form: {ex.Message}")
+            StatusLogger.Add($"Error opening Project Builder form: {ex.Message}")
             MessageBox.Show("Error opening Project Builder form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1444,14 +1497,14 @@ Public Class frmCreateEditProject
     Private Sub OpenProjectBuilderForm()
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
             If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
-                UpdateStatus($"No version selected for ProjectID {currentProject.ProjectID}")
+                StatusLogger.Add($"No version selected for ProjectID {currentProject.ProjectID}")
                 MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Exit Sub
             End If
             AddFormToTabControl(GetType(ProjectBuilderForm), $"ProjectBuilder_{currentVersionID}", New Object() {currentVersionID})
-            UpdateStatus($"Opened Project Builder form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
+            StatusLogger.Add($"Opened Project Builder form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
         Else
-            UpdateStatus("No valid project selected for Project Builder")
+            StatusLogger.Add("No valid project selected for Project Builder")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
@@ -1495,48 +1548,118 @@ Public Class frmCreateEditProject
 
 
     Private Sub LoadFuturesIntoListBox(versionId As Integer)
-        lstFutures.Items.Clear()
 
-        If versionId <= 0 Then
-            Debug.WriteLine("LoadFuturesIntoListBox: Invalid versionId")
-            Return
-        End If
+        lvFutures.Items.Clear()
+        lvFutures.Groups.Clear()
+        lvFutures.BeginUpdate()          ' ← prevents flickering
+        Try
+            If versionId <= 0 Then Return
 
-        Dim futures = LumberDataAccess.GetFuturesForVersion(versionId)
+            Dim futures = LumberDataAccess.GetFuturesForVersion(versionId)
+            If futures.Count = 0 Then Return
 
-        lstFutures.DisplayMember = NameOf(LumberFutures.ToString)   ' or just remove it
-        lstFutures.ValueMember = "ID"
+            ' Group by PullDate (date only)
+            Dim groups = futures.GroupBy(Function(f) f.PullDate.Date)
 
-        ' ---- Add the LumberFutures objects directly ----
-        For Each f As LumberFutures In futures
-            lstFutures.Items.Add(f)          ' <-- ListBox now holds LumberFutures
-        Next
+            For Each grp In groups.OrderByDescending(Function(g) g.Key)   ' newest first
+                Dim groupDateStr = grp.Key.ToString("MMMM d, yyyy")
+                Dim header = $"Pulled on {groupDateStr} ({grp.Count()} contracts)"
 
-        ' ---- Auto-select nearest expiry (no late binding) ----
-        If futures.Count > 0 Then
-            Dim today = DateTime.Today
-            Dim bestIdx = 0
-            Dim bestDiff = Double.MaxValue
+                Dim lvg As New ListViewGroup(grp.Key.ToString("yyyyMMdd"), header)
+                lvFutures.Groups.Add(lvg)
 
-            For i = 0 To futures.Count - 1
-                Dim f = futures(i)                     ' <-- typed reference
-                Dim parts = f.ContractMonth.Split(" "c)
-                If parts.Length >= 2 Then
-                    Dim m = LumberDataAccess.MonthNameToNumber(parts(0))
-                    Dim y = CInt(parts(1))
-                    Dim yr = If(y < 50, 2000 + y, 1900 + y)
-                    If m > 0 Then
-                        Dim dt = New DateTime(yr, m, 1)
-                        Dim diff = Math.Abs((dt - today).TotalDays)
-                        If diff < bestDiff Then
-                            bestDiff = diff
-                            bestIdx = i
+                For Each f In grp.OrderBy(Function(x) LumberDataAccess.MonthNameToNumber(x.ContractMonth.Split(" "c)(0)) * 100 + CInt(x.ContractMonth.Split(" "c)(1)))
+                    ' *** THIS IS THE KEY FIX ***
+                    Dim lvi As New ListViewItem(New String() {
+                    f.ContractMonth,                                           ' Column 0
+                    If(f.PriorSettle.HasValue, f.PriorSettle.Value.ToString("N2"), "—"), ' Column 1
+                    f.PullDate.ToString("MM/dd/yyyy")                          ' Column 2
+                }) With {
+                        .Tag = f,
+                        .Group = lvg
+                }
+                    lvFutures.Items.Add(lvi)
+                Next
+            Next
+
+            ' Highlight today's pull (optional – makes it pop)
+            If lvFutures.Groups.Count > 0 Then
+                lvFutures.Groups(0).Header = lvFutures.Groups(0).Header.Substring(9)
+            End If
+
+            ' Auto-select nearest expiry (unchanged logic)
+            If lvFutures.Items.Count > 0 Then
+                Dim today = DateTime.Today
+                Dim bestItem As ListViewItem = Nothing
+                Dim bestDiff As Double = Double.MaxValue
+
+                For Each item As ListViewItem In lvFutures.Items
+                    Dim f As LumberFutures = CType(item.Tag, LumberFutures)
+                    Dim parts = f.ContractMonth.Split(" "c)
+                    If parts.Length = 2 AndAlso Integer.TryParse(parts(1), Nothing) Then
+                        Dim m = LumberDataAccess.MonthNameToNumber(parts(0))
+                        Dim y = CInt(parts(1))
+                        Dim yr = If(y < 50, 2000 + y, 1900 + y)
+                        If m > 0 Then
+                            Dim contractDate = New DateTime(yr, m, 1)
+                            Dim diff = Math.Abs((contractDate - today).TotalDays)
+                            If diff < bestDiff Then
+                                bestDiff = diff
+                                bestItem = item
+                            End If
                         End If
                     End If
+                Next
+
+                If bestItem IsNot Nothing Then
+                    bestItem.Selected = True
+                    bestItem.EnsureVisible()
                 End If
-            Next
-            lstFutures.SelectedIndex = bestIdx
-        End If
+            End If
+
+        Finally
+            lvFutures.EndUpdate()
+        End Try
+
+        'lstFuturesold.Items.Clear()
+
+        'If versionId <= 0 Then
+        '    Debug.WriteLine("LoadFuturesIntoListBox: Invalid versionId")
+        '    Return
+        'End If
+
+        'Dim futures = LumberDataAccess.GetFuturesForVersion(versionId)
+
+        '' ---- Add the LumberFutures objects directly ----
+        'For Each f As LumberFutures In futures
+        '    lstFuturesold.Items.Add(f)          ' <-- ListBox now holds LumberFutures
+        'Next
+
+        '' ---- Auto-select nearest expiry (no late binding) ----
+        'If futures.Count > 0 Then
+        '    Dim today = DateTime.Today
+        '    Dim bestIdx = 0
+        '    Dim bestDiff = Double.MaxValue
+
+        '    For i = 0 To futures.Count - 1
+        '        Dim f = futures(i)                     ' <-- typed reference
+        '        Dim parts = f.ContractMonth.Split(" "c)
+        '        If parts.Length >= 2 Then
+        '            Dim m = LumberDataAccess.MonthNameToNumber(parts(0))
+        '            Dim y = CInt(parts(1))
+        '            Dim yr = If(y < 50, 2000 + y, 1900 + y)
+        '            If m > 0 Then
+        '                Dim dt = New DateTime(yr, m, 1)
+        '                Dim diff = Math.Abs((dt - today).TotalDays)
+        '                If diff < bestDiff Then
+        '                    bestDiff = diff
+        '                    bestIdx = i
+        '                End If
+        '            End If
+        '        End If
+        '    Next
+        '    lstFuturesold.SelectedIndex = bestIdx
+        'End If
     End Sub
     ''' <summary>
     ''' Gets the current LevelID from the selected tree node
@@ -1545,6 +1668,13 @@ Public Class frmCreateEditProject
         If tvProjectTree.SelectedNode Is Nothing Then Return 0
         If TypeOf tvProjectTree.SelectedNode.Tag Is LevelModel Then
             Return CType(tvProjectTree.SelectedNode.Tag, LevelModel).LevelID
+        End If
+        Return 0
+    End Function
+    Private Function GetCurrentBuildingID() As Integer
+        If tvProjectTree.SelectedNode Is Nothing Then Return 0
+        If TypeOf tvProjectTree.SelectedNode.Tag Is BuildingModel Then
+            Return CType(tvProjectTree.SelectedNode.Tag, BuildingModel).BuildingID
         End If
         Return 0
     End Function
@@ -1794,6 +1924,8 @@ Public Class frmCreateEditProject
 
                 Next
             Next
+            'Freeze first two columns of datagrid
+            dgvLevelVariance.Columns(1).Frozen = True
 
         Catch ex As Exception
             Dim stackTrace As New Diagnostics.StackTrace(ex, True)
@@ -1814,46 +1946,234 @@ Public Class frmCreateEditProject
             End Try
         End Try
     End Sub
+    ''' <summary>
+    ''' Building-level variance – ONE estimate column + ONE cumulative ACTUAL column
+    ''' Now uses the new BuildingID column in LevelActuals → faster, simpler, rock-solid
+    ''' Shows: Estimate vs Total Invoiced Actuals (StageType = 2) for the entire building
+    ''' Includes Level Count row and proper color logic
+    ''' </summary>
+    Private Sub RefreshBuildingVariance()
+        Dim buildingID As Integer = GetCurrentBuildingID()
+        If buildingID <= 0 OrElse currentVersionID <= 0 Then
+            dgvBuildingVariance.DataSource = Nothing
+            Exit Sub
+        End If
+
+        Dim dt As New DataTable()
+        Try
+            '====================================================================
+            ' 1. GET BldgQty + ESTIMATE ROLLUP (unchanged – perfect)
+            '====================================================================
+            Dim bldgQty As Integer = 1
+            Using r = SqlConnectionManager.Instance.ExecuteReader(
+            "SELECT BldgQty FROM Buildings WHERE BuildingID = @BuildingID AND VersionID = @VersionID",
+            {New SqlParameter("@BuildingID", buildingID), New SqlParameter("@VersionID", currentVersionID)})
+                If r.Read() Then bldgQty = CInt(r("BldgQty"))
+            End Using
+
+            Dim levelCount As Integer = 0
+            Dim est As New Dictionary(Of String, Decimal) From {
+            {"Sell Price", 0D}, {"BDFT", 0D}, {"Level Count", 0D}, {"AvgSPF2", 0D},
+            {"LumberCost", 0D}, {"PlateCost", 0D}, {"ManufLaborCost", 0D},
+            {"ManufLaborMH", 0D}, {"ItemCost", 0D}, {"DeliveryCost", 0D},
+            {"MiscLaborCost", 0D}, {"Total Cost", 0D}
+        }
+
+            Dim weightedEstSPF As Decimal = 0D, totalEstBDFT As Decimal = 0D
+
+            Using r = SqlConnectionManager.Instance.ExecuteReader(
+            Queries.SelectLevelsByBuilding & " AND l.VersionID = @VersionID",
+            {New SqlParameter("@BuildingID", buildingID), New SqlParameter("@VersionID", currentVersionID)})
+
+                While r.Read()
+                    levelCount += 1
+                    Dim b As Decimal = If(r("OverallBDFT") Is DBNull.Value, 0D, CDec(r("OverallBDFT")))
+                    Dim spf As Decimal = LumberDataAccess.GetActiveSPFNo2ByProductType(currentVersionID, r("ProductTypeName").ToString())
+
+                    weightedEstSPF += spf * b
+                    totalEstBDFT += b
+
+                    est("Sell Price") += CDec(If(r("OverallPrice") Is DBNull.Value, 0D, r("OverallPrice")))
+                    est("BDFT") += b
+                    est("LumberCost") += CDec(If(r("LumberCost") Is DBNull.Value, 0D, r("LumberCost")))
+                    est("PlateCost") += CDec(If(r("PlateCost") Is DBNull.Value, 0D, r("PlateCost")))
+                    est("ManufLaborCost") += CDec(If(r("LaborCost") Is DBNull.Value, 0D, r("LaborCost")))
+                    est("ManufLaborMH") += CDec(If(r("LaborMH") Is DBNull.Value, 0D, r("LaborMH")))
+                    est("ItemCost") += CDec(If(r("ItemsCost") Is DBNull.Value, 0D, r("ItemsCost")))
+                    est("DeliveryCost") += CDec(If(r("DeliveryCost") Is DBNull.Value, 0D, r("DeliveryCost")))
+                    est("MiscLaborCost") += CDec(If(r("DesignCost") Is DBNull.Value, 0D, r("DesignCost"))) _
+                                        + CDec(If(r("MGMTCost") Is DBNull.Value, 0D, r("MGMTCost"))) _
+                                        + CDec(If(r("JobSuppliesCost") Is DBNull.Value, 0D, r("JobSuppliesCost")))
+                    est("Total Cost") += CDec(If(r("OverallCost") Is DBNull.Value, 0D, r("OverallCost")))
+                End While
+            End Using
+
+            If levelCount = 0 Then
+                dgvBuildingVariance.DataSource = Nothing
+                Exit Sub
+            End If
+
+            If totalEstBDFT > 0 Then est("AvgSPF2") = weightedEstSPF / totalEstBDFT
+
+
+            For Each k In est.Keys.Where(Function(x) x <> "AvgSPF2").ToList()
+                est(k) *= bldgQty
+            Next
+            est("Level Count") = levelCount * bldgQty
+            '====================================================================
+            ' 2. ACTUALS – NOW USING BuildingID directly (MUCH FASTER & CLEANER)
+            '====================================================================
+            Dim act As New Dictionary(Of String, Decimal) From {
+            {"Sell Price", 0D}, {"BDFT", 0D}, {"Level Count", 0D}, {"AvgSPF2", 0D},
+            {"LumberCost", 0D}, {"PlateCost", 0D}, {"ManufLaborCost", 0D},
+            {"ManufLaborMH", 0D}, {"ItemCost", 0D}, {"DeliveryCost", 0D},
+            {"MiscLaborCost", 0D}, {"Total Cost", 0D}
+        }
+
+            Dim actualLevelCount As Integer = 0
+            Dim weightedActSPF As Decimal = 0D, totalActBDFT As Decimal = 0D
+
+            ' NEW: Direct filter using BuildingID in LevelActuals
+            Dim sqlActuals As String = "
+            SELECT la.*
+            FROM LevelActuals la
+            WHERE la.BuildingID = @BuildingID
+              AND la.VersionID = @VersionID
+              AND la.StageType = 1"
+
+            Using r = SqlConnectionManager.Instance.ExecuteReader(sqlActuals,
+            {New SqlParameter("@BuildingID", buildingID),
+             New SqlParameter("@VersionID", currentVersionID)})
+
+                While r.Read()
+                    actualLevelCount += 1
+
+                    Dim b As Decimal = If(r("ActualBDFT") Is DBNull.Value, 0D, CDec(r("ActualBDFT")))
+                    Dim spf As Decimal = If(r("AvgSPFNo2Actual") Is DBNull.Value, 0D, CDec(r("AvgSPFNo2Actual")))
+
+                    totalActBDFT += b
+                    weightedActSPF += spf * b
+
+                    act("Sell Price") += CDec(If(r("ActualSoldAmount") Is DBNull.Value, 0D, r("ActualSoldAmount")))
+                    act("BDFT") += b
+                    act("LumberCost") += CDec(If(r("ActualLumberCost") Is DBNull.Value, 0D, r("ActualLumberCost")))
+                    act("PlateCost") += CDec(If(r("ActualPlateCost") Is DBNull.Value, 0D, r("ActualPlateCost")))
+                    act("ManufLaborCost") += CDec(If(r("ActualManufLaborCost") Is DBNull.Value, 0D, r("ActualManufLaborCost")))
+                    act("ManufLaborMH") += CDec(If(r("ActualManufMH") Is DBNull.Value, 0D, r("ActualManufMH")))
+                    act("ItemCost") += CDec(If(r("ActualItemCost") Is DBNull.Value, 0D, r("ActualItemCost")))
+                    act("DeliveryCost") += CDec(If(r("ActualDeliveryCost") Is DBNull.Value, 0D, r("ActualDeliveryCost")))
+                    act("MiscLaborCost") += CDec(If(r("ActualMiscLaborCost") Is DBNull.Value, 0D, r("ActualMiscLaborCost")))
+                    act("Total Cost") += CDec(If(r("ActualTotalCost") Is DBNull.Value, 0D, r("ActualTotalCost")))
+                End While
+            End Using
+
+            If totalActBDFT > 0 Then act("AvgSPF2") = weightedActSPF / totalActBDFT
+            act("Level Count") = actualLevelCount
+
+            '====================================================================
+            ' 3. BUILD FINAL DATATABLE
+            '====================================================================
+            dt.Columns.Add("Metric", GetType(String))
+            dt.Columns.Add("Estimate", GetType(Decimal))
+            dt.Columns.Add("Actual", GetType(Decimal))
+
+            For Each kv In est
+                Dim row = dt.NewRow()
+                row("Metric") = kv.Key
+                row("Estimate") = kv.Value
+                row("Actual") = If(act.ContainsKey(kv.Key), act(kv.Key), 0D)
+                dt.Rows.Add(row)
+            Next
+
+            ' Insert Margin % row before Total Cost
+            Dim marginRow = dt.NewRow()
+            marginRow("Metric") = "Margin %"
+            dt.Rows.InsertAt(marginRow, dt.Rows.Count - 1)
+
+            For i = 1 To 2
+                Dim col = dt.Columns(i).ColumnName
+                Dim sell = CDec(dt.AsEnumerable().FirstOrDefault(Function(r) r.Field(Of String)("Metric") = "Sell Price")(col))
+                Dim cost = CDec(dt.AsEnumerable().FirstOrDefault(Function(r) r.Field(Of String)("Metric") = "Total Cost")(col))
+                marginRow(col) = If(sell = 0D, 0D, (sell - cost) / sell)
+            Next
+
+            '====================================================================
+            ' 4. BIND + FORMATTING + COLOR CODING
+            '====================================================================
+            dgvBuildingVariance.DataSource = dt
+
+            For Each row As DataGridViewRow In dgvBuildingVariance.Rows
+                If row.Cells("Metric").Value Is Nothing Then Continue For
+                Dim metric = row.Cells("Metric").Value.ToString()
+                For i = 1 To 2
+                    Dim cell = row.Cells(i)
+                    cell.Value = If(cell.Value Is DBNull.Value OrElse cell.Value Is Nothing, 0D, cell.Value)
+
+                    Select Case metric
+                        Case "Margin %"
+                            cell.Style.Format = "P2"
+                        Case "Sell Price", "LumberCost", "PlateCost", "ManufLaborCost", "ItemCost",
+                         "DeliveryCost", "MiscLaborCost", "Total Cost"
+                            cell.Style.Format = "C2"
+                        Case "BDFT", "Level Count"
+                            cell.Style.Format = "N0"
+                        Case Else
+                            cell.Style.Format = "N2"
+                    End Select
+                Next
+            Next
+
+            For i = 1 To 2
+                dgvBuildingVariance.Columns(i).DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+                dgvBuildingVariance.Columns(i).MinimumWidth = 130
+            Next
+
+            With dgvBuildingVariance.Columns("Metric")
+                .DefaultCellStyle.Font = New Font(dgvBuildingVariance.Font, FontStyle.Bold)
+                .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft
+                .MinimumWidth = 160
+            End With
+
+            dgvBuildingVariance.AutoResizeColumns()
+
+            ' Color coding: higher good for Margin%, Sell Price, Level Count
+            For Each row As DataGridViewRow In dgvBuildingVariance.Rows
+                Dim metric = If(row.Cells("Metric").Value?.ToString(), "")
+                Dim estVal = If(row.Cells("Estimate").Value Is DBNull.Value, 0D, CDec(row.Cells("Estimate").Value))
+                Dim actVal = If(row.Cells("Actual").Value Is DBNull.Value, 0D, CDec(row.Cells("Actual").Value))
+                Dim cell = row.Cells("Actual")
+
+                If estVal = 0 Then
+                    cell.Style.BackColor = Color.White
+                    Continue For
+                End If
+
+                Dim diff = (actVal - estVal) / estVal
+
+                If metric = "Margin %" OrElse metric = "Sell Price" OrElse metric = "Level Count" Then
+                    cell.Style.BackColor = If(diff > 0.05D, Color.LightGreen,
+                                         If(diff < -0.05D, Color.LightCoral, Color.White))
+                Else
+                    cell.Style.BackColor = If(diff > 0.05D, Color.LightCoral,
+                                         If(diff < -0.05D, Color.LightGreen, Color.White))
+                End If
+            Next
+
+            ' Freeze Estimate column
+            If dgvBuildingVariance.Columns.Count > 1 Then
+                dgvBuildingVariance.Columns(1).Frozen = True
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show("Building variance failed: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            dgvBuildingVariance.DataSource = Nothing
+        End Try
+    End Sub
 
     ''' <summary>
     ''' Refreshes the project-level variance summary — SAFE FOR NO RECORDS
     ''' </summary>
-    Private Sub RefreshRollupSummary()
-        If currentVersionID <= 0 Then
-            lblSumShipmentsVal.Text = "0"
-            lblSumBDFTVarVal.Text = "0"
-            lblSumCostVarVal.Text = "$0.00"
-            Exit Sub
-        End If
 
-        Dim params() As SqlParameter = {New SqlParameter("@VersionID", currentVersionID)}
-
-        Try
-            Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjectShipmentSummary, params)
-                If reader.HasRows AndAlso reader.Read() Then
-                    lblSumShipmentsVal.Text = reader("TotalShipments").ToString()
-                    lblSumBDFTVarVal.Text = If(reader("NetBDFTVar") Is DBNull.Value, "0", reader("NetBDFTVar").ToString())
-                    lblSumCostVarVal.Text = "$" & Format(If(reader("NetCostVar") Is DBNull.Value, 0D, CDec(reader("NetCostVar"))), "N2")
-                Else
-                    ' No records = all zeros
-                    lblSumShipmentsVal.Text = "0"
-                    lblSumBDFTVarVal.Text = "0"
-                    lblSumCostVarVal.Text = "$0.00"
-                End If
-            End Using
-
-            ' After all formatting and resizing
-            ColorVarianceCells()
-
-        Catch ex As Exception
-            ' Never crash — show clean zeros
-            lblSumShipmentsVal.Text = "0"
-            lblSumBDFTVarVal.Text = "0"
-            lblSumCostVarVal.Text = "$0.00"
-            ' Optional: log to status
-            ' UpdateStatus("Rollup error: " & ex.Message)
-        End Try
-    End Sub
 
 
     Private Sub ColorVarianceCells()
@@ -1911,7 +2231,7 @@ Public Class frmCreateEditProject
                 Dim frm As New frmActualsMatcher(currentVersionID, 1, dlg.FileName) ' 1 = Design
                 If frm.ShowDialog() = DialogResult.OK Then
                     RefreshLevelVariance()
-                    RefreshRollupSummary()
+
                     MessageBox.Show("MiTek actuals imported successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 End If
             End If
@@ -1925,7 +2245,7 @@ Public Class frmCreateEditProject
                 Dim frm As New frmActualsMatcher(currentVersionID, 2, dlg.FileName) ' 2 = Invoice
                 If frm.ShowDialog() = DialogResult.OK Then
                     RefreshLevelVariance()
-                    RefreshRollupSummary()
+
                     MessageBox.Show("BisTrack invoice imported successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 End If
             End If
@@ -1988,5 +2308,33 @@ Public Class frmCreateEditProject
                             "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Try
         End Using
+    End Sub
+
+    Private Sub btnLinkMonday_Click(sender As Object, e As EventArgs) Handles btnLinkMonday.Click
+        Using searchForm As New frmMondaySearch With {
+        .InitialSearchText = txtProjectName.Text.Trim()
+    }
+            If searchForm.ShowDialog() = DialogResult.OK AndAlso Not String.IsNullOrEmpty(searchForm.SelectedMondayItemId) Then
+                txtMondayItemId.Text = searchForm.SelectedMondayItemId
+                MessageBox.Show("Successfully linked to monday.com item: " & searchForm.SelectedMondayItemId, "Linked!", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            End If
+        End Using
+    End Sub
+
+
+    Private Sub btnViewMonday_Click(sender As Object, e As EventArgs) Handles btnViewMonday.Click
+        Dim itemId As String = txtMondayItemId.Text.Trim()
+
+        If String.IsNullOrWhiteSpace(itemId) OrElse Not IsNumeric(itemId) Then
+            MessageBox.Show("No valid Monday.com Item ID found.", "Nothing to open", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
+        Try
+            Dim url As String = MondaycomAccess.GetMondayItemUrl(itemId)
+            Process.Start(New ProcessStartInfo(url) With {.UseShellExecute = True})
+        Catch ex As Exception
+            MessageBox.Show("Could not open browser: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 End Class

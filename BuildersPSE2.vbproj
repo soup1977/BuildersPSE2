@@ -17,6 +17,7 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -29,7 +30,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -66,7 +66,16 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>BuildersPSEKey.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>BuildersPSEicon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ClosedXML, Version=0.105.0.0, Culture=neutral, PublicKeyToken=fd1eb21b62ae805b, processorArchitecture=MSIL">
@@ -186,6 +195,7 @@
     <Compile Include="DataAccess\HelperDataAccess.vb" />
     <Compile Include="DataAccess\IEDataAccess.vb" />
     <Compile Include="DataAccess\LumberDataAccess.vb" />
+    <Compile Include="DataAccess\ModelParams.vb" />
     <Compile Include="DataAccess\ProjectDataAccess.vb" />
     <Compile Include="DataAccess\ProjVersionDataAccess.vb" />
     <Compile Include="DataAccess\Queries.vb" />
@@ -239,6 +249,12 @@
       <DependentUpon>frmMondayList.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmMondayList.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmMondaySearch.Designer.vb">
+      <DependentUpon>frmMondaySearch.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmMondaySearch.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\frmPSE.Designer.vb">
@@ -343,6 +359,7 @@
     <Compile Include="Utilities\SecurityHelper.vb" />
     <Compile Include="Utilities\SpreadsheetParser.vb" />
     <Compile Include="Utilities\SqlConnectionManager.vb" />
+    <Compile Include="Utilities\StatusLogger.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\frmActualsMatcher.resx">
@@ -372,6 +389,9 @@
     <EmbeddedResource Include="Forms\frmMondayList.resx">
       <DependentUpon>frmMondayList.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmMondaySearch.resx">
+      <DependentUpon>frmMondaySearch.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmPSE.resx">
       <DependentUpon>frmPSE.vb</DependentUpon>
     </EmbeddedResource>
@@ -398,6 +418,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
+    <None Include="BuildersPSEKey.pfx" />
     <None Include="IncExcDataSet.xsc">
       <DependentUpon>IncExcDataSet.xsd</DependentUpon>
     </None>
@@ -409,6 +430,7 @@
     <None Include="IncExcDataSet.xss">
       <DependentUpon>IncExcDataSet.xsd</DependentUpon>
     </None>
+    <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
@@ -482,6 +504,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="BuildersPSEicon.ico" />
+    <Content Include="favicon.ico" />
     <Content Include="SqlServerTypes\Loader.cs" />
     <Content Include="SqlServerTypes\readme.htm" />
     <Content Include="SqlServerTypes\x64\msvcr120.dll">

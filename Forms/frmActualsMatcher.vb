@@ -1,6 +1,6 @@
 ﻿Option Strict On
 Imports System.Data.SqlClient
-Imports BuildersPSE2.BuildersPSE.Utilities
+Imports BuildersPSE2.Utilities
 Imports BuildersPSE2.DataAccess
 Imports Microsoft.VisualBasic.FileIO
 
@@ -30,45 +30,53 @@ Public Class frmActualsMatcher
             parser.TextFieldType = FieldType.Delimited
             parser.SetDelimiters(",")
 
-            ' Read header
             Dim headers = parser.ReadFields()
-            For Each h In headers
-                miTekData.Columns.Add(h)
+            For Each h As String In headers
+                miTekData.Columns.Add(h, GetType(String))
             Next
 
-            ' Temporary table to hold ALL rows first
-            Dim tempTable As New DataTable()
-            For Each col In miTekData.Columns
-                tempTable.Columns.Add(col.ToString())
-            Next
-
-            ' Load ALL rows into temp table
             While Not parser.EndOfData
                 Dim fields = parser.ReadFields()
                 If fields IsNot Nothing AndAlso fields.Length = headers.Length Then
-                    tempTable.Rows.Add(fields)
+                    miTekData.Rows.Add(fields)
                 End If
             End While
-
-            ' FILTER: Only rows with BOTH WONbr AND SONbr
-            Dim validRows = tempTable.AsEnumerable() _
-            .Where(Function(r)
-                       Dim wo = If(r("WONbr") Is DBNull.Value, String.Empty, r("WONbr").ToString().Trim())
-                       Dim so = If(r("SONbr") Is DBNull.Value, String.Empty, r("SONbr").ToString().Trim())
-                       Return Not String.IsNullOrEmpty(wo) AndAlso Not String.IsNullOrEmpty(so)
-                   End Function)
-
-            ' Copy only valid rows to final table
-            For Each row In validRows
-                miTekData.ImportRow(row)
-            Next
         End Using
 
-        ' Bind to grid
+        ' FILTER: ONLY ROWS WITH BOTH WONbr AND SONbr
+        Dim validRows = miTekData.AsEnumerable() _
+        .Where(Function(r)
+                   Dim wo = If(r("WONbr") Is DBNull.Value, String.Empty, r("WONbr").ToString().Trim())
+                   Dim so = If(r("SONbr") Is DBNull.Value, String.Empty, r("SONbr").ToString().Trim())
+                   Return Not String.IsNullOrEmpty(wo) AndAlso Not String.IsNullOrEmpty(so)
+               End Function).ToList()
+
+        ' Rebuild table with only valid rows
+        Dim filteredTable As New DataTable()
+        For Each col As DataColumn In miTekData.Columns
+            filteredTable.Columns.Add(col.ColumnName, GetType(String))
+        Next
+
+        For Each row In validRows
+            filteredTable.ImportRow(row)
+        Next
+
+        miTekData = filteredTable
+
+        ' NO SORTING — AS REQUESTED
+        ' Just bind the filtered data as-is
+
         dgvMitek.DataSource = miTekData
 
+        ' Show/format SentToShopDate if exists
+        If dgvMitek.Columns.Contains("SentToShopDate") Then
+            dgvMitek.Columns("SentToShopDate").Visible = True
+            dgvMitek.Columns("SentToShopDate").DefaultCellStyle.Format = "MM/dd/yyyy"
+            dgvMitek.Columns("SentToShopDate").HeaderText = "Sent To Shop"
+            dgvMitek.Columns("SentToShopDate").DisplayIndex = 1
+        End If
 
-        ' === HIDE COLUMNS ===
+        ' Hide unwanted columns
         Dim columnsToHide As String() = {"CustomerName", "JobName", "StructureName", "Project"}
         For Each colName In columnsToHide
             If dgvMitek.Columns.Contains(colName) Then
@@ -76,15 +84,16 @@ Public Class frmActualsMatcher
             End If
         Next
 
-        ' Friendly message if nothing qualified
+        ' Message
         If miTekData.Rows.Count = 0 Then
-            MessageBox.Show("No rows found with both Work Order (WONbr) and Sales Order (SONbr)." & vbCrLf &
-                       "Only rows containing both will be imported.",
+            MessageBox.Show("No rows found with both WONbr and SONbr." & vbCrLf &
+                       "Only rows with both will be imported.",
                        "No Valid Data", MessageBoxButtons.OK, MessageBoxIcon.Information)
             btnImportMatched.Enabled = False
         Else
             btnImportMatched.Enabled = True
         End If
+
         ColorMiTekRows()
         HighlightAlreadyImportedRows()
     End Sub
@@ -181,7 +190,13 @@ Public Class frmActualsMatcher
         Next
     End Sub
 
-
+    Private Function GetBuildingIDForLevel(levelID As Integer) As Integer
+        Dim result = SqlConnectionManager.Instance.ExecuteScalar(Of Integer?)(
+        Queries.GetBuildingIDByLevelID,
+        {New SqlParameter("@LevelID", levelID)}
+    )
+        Return If(result.HasValue, result.Value, 0)
+    End Function
 
     Private Sub btnClearMatches_Click(sender As Object, e As EventArgs) Handles btnClearMatches.Click
         matches.Clear()
@@ -202,20 +217,36 @@ Public Class frmActualsMatcher
 
         Dim importedCount As Integer = 0
 
+        ' SORT MATCHES BY SentToShopDate DESC BEFORE IMPORT
+        Dim sortedMatches = matches.OrderByDescending(Function(kvp)
+                                                          Dim row As DataRow = miTekData.Rows(kvp.Key)
+                                                          Dim dateObj = row("SentToShopDate")
+
+                                                          Dim dateStr As String = ""
+                                                          If dateObj IsNot Nothing AndAlso dateObj IsNot DBNull.Value Then
+                                                              dateStr = dateObj.ToString().Trim()
+                                                          End If
+
+                                                          Dim parsedDate As DateTime
+                                                          If DateTime.TryParse(dateStr, parsedDate) Then
+                                                              Return parsedDate
+                                                          Else
+                                                              Return DateTime.MinValue
+                                                          End If
+                                                      End Function).ToList()
+
         Using conn = SqlConnectionManager.Instance.GetConnection()
             Using tran = conn.BeginTransaction()
                 Try
-                    For Each kvp In matches
+                    For Each kvp In sortedMatches
                         Dim rowIndex As Integer = kvp.Key
                         Dim row As DataRow = miTekData.Rows(rowIndex)
                         Dim levelID As Integer = kvp.Value
 
-                        ' NEW: SKIP ROWS WITHOUT BOTH WO and SO
+                        ' SKIP ROWS WITHOUT BOTH WO and SO (safety)
                         Dim woNbr As String = If(row("WONbr") Is DBNull.Value OrElse row("WONbr") Is Nothing, String.Empty, row("WONbr").ToString().Trim())
                         Dim soNbr As String = If(row("SONbr") Is DBNull.Value OrElse row("SONbr") Is Nothing, String.Empty, row("SONbr").ToString().Trim())
-
                         If String.IsNullOrEmpty(woNbr) OrElse String.IsNullOrEmpty(soNbr) Then
-                            ' Skip this row — no WO/SO
                             Continue For
                         End If
 
@@ -231,6 +262,7 @@ Public Class frmActualsMatcher
 
                         Dim params() As SqlParameter = {
                         New SqlParameter("@LevelID", levelID),
+                        New SqlParameter("@BuildingID", GetBuildingIDForLevel(levelID)),
                         New SqlParameter("@VersionID", versionID),
                         New SqlParameter("@StageType", stageType),
                         New SqlParameter("@ActualBDFT", If(row("BF") Is DBNull.Value, CType(DBNull.Value, Object), CType(CDec(row("BF")), Object))),

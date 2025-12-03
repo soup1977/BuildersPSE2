@@ -3,8 +3,11 @@
         Public Property ContractMonth As String
         Public Property ID As Integer
         Public Property PriorSettle As Decimal?
+        Public Property PullDate As DateTime
         Public Overrides Function ToString() As String
-            Return $"{ContractMonth} – ${PriorSettle.GetValueOrDefault():F2}"
+            Dim settleStr = If(PriorSettle.HasValue, PriorSettle.Value.ToString("N2"), "—")
+            Dim pullDateStr = PullDate.ToString("MM/dd/yyyy")  ' Date only, no time
+            Return $"{ContractMonth}    ${settleStr}    [{pullDateStr}]"
         End Function
     End Class
 End Namespace

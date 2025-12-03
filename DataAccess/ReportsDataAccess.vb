@@ -1,5 +1,5 @@
 ﻿Imports System.Data.SqlClient
-Imports BuildersPSE2.BuildersPSE.Utilities
+Imports BuildersPSE2.Utilities
 Imports BuildersPSE2.DataAccess
 
 Public Class ReportsDataAccess

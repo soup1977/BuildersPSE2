@@ -158,19 +158,18 @@
 
         ' ProjectVersions Queries
         Public Const SelectProjectVersions As String = "SELECT pv.*, c.CustomerName, s.SalesName FROM ProjectVersions pv LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT JOIN Sales s ON pv.SalesID = s.SalesID WHERE ProjectID = @ProjectID ORDER BY VersionDate DESC"
-        Public Const InsertProjectVersion As String = "INSERT INTO ProjectVersions (ProjectID, VersionName, VersionDate, Description, LastModifiedDate, CustomerID, SalesID) OUTPUT INSERTED.VersionID VALUES (@ProjectID, @VersionName, @VersionDate, @Description, GetDate(), @CustomerID, @SalesID)"
-        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, Description = @Description, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID WHERE VersionID = @VersionID"
+        Public Const InsertProjectVersion As String = "INSERT INTO ProjectVersions (ProjectID, VersionName, VersionDate, Description, LastModifiedDate, CustomerID, SalesID, MondayID) OUTPUT INSERTED.VersionID VALUES (@ProjectID, @VersionName, @VersionDate, @Description, GetDate(), @CustomerID, @SalesID, @MondayID)"
+        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, Description = @Description, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID, MondayID=@MondayID WHERE VersionID = @VersionID"
 
         ' ProjectVersions Duplication Queries
         Public Const DuplicateBuildings As String = "INSERT INTO Buildings (BuildingName, BuildingType, ResUnits, BldgQty, VersionID, LastModifiedDate) OUTPUT INSERTED.BuildingID SELECT BuildingName, BuildingType, ResUnits, BldgQty, @NewVersionID, GetDate() FROM Buildings WHERE VersionID = @OriginalVersionID"
         Public Const DuplicateLevels As String = "INSERT INTO Levels (VersionID, BuildingID, ProductTypeID, LevelNumber, LevelName, LastModifiedDate) OUTPUT INSERTED.LevelID SELECT @NewVersionID, @NewBuildingID, ProductTypeID, LevelNumber, LevelName, GetDate() FROM Levels WHERE VersionID = @OriginalVersionID AND BuildingID = @OriginalBuildingID"
-        Public Const DuplicateRawUnits As String = "INSERT INTO RawUnits (RawUnitName, VersionID, ProductTypeID, BF, LF, EWPLF, SqFt, FCArea, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, DeliveryCost, TotalSellPrice, AvgSPFNo2) OUTPUT INSERTED.RawUnitID SELECT RawUnitName, @NewVersionID, ProductTypeID, BF, LF, EWPLF, SqFt, FCArea, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, DeliveryCost, TotalSellPrice, AvgSPFNo2 FROM RawUnits WHERE VersionID = @OriginalVersionID"
+        Public Const DuplicateRawUnits As String = "INSERT INTO RawUnits (RawUnitName, VersionID, ProductTypeID, BF, LF, EWPLF, SqFt, FCArea, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, DeliveryCost, TotalSellPrice, AvgSPFNo2, SPFNo2BDFT, Avg241800, MSR241800BDFT, Avg242400, MSR242400BDFT, Avg261800, MSR261800BDFT, Avg262400, MSR262400BDFT) OUTPUT INSERTED.RawUnitID SELECT RawUnitName, @NewVersionID, ProductTypeID, BF, LF, EWPLF, SqFt, FCArea, LumberCost, PlateCost, ManufLaborCost, DesignLabor, MGMTLabor, JobSuppliesCost, ManHours, ItemCost, OverallCost, DeliveryCost, TotalSellPrice, AvgSPFNo2, SPFNo2BDFT, Avg241800, MSR241800BDFT, Avg242400, MSR242400BDFT, Avg261800, MSR261800BDFT, Avg262400, MSR262400BDFT FROM RawUnits WHERE VersionID = @OriginalVersionID"
         Public Const DuplicateActualUnits As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder) OUTPUT INSERTED.ActualUnitID SELECT @NewVersionID, @NewRawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder FROM ActualUnits WHERE VersionID = @OriginalVersionID AND RawUnitID = @OriginalRawUnitID"
         Public Const DuplicateCalculatedComponents As String = "INSERT INTO CalculatedComponents (VersionID, ActualUnitID, ComponentType, Value) OUTPUT INSERTED.ComponentID SELECT @NewVersionID, @NewActualUnitID, ComponentType, Value FROM CalculatedComponents WHERE VersionID = @OriginalVersionID AND ActualUnitID = @OriginalActualUnitID"
         Public Const DuplicateActualToLevelMapping As String = "INSERT INTO ActualToLevelMapping (VersionID, ActualUnitID, LevelID, Quantity) OUTPUT INSERTED.MappingID SELECT @NewVersionID, @NewActualUnitID, @NewLevelID, Quantity FROM ActualToLevelMapping WHERE VersionID = @OriginalVersionID AND ActualUnitID = @OriginalActualUnitID AND LevelID = @OriginalLevelID"
         Public Const DuplicateProjectProductSettings As String = "INSERT INTO ProjectProductSettings (VersionID, ProductTypeID, MarginPercent, LumberAdder) OUTPUT INSERTED.SettingID SELECT @NewVersionID, ProductTypeID, MarginPercent, LumberAdder FROM ProjectProductSettings WHERE VersionID = @OriginalVersionID"
 
-        ' Add to Queries.vb (in BuildersPSE.DataAccess namespace)
         ' ProjectDesignInfo
         Public Const SelectProjectDesignInfo As String = "SELECT * FROM ProjectDesignInfo WHERE ProjectID = @ProjectID"
         Public Const InsertProjectDesignInfo As String = "INSERT INTO ProjectDesignInfo (ProjectID,  BuildingCode, Importance, ExposureCategory, WindSpeed, SnowLoadType, OccupancyCategory, RoofPitches, FloorDepths, WallHeights, HeelHeights) OUTPUT INSERTED.InfoID VALUES (@ProjectID, @BuildingCode, @Importance, @ExposureCategory, @WindSpeed, @SnowLoadType, @OccupancyCategory, @RoofPitches, @FloorDepths, @WallHeights, @HeelHeights)"
@@ -248,9 +247,12 @@
 
 
         '--- Lumber Futures -------------------------------------------------
-        Public Const SelectLumberFuturesByVersion As String = "SELECT LumberFutureID, ContractMonth, PriorSettle FROM LumberFutures WHERE VersionID = @VersionID ORDER BY PullDate"
+        Public Const SelectLumberFuturesByVersion As String = "SELECT LumberFutureID, ContractMonth, PriorSettle, PullDate FROM LumberFutures WHERE VersionID = @VersionID ORDER BY PullDate"
         Public Const UpsertLumberFuture As String = "IF EXISTS (SELECT 1 FROM LumberFutures WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth) UPDATE LumberFutures SET PriorSettle = @PriorSettle, PullDate = GETDATE() WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth ELSE INSERT INTO LumberFutures (VersionID, ContractMonth, PriorSettle) VALUES (@VersionID, @ContractMonth, @PriorSettle)"
         Public Const UpdateProjectProductSettingLumberAdder As String = "UPDATE ProjectProductSettings SET LumberAdder = @LumberAdder WHERE VersionID = @VersionID AND ProductTypeID = @ProductTypeID"
+        Public Const InsertLumberFuture As String = "INSERT INTO LumberFutures (VersionID, ContractMonth, PriorSettle, PullDate) VALUES (@VersionID, @ContractMonth, @PriorSettle, GETDATE())"
+
+        Public Const UpdateLumberFuture As String = "UPDATE LumberFutures SET PriorSettle = @PriorSettle, PullDate = GETDATE() WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth"
 
         ' Project summary – includes City, State, Architect, Engineer, plan dates and Salesman
         'Public Const SelectProjectSummary As String = "SELECT p.ProjectName, p.JBID,  pv.VersionName, c.CustomerName, s.SalesName, p.City, p.State, ca.CustomerName As Architect, ce.CustomerName As Engineer, p.ArchPlansDated, p.EngPlansDated, b.BuildingName, b.BldgQty, b.OverallPrice, l.LevelName, l.OverallSQFT, l.OverallPrice As OverallPrice_Level, pt.ProductTypeName, SUM(b.BldgQty) OVER (PARTITION BY p.ProjectID) AS TotalBldgQty FROM Projects p INNER JOIN ProjectVersions pv On p.ProjectID = pv.ProjectID And pv.VersionID = @VersionID LEFT JOIN Customer c On pv.CustomerID = c.CustomerID And c.CustomerType = 1 LEFT JOIN Sales s On pv.SalesID = s.SalesID LEFT JOIN Customer ca On p.ArchitectID = ca.CustomerID And ca.CustomerType = 2 LEFT JOIN Customer ce On p.EngineerID = ce.CustomerID And ce.CustomerType = 3 LEFT JOIN Buildings b On pv.VersionID = b.VersionID LEFT JOIN Levels l On b.BuildingID = l.BuildingID LEFT JOIN ProductType pt On l.ProductTypeID = pt.ProductTypeID  WHERE p.ProjectID = @ProjectID"
@@ -297,17 +299,19 @@ WHERE p.ProjectID = @ProjectID"
         Public Const InsertLevelActual As String = "
 INSERT INTO LevelActuals
     (LevelID, VersionID, StageType,
-     ActualBDFT, ActualLumberCost, ActualPlateCost, ActualManufLaborCost,
+     ActualBDFT, ActualLumberCost, ActualPlateCost, ActualManufLaborCost, ActualManufMH,
      ActualItemCost, ActualDeliveryCost, ActualMiscLaborCost, ActualTotalCost,
      ActualSoldAmount, ActualMarginPercent, AvgSPFNo2Actual,
-     MiTekJobNumber, BistrackWorksOrder, BisTrackSalesOrder,ActualManufMH, ImportedBy, Notes)
+     MiTekJobNumber, BistrackWorksOrder, BisTrackSalesOrder,
+     BuildingID, ImportedBy, Notes)
 OUTPUT INSERTED.ActualID
 VALUES
     (@LevelID, @VersionID, @StageType,
-     @ActualBDFT, @ActualLumberCost, @ActualPlateCost, @ActualManufLaborCost,
+     @ActualBDFT, @ActualLumberCost, @ActualPlateCost, @ActualManufLaborCost, @ActualManufMH,
      @ActualItemCost, @ActualDeliveryCost, @ActualMiscLaborCost, @ActualTotalCost,
      @ActualSoldAmount, @ActualMarginPercent, @AvgSPFNo2Actual,
-     @MiTekJobNumber, @BistrackWorksOrder, @BisTrackSalesOrder,@ActualManufMH, @ImportedBy, @Notes)"
+     @MiTekJobNumber, @BistrackWorksOrder, @BisTrackSalesOrder,
+     @BuildingID, @ImportedBy, @Notes)"
 
         ' 2. Get ALL actuals for a specific Level (shows every shipment)
         Public Const SelectAllActualsForLevel As String = "
@@ -347,7 +351,7 @@ VALUES
     JOIN Buildings b ON l.BuildingID = b.BuildingID
     LEFT JOIN LevelActuals la ON l.LevelID = la.LevelID 
                              AND l.VersionID = la.VersionID
-                             AND la.StageType = 2   -- 2 = Invoice (change to 1 for Design)
+                             AND la.StageType = 1   -- 2 = Invoice (change to 1 for Design)
     WHERE l.VersionID = @VersionID
     ORDER BY l.LevelName, la.ImportDate DESC"
 
@@ -368,7 +372,7 @@ VALUES
     JOIN Buildings b ON l.BuildingID = b.BuildingID
     LEFT JOIN LevelActuals la ON l.LevelID = la.LevelID 
                              AND l.VersionID = la.VersionID
-                             AND la.StageType = 2
+                             AND la.StageType = 1
     WHERE l.VersionID = @VersionID"
 
         ' 5. Design-stage only variance (MiTek actuals vs. Estimate)

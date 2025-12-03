@@ -3,7 +3,7 @@
 Imports System.Configuration
 Imports System.Data.SqlClient
 
-Namespace BuildersPSE.Utilities
+Namespace Utilities
     Public Class SqlConnectionManager
         Private Shared _instance As SqlConnectionManager
         Private Shared ReadOnly _lock As New Object()

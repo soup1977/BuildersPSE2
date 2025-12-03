@@ -3,7 +3,7 @@
 Imports System.Security.Cryptography
 Imports System.Text
 
-Namespace BuildersPSE.Utilities
+Namespace Utilities
     Public Module SecurityHelper
         ' Encrypt the API key (run once to store encrypted value)
         Public Function EncryptApiKey(apiKey As String) As String

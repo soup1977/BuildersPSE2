@@ -37,11 +37,12 @@ Partial Class frmActualsMatcher
         Me.dgvMitek.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.dgvMitek.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells
         Me.dgvMitek.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvMitek.Location = New System.Drawing.Point(12, 35)
         Me.dgvMitek.Name = "dgvMitek"
         Me.dgvMitek.ReadOnly = True
-        Me.dgvMitek.Size = New System.Drawing.Size(475, 475)
+        Me.dgvMitek.Size = New System.Drawing.Size(642, 485)
         Me.dgvMitek.TabIndex = 0
         '
         'dgvProject
@@ -50,15 +51,15 @@ Partial Class frmActualsMatcher
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.dgvProject.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvProject.Location = New System.Drawing.Point(500, 35)
+        Me.dgvProject.Location = New System.Drawing.Point(660, 35)
         Me.dgvProject.Name = "dgvProject"
         Me.dgvProject.ReadOnly = True
-        Me.dgvProject.Size = New System.Drawing.Size(475, 475)
+        Me.dgvProject.Size = New System.Drawing.Size(482, 485)
         Me.dgvProject.TabIndex = 1
         '
         'btnMatchSelected
         '
-        Me.btnMatchSelected.Location = New System.Drawing.Point(534, 525)
+        Me.btnMatchSelected.Location = New System.Drawing.Point(704, 529)
         Me.btnMatchSelected.Name = "btnMatchSelected"
         Me.btnMatchSelected.Size = New System.Drawing.Size(105, 29)
         Me.btnMatchSelected.TabIndex = 3
@@ -67,7 +68,7 @@ Partial Class frmActualsMatcher
         '
         'btnClearMatches
         '
-        Me.btnClearMatches.Location = New System.Drawing.Point(645, 525)
+        Me.btnClearMatches.Location = New System.Drawing.Point(815, 529)
         Me.btnClearMatches.Name = "btnClearMatches"
         Me.btnClearMatches.Size = New System.Drawing.Size(105, 29)
         Me.btnClearMatches.TabIndex = 5
@@ -76,7 +77,7 @@ Partial Class frmActualsMatcher
         '
         'btnImportMatched
         '
-        Me.btnImportMatched.Location = New System.Drawing.Point(756, 525)
+        Me.btnImportMatched.Location = New System.Drawing.Point(926, 529)
         Me.btnImportMatched.Name = "btnImportMatched"
         Me.btnImportMatched.Size = New System.Drawing.Size(105, 29)
         Me.btnImportMatched.TabIndex = 6
@@ -85,7 +86,7 @@ Partial Class frmActualsMatcher
         '
         'btnCancel
         '
-        Me.btnCancel.Location = New System.Drawing.Point(867, 525)
+        Me.btnCancel.Location = New System.Drawing.Point(1037, 529)
         Me.btnCancel.Name = "btnCancel"
         Me.btnCancel.Size = New System.Drawing.Size(105, 29)
         Me.btnCancel.TabIndex = 7
@@ -96,7 +97,7 @@ Partial Class frmActualsMatcher
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(984, 661)
+        Me.ClientSize = New System.Drawing.Size(1151, 570)
         Me.Controls.Add(Me.btnCancel)
         Me.Controls.Add(Me.btnImportMatched)
         Me.Controls.Add(Me.btnClearMatches)

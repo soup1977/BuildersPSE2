@@ -8,7 +8,7 @@ Imports System.Data.SqlClient
 Imports BuildersPSE2.DataAccess
 Imports Microsoft.VisualBasic.FileIO
 
-Namespace BuildersPSE.Utilities
+Namespace Utilities
 
     Public Class ActualsImporter
 

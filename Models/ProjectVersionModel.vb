@@ -9,4 +9,5 @@
     Public Property SalesID As Integer?
     Public Property CustomerName As String
     Public Property SalesName As String
+    Public Property MondayID As String
 End Class
