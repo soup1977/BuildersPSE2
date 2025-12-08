@@ -51,6 +51,7 @@ Namespace DataAccess
 
         ' Refactored Import PSE Spreadsheet as New Project
         Public Shared Sub ImportSpreadsheetAsNewProject(filePath As String)
+            UIHelper.ShowBusy(frmMain, "Importing spreadsheet as new project...")
             Dim spreadsheetData As Dictionary(Of String, DataTable) = SpreadsheetParser.ParseSpreadsheet(filePath)
             Dim importLog As New StringBuilder()
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
@@ -92,9 +93,9 @@ Namespace DataAccess
                                                                                     )
                                                                                    Dim projectID As Integer = ids.Item1
                                                                                    Dim newVersionID As Integer = ids.Item2
-                                                                                   Debug.WriteLine($"Project '{projectName}' created successfully with ID {projectID}.")
-                                                                                   Debug.WriteLine($"Project version created with ID {newVersionID}.")
-                                                                                   Debug.WriteLine("Inserted default project product settings.")  ' Simplified log
+                                                                                   UIHelper.Add($"Project '{projectName}' created successfully with ID {projectID}.")
+                                                                                   UIHelper.Add($"Project version created with ID {newVersionID}.")
+                                                                                   UIHelper.Add("Inserted default project product settings.")  ' Simplified log
 
 
                                                                                    ' Step 3.2: Import RawUnits (refactored)
@@ -151,7 +152,7 @@ Namespace DataAccess
                                                                                            Next
                                                                                        End If
                                                                                    Next
-                                                                                   Debug.WriteLine($"Imported {rawUnitCount} raw units from FloorImport and RoofImport.")
+                                                                                   UIHelper.Add($"Imported {rawUnitCount} raw units from FloorImport and RoofImport.")
 
                                                                                    ' Step 3.3: Import ActualUnits (refactored)
                                                                                    Dim actualUnitMap As New Dictionary(Of String, Integer)
@@ -212,7 +213,7 @@ Namespace DataAccess
                                                                                            actualUnitCount += 1
                                                                                        Next
                                                                                    Next
-                                                                                   Debug.WriteLine($"Imported {actualUnitCount} actual units from Floor and Roof Unit Data.")
+                                                                                   UIHelper.Add($"Imported {actualUnitCount} actual units from Floor and Roof Unit Data.")
 
                                                                                    ' Step 3.4: Import CalculatedComponents (refactored – now uses ModelParams and NonQuery)
                                                                                    Dim componentCount As Integer = 0
@@ -293,7 +294,7 @@ Namespace DataAccess
                                                                                            componentCount += 1
                                                                                        Next
                                                                                    Next
-                                                                                   Debug.WriteLine($"Imported {componentCount} calculated components.")
+                                                                                   UIHelper.Add($"Imported {componentCount} calculated components.")
 
                                                                                    ' Step 3.5: Import Buildings using shared function
                                                                                    Dim buildingMap As New Dictionary(Of String, Integer)(StringComparer.OrdinalIgnoreCase)
@@ -309,7 +310,7 @@ Namespace DataAccess
                                                                                            If newBldgID > 0 Then buildingCount += 1 ' Only count new inserts
                                                                                        Next
                                                                                    End If
-                                                                                   Debug.WriteLine($"Imported {buildingCount} buildings from Buildings sheet.")
+                                                                                   UIHelper.Add($"Imported {buildingCount} buildings from Buildings sheet.")
 
                                                                                    ' Step 3.6: Import Levels using shared function
                                                                                    Dim levelMap As New Dictionary(Of Tuple(Of Integer, Integer, String), Integer)(
@@ -330,7 +331,7 @@ Namespace DataAccess
                                                                                            Next
                                                                                        End If
                                                                                    Next
-                                                                                   Debug.WriteLine($"Imported {levelCount} levels for buildings.")
+                                                                                   UIHelper.Add($"Imported {levelCount} levels for buildings.")
 
                                                                                    ' Step 3.7: Import ActualToLevelMappings (refactored)
                                                                                    Dim mappingCount As Integer = 0
@@ -350,7 +351,7 @@ Namespace DataAccess
 
                                                                                                For colIdx As Integer = 46 To dt.Columns.Count - 1
                                                                                                    Dim qtyObj As Object = dt.Rows(rowIdx)(colIdx)
-                                                                                                   If qtyObj Is DBNull.Value OrElse CInt(qtyObj) <= 0 Then Continue For
+                                                                                                   If qtyObj Is DBNull.Value OrElse String.IsNullOrWhiteSpace(CStr(qtyObj)) OrElse (IsNumeric(qtyObj) AndAlso CInt(qtyObj) <= 0) Then Continue For
                                                                                                    Dim rawUnitName As String = If(dt.Rows(0)(colIdx) Is DBNull.Value, String.Empty, CStr(dt.Rows(0)(colIdx))).Trim()
                                                                                                    Dim unitName As String = Regex.Replace(rawUnitName, "actual$", "", RegexOptions.IgnoreCase).Trim()
                                                                                                    If String.IsNullOrEmpty(unitName) Then Continue For
@@ -378,7 +379,7 @@ Namespace DataAccess
                                                                                            Next
                                                                                        End If
                                                                                    Next
-                                                                                   Debug.WriteLine($"Imported {mappingCount} actual-to-level mappings.")
+                                                                                   UIHelper.Add($"Imported {mappingCount} actual-to-level mappings.")
 
                                                                                    ' Commit and recalculate
                                                                                    FinalizeImport(newVersionID, importLog, transaction)
@@ -425,8 +426,8 @@ Namespace DataAccess
                         newProjectID = ids.Item1
                         Dim versionID As Integer = ids.Item2
                         ' Optional: Add logging for consistency
-                        Debug.WriteLine($"Project '{projectName}' created successfully with ID {newProjectID}.")
-                        Debug.WriteLine($"Project version created with ID {versionID}.")
+                        UIHelper.Add($"Project '{projectName}' created successfully with ID {newProjectID}.")
+                        UIHelper.Add($"Project version created with ID {versionID}.")
 
                         ' === Parse CSV ===
                         Dim buildingKeys As New HashSet(Of String)
@@ -1106,8 +1107,9 @@ Namespace DataAccess
 )
             trans.Commit()
             RollupDataAccess.RecalculateVersion(versionID)
-            frmMainProjectList.RefreshProjects()
-            Debug.WriteLine("All data imported and rollups recalculated.") ' Common append
+
+            UIHelper.Add("All data imported and rollups recalculated.") ' Common append
+            UIHelper.HideBusy(frmMain)
             MessageBox.Show(If(importLog.Length > 0, importLog.ToString(), successMessage), "Import Summary", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End Sub
 

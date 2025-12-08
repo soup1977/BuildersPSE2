@@ -580,6 +580,7 @@ Namespace DataAccess
                                                     .RawUnitID = reader.GetInt32(reader.GetOrdinal("RawUnitID")),
                                                     .ColorCode = If(Not reader.IsDBNull(reader.GetOrdinal("ColorCode")), reader.GetString(reader.GetOrdinal("ColorCode")), String.Empty),
                                                     .VersionID = versionID,
+                                                    .ReferencedRawUnitName = If(Not reader.IsDBNull(reader.GetOrdinal("RawUnitName")), reader.GetString(reader.GetOrdinal("RawUnitName")), String.Empty),
                                                     .ProductTypeID = reader.GetInt32(reader.GetOrdinal("ProductTypeID"))
                                                 }
                                                                                actual.CalculatedComponents = GetCalculatedComponentsByActualUnitID(actual.ActualUnitID)
@@ -903,35 +904,51 @@ Namespace DataAccess
             Return margin
         End Function
 
-        Public Shared Function ComputeLevelUnits(levelID As Integer) As List(Of DisplayUnitData)
-            Dim units As New List(Of DisplayUnitData)
+
+        Public Shared Function ComputeLevelUnitsDataTable(levelID As Integer) As DataTable
+            Dim dt As New DataTable()
+
+            ' Define columns once — matches your DisplayUnitData properties
+            dt.Columns.Add("MappingID", GetType(Integer))
+            dt.Columns.Add("UnitName", GetType(String))
+            dt.Columns.Add("ReferencedRawUnitName", GetType(String))
+            dt.Columns.Add("ColorCode", GetType(String))
+            dt.Columns.Add("ActualUnitQuantity", GetType(Integer))
+            dt.Columns.Add("PlanSQFT", GetType(Decimal))
+            dt.Columns.Add("LF", GetType(Decimal))
+            dt.Columns.Add("BDFT", GetType(Decimal))
+            dt.Columns.Add("LumberCost", GetType(Decimal))
+            dt.Columns.Add("PlateCost", GetType(Decimal))
+            dt.Columns.Add("ManufLaborCost", GetType(Decimal))
+            dt.Columns.Add("DesignLabor", GetType(Decimal))
+            dt.Columns.Add("MGMTLabor", GetType(Decimal))
+            dt.Columns.Add("JobSuppliesCost", GetType(Decimal))
+            dt.Columns.Add("ManHours", GetType(Decimal))
+            dt.Columns.Add("ItemCost", GetType(Decimal))
+            dt.Columns.Add("DeliveryCost", GetType(Decimal))
+            dt.Columns.Add("OverallCost", GetType(Decimal))
+            dt.Columns.Add("SellPrice", GetType(Decimal))
+            dt.Columns.Add("Margin", GetType(Decimal))
+
             Dim mappings As List(Of ActualToLevelMappingModel) = GetActualToLevelMappingsByLevelID(levelID)
-            If Not mappings.Any() Then Return units
+            If Not mappings.Any() Then Return dt
 
             Dim levelInfo As Tuple(Of Integer, Integer, Decimal) = GetLevelInfo(levelID)
             Dim versionID As Integer = levelInfo.Item1
             Dim productTypeID As Integer = levelInfo.Item2
-            ' commonSQFT = levelInfo.Item3 (not used here)
-
             Dim projectID As Integer = GetProjectIDByVersionID(versionID)
             Dim miles As Integer = GetMilesToJobSite(projectID)
             Dim mileageRate As Decimal = GetConfigValue("MileageRate")
-
             Dim totalBDFT As Decimal = 0D
-            Dim unitBDFTs As New List(Of Decimal)
+            Dim unitBDFTs As New List(Of Decimal)()
+            Dim tempRows As New List(Of DataRow)()
 
-            For Each mapping As ActualToLevelMappingModel In mappings
-                Dim actual As ActualUnitModel = mapping.ActualUnit
-                Dim raw As RawUnitModel = GetRawUnitByID(actual.RawUnitID)
-                Dim history As RawUnitLumberHistoryModel = LumberDataAccess.GetLatestLumberHistory(actual.RawUnitID, versionID)
+            For Each mapping In mappings
+                Dim actual = mapping.ActualUnit
+                Dim raw = GetRawUnitByID(actual.RawUnitID)
+                Dim history = LumberDataAccess.GetLatestLumberHistory(actual.RawUnitID, versionID)
+
                 If raw Is Nothing OrElse raw.SqFt.GetValueOrDefault() <= 0D Then Continue For
-
-                Dim display As New DisplayUnitData With {
-                    .ActualUnit = actual,
-                    .MappingID = mapping.MappingID,
-                    .ReferencedRawUnitName = raw.RawUnitName,
-                    .ActualUnitQuantity = mapping.Quantity
-                }
 
                 Dim planSqft As Decimal = actual.PlanSQFT
                 Dim opt As Decimal = actual.OptionalAdder
@@ -939,39 +956,48 @@ Namespace DataAccess
                 Dim extSqft As Decimal = planSqft * qty * opt
 
                 Dim lfPer As Decimal = raw.LF.GetValueOrDefault() / raw.SqFt.Value
-                display.LF = lfPer * extSqft
-
                 Dim bdftPer As Decimal = raw.BF.GetValueOrDefault() / raw.SqFt.Value
-                display.BDFT = bdftPer * extSqft
-
                 Dim lumberPer As Decimal = history.LumberCost / raw.SqFt.Value
-                display.LumberCost = lumberPer * extSqft
 
+                Dim lumberCost As Decimal = lumberPer * extSqft
                 Dim lumberadder As Decimal = LumberDataAccess.GetLumberAdder(versionID, productTypeID)
-                If lumberadder > 0D Then
-                    display.LumberCost += (display.BDFT / 1000D) * lumberadder
-                End If
+                If lumberadder > 0D Then lumberCost += (bdftPer * extSqft / 1000D) * lumberadder
 
-                display.PlateCost = (raw.PlateCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                display.ManufLaborCost = (raw.ManufLaborCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                display.DesignLabor = (raw.DesignLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                display.MGMTLabor = (raw.MGMTLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                display.JobSuppliesCost = (raw.JobSuppliesCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                display.ManHours = (raw.ManHours.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                display.ItemCost = (raw.ItemCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                Dim row As DataRow = dt.NewRow()
+                row("MappingID") = mapping.MappingID
+                row("UnitName") = actual.UnitName
+                row("ReferencedRawUnitName") = raw.RawUnitName
+                row("ColorCode") = If(String.IsNullOrWhiteSpace(actual.ColorCode), "N/A", actual.ColorCode)
+                row("ActualUnitQuantity") = qty
+                row("PlanSQFT") = planSqft
+                row("LF") = lfPer * extSqft
+                row("BDFT") = bdftPer * extSqft
+                row("LumberCost") = lumberCost
+                row("PlateCost") = (raw.PlateCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                row("ManufLaborCost") = (raw.ManufLaborCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                row("DesignLabor") = (raw.DesignLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                row("MGMTLabor") = (raw.MGMTLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                row("JobSuppliesCost") = (raw.JobSuppliesCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                row("ManHours") = (raw.ManHours.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                row("ItemCost") = (raw.ItemCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
 
-                display.OverallCost = display.LumberCost + display.PlateCost + display.ManufLaborCost + display.DesignLabor + display.MGMTLabor + display.JobSuppliesCost + display.ItemCost
+                Dim overallCost As Decimal = row.Field(Of Decimal)("LumberCost") + row.Field(Of Decimal)("PlateCost") +
+                                    row.Field(Of Decimal)("ManufLaborCost") + row.Field(Of Decimal)("DesignLabor") +
+                                    row.Field(Of Decimal)("MGMTLabor") + row.Field(Of Decimal)("JobSuppliesCost") +
+                                    row.Field(Of Decimal)("ItemCost")
+                row("OverallCost") = overallCost
 
                 Dim margin As Decimal = GetEffectiveMargin(versionID, productTypeID, raw.RawUnitID)
-                display.SellPrice = If(margin >= 1D, display.OverallCost, display.OverallCost / (1D - margin))
-                display.Margin = display.SellPrice - display.OverallCost
+                Dim sellPrice As Decimal = If(margin >= 1D, overallCost, overallCost / (1D - margin))
+                row("SellPrice") = sellPrice
+                row("Margin") = sellPrice - overallCost
 
-                unitBDFTs.Add(display.BDFT)
-                totalBDFT += display.BDFT
-
-                units.Add(display)
+                unitBDFTs.Add(row.Field(Of Decimal)("BDFT"))
+                totalBDFT += row.Field(Of Decimal)("BDFT")
+                tempRows.Add(row)
             Next
 
+            ' Second pass: apply delivery cost
             Dim deliveryTotal As Decimal = 0D
             If totalBDFT > 0D Then
                 Dim numLoads As Decimal = Math.Ceiling(totalBDFT / 10000D)
@@ -980,15 +1006,27 @@ Namespace DataAccess
             End If
 
             If totalBDFT > 0D Then
-                For i As Integer = 0 To units.Count - 1
-                    units(i).DeliveryCost = (unitBDFTs(i) / totalBDFT) * deliveryTotal
-                    Dim margin As Decimal = GetEffectiveMargin(versionID, units(i).ActualUnit.ProductTypeID, units(i).ActualUnit.RawUnitID)
-                    units(i).SellPrice = If(margin >= 1D, units(i).OverallCost + units(i).DeliveryCost, units(i).OverallCost / (1D - margin) + units(i).DeliveryCost)
-                    units(i).Margin = units(i).SellPrice - units(i).OverallCost - units(i).DeliveryCost
+                For i As Integer = 0 To tempRows.Count - 1
+                    Dim row = tempRows(i)
+                    Dim unitBDFT = unitBDFTs(i)
+                    row("DeliveryCost") = (unitBDFT / totalBDFT) * deliveryTotal
+
+                    Dim overallCost = row.Field(Of Decimal)("OverallCost")
+                    Dim margin = GetEffectiveMargin(versionID, CInt(row.Field(Of Integer?)("ActualUnitQuantity")), 0) ' fix if needed
+                    Dim sellPrice = If(margin >= 1D,
+                              overallCost + row.Field(Of Decimal)("DeliveryCost"),
+                              overallCost / (1D - margin) + row.Field(Of Decimal)("DeliveryCost"))
+                    row("SellPrice") = sellPrice
+                    row("Margin") = sellPrice - overallCost - row.Field(Of Decimal)("DeliveryCost")
                 Next
             End If
 
-            Return units
+            ' Add all rows at once
+            For Each row In tempRows
+                dt.Rows.Add(row)
+            Next
+
+            Return dt
         End Function
 
         ' Delete an entire project and all related data, respecting FK constraints

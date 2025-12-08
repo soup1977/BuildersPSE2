@@ -232,6 +232,12 @@
     <Compile Include="Forms\frmInclusionsExclusions.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\frmLoginSplash.Designer.vb">
+      <DependentUpon>frmLoginSplash.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmLoginSplash.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\frmMain.Designer.vb">
       <DependentUpon>frmMain.vb</DependentUpon>
     </Compile>
@@ -354,12 +360,13 @@
       <DependentUpon>ProjectSummaryDataSet.xsd</DependentUpon>
     </Compile>
     <Compile Include="Utilities\ActualsImporter.vb" />
+    <Compile Include="Utilities\CurrentUser.vb" />
     <Compile Include="Utilities\modDialogs.vb" />
     <Compile Include="Utilities\MondaycomAccess.vb" />
     <Compile Include="Utilities\SecurityHelper.vb" />
     <Compile Include="Utilities\SpreadsheetParser.vb" />
     <Compile Include="Utilities\SqlConnectionManager.vb" />
-    <Compile Include="Utilities\StatusLogger.vb" />
+    <Compile Include="Utilities\UIHelper.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\frmActualsMatcher.resx">
@@ -376,6 +383,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmInclusionsExclusions.resx">
       <DependentUpon>frmInclusionsExclusions.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmLoginSplash.resx">
+      <DependentUpon>frmLoginSplash.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmLumberManagement.resx">
       <DependentUpon>frmLumberManagement.vb</DependentUpon>
@@ -505,7 +515,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="BuildersPSEicon.ico" />
-    <Content Include="favicon.ico" />
     <Content Include="SqlServerTypes\Loader.cs" />
     <Content Include="SqlServerTypes\readme.htm" />
     <Content Include="SqlServerTypes\x64\msvcr120.dll">

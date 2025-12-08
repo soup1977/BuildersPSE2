@@ -27,6 +27,9 @@ Partial Class FrmPSE
         Me.ContextMenuLevels = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.mnuCopyUnits = New System.Windows.Forms.ToolStripMenuItem()
         Me.mnuPasteUnits = New System.Windows.Forms.ToolStripMenuItem()
+        Me.mnuCopyBuildingUnits = New System.Windows.Forms.ToolStripMenuItem()
+        Me.mnuPasteBuildingUnits = New System.Windows.Forms.ToolStripMenuItem()
+        Me.mnuClearBuildingCopy = New System.Windows.Forms.ToolStripMenuItem()
         Me.TabControlData = New System.Windows.Forms.TabControl()
         Me.TabUnitBased = New System.Windows.Forms.TabPage()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
@@ -81,6 +84,9 @@ Partial Class FrmPSE
         Me.tabRawUnit = New System.Windows.Forms.TabPage()
         Me.dgvRawUnitsData = New System.Windows.Forms.DataGridView()
         Me.PanelDetails = New System.Windows.Forms.Panel()
+        Me.btnPickColor = New System.Windows.Forms.Button()
+        Me.Label5 = New System.Windows.Forms.Label()
+        Me.txtColorCode = New System.Windows.Forms.TextBox()
         Me.chkAttachToLevel = New System.Windows.Forms.CheckBox()
         Me.btnDeleteUnit = New System.Windows.Forms.Button()
         Me.btnSave = New System.Windows.Forms.Button()
@@ -122,9 +128,7 @@ Partial Class FrmPSE
         Me.BtnCancel = New System.Windows.Forms.Button()
         Me.LblReferencedRawUnit = New System.Windows.Forms.Label()
         Me.TxtReferencedRawUnit = New System.Windows.Forms.TextBox()
-        Me.txtColorCode = New System.Windows.Forms.TextBox()
-        Me.Label5 = New System.Windows.Forms.Label()
-        Me.btnPickColor = New System.Windows.Forms.Button()
+        Me.Column1 = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.ContextMenuLevels.SuspendLayout()
         Me.TabControlData.SuspendLayout()
         Me.TabUnitBased.SuspendLayout()
@@ -148,21 +152,39 @@ Partial Class FrmPSE
         '
         'ContextMenuLevels
         '
-        Me.ContextMenuLevels.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCopyUnits, Me.mnuPasteUnits})
+        Me.ContextMenuLevels.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCopyUnits, Me.mnuPasteUnits, Me.mnuCopyBuildingUnits, Me.mnuPasteBuildingUnits, Me.mnuClearBuildingCopy})
         Me.ContextMenuLevels.Name = "ContextMenuLevels"
-        Me.ContextMenuLevels.Size = New System.Drawing.Size(133, 48)
+        Me.ContextMenuLevels.Size = New System.Drawing.Size(170, 114)
         '
         'mnuCopyUnits
         '
         Me.mnuCopyUnits.Name = "mnuCopyUnits"
-        Me.mnuCopyUnits.Size = New System.Drawing.Size(132, 22)
+        Me.mnuCopyUnits.Size = New System.Drawing.Size(169, 22)
         Me.mnuCopyUnits.Text = "Copy Units"
         '
         'mnuPasteUnits
         '
         Me.mnuPasteUnits.Name = "mnuPasteUnits"
-        Me.mnuPasteUnits.Size = New System.Drawing.Size(132, 22)
+        Me.mnuPasteUnits.Size = New System.Drawing.Size(169, 22)
         Me.mnuPasteUnits.Text = "Paste Units"
+        '
+        'mnuCopyBuildingUnits
+        '
+        Me.mnuCopyBuildingUnits.Name = "mnuCopyBuildingUnits"
+        Me.mnuCopyBuildingUnits.Size = New System.Drawing.Size(169, 22)
+        Me.mnuCopyBuildingUnits.Text = "Copy Bldg Units"
+        '
+        'mnuPasteBuildingUnits
+        '
+        Me.mnuPasteBuildingUnits.Name = "mnuPasteBuildingUnits"
+        Me.mnuPasteBuildingUnits.Size = New System.Drawing.Size(169, 22)
+        Me.mnuPasteBuildingUnits.Text = "Paste Bldg Units"
+        '
+        'mnuClearBuildingCopy
+        '
+        Me.mnuClearBuildingCopy.Name = "mnuClearBuildingCopy"
+        Me.mnuClearBuildingCopy.Size = New System.Drawing.Size(169, 22)
+        Me.mnuClearBuildingCopy.Text = "Clear Copied Data"
         '
         'TabControlData
         '
@@ -623,6 +645,7 @@ Partial Class FrmPSE
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DataGridViewAssigned.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DataGridViewAssigned.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.DataGridViewAssigned.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.Column1})
         Me.DataGridViewAssigned.Location = New System.Drawing.Point(10, 273)
         Me.DataGridViewAssigned.Name = "DataGridViewAssigned"
         Me.DataGridViewAssigned.Size = New System.Drawing.Size(857, 287)
@@ -707,6 +730,31 @@ Partial Class FrmPSE
         Me.PanelDetails.Size = New System.Drawing.Size(253, 647)
         Me.PanelDetails.TabIndex = 2
         Me.PanelDetails.Visible = False
+        '
+        'btnPickColor
+        '
+        Me.btnPickColor.Location = New System.Drawing.Point(203, 168)
+        Me.btnPickColor.Name = "btnPickColor"
+        Me.btnPickColor.Size = New System.Drawing.Size(35, 21)
+        Me.btnPickColor.TabIndex = 52
+        Me.btnPickColor.Text = "..."
+        Me.btnPickColor.UseVisualStyleBackColor = True
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(0, 168)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(117, 13)
+        Me.Label5.TabIndex = 51
+        Me.Label5.Text = "Actual Unit Color Code:"
+        '
+        'txtColorCode
+        '
+        Me.txtColorCode.Location = New System.Drawing.Point(122, 168)
+        Me.txtColorCode.Name = "txtColorCode"
+        Me.txtColorCode.Size = New System.Drawing.Size(76, 20)
+        Me.txtColorCode.TabIndex = 50
         '
         'chkAttachToLevel
         '
@@ -1036,30 +1084,10 @@ Partial Class FrmPSE
         Me.TxtReferencedRawUnit.Size = New System.Drawing.Size(119, 20)
         Me.TxtReferencedRawUnit.TabIndex = 15
         '
-        'txtColorCode
+        'Column1
         '
-        Me.txtColorCode.Location = New System.Drawing.Point(122, 168)
-        Me.txtColorCode.Name = "txtColorCode"
-        Me.txtColorCode.Size = New System.Drawing.Size(76, 20)
-        Me.txtColorCode.TabIndex = 50
-        '
-        'Label5
-        '
-        Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(0, 168)
-        Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(117, 13)
-        Me.Label5.TabIndex = 51
-        Me.Label5.Text = "Actual Unit Color Code:"
-        '
-        'btnPickColor
-        '
-        Me.btnPickColor.Location = New System.Drawing.Point(203, 168)
-        Me.btnPickColor.Name = "btnPickColor"
-        Me.btnPickColor.Size = New System.Drawing.Size(35, 21)
-        Me.btnPickColor.TabIndex = 52
-        Me.btnPickColor.Text = "..."
-        Me.btnPickColor.UseVisualStyleBackColor = True
+        Me.Column1.HeaderText = "Column1"
+        Me.Column1.Name = "Column1"
         '
         'FrmPSE
         '
@@ -1188,4 +1216,8 @@ Partial Class FrmPSE
     Friend WithEvents btnPickColor As Button
     Friend WithEvents Label5 As Label
     Friend WithEvents txtColorCode As TextBox
+    Friend WithEvents mnuCopyBuildingUnits As ToolStripMenuItem
+    Friend WithEvents mnuPasteBuildingUnits As ToolStripMenuItem
+    Friend WithEvents mnuClearBuildingCopy As ToolStripMenuItem
+    Friend WithEvents Column1 As DataGridViewTextBoxColumn
 End Class

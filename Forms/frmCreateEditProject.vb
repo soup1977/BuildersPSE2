@@ -1,9 +1,10 @@
 ﻿Option Strict On
-Imports BuildersPSE2.DataAccess
-Imports BuildersPSE2.BuildersPSE.Models
-Imports Microsoft.Reporting.WinForms
-Imports BuildersPSE2.Utilities
 Imports System.Data.SqlClient
+Imports System.Globalization
+Imports BuildersPSE2.BuildersPSE.Models
+Imports BuildersPSE2.DataAccess
+Imports BuildersPSE2.Utilities
+Imports Microsoft.Reporting.WinForms
 
 Public Class frmCreateEditProject
     Private ReadOnly da As New ProjectDataAccess()
@@ -21,6 +22,7 @@ Public Class frmCreateEditProject
             Return DisplayText
         End Function
     End Class
+    Private ReadOnly _mainForm As frmMain = CType(Application.OpenForms.OfType(Of frmMain)().FirstOrDefault(), frmMain)
 
     Public Sub New(Optional selectedProj As ProjectModel = Nothing, Optional versionID As Integer = 0)
         InitializeComponent()
@@ -68,7 +70,7 @@ Public Class frmCreateEditProject
             cmbLevelType.DisplayMember = "ProductTypeName"
             cmbLevelType.ValueMember = "ProductTypeID"
         Catch ex As Exception
-            StatusLogger.Add($"Error initializing combo boxes: {ex.Message}")
+            UIHelper.Add($"Error initializing combo boxes: {ex.Message}")
             MessageBox.Show($"Error initializing combo boxes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -86,8 +88,12 @@ Public Class frmCreateEditProject
                 }
                 InitializeProjectSettings()
             End If
+            txtEngPlanDate.PromptChar = " "c
+            txtArchPlanDate.PromptChar = " "c
+            txtEngPlanDate.ValidatingType = GetType(Date)
+            txtArchPlanDate.ValidatingType = GetType(Date)
         Catch ex As Exception
-            StatusLogger.Add($"Error initializing project: {ex.Message}")
+            UIHelper.Add($"Error initializing project: {ex.Message}")
             MessageBox.Show($"Error initializing project: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -128,9 +134,9 @@ Public Class frmCreateEditProject
                 tabControlRight.TabPages.Add(tabBuildingInfo)
                 tabControlRight.TabPages.Add(tabLevelInfo)
             End If
-            StatusLogger.Add($"Initialized {tabControlRight.TabPages.Count} tab(s) for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
+            UIHelper.Add($"Initialized {tabControlRight.TabPages.Count} tab(s) for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
         Catch ex As Exception
-            StatusLogger.Add($"Error initializing tab control: {ex.Message}")
+            UIHelper.Add($"Error initializing tab control: {ex.Message}")
             MessageBox.Show($"Error initializing tab control: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -147,7 +153,7 @@ Public Class frmCreateEditProject
 
         Catch ex As Exception
             isChangingVersion = False
-            StatusLogger.Add("Status: Error loading versions: " & ex.Message)
+            UIHelper.Add("Status: Error loading versions: " & ex.Message)
             MessageBox.Show("Error loading versions: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -155,7 +161,7 @@ Public Class frmCreateEditProject
     ' Clears the version combo box and project tree for new projects.
     Private Sub ClearVersionComboAndTree()
         cboVersion.DataSource = New List(Of ProjectVersionModel)()
-        StatusLogger.Add("Status: Save the project to create a version.")
+        UIHelper.Add("Status: Save the project to create a version.")
         tvProjectTree.Nodes.Clear()
         tvProjectTree.Nodes.Add(New TreeNode(currentProject.ProjectName & "-No Version") With {.Tag = currentProject})
     End Sub
@@ -174,7 +180,7 @@ Public Class frmCreateEditProject
             currentVersionID = CInt(cboVersion.SelectedValue)
         Else
             currentVersionID = 0
-            StatusLogger.Add("Status: No versions found. Save the project to create a base version.")
+            UIHelper.Add("Status: No versions found. Save the project to create a base version.")
         End If
         isChangingVersion = False
     End Sub
@@ -195,9 +201,9 @@ Public Class frmCreateEditProject
             LoadProjectInfo(currentProject)
             LoadVersionSpecificData()
             LoadRollupForSelectedNode()
-            StatusLogger.Add($"Loaded data for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
+            UIHelper.Add($"Loaded data for {(If(isNewProject, "new project", $"project ID {currentProject.ProjectID}"))}")
         Catch ex As Exception
-            StatusLogger.Add($"Error loading project data: {ex.Message}")
+            UIHelper.Add($"Error loading project data: {ex.Message}")
             MessageBox.Show($"Error loading project data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -213,7 +219,7 @@ Public Class frmCreateEditProject
 
     Private Sub LoadVersionSpecificData()
         Try
-            StatusLogger.Add("Loading version...")
+            UIHelper.Add("Loading version...")
             LoadProjectSettingsAndOverrides()
             LoadProjectBuildings()
             RefreshProjectTree()
@@ -223,10 +229,10 @@ Public Class frmCreateEditProject
             LoadLumberHistory()
             LoadProjectRollup()
             Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
-            StatusLogger.Add($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
+            UIHelper.Add($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
             LoadFuturesIntoListBox(currentVersionID)
         Catch ex As Exception
-            StatusLogger.Add($"Error loading version-specific data: {ex.Message}")
+            UIHelper.Add($"Error loading version-specific data: {ex.Message}")
             MessageBox.Show("Error loading version-specific data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -238,12 +244,12 @@ Public Class frmCreateEditProject
     End Sub
 
     ' Loads buildings for the current version.
-    Private Sub LoadProjectBuildings()
+    Public Sub LoadProjectBuildings()
         currentProject.Buildings = ProjectDataAccess.GetBuildingsByVersionID(currentVersionID)
     End Sub
 
     ' Refreshes the project tree view with current project data.
-    Private Sub RefreshProjectTree()
+    Public Sub RefreshProjectTree()
         tvProjectTree.Nodes.Clear()
         Dim selectedVersion As ProjectVersionModel = If(currentVersionID > 0, ProjVersionDataAccess.GetProjectVersions(currentProject.ProjectID).FirstOrDefault(Function(v) v.VersionID = currentVersionID), Nothing)
         Dim rootText As String = If(selectedVersion IsNot Nothing, $"{currentProject.ProjectName}-{selectedVersion.VersionName}", currentProject.ProjectName & "-No Version")
@@ -334,7 +340,7 @@ Public Class frmCreateEditProject
         Try
             PopulateProjectInfoControls(proj)
         Catch ex As Exception
-            StatusLogger.Add($"Error loading project info: {ex.Message}")
+            UIHelper.Add($"Error loading project info: {ex.Message}")
             MessageBox.Show($"Error loading project info: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -349,12 +355,30 @@ Public Class frmCreateEditProject
         txtCity.Text = proj.City
         cboState.Text = proj.State
         txtZip.Text = proj.Zip
-        If proj.BidDate.HasValue Then dtpBidDate.Value = proj.BidDate.Value Else dtpBidDate.Value = DateTime.Today
-        If proj.ArchPlansDated.HasValue Then dtpArchPlansDated.Value = proj.ArchPlansDated.Value Else dtpArchPlansDated.Value = DateTime.Today
-        If proj.EngPlansDated.HasValue Then dtpEngPlansDated.Value = proj.EngPlansDated.Value Else dtpEngPlansDated.Value = DateTime.Today
+        If proj.BidDate.HasValue Then
+            dtpBidDate.Value = proj.BidDate.Value
+        End If
+        If proj.ArchPlansDated.HasValue Then
+            txtArchPlanDate.Text = If(proj.ArchPlansDated.HasValue,
+                          proj.ArchPlansDated.Value.ToString("MMddyyyy"),
+                          String.Empty)
+        End If
+        If proj.EngPlansDated.HasValue Then
+            txtEngPlanDate.Text = If(proj.EngPlansDated.HasValue,
+                         proj.EngPlansDated.Value.ToString("MMddyyyy"),
+                         String.Empty)
+        End If
         nudMilesToJobSite.Value = proj.MilesToJobSite
-        If proj.TotalNetSqft.HasValue Then nudTotalNetSqft.Value = proj.TotalNetSqft.Value Else nudTotalNetSqft.Value = 0
-        If proj.TotalGrossSqft.HasValue Then nudTotalGrossSqft.Value = proj.TotalGrossSqft.Value Else nudTotalGrossSqft.Value = 0
+        If proj.TotalNetSqft.HasValue Then
+            nudTotalNetSqft.Value = proj.TotalNetSqft.Value
+        Else
+            nudTotalNetSqft.Value = 0
+        End If
+        If proj.TotalGrossSqft.HasValue Then
+            nudTotalGrossSqft.Value = proj.TotalGrossSqft.Value
+        Else
+            nudTotalGrossSqft.Value = 0
+        End If
         cboProjectArchitect.SelectedValue = If(proj.ArchitectID, 0)
         cboProjectEngineer.SelectedValue = If(proj.EngineerID, 0)
         txtProjectNotes.Text = proj.ProjectNotes
@@ -367,7 +391,7 @@ Public Class frmCreateEditProject
             BindOverridesGrid(settings)
             ConfigureOverridesGridColumns()
         Catch ex As Exception
-            StatusLogger.Add($"Error loading overrides: {ex.Message}")
+            UIHelper.Add($"Error loading overrides: {ex.Message}")
             MessageBox.Show($"Error loading overrides: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -424,7 +448,7 @@ Public Class frmCreateEditProject
             End Select
             dgvRollup.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         Catch ex As Exception
-            StatusLogger.Add($"Error loading rollup: {ex.Message}")
+            UIHelper.Add($"Error loading rollup: {ex.Message}")
             MessageBox.Show($"Error loading rollup: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -545,13 +569,18 @@ Public Class frmCreateEditProject
         dgvRollup.Rows.Add("MGMT Labor Cost comparison", (CDec(If(level.LaborCost, 0D)) + CDec(If(level.DesignCost, 0D)) + CDec(If(level.MGMTCost, 0D)) + CDec(If(level.JobSuppliesCost, 0D))).ToString("C2"))
         Dim margin As Decimal = If(level.OverallPrice = 0, 0D, ((CDec(If(level.OverallPrice, 0D)) - CDec(If(level.DeliveryCost, 0D))) - CDec(If(level.OverallCost, 0D))) / CDec(If(level.OverallPrice, 0D) - CDec(If(level.DeliveryCost, 0D))))
         dgvRollup.Rows.Add("Margin", margin.ToString("P1"))
+        Dim pricePerBDFT As Decimal = CDec(If(level.OverallBDFT = 0, 0D, level.OverallPrice / level.OverallBDFT))
+        dgvRollup.Rows.Add("PricePerBDFT", pricePerBDFT.ToString("C2"))
+        Dim pricePerSQFT As Decimal = CDec(If(level.OverallSQFT = 0, 0D, level.OverallPrice / level.OverallSQFT))
+        dgvRollup.Rows.Add("PricePerSQFT", pricePerSQFT.ToString("C2"))
+
     End Sub
 
     Private Sub LoadBuildingInfo(bldg As BuildingModel)
         Try
             PopulateBuildingInfoControls(bldg)
         Catch ex As Exception
-            StatusLogger.Add($"Error loading building info: {ex.Message}")
+            UIHelper.Add($"Error loading building info: {ex.Message}")
             MessageBox.Show($"Error loading building info: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -573,7 +602,7 @@ Public Class frmCreateEditProject
         Try
             PopulateLevelInfoControls(level)
         Catch ex As Exception
-            StatusLogger.Add($"Error loading level info: {ex.Message}")
+            UIHelper.Add($"Error loading level info: {ex.Message}")
             MessageBox.Show($"Error loading level info: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -613,14 +642,14 @@ Public Class frmCreateEditProject
     Private Sub OpenCustomerDialog(defaultTypeID As Integer, role As String)
         Try
             Using frm As New FrmCustomerDialog(defaultTypeID:=defaultTypeID)
-                StatusLogger.Add($"Opened {role} dialog for new {role}")
+                UIHelper.Add($"Opened {role} dialog for new {role}")
                 If frm.ShowDialog() = DialogResult.OK Then
                     RefreshCustomerComboboxes()
-                    StatusLogger.Add($"{role} added")
+                    UIHelper.Add($"{role} added")
                 End If
             End Using
         Catch ex As Exception
-            StatusLogger.Add($"Error opening {role} dialog: {ex.Message}")
+            UIHelper.Add($"Error opening {role} dialog: {ex.Message}")
             MessageBox.Show($"Error opening {role} dialog: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -633,22 +662,22 @@ Public Class frmCreateEditProject
                 Dim selectedCustomer As CustomerModel = HelperDataAccess.GetCustomers(customerType:=customerType).FirstOrDefault(Function(c) c.CustomerID = selectedCustomerID)
                 If selectedCustomer IsNot Nothing Then
                     Using frm As New FrmCustomerDialog(selectedCustomer)
-                        StatusLogger.Add($"Opened {role} dialog for CustomerID {selectedCustomerID}")
+                        UIHelper.Add($"Opened {role} dialog for CustomerID {selectedCustomerID}")
                         If frm.ShowDialog() = DialogResult.OK Then
                             RefreshCustomerComboboxes()
-                            StatusLogger.Add($"{role} updated")
+                            UIHelper.Add($"{role} updated")
                         End If
                     End Using
                 Else
-                    StatusLogger.Add($"No {role} found for CustomerID {selectedCustomerID}")
+                    UIHelper.Add($"No {role} found for CustomerID {selectedCustomerID}")
                     MessageBox.Show($"No {role} found for the selected ID.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 End If
             Else
-                StatusLogger.Add($"No {role} selected for editing")
+                UIHelper.Add($"No {role} selected for editing")
                 MessageBox.Show($"Select a {role} to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             End If
         Catch ex As Exception
-            StatusLogger.Add($"Error editing {role}: {ex.Message}")
+            UIHelper.Add($"Error editing {role}: {ex.Message}")
             MessageBox.Show($"Error editing {role}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -703,11 +732,21 @@ Public Class frmCreateEditProject
             LoadVersions()
             LoadProjectData()
         Catch ex As Exception
-            StatusLogger.Add($"Error saving project info: {ex.Message}")
+            UIHelper.Add($"Error saving project info: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+    Private Function TextToNullableDate(mtb As MaskedTextBox) As Date?
+        If String.IsNullOrEmpty(mtb.Text) OrElse mtb.Text.Length <> 8 Then
+            Return Nothing
+        End If
 
+        If DateTime.TryParseExact(mtb.Text, "MMddyyyy", Nothing, DateTimeStyles.None, Nothing) Then
+            Return DateTime.ParseExact(mtb.Text, "MMddyyyy", Nothing).Date
+        Else
+            Return Nothing  ' invalid date → treat as null
+        End If
+    End Function
     ' Updates the project model with data from UI controls.
     Private Sub UpdateProjectFromControls()
         currentProject.JBID = txtJBID.Text
@@ -721,8 +760,8 @@ Public Class frmCreateEditProject
         currentProject.State = cboState.Text
         currentProject.Zip = txtZip.Text
         currentProject.BidDate = dtpBidDate.Value
-        currentProject.ArchPlansDated = dtpArchPlansDated.Value
-        currentProject.EngPlansDated = dtpEngPlansDated.Value
+        currentProject.ArchPlansDated = TextToNullableDate(txtArchPlanDate)
+        currentProject.EngPlansDated = TextToNullableDate(txtEngPlanDate)
         currentProject.MilesToJobSite = CInt(nudMilesToJobSite.Value)
         currentProject.TotalNetSqft = If(nudTotalNetSqft.Value > 0, CInt(nudTotalNetSqft.Value), Nothing)
         currentProject.TotalGrossSqft = CInt(nudTotalGrossSqft.Value)
@@ -739,7 +778,7 @@ Public Class frmCreateEditProject
         If isNewProject AndAlso currentVersionID = 0 Then
             CreateInitialVersion(customerID, salesID)
         ElseIf currentVersionID > 0 Then
-            ProjVersionDataAccess.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtProjectNotes.Text, txtMondayItemId.Text, customerID, salesID)
+            ProjVersionDataAccess.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtMondayItemId.Text, customerID, salesID)
         End If
     End Sub
 
@@ -760,13 +799,17 @@ Public Class frmCreateEditProject
     End Sub
 
     Private Sub btnSaveOverrides_Click(sender As Object, e As EventArgs) Handles btnSaveOverrides.Click
+        If Not CurrentUser.IsAdmin Then
+            MsgBox("Admin only")
+            Exit Sub
+        End If
         Try
             SaveOverrides()
             MessageBox.Show("Overrides saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
             LoadOverrides(currentProject.Settings)
             btnRecalcRollup.PerformClick()
         Catch ex As Exception
-            StatusLogger.Add($"Error saving overrides: {ex.Message}")
+            UIHelper.Add($"Error saving overrides: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -787,7 +830,7 @@ Public Class frmCreateEditProject
             ProjectDataAccess.SaveBuilding(bldg, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
-            StatusLogger.Add($"Error saving building info: {ex.Message}")
+            UIHelper.Add($"Error saving building info: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -805,7 +848,7 @@ Public Class frmCreateEditProject
             ProjectDataAccess.SaveLevel(level, level.BuildingID, currentVersionID)
             LoadProjectData()
         Catch ex As Exception
-            StatusLogger.Add($"Error saving level info: {ex.Message}")
+            UIHelper.Add($"Error saving level info: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -825,7 +868,7 @@ Public Class frmCreateEditProject
             RefreshBuildingVariance()
 
         Catch ex As Exception
-            StatusLogger.Add($"Error selecting tree node: {ex.Message}")
+            UIHelper.Add($"Error selecting tree node: {ex.Message}")
             MessageBox.Show("Error selecting tree node: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -926,7 +969,7 @@ Public Class frmCreateEditProject
             AddNewBuilding()
             LoadProjectData()
         Catch ex As Exception
-            StatusLogger.Add($"Error adding building: {ex.Message}")
+            UIHelper.Add($"Error adding building: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -943,7 +986,7 @@ Public Class frmCreateEditProject
             AddNewLevel()
             LoadProjectData()
         Catch ex As Exception
-            StatusLogger.Add($"Error adding level: {ex.Message}")
+            UIHelper.Add($"Error adding level: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -968,7 +1011,7 @@ Public Class frmCreateEditProject
                 LoadProjectData()
             End If
         Catch ex As Exception
-            StatusLogger.Add($"Error deleting item: {ex.Message}")
+            UIHelper.Add($"Error deleting item: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -992,7 +1035,7 @@ Public Class frmCreateEditProject
         Try
             CopyLevels()
         Catch ex As Exception
-            StatusLogger.Add($"Error copying levels: {ex.Message}")
+            UIHelper.Add($"Error copying levels: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1017,7 +1060,7 @@ Public Class frmCreateEditProject
             PasteLevels()
             LoadProjectData()
         Catch ex As Exception
-            StatusLogger.Add($"Error pasting levels: {ex.Message}")
+            UIHelper.Add($"Error pasting levels: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1054,18 +1097,18 @@ Public Class frmCreateEditProject
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
             Try
                 If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
-                    StatusLogger.Add($"No version selected for ProjectID {currentProject.ProjectID}")
+                    UIHelper.Add($"No version selected for ProjectID {currentProject.ProjectID}")
                     MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Exit Sub
                 End If
-                AddFormToTabControl(GetType(FrmPSE), $"PSE_{currentProject.ProjectID}_{currentVersionID}", New Object() {currentProject.ProjectID, currentVersionID})
-                StatusLogger.Add($"Opened PSE form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
+                _mainForm.AddFormToTabControl(GetType(FrmPSE), $"PSE_{currentProject.ProjectID}_{currentVersionID}", New Object() {currentProject.ProjectID, currentVersionID})
+                UIHelper.Add($"Opened PSE form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
             Catch ex As Exception
-                StatusLogger.Add($"Error opening PSE form: {ex.Message}")
+                UIHelper.Add($"Error opening PSE form: {ex.Message}")
                 MessageBox.Show("Error opening PSE form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Try
         Else
-            StatusLogger.Add("No valid project selected for PSE")
+            UIHelper.Add("No valid project selected for PSE")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
@@ -1075,7 +1118,7 @@ Public Class frmCreateEditProject
             UpdateVersionAndSettings()
             LoadVersionSpecificData()
         Catch ex As Exception
-            StatusLogger.Add($"Error refreshing rollup data: {ex.Message}")
+            UIHelper.Add($"Error refreshing rollup data: {ex.Message}")
             MessageBox.Show($"Error refreshing rollup data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1098,15 +1141,15 @@ Public Class frmCreateEditProject
         Try
             Dim currentTab As TabPage = tabControlRight.SelectedTab
             Dim selectedNode As TreeNode = tvProjectTree.SelectedNode
-            StatusLogger.Add("Recalculating rollup...")
+            UIHelper.Add("Recalculating rollup...")
             Me.Cursor = Cursors.WaitCursor
             SaveOverrides()
             RollupDataAccess.RecalculateVersion(currentVersionID)
             RefreshRollupData()
             RestoreRollupGrid(currentTab, selectedNode)
-            StatusLogger.Add("Rollup recalculated successfully")
+            UIHelper.Add("Rollup recalculated successfully")
         Catch ex As Exception
-            StatusLogger.Add($"Error recalculating rollup: {ex.Message}")
+            UIHelper.Add($"Error recalculating rollup: {ex.Message}")
             MessageBox.Show($"Error recalculating rollup: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             Me.Cursor = Cursors.Default
@@ -1134,7 +1177,7 @@ Public Class frmCreateEditProject
                 End If
             End Using
         Catch ex As Exception
-            StatusLogger.Add($"Error creating version: {ex.Message}")
+            UIHelper.Add($"Error creating version: {ex.Message}")
             MessageBox.Show("Error creating version: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1160,10 +1203,10 @@ Public Class frmCreateEditProject
                 End If
             End Using
         Catch ex As ArgumentException
-            StatusLogger.Add($"Cannot duplicate version: {ex.Message}")
+            UIHelper.Add($"Cannot duplicate version: {ex.Message}")
             MessageBox.Show($"Cannot duplicate version: {ex.Message}", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Catch ex As Exception
-            StatusLogger.Add($"Error duplicating version: {ex.Message}")
+            UIHelper.Add($"Error duplicating version: {ex.Message}")
             MessageBox.Show($"Error duplicating version: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1188,7 +1231,7 @@ Public Class frmCreateEditProject
         Try
             CloseForm()
         Catch ex As Exception
-            StatusLogger.Add($"Error closing tab: {ex.Message}")
+            UIHelper.Add($"Error closing tab: {ex.Message}")
             MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1199,17 +1242,17 @@ Public Class frmCreateEditProject
         If String.IsNullOrEmpty(tagValue) Then
             Throw New Exception("Tab tag not found.")
         End If
-        frmMainProjectList.LoadProjects()
 
-        RemoveTabFromTabControl(tagValue)
-        StatusLogger.Add($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
+
+        _mainForm.RemoveTabFromTabControl(tagValue)
+        UIHelper.Add($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
     End Sub
 
     Private Sub btnIEOpen_Click(sender As Object, e As EventArgs) Handles btnIEOpen.Click
         Try
             OpenInclusionsExclusionsForm()
         Catch ex As Exception
-            StatusLogger.Add($"Error opening Inclusions/Exclusions form: {ex.Message}")
+            UIHelper.Add($"Error opening Inclusions/Exclusions form: {ex.Message}")
             MessageBox.Show("Error opening Inclusions/Exclusions form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1217,10 +1260,10 @@ Public Class frmCreateEditProject
     ' Opens the Inclusions/Exclusions form.
     Private Sub OpenInclusionsExclusionsForm()
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
-            AddFormToTabControl(GetType(frmInclusionsExclusions), $"IE_{currentProject.ProjectID}", New Object() {currentProject.ProjectID})
-            StatusLogger.Add($"Opened Inclusions/Exclusions form for ProjectID {currentProject.ProjectID}")
+            _mainForm.AddFormToTabControl(GetType(frmInclusionsExclusions), $"IE_{currentProject.ProjectID}", New Object() {currentProject.ProjectID})
+            UIHelper.Add($"Opened Inclusions/Exclusions form for ProjectID {currentProject.ProjectID}")
         Else
-            StatusLogger.Add("No valid project selected for Inclusions/Exclusions")
+            UIHelper.Add("No valid project selected for Inclusions/Exclusions")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
@@ -1229,7 +1272,7 @@ Public Class frmCreateEditProject
         Try
             CopyBuilding()
         Catch ex As Exception
-            StatusLogger.Add($"Error copying building: {ex.Message}")
+            UIHelper.Add($"Error copying building: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1260,7 +1303,7 @@ Public Class frmCreateEditProject
             PasteBuilding()
             LoadProjectData()
         Catch ex As Exception
-            StatusLogger.Add($"Error pasting building: {ex.Message}")
+            UIHelper.Add($"Error pasting building: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1302,12 +1345,16 @@ Public Class frmCreateEditProject
     End Sub
 
     Private Sub btnDeleteProject_Click(sender As Object, e As EventArgs) Handles btnDeleteProject.Click
+        If Not CurrentUser.IsAdmin Then
+            MsgBox("Admin only")
+            Exit Sub
+        End If
         Try
             If MessageBox.Show("Are you really sure you want to delete this project? This action cannot be undone.", "Confirm Deletion", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.Yes Then
                 DeleteProject()
             End If
         Catch ex As Exception
-            StatusLogger.Add($"Error deleting project: {ex.Message}")
+            UIHelper.Add($"Error deleting project: {ex.Message}")
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1319,15 +1366,16 @@ Public Class frmCreateEditProject
         If Not String.IsNullOrEmpty(notification) Then
             MessageBox.Show(notification, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End If
-        frmMainProjectList.RefreshProjects()
+
         btnClose.PerformClick()
     End Sub
 
     Private Sub btnGenerateProjectReport_Click(sender As Object, e As EventArgs) Handles btnGenerateProjectReport.Click
+
         Try
             GenerateProjectReport()
         Catch ex As Exception
-            StatusLogger.Add($"Error generating project report: {ex.Message}")
+            UIHelper.Add($"Error generating project report: {ex.Message}")
             MessageBox.Show("Error generating project report: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1335,24 +1383,24 @@ Public Class frmCreateEditProject
     ' Generates and displays the project summary report.
     Private Sub GenerateProjectReport()
         If currentProject Is Nothing OrElse currentProject.ProjectID <= 0 OrElse currentVersionID <= 0 Then
-            StatusLogger.Add("No valid project or version selected for report")
+            UIHelper.Add("No valid project or version selected for report")
             MessageBox.Show("No valid project or version selected. Save the project and select a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
-        StatusLogger.Add("Opening Project Summary Preview...")
+        UIHelper.Add("Opening Project Summary Preview...")
         Dim dataSources As New List(Of ReportDataSource) From {
             New ReportDataSource("ProjectSummaryDataSet", ReportsDataAccess.GetProjectSummaryData(currentProject.ProjectID, currentVersionID))
         }
         Dim previewForm As New frmReportPreview("BuildersPSE2.ProjectSummary.rdlc", dataSources)
         previewForm.ShowDialog()
-        StatusLogger.Add("Project Summary Preview opened")
+        UIHelper.Add("Project Summary Preview opened")
     End Sub
 
     Private Sub btnPreviewIncExc_Click(sender As Object, e As EventArgs) Handles btnPreviewIncExc.Click
         Try
             GenerateInclusionsExclusionsReport()
         Catch ex As Exception
-            StatusLogger.Add($"Error generating Inclusions/Exclusions report: {ex.Message}")
+            UIHelper.Add($"Error generating Inclusions/Exclusions report: {ex.Message}")
             MessageBox.Show("Error generating Inclusions/Exclusions report: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1360,11 +1408,11 @@ Public Class frmCreateEditProject
     ' Generates and displays the Inclusions/Exclusions report.
     Private Sub GenerateInclusionsExclusionsReport()
         If currentProject Is Nothing OrElse currentProject.ProjectID <= 0 OrElse currentVersionID <= 0 Then
-            StatusLogger.Add("No valid project or version selected for report")
+            UIHelper.Add("No valid project or version selected for report")
             MessageBox.Show("No valid project or version selected. Save the project and select a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
-        StatusLogger.Add("Opening Inclusions/Exclusions Preview...")
+        UIHelper.Add("Opening Inclusions/Exclusions Preview...")
         Dim dataSources As New List(Of ReportDataSource) From {
             New ReportDataSource("ProjectHeaderDataSet", ReportsDataAccess.GetProjectHeaderData(currentProject.ProjectID, currentVersionID)),
             New ReportDataSource("IncExcItemsDataSet", IEDataAccess.GetProjectItems(currentProject.ProjectID)),
@@ -1373,30 +1421,37 @@ Public Class frmCreateEditProject
         }
         Dim previewForm As New frmReportPreview("BuildersPSE2.InclusionsExclusions.rdlc", dataSources)
         previewForm.ShowDialog()
-        StatusLogger.Add("Inclusions/Exclusions Preview opened")
+        UIHelper.Add("Inclusions/Exclusions Preview opened")
     End Sub
 
     Private Sub btnUpdateLumber_Click(sender As Object, e As EventArgs) Handles btnUpdateLumber.Click
-        Try
-            UpdateLumberPrices()
-            StatusLogger.Add("Lumber prices updated successfully for version " & currentVersionID)
-            MessageBox.Show("Lumber prices updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            LoadVersionSpecificData()
-        Catch ex As Exception
-            StatusLogger.Add($"Error updating lumber prices: {ex.Message}")
-            MessageBox.Show("Error updating lumber prices: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        If CurrentUser.IsAdmin Then
+            UIHelper.ShowBusy(frmMain, "Updating lumber prices")
+            Try
+                UpdateLumberPrices()
+                UIHelper.Add("Lumber prices updated successfully for version " & currentVersionID)
+                MessageBox.Show("Lumber prices updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                LoadVersionSpecificData()
+            Catch ex As Exception
+                UIHelper.Add($"Error updating lumber prices: {ex.Message}")
+                MessageBox.Show("Error updating lumber prices: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Finally
+                UIHelper.HideBusy(frmMain)
+            End Try
+        Else
+            MsgBox("Admin only")
+        End If
     End Sub
 
     ' Updates lumber prices for the selected cost-effective date.
     Private Sub UpdateLumberPrices()
         If currentVersionID <= 0 Then
-            StatusLogger.Add("No valid version selected for lumber update")
+            UIHelper.Add("No valid version selected for lumber update")
             MessageBox.Show("No valid version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
         If cboCostEffective.SelectedValue Is Nothing OrElse CInt(cboCostEffective.SelectedValue) <= 0 Then
-            StatusLogger.Add("No cost-effective date selected for lumber update")
+            UIHelper.Add("No cost-effective date selected for lumber update")
             MessageBox.Show("Please select a cost-effective date.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
@@ -1405,16 +1460,24 @@ Public Class frmCreateEditProject
     End Sub
 
     Private Sub btnSetActive_Click(sender As Object, e As EventArgs) Handles btnSetActive.Click
-        Try
-            SetActiveLumberHistory()
-        Catch ex As Exception
-            StatusLogger.Add($"Error setting active lumber history: {ex.Message}")
-            MessageBox.Show($"Error setting active lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        If CurrentUser.IsAdmin Then
+            Try
+                SetActiveLumberHistory()
+            Catch ex As Exception
+                UIHelper.Add($"Error setting active lumber history: {ex.Message}")
+                MessageBox.Show($"Error setting active lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        Else
+            MsgBox("Admin only")
+        End If
     End Sub
 
     ' Sets the selected lumber history as active.
     Private Sub SetActiveLumberHistory()
+        If Not CurrentUser.IsAdmin Then
+            MsgBox("Admin only")
+            Exit Sub
+        End If
         If lstLumberHistory.SelectedItem Is Nothing Then
             MessageBox.Show("Please select a cost-effective date to set as active.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
@@ -1439,12 +1502,12 @@ Public Class frmCreateEditProject
                     }
                     SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 1, UpdateDate = GETDATE() WHERE CostEffectiveDateID = @CostEffectiveDateID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(activateParams), conn, transaction)
                     transaction.Commit()
-                    StatusLogger.Add($"Set CostEffectiveDateID {costEffectiveID} as active for VersionID {currentVersionID}")
+                    UIHelper.Add($"Set CostEffectiveDateID {costEffectiveID} as active for VersionID {currentVersionID}")
                     RollupDataAccess.RecalculateVersion(currentVersionID)
                     LoadVersionSpecificData()
                 Catch ex As Exception
                     transaction.Rollback()
-                    StatusLogger.Add($"Error setting active lumber history: {ex.Message}")
+                    UIHelper.Add($"Error setting active lumber history: {ex.Message}")
                     Throw
                 End Try
             End Using
@@ -1455,7 +1518,7 @@ Public Class frmCreateEditProject
         Try
             DeleteLumberHistory()
         Catch ex As Exception
-            StatusLogger.Add($"Error deleting lumber history: {ex.Message}")
+            UIHelper.Add($"Error deleting lumber history: {ex.Message}")
             MessageBox.Show($"Error deleting lumber history: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1478,7 +1541,7 @@ Public Class frmCreateEditProject
                 {"@VersionID", currentVersionID}
             }
             SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteLumberHistory, HelperDataAccess.BuildParameters(params))
-            StatusLogger.Add($"Deleted lumber history for CostEffectiveDateID {costEffectiveID}")
+            UIHelper.Add($"Deleted lumber history for CostEffectiveDateID {costEffectiveID}")
             RollupDataAccess.RecalculateVersion(currentVersionID)
             LoadVersionSpecificData()
         End If
@@ -1488,7 +1551,7 @@ Public Class frmCreateEditProject
         Try
             OpenProjectBuilderForm()
         Catch ex As Exception
-            StatusLogger.Add($"Error opening Project Builder form: {ex.Message}")
+            UIHelper.Add($"Error opening Project Builder form: {ex.Message}")
             MessageBox.Show("Error opening Project Builder form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1497,19 +1560,23 @@ Public Class frmCreateEditProject
     Private Sub OpenProjectBuilderForm()
         If currentProject IsNot Nothing AndAlso currentProject.ProjectID > 0 Then
             If currentVersionID <= 0 OrElse cboVersion.SelectedValue Is Nothing Then
-                StatusLogger.Add($"No version selected for ProjectID {currentProject.ProjectID}")
+                UIHelper.Add($"No version selected for ProjectID {currentProject.ProjectID}")
                 MessageBox.Show("No version selected. Please select or create a version first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Exit Sub
             End If
-            AddFormToTabControl(GetType(ProjectBuilderForm), $"ProjectBuilder_{currentVersionID}", New Object() {currentVersionID})
-            StatusLogger.Add($"Opened Project Builder form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
+            _mainForm.AddFormToTabControl(GetType(ProjectBuilderForm), $"ProjectBuilder_{currentVersionID}", New Object() {currentVersionID})
+            UIHelper.Add($"Opened Project Builder form for ProjectID {currentProject.ProjectID}, VersionID {currentVersionID}")
         Else
-            StatusLogger.Add("No valid project selected for Project Builder")
+            UIHelper.Add("No valid project selected for Project Builder")
             MessageBox.Show("No valid project selected or project ID not available. Please save the project first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
 
     Private Sub btnPullFutures_Click(sender As Object, e As EventArgs) Handles btnPullFutures.Click
+        If Not CurrentUser.IsAdmin Then
+            MsgBox("Admin only")
+            Exit Sub
+        End If
         Dim versionId As Integer = currentVersionID
 
         If versionId <= 0 Then
@@ -2226,6 +2293,10 @@ Public Class frmCreateEditProject
 
     ' REPLACE YOUR OLD btnImportMiTek_Click
     Private Sub btnImportMiTek_Click(sender As Object, e As EventArgs) Handles btnImportMiTek.Click
+        If Not CurrentUser.IsAdmin Then
+            MsgBox("Admin only")
+            Exit Sub
+        End If
         Using dlg As New OpenFileDialog With {.Filter = "CSV files|*.csv", .Title = "Select MiTek Design Export"}
             If dlg.ShowDialog() = DialogResult.OK Then
                 Dim frm As New frmActualsMatcher(currentVersionID, 1, dlg.FileName) ' 1 = Design
@@ -2311,6 +2382,10 @@ Public Class frmCreateEditProject
     End Sub
 
     Private Sub btnLinkMonday_Click(sender As Object, e As EventArgs) Handles btnLinkMonday.Click
+        If Not CurrentUser.IsAdmin Then
+            MsgBox("Admin only")
+            Exit Sub
+        End If
         Using searchForm As New frmMondaySearch With {
         .InitialSearchText = txtProjectName.Text.Trim()
     }
@@ -2323,6 +2398,10 @@ Public Class frmCreateEditProject
 
 
     Private Sub btnViewMonday_Click(sender As Object, e As EventArgs) Handles btnViewMonday.Click
+        If Not CurrentUser.IsAdmin Then
+            MsgBox("Admin only")
+            Exit Sub
+        End If
         Dim itemId As String = txtMondayItemId.Text.Trim()
 
         If String.IsNullOrWhiteSpace(itemId) OrElse Not IsNumeric(itemId) Then
@@ -2337,4 +2416,10 @@ Public Class frmCreateEditProject
             MessageBox.Show("Could not open browser: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub RefreshToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RefreshToolStripMenuItem.Click
+        LoadProjectBuildings()
+        RefreshProjectTree()
+    End Sub
+
 End Class

@@ -69,6 +69,8 @@ Namespace DataAccess
                                                                            End If
                                                                        Next
 
+
+
                                                                        ' Collect unique ActualUnits
                                                                        Dim actualUnitSet As New HashSet(Of Integer)
                                                                        Dim uniqueActualUnits As New List(Of ActualUnitModel)
@@ -114,6 +116,88 @@ Namespace DataAccess
                                                                                        Dim newRawUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertRawUnit, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                        rawIdMap.Add(raw.RawUnitID, newRawUnitID)
                                                                                    Next
+
+
+                                                                                   ' Fetch all lumber history records for the original version, grouped by RawUnit
+                                                                                   Dim lumberHistories As New Dictionary(Of Integer, List(Of RawUnitLumberHistoryModel))
+
+                                                                                   Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(
+        Queries.SelectLumberHistoryByVersion,
+        {New SqlParameter("@VersionID", originalVersionID)})
+
+                                                                                       ' Cache column ordinals once for performance and safety
+                                                                                       Dim ordRawUnitID As Integer = reader.GetOrdinal("RawUnitID")
+                                                                                       Dim ordCostEffDateID As Integer = reader.GetOrdinal("CostEffectiveDateID")
+                                                                                       Dim ordLumberCost As Integer = reader.GetOrdinal("LumberCost")
+                                                                                       Dim ordAvgSPFNo2 As Integer = reader.GetOrdinal("AvgSPFNo2")
+                                                                                       Dim ordAvg241800 As Integer = reader.GetOrdinal("Avg241800")
+                                                                                       Dim ordAvg242400 As Integer = reader.GetOrdinal("Avg242400")
+                                                                                       Dim ordAvg261800 As Integer = reader.GetOrdinal("Avg261800")
+                                                                                       Dim ordAvg262400 As Integer = reader.GetOrdinal("Avg262400")
+
+                                                                                       While reader.Read()
+                                                                                           Dim rawID As Integer = reader.GetInt32(ordRawUnitID)
+
+                                                                                           If Not lumberHistories.ContainsKey(rawID) Then
+                                                                                               lumberHistories(rawID) = New List(Of RawUnitLumberHistoryModel)
+                                                                                           End If
+
+                                                                                           lumberHistories(rawID).Add(New RawUnitLumberHistoryModel With {
+            .RawUnitID = rawID,
+            .CostEffectiveDateID = If(reader.IsDBNull(ordCostEffDateID), Nothing, CType(reader.GetInt32(ordCostEffDateID), Integer?)),
+            .LumberCost = reader.GetDecimal(ordLumberCost),
+            .AvgSPFNo2 = If(reader.IsDBNull(ordAvgSPFNo2), Nothing, CType(reader.GetDecimal(ordAvgSPFNo2), Decimal?)),
+            .Avg241800 = If(reader.IsDBNull(ordAvg241800), Nothing, CType(reader.GetDecimal(ordAvg241800), Decimal?)),
+            .Avg242400 = If(reader.IsDBNull(ordAvg242400), Nothing, CType(reader.GetDecimal(ordAvg242400), Decimal?)),
+            .Avg261800 = If(reader.IsDBNull(ordAvg261800), Nothing, CType(reader.GetDecimal(ordAvg261800), Decimal?)),
+            .Avg262400 = If(reader.IsDBNull(ordAvg262400), Nothing, CType(reader.GetDecimal(ordAvg262400), Decimal?))
+        })
+                                                                                       End While
+                                                                                   End Using
+
+                                                                                   ' Now insert into new version using the rawIdMap (already populated)
+                                                                                   For Each kvp In lumberHistories
+                                                                                       Dim oldRawID = kvp.Key
+                                                                                       If rawIdMap.ContainsKey(oldRawID) Then
+                                                                                           Dim newRawID = rawIdMap(oldRawID)
+                                                                                           Dim lastHistoryID As Integer = 0
+
+                                                                                           For Each hist In kvp.Value
+                                                                                               Dim historyParams As New Dictionary(Of String, Object) From {
+                {"@RawUnitID", newRawID},
+                {"@VersionID", newVersionID},
+                {"@CostEffectiveDateID", If(hist.CostEffectiveDateID.HasValue, CType(hist.CostEffectiveDateID.Value, Object), DBNull.Value)},
+                {"@LumberCost", hist.LumberCost},
+                {"@AvgSPFNo2", If(hist.AvgSPFNo2.HasValue, CType(hist.AvgSPFNo2.Value, Object), DBNull.Value)},
+                {"@Avg241800", If(hist.Avg241800.HasValue, CType(hist.Avg241800.Value, Object), DBNull.Value)},
+                {"@Avg242400", If(hist.Avg242400.HasValue, CType(hist.Avg242400.Value, Object), DBNull.Value)},
+                {"@Avg261800", If(hist.Avg261800.HasValue, CType(hist.Avg261800.Value, Object), DBNull.Value)},
+                {"@Avg262400", If(hist.Avg262400.HasValue, CType(hist.Avg262400.Value, Object), DBNull.Value)}
+            }
+
+                                                                                               lastHistoryID = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(
+                Queries.InsertRawUnitLumberHistory,
+                HelperDataAccess.BuildParameters(historyParams),
+                conn, transaction)
+                                                                                           Next
+
+                                                                                           ' Activate the most recent history record
+                                                                                           If lastHistoryID > 0 Then
+                                                                                               Dim activeParams As New Dictionary(Of String, Object) From {
+                {"@RawUnitID", newRawID},
+                {"@VersionID", newVersionID},
+                {"@HistoryID", lastHistoryID}
+            }
+                                                                                               SqlConnectionManager.Instance.ExecuteNonQueryTransactional(
+                Queries.SetLumberHistoryActive,
+                HelperDataAccess.BuildParameters(activeParams),
+                conn, transaction)
+                                                                                           End If
+                                                                                       End If
+                                                                                   Next
+                                                                                   ' === END OF LUMBER HISTORY BLOCK ===
+
+
 
                                                                                    ' Duplicate ActualUnits and create map
                                                                                    Dim actualIdMap As New Dictionary(Of Integer, Integer)
@@ -205,7 +289,7 @@ Namespace DataAccess
         End Function
 
         ' Update an existing project version (CustomerID restricted to CustomerType=1 via UI filtering and validation)
-        Public Shared Sub UpdateProjectVersion(versionID As Integer, versionName As String, description As String, mondayid As String, customerID As Integer?, salesID As Integer?)
+        Public Shared Sub UpdateProjectVersion(versionID As Integer, versionName As String, mondayid As String, customerID As Integer?, salesID As Integer?)
             ' Validate CustomerID for CustomerType=1
             If customerID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(customerID, 1) Then
                 Throw New ArgumentException("CustomerID must reference a customer with CustomerType=1 (Customer).")
@@ -216,7 +300,6 @@ Namespace DataAccess
                                                                    {"@VersionID", versionID},
                                                                    {"@VersionName", versionName},
                                                                    {"@LastModifiedDate", Date.Now},
-                                                                   {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
                                                                    {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                    {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)},
                                                                    {"@MondayID", If(String.IsNullOrEmpty(mondayid), DBNull.Value, CType(mondayid, Object))}

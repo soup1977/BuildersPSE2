@@ -17,8 +17,7 @@ Public Class ProjectBuilderForm
         m_VersionID = versionID
         InitializeComponent()
     End Sub
-
-
+    Private ReadOnly _mainForm As frmMain = CType(Application.OpenForms.OfType(Of frmMain)().FirstOrDefault(), frmMain)
 
     Private Sub btnApply_Click(sender As Object, e As EventArgs) Handles BtnSaveProjectBuilder.Click
         For Each row As DataGridViewRow In dgvProjBlder.Rows
@@ -113,6 +112,7 @@ Public Class ProjectBuilderForm
 
         MessageBox.Show("Buildings and levels created successfully.")
 
+
     End Sub
 
     Private Function GetOrdinalSuffix(num As Integer) As String
@@ -134,7 +134,7 @@ Public Class ProjectBuilderForm
     Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
         Try
 
-            RemoveTabFromTabControl($"ProjectBuilder_{m_VersionID}")
+            _mainform.RemoveTabFromTabControl($"ProjectBuilder_{m_VersionID}")
         Catch ex As Exception
 
             MessageBox.Show("Error closing form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)

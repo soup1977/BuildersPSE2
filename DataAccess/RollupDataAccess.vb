@@ -94,46 +94,49 @@ Namespace DataAccess
         ' Replace existing UpdateLevelRollups with this
         Public Shared Sub UpdateLevelRollups(levelID As Integer)
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Dim units As List(Of DisplayUnitData) = ProjectDataAccess.ComputeLevelUnits(levelID)
-                                                                       Dim overallSQFT As Decimal = units.Sum(Function(u) u.PlanSQFT * u.ActualUnitQuantity * u.OptionalAdder)
-                                                                       Dim overallLF As Decimal = units.Sum(Function(u) u.LF)
-                                                                       Dim overallBDFT As Decimal = units.Sum(Function(u) u.BDFT)
-                                                                       Dim lumberCost As Decimal = units.Sum(Function(u) u.LumberCost)
-                                                                       Dim plateCost As Decimal = units.Sum(Function(u) u.PlateCost)
-                                                                       Dim laborCost As Decimal = units.Sum(Function(u) u.ManufLaborCost)
-                                                                       Dim laborMH As Decimal = units.Sum(Function(u) u.ManHours)
-                                                                       Dim designCost As Decimal = units.Sum(Function(u) u.DesignLabor)
-                                                                       Dim mgmtCost As Decimal = units.Sum(Function(u) u.MGMTLabor)
-                                                                       Dim jobSuppliesCost As Decimal = units.Sum(Function(u) u.JobSuppliesCost)
-                                                                       Dim itemsCost As Decimal = units.Sum(Function(u) u.ItemCost)
-                                                                       Dim deliveryCost As Decimal = units.Sum(Function(u) u.DeliveryCost)
-                                                                       Dim overallCost As Decimal = units.Sum(Function(u) u.OverallCost)
-                                                                       Dim overallPrice As Decimal = units.Sum(Function(u) u.SellPrice)
+                                                                       Dim dt As DataTable = ProjectDataAccess.ComputeLevelUnitsDataTable(levelID)
 
-                                                                       Dim levelInfo As Tuple(Of Integer, Integer, Decimal) = ProjectDataAccess.GetLevelInfo(levelID)
+                                                                       ' All sums are now 1-liners — no risk of mismatch
+                                                                       Dim overallSQFT As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("PlanSQFT") * r.Field(Of Integer)("ActualUnitQuantity"))
+                                                                       Dim overallLF As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("LF"))
+                                                                       Dim overallBDFT As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("BDFT"))
+                                                                       Dim lumberCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("LumberCost"))
+                                                                       Dim plateCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("PlateCost"))
+                                                                       Dim laborCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("ManufLaborCost"))
+                                                                       Dim laborMH As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("ManHours"))
+                                                                       Dim designCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("DesignLabor"))
+                                                                       Dim mgmtCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("MGMTLabor"))
+                                                                       Dim jobSuppliesCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("JobSuppliesCost"))
+                                                                       Dim itemsCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("ItemCost"))
+                                                                       Dim deliveryCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("DeliveryCost"))
+                                                                       Dim overallCost As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("OverallCost"))
+                                                                       Dim overallPrice As Decimal = dt.AsEnumerable().Sum(Function(r) r.Field(Of Decimal)("SellPrice"))
+
+                                                                       Dim levelInfo = ProjectDataAccess.GetLevelInfo(levelID)
                                                                        Dim commonSQFT As Decimal = levelInfo.Item3
                                                                        Dim totalSQFT As Decimal = overallSQFT + commonSQFT
                                                                        Dim avgPricePerSqft As Decimal = If(totalSQFT > 0D, overallPrice / totalSQFT, 0D)
 
                                                                        Dim paramsDict As New Dictionary(Of String, Object) From {
-                                                                           {"@LevelID", levelID},
-                                                                           {"@OverallSQFT", overallSQFT},
-                                                                           {"@OverallLF", overallLF},
-                                                                           {"@OverallBDFT", overallBDFT},
-                                                                           {"@LumberCost", lumberCost},
-                                                                           {"@PlateCost", plateCost},
-                                                                           {"@LaborCost", laborCost},
-                                                                           {"@LaborMH", laborMH},
-                                                                           {"@DesignCost", designCost},
-                                                                           {"@MGMTCost", mgmtCost},
-                                                                           {"@JobSuppliesCost", jobSuppliesCost},
-                                                                           {"@ItemsCost", itemsCost},
-                                                                           {"@DeliveryCost", deliveryCost},
-                                                                           {"@OverallCost", overallCost},
-                                                                           {"@OverallPrice", overallPrice},
-                                                                           {"@TotalSQFT", totalSQFT},
-                                                                           {"@AvgPricePerSQFT", avgPricePerSqft}
-                                                                       }
+                                                                            {"@LevelID", levelID},
+                                                                            {"@OverallSQFT", overallSQFT},
+                                                                            {"@OverallLF", overallLF},
+                                                                            {"@OverallBDFT", overallBDFT},
+                                                                            {"@LumberCost", lumberCost},
+                                                                            {"@PlateCost", plateCost},
+                                                                            {"@LaborCost", laborCost},
+                                                                            {"@LaborMH", laborMH},
+                                                                            {"@DesignCost", designCost},
+                                                                            {"@MGMTCost", mgmtCost},
+                                                                            {"@JobSuppliesCost", jobSuppliesCost},
+                                                                            {"@ItemsCost", itemsCost},
+                                                                            {"@DeliveryCost", deliveryCost},
+                                                                            {"@OverallCost", overallCost},
+                                                                            {"@OverallPrice", overallPrice},
+                                                                            {"@TotalSQFT", totalSQFT},
+                                                                            {"@AvgPricePerSQFT", avgPricePerSqft}
+                                                                        }
+
                                                                        SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateLevelRollupsSql, HelperDataAccess.BuildParameters(paramsDict))
                                                                    End Sub, "Error updating level rollups for " & levelID)
         End Sub

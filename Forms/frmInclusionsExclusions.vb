@@ -18,7 +18,7 @@ Public Class frmInclusionsExclusions
         Me.Text = $"Inclusions/Exclusions - Project {Project.jbid}"
     End Sub
 
-
+    Private ReadOnly _mainForm As frmMain = CType(Application.OpenForms.OfType(Of frmMain)().FirstOrDefault(), frmMain)
     Private Sub frmInclusionsExclusions_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
@@ -142,7 +142,7 @@ Public Class frmInclusionsExclusions
     Private Sub LoadData()
         Try
 
-            StatusLogger.Add("Loading Inclusions/Exclusions data...")
+            UIHelper.Add("Loading Inclusions/Exclusions data...")
             ' Load Design Info
             Dim info = ieda.GetProjectDesignInfo(ProjectID)
             If info IsNot Nothing Then
@@ -236,16 +236,16 @@ Public Class frmInclusionsExclusions
                     End If
                 Next
             Next
-            StatusLogger.Add("Inclusions/Exclusions data loaded successfully.")
+            UIHelper.Add("Inclusions/Exclusions data loaded successfully.")
         Catch ex As Exception
-            StatusLogger.Add("Error loading Inclusions/Exclusions data: " & ex.Message)
+            UIHelper.Add("Error loading Inclusions/Exclusions data: " & ex.Message)
             MessageBox.Show("Error loading data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub SaveData(sender As Object, e As EventArgs) Handles btnSave.Click
         Try
-            StatusLogger.Add("Saving Inclusions/Exclusions data...")
+            UIHelper.Add("Saving Inclusions/Exclusions data...")
             ' Save Design Info
             Dim info As New ProjectDesignInfoModel With {
             .ProjectID = ProjectID,
@@ -358,15 +358,15 @@ Public Class frmInclusionsExclusions
             Next
             ieda.SaveProjectItems(ProjectID, items)
 
-            StatusLogger.Add("Inclusions/Exclusions data saved successfully.")
+            UIHelper.Add("Inclusions/Exclusions data saved successfully.")
             MessageBox.Show("Data saved successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
-            StatusLogger.Add("Error saving Inclusions/Exclusions data: " & ex.Message)
+            UIHelper.Add("Error saving Inclusions/Exclusions data: " & ex.Message)
             MessageBox.Show("Error saving: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
-        RemoveTabFromTabControl(CStr(Me.Tag))
+        _mainForm.RemoveTabFromTabControl(CStr(Me.Tag))
     End Sub
 End Class

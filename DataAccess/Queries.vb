@@ -159,7 +159,7 @@
         ' ProjectVersions Queries
         Public Const SelectProjectVersions As String = "SELECT pv.*, c.CustomerName, s.SalesName FROM ProjectVersions pv LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT JOIN Sales s ON pv.SalesID = s.SalesID WHERE ProjectID = @ProjectID ORDER BY VersionDate DESC"
         Public Const InsertProjectVersion As String = "INSERT INTO ProjectVersions (ProjectID, VersionName, VersionDate, Description, LastModifiedDate, CustomerID, SalesID, MondayID) OUTPUT INSERTED.VersionID VALUES (@ProjectID, @VersionName, @VersionDate, @Description, GetDate(), @CustomerID, @SalesID, @MondayID)"
-        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, Description = @Description, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID, MondayID=@MondayID WHERE VersionID = @VersionID"
+        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID, MondayID=@MondayID WHERE VersionID = @VersionID"
 
         ' ProjectVersions Duplication Queries
         Public Const DuplicateBuildings As String = "INSERT INTO Buildings (BuildingName, BuildingType, ResUnits, BldgQty, VersionID, LastModifiedDate) OUTPUT INSERTED.BuildingID SELECT BuildingName, BuildingType, ResUnits, BldgQty, @NewVersionID, GetDate() FROM Buildings WHERE VersionID = @OriginalVersionID"
@@ -403,7 +403,10 @@ VALUES
     DELETE FROM LevelActuals 
     WHERE ActualID = @ActualID"
 
-
+        ' Users (for login and auto-add)
+        Public Const SelectUserByWindowsLogon As String = "SELECT * FROM Users WHERE WindowsLogon = @WindowsLogon"
+        Public Const InsertUser As String = "INSERT INTO Users (WindowsLogon, DisplayName, EstimatorID, IsActive, IsAdmin, IsLoggedIn, LastLogin) OUTPUT INSERTED.UserID VALUES (@WindowsLogon, @DisplayName, @EstimatorID, 1, 0, 1, GETDATE())"
+        Public Const UpdateUserLoginStatus As String = "UPDATE Users SET IsLoggedIn = @IsLoggedIn, LastLogin = COALESCE(@LastLogin, LastLogin), LastLogout = COALESCE(@LastLogout, LastLogout) WHERE UserID = @UserID"
 
 
     End Module

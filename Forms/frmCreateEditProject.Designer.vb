@@ -33,9 +33,11 @@ Partial Class frmCreateEditProject
         Me.mnuPasteLevels = New System.Windows.Forms.ToolStripMenuItem()
         Me.mnuCopyBuilding = New System.Windows.Forms.ToolStripMenuItem()
         Me.mnuPasteBuilding = New System.Windows.Forms.ToolStripMenuItem()
+        Me.RefreshToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.tabControlRight = New System.Windows.Forms.TabControl()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
         Me.pnlProjectInfo = New System.Windows.Forms.Panel()
+        Me.btnViewMonday = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
         Me.txtMondayItemId = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -73,9 +75,7 @@ Partial Class frmCreateEditProject
         Me.lblBidDate = New System.Windows.Forms.Label()
         Me.dtpBidDate = New System.Windows.Forms.DateTimePicker()
         Me.lblArchPlansDated = New System.Windows.Forms.Label()
-        Me.dtpArchPlansDated = New System.Windows.Forms.DateTimePicker()
         Me.lblEngPlansDated = New System.Windows.Forms.Label()
-        Me.dtpEngPlansDated = New System.Windows.Forms.DateTimePicker()
         Me.lblCustomerName = New System.Windows.Forms.Label()
         Me.lblMilesToJobSite = New System.Windows.Forms.Label()
         Me.nudMilesToJobSite = New System.Windows.Forms.NumericUpDown()
@@ -155,7 +155,8 @@ Partial Class frmCreateEditProject
         Me.btnImportWalls = New System.Windows.Forms.Button()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
         Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
-        Me.btnViewMonday = New System.Windows.Forms.Button()
+        Me.txtEngPlanDate = New System.Windows.Forms.MaskedTextBox()
+        Me.txtArchPlanDate = New System.Windows.Forms.MaskedTextBox()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -197,9 +198,9 @@ Partial Class frmCreateEditProject
         '
         'cmsTreeMenu
         '
-        Me.cmsTreeMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAddBuilding, Me.mnuAddLevel, Me.mnuDelete, Me.EditPSEToolStripMenuItem, Me.mnuCopyLevels, Me.mnuPasteLevels, Me.mnuCopyBuilding, Me.mnuPasteBuilding})
+        Me.cmsTreeMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuAddBuilding, Me.mnuAddLevel, Me.mnuDelete, Me.EditPSEToolStripMenuItem, Me.mnuCopyLevels, Me.mnuPasteLevels, Me.mnuCopyBuilding, Me.mnuPasteBuilding, Me.RefreshToolStripMenuItem})
         Me.cmsTreeMenu.Name = "cmsTreeMenu"
-        Me.cmsTreeMenu.Size = New System.Drawing.Size(150, 180)
+        Me.cmsTreeMenu.Size = New System.Drawing.Size(150, 202)
         '
         'mnuAddBuilding
         '
@@ -249,6 +250,12 @@ Partial Class frmCreateEditProject
         Me.mnuPasteBuilding.Size = New System.Drawing.Size(149, 22)
         Me.mnuPasteBuilding.Text = "Paste Building"
         '
+        'RefreshToolStripMenuItem
+        '
+        Me.RefreshToolStripMenuItem.Name = "RefreshToolStripMenuItem"
+        Me.RefreshToolStripMenuItem.Size = New System.Drawing.Size(149, 22)
+        Me.RefreshToolStripMenuItem.Text = "Refresh"
+        '
         'tabControlRight
         '
         Me.tabControlRight.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
@@ -278,6 +285,8 @@ Partial Class frmCreateEditProject
         '
         Me.pnlProjectInfo.AutoScroll = True
         Me.pnlProjectInfo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.pnlProjectInfo.Controls.Add(Me.txtArchPlanDate)
+        Me.pnlProjectInfo.Controls.Add(Me.txtEngPlanDate)
         Me.pnlProjectInfo.Controls.Add(Me.btnViewMonday)
         Me.pnlProjectInfo.Controls.Add(Me.Label8)
         Me.pnlProjectInfo.Controls.Add(Me.txtMondayItemId)
@@ -316,9 +325,7 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Controls.Add(Me.lblBidDate)
         Me.pnlProjectInfo.Controls.Add(Me.dtpBidDate)
         Me.pnlProjectInfo.Controls.Add(Me.lblArchPlansDated)
-        Me.pnlProjectInfo.Controls.Add(Me.dtpArchPlansDated)
         Me.pnlProjectInfo.Controls.Add(Me.lblEngPlansDated)
-        Me.pnlProjectInfo.Controls.Add(Me.dtpEngPlansDated)
         Me.pnlProjectInfo.Controls.Add(Me.lblCustomerName)
         Me.pnlProjectInfo.Controls.Add(Me.lblMilesToJobSite)
         Me.pnlProjectInfo.Controls.Add(Me.nudMilesToJobSite)
@@ -338,6 +345,15 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Name = "pnlProjectInfo"
         Me.pnlProjectInfo.Size = New System.Drawing.Size(681, 551)
         Me.pnlProjectInfo.TabIndex = 0
+        '
+        'btnViewMonday
+        '
+        Me.btnViewMonday.Location = New System.Drawing.Point(310, 510)
+        Me.btnViewMonday.Name = "btnViewMonday"
+        Me.btnViewMonday.Size = New System.Drawing.Size(102, 21)
+        Me.btnViewMonday.TabIndex = 58
+        Me.btnViewMonday.Text = "View on Monday"
+        Me.btnViewMonday.UseVisualStyleBackColor = True
         '
         'Label8
         '
@@ -660,14 +676,6 @@ Partial Class frmCreateEditProject
         Me.lblArchPlansDated.TabIndex = 20
         Me.lblArchPlansDated.Text = "Arch Plans Dated:"
         '
-        'dtpArchPlansDated
-        '
-        Me.dtpArchPlansDated.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpArchPlansDated.Location = New System.Drawing.Point(478, 147)
-        Me.dtpArchPlansDated.Name = "dtpArchPlansDated"
-        Me.dtpArchPlansDated.Size = New System.Drawing.Size(100, 20)
-        Me.dtpArchPlansDated.TabIndex = 10
-        '
         'lblEngPlansDated
         '
         Me.lblEngPlansDated.AutoSize = True
@@ -676,14 +684,6 @@ Partial Class frmCreateEditProject
         Me.lblEngPlansDated.Size = New System.Drawing.Size(90, 13)
         Me.lblEngPlansDated.TabIndex = 22
         Me.lblEngPlansDated.Text = "Eng Plans Dated:"
-        '
-        'dtpEngPlansDated
-        '
-        Me.dtpEngPlansDated.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpEngPlansDated.Location = New System.Drawing.Point(478, 172)
-        Me.dtpEngPlansDated.Name = "dtpEngPlansDated"
-        Me.dtpEngPlansDated.Size = New System.Drawing.Size(100, 20)
-        Me.dtpEngPlansDated.TabIndex = 11
         '
         'lblCustomerName
         '
@@ -777,6 +777,7 @@ Partial Class frmCreateEditProject
         Me.txtProjectNotes.Location = New System.Drawing.Point(139, 333)
         Me.txtProjectNotes.Multiline = True
         Me.txtProjectNotes.Name = "txtProjectNotes"
+        Me.txtProjectNotes.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.txtProjectNotes.Size = New System.Drawing.Size(440, 147)
         Me.txtProjectNotes.TabIndex = 19
         '
@@ -1436,14 +1437,27 @@ Partial Class frmCreateEditProject
         Me.FileSystemWatcher1.EnableRaisingEvents = True
         Me.FileSystemWatcher1.SynchronizingObject = Me
         '
-        'btnViewMonday
+        'txtEngPlanDate
         '
-        Me.btnViewMonday.Location = New System.Drawing.Point(310, 510)
-        Me.btnViewMonday.Name = "btnViewMonday"
-        Me.btnViewMonday.Size = New System.Drawing.Size(102, 21)
-        Me.btnViewMonday.TabIndex = 58
-        Me.btnViewMonday.Text = "View on Monday"
-        Me.btnViewMonday.UseVisualStyleBackColor = True
+        Me.txtEngPlanDate.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
+        Me.txtEngPlanDate.Location = New System.Drawing.Point(476, 172)
+        Me.txtEngPlanDate.Mask = "00/00/0000"
+        Me.txtEngPlanDate.Name = "txtEngPlanDate"
+        Me.txtEngPlanDate.PromptChar = Global.Microsoft.VisualBasic.ChrW(32)
+        Me.txtEngPlanDate.Size = New System.Drawing.Size(102, 20)
+        Me.txtEngPlanDate.TabIndex = 59
+        Me.txtEngPlanDate.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
+        '
+        'txtArchPlanDate
+        '
+        Me.txtArchPlanDate.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
+        Me.txtArchPlanDate.Location = New System.Drawing.Point(476, 150)
+        Me.txtArchPlanDate.Mask = "00/00/0000"
+        Me.txtArchPlanDate.Name = "txtArchPlanDate"
+        Me.txtArchPlanDate.PromptChar = Global.Microsoft.VisualBasic.ChrW(32)
+        Me.txtArchPlanDate.Size = New System.Drawing.Size(102, 20)
+        Me.txtArchPlanDate.TabIndex = 60
+        Me.txtArchPlanDate.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
         '
         'frmCreateEditProject
         '
@@ -1507,9 +1521,7 @@ Partial Class frmCreateEditProject
     Friend WithEvents lblBidDate As Label
     Friend WithEvents dtpBidDate As DateTimePicker
     Friend WithEvents lblArchPlansDated As Label
-    Friend WithEvents dtpArchPlansDated As DateTimePicker
     Friend WithEvents lblEngPlansDated As Label
-    Friend WithEvents dtpEngPlansDated As DateTimePicker
     Friend WithEvents lblCustomerName As Label
     Friend WithEvents lblMilesToJobSite As Label
     Friend WithEvents nudMilesToJobSite As NumericUpDown
@@ -1619,4 +1631,7 @@ Partial Class frmCreateEditProject
     Friend WithEvents Label8 As Label
     Friend WithEvents txtMondayItemId As TextBox
     Friend WithEvents btnViewMonday As Button
+    Friend WithEvents RefreshToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents txtEngPlanDate As MaskedTextBox
+    Friend WithEvents txtArchPlanDate As MaskedTextBox
 End Class

@@ -19,6 +19,7 @@ Namespace BuildersPSE.Models
         Public Property DeliveryCost As Decimal
         Public Property SellPrice As Decimal
         Public Property Margin As Decimal
+        Public Property ColorCode As String
 
         Public ReadOnly Property ActualUnitID As Integer
             Get

@@ -7,6 +7,8 @@ Public Class frmLumberManagement
     Private ReadOnly _dataAccess As New LumberDataAccess()
     Private _lumberCostsDataTable As DataTable
 
+    Private ReadOnly _mainForm As frmMain = CType(Application.OpenForms.OfType(Of frmMain)().FirstOrDefault(), frmMain)
+
     Private Sub frmLumberManagement_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         InitializeControls()
         PopulateLumberTypes()
@@ -176,10 +178,10 @@ Public Class frmLumberManagement
             If String.IsNullOrEmpty(tagValue) Then
                 Throw New Exception("Tab tag not found.")
             End If
-            RemoveTabFromTabControl(tagValue)
-            StatusLogger.Add($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
+            _mainForm.RemoveTabFromTabControl(tagValue)
+            UIHelper.Add($"Closed tab {tagValue} at {DateTime.Now:HH:mm:ss}")
         Catch ex As Exception
-            StatusLogger.Add($"Error closing tab: {ex.Message} at {DateTime.Now:HH:mm:ss}")
+            UIHelper.Add($"Error closing tab: {ex.Message} at {DateTime.Now:HH:mm:ss}")
             MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub

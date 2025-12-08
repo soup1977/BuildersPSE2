@@ -16,6 +16,10 @@ Public Class FrmPSE
         ReuseUnit
         EditMappingQuantity
     End Enum
+
+    Private sourceBuildingStructure As New List(Of Integer)   ' ProductTypeID sequence, sorted by LevelNumber
+    Private copiedBuildingMappings As New List(Of List(Of Tuple(Of Integer, Integer))) '
+
     Private currentdetailsMode As DetailsMode = DetailsMode.None
 
     ' Data Tracking
@@ -57,12 +61,13 @@ Public Class FrmPSE
     Private colDeliveryCost As DataGridViewColumn
     Private colSellPrice As DataGridViewColumn
     Private colMargin As DataGridViewColumn
+    Private colColorCode As DataGridViewColumn
     Private colActions As DataGridViewColumn
 
     Private copiedMappings As New List(Of Tuple(Of Integer, Integer)) ' (ActualUnitID, Quantity)
     Private sourceProductTypeID As Integer = -1
 
-
+    Private ReadOnly _mainForm As frmMain = CType(Application.OpenForms.OfType(Of frmMain)().FirstOrDefault(), frmMain)
     Public Sub New(projectID As Integer, Optional versionID As Integer = 0)
         ' Check for versions before initializing
         Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(projectID)
@@ -118,7 +123,8 @@ Public Class FrmPSE
             .DataPropertyName = "UnitName",
             .HeaderText = "Actual Unit Name",
             .ReadOnly = True,
-            .Visible = True
+            .Visible = True,
+            .SortMode = DataGridViewColumnSortMode.Automatic
         }
         DataGridViewAssigned.Columns.Add(colUnitName)
 
@@ -126,7 +132,8 @@ Public Class FrmPSE
             .DataPropertyName = "ReferencedRawUnitName",
             .HeaderText = "Referenced Raw Unit Name",
             .ReadOnly = True,
-            .Visible = True
+            .Visible = True,
+            .SortMode = DataGridViewColumnSortMode.Automatic
         }
         DataGridViewAssigned.Columns.Add(colReferencedRawUnitName)
 
@@ -258,6 +265,15 @@ Public Class FrmPSE
         }
         DataGridViewAssigned.Columns.Add(colMargin)
 
+        colColorCode = New DataGridViewTextBoxColumn With {
+            .Name = "colColorCode",
+            .DataPropertyName = "ColorCode",
+            .HeaderText = "ColorCode",
+            .ReadOnly = True,
+            .Visible = False
+        }
+        DataGridViewAssigned.Columns.Add(colColorCode)
+
         colActions = New DataGridViewButtonColumn With {
             .Name = "ActionsColumn",
             .HeaderText = "Actions",
@@ -284,8 +300,9 @@ Public Class FrmPSE
         colSellPrice.Visible = isDetailedView
         colMargin.Visible = isDetailedView
         colDeliveryCost.Visible = isDetailedView
+        colColorCode.Visible = isDetailedView
         DataGridViewAssigned.Refresh()
-        StatusLogger.Add($"Grid view switched to {(If(isDetailedView, "Detailed", "Base"))} mode.")
+        UIHelper.Add($"Grid view switched to {(If(isDetailedView, "Detailed", "Base"))} mode.")
     End Sub
 
     Private Sub ChkDetailedView_CheckedChanged(sender As Object, e As EventArgs) Handles ChkDetailedView.CheckedChanged
@@ -297,7 +314,7 @@ Public Class FrmPSE
         Try
             Dim project = dataAccess.GetProjectByID(selectedProjectID)
             If project Is Nothing Then
-                StatusLogger.Add("Status: Project not found.")
+                UIHelper.Add("Status: Project not found.")
                 Return
             End If
             Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(selectedProjectID)
@@ -307,22 +324,25 @@ Public Class FrmPSE
             projectNode.Tag = New Dictionary(Of String, Object) From {{"Type", "Project"}, {"ID", selectedProjectID}}
             Dim buildings = ProjectDataAccess.GetBuildingsByVersionID(selectedVersionID)
             If Not buildings.Any() Then
-                StatusLogger.Add("Status: No buildings found for this version.")
+                UIHelper.Add("Status: No buildings found for this version.")
                 Return
             End If
             For Each bldg In buildings
-                Dim bldgNode As TreeNode = projectNode.Nodes.Add(bldg.BuildingName)
+                Dim bldgNode As New TreeNode(String.Format("{0} ({1})", bldg.BuildingName, "x" & bldg.BldgQty))
                 bldgNode.Tag = New Dictionary(Of String, Object) From {{"Type", "Building"}, {"ID", bldg.BuildingID}}
+                projectNode.Nodes.Add(bldgNode)
+
                 Dim levels = ProjectDataAccess.GetLevelsByBuildingID(bldg.BuildingID)
                 For Each lvl In levels
-                    Dim levelNode As TreeNode = bldgNode.Nodes.Add(lvl.ProductTypeName & " Level " & lvl.LevelNumber)
+                    Dim levelNode As New TreeNode(String.Format("{0} ({1})", lvl.LevelName, lvl.ProductTypeName))
                     levelNode.Tag = New Dictionary(Of String, Object) From {{"Type", "Level"}, {"ID", lvl.LevelID}, {"ProductTypeID", lvl.ProductTypeID}}
+                    bldgNode.Nodes.Add(levelNode)
                 Next
             Next
             projectNode.Expand()
-            StatusLogger.Add("Status: Project hierarchy loaded for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Project hierarchy loaded for version " & selectedVersionID & ".")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error loading hierarchy: " & ex.Message)
+            UIHelper.Add("Status: Error loading hierarchy: " & ex.Message)
             MessageBox.Show("Error loading project hierarchy: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -351,16 +371,16 @@ Public Class FrmPSE
         Try
             rawUnits = ProjectDataAccess.GetRawUnitsByVersionID(selectedVersionID).Where(Function(r) r.ProductTypeID = productTypeID).ToList()
             If Not rawUnits.Any() Then
-                StatusLogger.Add("Status: No raw units found for this version and product type.")
+                UIHelper.Add("Status: No raw units found for this version and product type.")
                 Return
             End If
             For Each rawUnit In rawUnits
                 ListBoxAvailableUnits.Items.Add(rawUnit.RawUnitName)
             Next
-            StatusLogger.Add("Status: Raw units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
+            UIHelper.Add("Status: Raw units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
             UpdateSelectedRawPreview()
         Catch ex As Exception
-            StatusLogger.Add("Status: Error loading raw units: " & ex.Message)
+            UIHelper.Add("Status: Error loading raw units: " & ex.Message)
             MessageBox.Show("Error loading raw units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -369,7 +389,7 @@ Public Class FrmPSE
         Try
             existingActualUnits = ProjectDataAccess.GetActualUnitsByVersion(selectedVersionID).Where(Function(u) u.ProductTypeID = productTypeID).ToList()
             If Not existingActualUnits.Any() Then
-                StatusLogger.Add("Status: No actual units found for this version and product type.")
+                UIHelper.Add("Status: No actual units found for this version and product type.")
                 Return
             End If
             For Each unit In existingActualUnits
@@ -380,9 +400,9 @@ Public Class FrmPSE
                 End If
                 ListboxExistingActualUnits.Items.Add($"{unit.UnitName} ({unit.UnitType}) - {sellPricePerSQFT:C2}/SQFT")
             Next
-            StatusLogger.Add("Status: Actual units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
+            UIHelper.Add("Status: Actual units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error loading actual units: " & ex.Message)
+            UIHelper.Add("Status: Error loading actual units: " & ex.Message)
             MessageBox.Show("Error loading actual units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -425,17 +445,45 @@ Public Class FrmPSE
     End Sub
     Private Sub LoadAssignedUnits()
         Try
-            displayUnits = ProjectDataAccess.ComputeLevelUnits(selectedLevelID)
-            bindingSource.DataSource = displayUnits
+            bindingSource.DataSource = ProjectDataAccess.ComputeLevelUnitsDataTable(selectedLevelID)
+            ' displayUnits = ProjectDataAccess.ComputeLevelUnits(selectedLevelID)
+            'bindingSource.DataSource = displayUnits
             bindingSource.ResetBindings(False)
+
+            AddHandler DataGridViewAssigned.CellFormatting, AddressOf DataGridViewAssigned_CellFormatting
             DataGridViewAssigned.Refresh()
+
             UpdateLevelTotals()
         Catch ex As Exception
             MessageBox.Show("Error loading assigned units: " & ex.Message)
         End Try
     End Sub
 
+    Private Sub DataGridViewAssigned_CellFormatting(sender As Object, e As DataGridViewCellFormattingEventArgs) _
+    Handles DataGridViewAssigned.CellFormatting
 
+        ' Only color the UnitName column
+        If e.ColumnIndex < 0 Then Return
+        If DataGridViewAssigned.Columns(e.ColumnIndex).DataPropertyName <> "UnitName" Then Return
+
+        Dim row As DataGridViewRow = DataGridViewAssigned.Rows(e.RowIndex)
+        If row.IsNewRow Then Return
+
+        ' Safest way: get value directly from the hidden ColorCode cell
+        Dim colorCell = row.Cells("colColorCode")
+        If colorCell IsNot Nothing AndAlso colorCell.Value IsNot Nothing AndAlso Not IsDBNull(colorCell.Value) Then
+            Dim colorCode As String = colorCell.Value.ToString().Trim()
+            If Not String.IsNullOrEmpty(colorCode) Then
+                Try
+                    Dim clr = ColorTranslator.FromHtml("#" & colorCode)
+                    e.CellStyle.BackColor = clr
+                    e.CellStyle.SelectionBackColor = clr
+                Catch
+                    ' ignore bad color
+                End Try
+            End If
+        End If
+    End Sub
 
     Private Sub UpdateLevelTotals()
         Dim totalSQFT As Decimal = displayUnits.Sum(Function(u) u.PlanSQFT * u.ActualUnitQuantity)
@@ -460,7 +508,7 @@ Public Class FrmPSE
             txtTotMargin.Text = "0.00"
         End If
         txtTotalDeliveryCost.Text = displayUnits.Sum(Function(u) u.DeliveryCost).ToString("C2")
-        StatusLogger.Add($"Total Adjusted SQFT: {totalSQFT} - Recalc complete. No variations detected... yet.")
+        UIHelper.Add($"Total Adjusted SQFT: {totalSQFT} - Recalc complete. No variations detected... yet.")
     End Sub
 
     Private Sub UpdateSelectedRawPreview()
@@ -479,7 +527,7 @@ Public Class FrmPSE
                 TxtOverallCostPerSQFT.Text = "0.00"
                 TxtDeliveryCostPerSQFT.Text = "0.00"
                 TxtTotalSellPricePerSQFT.Text = "0.00"
-                StatusLogger.Add($"Status: No valid raw unit or zero SQFT for version {selectedVersionID}.")
+                UIHelper.Add($"Status: No valid raw unit or zero SQFT for version {selectedVersionID}.")
                 Return
             End If
             TxtLumberPerSQFT.Text = (currentRawUnit.LumberCost.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
@@ -494,9 +542,9 @@ Public Class FrmPSE
             TxtOverallCostPerSQFT.Text = (currentRawUnit.OverallCost.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
             TxtDeliveryCostPerSQFT.Text = (currentRawUnit.DeliveryCost.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
             TxtTotalSellPricePerSQFT.Text = (currentRawUnit.TotalSellPrice.GetValueOrDefault() / currentRawUnit.SqFt.Value).ToString("F2")
-            StatusLogger.Add($"Status: Preview updated for raw unit {currentRawUnit.RawUnitName} in version {selectedVersionID}.")
+            UIHelper.Add($"Status: Preview updated for raw unit {currentRawUnit.RawUnitName} in version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating raw unit preview: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -505,13 +553,13 @@ Public Class FrmPSE
         Try
             Dim productTypes = dataAccess.GetProductTypes()
             If Not productTypes.Any() Then
-                StatusLogger.Add("Status: No product types found for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: No product types found for version " & selectedVersionID & ".")
                 Return
             End If
             If TreeViewLevels.Nodes.Count > 0 AndAlso TreeViewLevels.Nodes(0).Nodes.Count > 0 AndAlso TreeViewLevels.Nodes(0).Nodes(0).Nodes.Count > 0 Then
                 TreeViewLevels.SelectedNode = TreeViewLevels.Nodes(0).Nodes(0).Nodes(0) ' Assume first level
             Else
-                StatusLogger.Add("Status: No levels available for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: No levels available for version " & selectedVersionID & ".")
             End If
 
             populaterawunits()
@@ -519,9 +567,9 @@ Public Class FrmPSE
             UpdateLevelTotals()
             UpdateSelectedRawPreview()
             TreeViewLevels.ExpandAll()
-            StatusLogger.Add("Status: Form loaded for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Form loaded for version " & selectedVersionID & ".")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error initializing form for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error initializing form for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error initializing form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -532,7 +580,7 @@ Public Class FrmPSE
             dgvRawUnitsData.DataSource = rawUnits
         Else
             dgvRawUnitsData.DataSource = Nothing
-            StatusLogger.Add("Status: No raw units found for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: No raw units found for version " & selectedVersionID & ".")
         End If
     End Sub
     Private Function CreateAndSaveActualUnit() As ActualUnitModel
@@ -541,14 +589,14 @@ Public Class FrmPSE
             Dim adder As Decimal
             If String.IsNullOrEmpty(TxtUnitName.Text) OrElse Not Decimal.TryParse(TxtPlanSQFT.Text, sqft) OrElse sqft <= 0 OrElse
            Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
-                StatusLogger.Add("Status: Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.")
+                UIHelper.Add("Status: Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.")
                 MessageBox.Show("Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return Nothing
             End If
 
             Dim rawUnit As RawUnitModel = rawUnits.FirstOrDefault(Function(r) r.RawUnitID = selectedRawUnitID)
             If rawUnit Is Nothing Then
-                StatusLogger.Add("Status: Referenced Raw Unit not found.")
+                UIHelper.Add("Status: Referenced Raw Unit not found.")
                 MessageBox.Show("Referenced Raw Unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return Nothing
             End If
@@ -569,10 +617,10 @@ Public Class FrmPSE
             actualUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnit, Me.selectedVersionID)
             dataAccess.SaveCalculatedComponents(actualUnit)
 
-            StatusLogger.Add("Status: Actual unit created for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Actual unit created for version " & selectedVersionID & ".")
             Return actualUnit
         Catch ex As Exception
-            StatusLogger.Add("Status: Error creating actual unit for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error creating actual unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error creating actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return Nothing
         End Try
@@ -620,7 +668,7 @@ Public Class FrmPSE
 
             Return components
         Catch ex As Exception
-            StatusLogger.Add("Status: Error calculating components for version " & versionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error calculating components for version " & versionID & ": " & ex.Message)
             MessageBox.Show("Error calculating components: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return components
         End Try
@@ -641,7 +689,7 @@ Public Class FrmPSE
             End If
             Try
                 If ImportRawUnitsWithMapping(ofd.FileName, productTypeID) Then
-                    StatusLogger.Add("Status: Raw units imported successfully for version " & selectedVersionID & ".")
+                    UIHelper.Add("Status: Raw units imported successfully for version " & selectedVersionID & ".")
                     If selectedLevelID <> -1 Then
                         populaterawunits()
                         FilterRawUnits(productTypeID)
@@ -650,10 +698,10 @@ Public Class FrmPSE
                         LoadAssignedUnits()
                     End If
                 Else
-                    StatusLogger.Add("Status: Import cancelled for version " & selectedVersionID & ".")
+                    UIHelper.Add("Status: Import cancelled for version " & selectedVersionID & ".")
                 End If
             Catch ex As Exception
-                StatusLogger.Add("Status: Import failed for version " & selectedVersionID & ": " & ex.Message)
+                UIHelper.Add("Status: Import failed for version " & selectedVersionID & ": " & ex.Message)
                 MessageBox.Show("Import failed: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Finally
                 isImporting = False
@@ -1000,7 +1048,7 @@ Public Class FrmPSE
     Private Sub BtnConvertToActualUnit_Click(sender As Object, e As EventArgs) Handles BtnConvertToActualUnit.Click
         Try
             If ListBoxAvailableUnits.SelectedIndex < 0 Then
-                StatusLogger.Add($"Status: No raw unit selected for conversion in version {selectedVersionID}.")
+                UIHelper.Add($"Status: No raw unit selected for conversion in version {selectedVersionID}.")
                 MessageBox.Show("Please select a raw unit to convert.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1019,9 +1067,9 @@ Public Class FrmPSE
             PopulateDetailsPane(newActualUnit, False, 1)
             TxtUnitName.Text = String.Empty  ' Clear for user to enter actual unit name
             TxtUnitName.Focus()  ' Set focus for immediate typing
-            StatusLogger.Add($"Status: Converting raw unit {rawUnit.RawUnitName} to actual unit for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Converting raw unit {rawUnit.RawUnitName} to actual unit for version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error converting raw unit for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error converting raw unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error converting raw unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1029,22 +1077,22 @@ Public Class FrmPSE
     Private Sub btnReuseActualUnit_Click(sender As Object, e As EventArgs) Handles btnReuseActualUnit.Click
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                StatusLogger.Add($"Status: Please select an actual unit to reuse for version {selectedVersionID}.")
+                UIHelper.Add($"Status: Please select an actual unit to reuse for version {selectedVersionID}.")
                 MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             selectedActualUnitID = existingActualUnits(ListboxExistingActualUnits.SelectedIndex).ActualUnitID
             Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
             If selectedActual Is Nothing Then
-                StatusLogger.Add($"Status: Selected actual unit not found for version {selectedVersionID}.")
+                UIHelper.Add($"Status: Selected actual unit not found for version {selectedVersionID}.")
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             currentdetailsMode = DetailsMode.ReuseUnit
             PopulateDetailsPane(selectedActual, False, 1)
-            StatusLogger.Add($"Status: Reusing actual unit {selectedActual.UnitName} for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Reusing actual unit {selectedActual.UnitName} for version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error reusing unit for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error reusing unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error reusing unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1114,9 +1162,9 @@ Public Class FrmPSE
 
             PanelDetails.Visible = True
             BtnToggleDetails.Text = "Hide Details"
-            StatusLogger.Add($"Status: Details pane opened in {currentdetailsMode} mode for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Details pane opened in {currentdetailsMode} mode for version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error opening details pane for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error opening details pane for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error opening details pane: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1146,7 +1194,7 @@ Public Class FrmPSE
     Private Sub HandleGlobalUnitEdit()
         Try
             If selectedActualUnitID <= 0 Then
-                StatusLogger.Add($"Status: Invalid unit selection for version {selectedVersionID}.")
+                UIHelper.Add($"Status: Invalid unit selection for version {selectedVersionID}.")
                 MessageBox.Show("Invalid unit selection for edit.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1155,14 +1203,14 @@ Public Class FrmPSE
             Dim adder As Decimal
             If Not Decimal.TryParse(TxtPlanSQFT.Text, sqft) OrElse sqft <= 0 OrElse
                Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
-                StatusLogger.Add($"Status: Invalid input for version {selectedVersionID}—SQFT (>0) and Adder (≥1) must be valid.")
+                UIHelper.Add($"Status: Invalid input for version {selectedVersionID}—SQFT (>0) and Adder (≥1) must be valid.")
                 MessageBox.Show("Invalid input—SQFT (>0) and Adder (≥1) must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
 
             Dim updatedUnit As ActualUnitModel = ProjectDataAccess.GetActualUnitByID(selectedActualUnitID)
             If updatedUnit Is Nothing Then
-                StatusLogger.Add($"Status: Actual unit not found for version {selectedVersionID}.")
+                UIHelper.Add($"Status: Actual unit not found for version {selectedVersionID}.")
                 MessageBox.Show("Actual unit not found for update.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1182,22 +1230,22 @@ Public Class FrmPSE
             End If
 
             LoadExistingActualUnits()
-            StatusLogger.Add($"Status: Actual unit {updatedUnit.UnitName} updated successfully for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Actual unit {updatedUnit.UnitName} updated successfully for version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error updating actual unit for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error updating actual unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
     Private Sub HandleEditMappingQuantity(quantity As Integer)
         Try
             If selectedMappingID <= 0 Then
-                StatusLogger.Add($"Status: Invalid mapping ID for version {selectedVersionID}.")
+                UIHelper.Add($"Status: Invalid mapping ID for version {selectedVersionID}.")
                 MessageBox.Show("Invalid mapping selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             Dim mapping As ActualToLevelMappingModel = ProjectDataAccess.GetActualToLevelMappingsByLevelID(selectedLevelID).FirstOrDefault(Function(m) m.MappingID = selectedMappingID)
             If mapping Is Nothing Then
-                StatusLogger.Add($"Status: Mapping not found for ID {selectedMappingID} in version {selectedVersionID}.")
+                UIHelper.Add($"Status: Mapping not found for ID {selectedMappingID} in version {selectedVersionID}.")
                 MessageBox.Show("Mapping not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1206,9 +1254,9 @@ Public Class FrmPSE
             LoadAssignedUnits()
             RollupDataAccess.UpdateLevelRollups(selectedLevelID)
             If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
-            StatusLogger.Add($"Status: Mapping quantity updated for unit {mapping.ActualUnit.UnitName} in version {selectedVersionID}.")
+            UIHelper.Add($"Status: Mapping quantity updated for unit {mapping.ActualUnit.UnitName} in version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error updating mapping quantity for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error updating mapping quantity for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating mapping quantity: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1227,7 +1275,7 @@ Public Class FrmPSE
             .Quantity = qty
         }
         dataAccess.SaveActualToLevelMapping(mapping)
-        StatusLogger.Add("Unit quantity updated successfully for version " & selectedVersionID & ".")
+        UIHelper.Add("Unit quantity updated successfully for version " & selectedVersionID & ".")
     End Sub
 
     Private Sub HandleNewUnit(qty As Integer)
@@ -1241,7 +1289,7 @@ Public Class FrmPSE
             .Quantity = qty
         }
         dataAccess.SaveActualToLevelMapping(mapping)
-        StatusLogger.Add("Unit saved and attached successfully for version " & selectedVersionID & ".")
+        UIHelper.Add("Unit saved and attached successfully for version " & selectedVersionID & ".")
     End Sub
 
     Private Sub HandleReuseMapping(qty As Integer)
@@ -1252,7 +1300,7 @@ Public Class FrmPSE
             .Quantity = qty
         }
         dataAccess.SaveActualToLevelMapping(mapping)
-        StatusLogger.Add("Existing unit reused and mapped successfully for version " & selectedVersionID & ".")
+        UIHelper.Add("Existing unit reused and mapped successfully for version " & selectedVersionID & ".")
     End Sub
 
     Private Sub btnDeleteUnit_Click(sender As Object, e As EventArgs) Handles btnDeleteUnit.Click
@@ -1274,7 +1322,7 @@ Public Class FrmPSE
                         ListboxExistingActualUnits.Items.Add(unit.UnitName & " (" & unit.UnitType & ")")
                     Next
                     If selectedLevelID > 0 Then LoadAssignedUnits()
-                    StatusLogger.Add($"Status: Actual unit deleted for version {selectedVersionID}.")
+                    UIHelper.Add($"Status: Actual unit deleted for version {selectedVersionID}.")
 
                 Case DetailsMode.EditMappingQuantity
                     If selectedMappingID <= 0 Then
@@ -1288,13 +1336,13 @@ Public Class FrmPSE
                     RollupDataAccess.UpdateLevelRollups(selectedLevelID)
                     If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
                     ResetDetailsPane()
-                    StatusLogger.Add($"Status: Mapping deleted for version {selectedVersionID}.")
+                    UIHelper.Add($"Status: Mapping deleted for version {selectedVersionID}.")
 
                 Case Else
                     MessageBox.Show("Delete not supported in this mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End Select
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error deleting for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error deleting for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error deleting: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1317,9 +1365,9 @@ Public Class FrmPSE
             btnSave.Text = "Save"
             PanelDetails.Visible = False
             BtnToggleDetails.Text = "Show Details"
-            StatusLogger.Add($"Status: Details pane reset for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Details pane reset for version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error resetting details pane for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error resetting details pane for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error resetting details pane: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1327,7 +1375,7 @@ Public Class FrmPSE
     Private Sub BtnRecalculate_Click(sender As Object, e As EventArgs) Handles BtnRecalculate.Click
         Try
             If selectedLevelID <= 0 Then
-                StatusLogger.Add("Status: Please select a level to recalculate for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: Please select a level to recalculate for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select a level before recalculating.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1338,10 +1386,10 @@ Public Class FrmPSE
                 RecalculateAllActualUnits(selectedVersionID)
                 RecalculateProject()
             End If
-            StatusLogger.Add("Status: Recalculated totals successfully for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Recalculated totals successfully for version " & selectedVersionID & ".")
             MessageBox.Show("Recalculated totals successfully for version " & selectedVersionID & ".", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
-            StatusLogger.Add("Status: Error recalculating for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error recalculating for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error recalculating: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1349,9 +1397,9 @@ Public Class FrmPSE
         Try
             RollupDataAccess.RecalculateVersion(selectedVersionID)
             LoadAssignedUnits()
-            StatusLogger.Add("Status: Project recalculated successfully for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Project recalculated successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error recalculating project for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error recalculating project for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error recalculating project: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1360,7 +1408,7 @@ Public Class FrmPSE
             If e.ColumnIndex = colActions.Index AndAlso e.RowIndex >= 0 Then
                 Dim selectedUnit As DisplayUnitData = TryCast(bindingSource.Current, DisplayUnitData)
                 If selectedUnit Is Nothing Then
-                    StatusLogger.Add($"Status: No unit selected for editing in version {selectedVersionID}.")
+                    UIHelper.Add($"Status: No unit selected for editing in version {selectedVersionID}.")
                     MessageBox.Show("No unit selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return
                 End If
@@ -1368,10 +1416,10 @@ Public Class FrmPSE
                 selectedActualUnitID = selectedUnit.ActualUnit.ActualUnitID
                 currentdetailsMode = DetailsMode.EditMappingQuantity
                 PopulateDetailsPane(selectedUnit.ActualUnit, False, selectedUnit.ActualUnitQuantity)
-                StatusLogger.Add($"Status: Editing mapping quantity for unit {selectedUnit.UnitName} in version {selectedVersionID}.")
+                UIHelper.Add($"Status: Editing mapping quantity for unit {selectedUnit.UnitName} in version {selectedVersionID}.")
             End If
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error in cell click for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error in cell click for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error in cell click: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1381,7 +1429,7 @@ Public Class FrmPSE
         Try
             existingActualUnits = ProjectDataAccess.GetActualUnitsByVersion(selectedVersionID)
             If Not existingActualUnits.Any() Then
-                StatusLogger.Add("Status: No actual units found for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: No actual units found for version " & selectedVersionID & ".")
                 Return
             End If
             For Each actual In existingActualUnits
@@ -1392,9 +1440,9 @@ Public Class FrmPSE
                 End If
                 ListboxExistingActualUnits.Items.Add($"{actual.UnitName} ({actual.UnitType}) - {sellPricePerSQFT:C2}/SQFT")
             Next
-            StatusLogger.Add("Status: Actual units loaded for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Actual units loaded for version " & selectedVersionID & ".")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error loading actual units for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error loading actual units for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error loading actual units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1402,20 +1450,20 @@ Public Class FrmPSE
     Private Sub ListBoxAvailableUnits_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBoxAvailableUnits.SelectedIndexChanged
         Try
             If ListBoxAvailableUnits.SelectedIndex < 0 Then
-                StatusLogger.Add($"Status: No raw unit selected for version {selectedVersionID}.")
+                UIHelper.Add($"Status: No raw unit selected for version {selectedVersionID}.")
                 UpdateSelectedRawPreview()
                 Return
             End If
             UpdateSelectedRawPreview()
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error updating raw unit preview for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating raw unit preview: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub mnuCopyUnits_Click(sender As Object, e As EventArgs) Handles mnuCopyUnits.Click
         If selectedLevelID <= 0 Then
-            StatusLogger.Add("Status: Please select a level to copy units for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Please select a level to copy units for version " & selectedVersionID & ".")
             MessageBox.Show("Please select a level to copy units.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
@@ -1428,21 +1476,21 @@ Public Class FrmPSE
             Next
             Dim levelTag = DirectCast(TreeViewLevels.SelectedNode.Tag, Dictionary(Of String, Object))
             sourceProductTypeID = CInt(levelTag("ProductTypeID"))
-            StatusLogger.Add($"Status: Copied {copiedMappings.Count} units from level for version {selectedVersionID}. Ready to paste.")
+            UIHelper.Add($"Status: Copied {copiedMappings.Count} units from level for version {selectedVersionID}. Ready to paste.")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error copying units for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error copying units for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error copying units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub mnuPasteUnits_Click(sender As Object, e As EventArgs) Handles mnuPasteUnits.Click
         If selectedLevelID <= 0 Then
-            StatusLogger.Add("Status: Please select a target level for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Please select a target level for version " & selectedVersionID & ".")
             MessageBox.Show("Please select a target level to paste units.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
         If copiedMappings.Count = 0 Then
-            StatusLogger.Add("Status: No units copied for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: No units copied for version " & selectedVersionID & ".")
             MessageBox.Show("No units copied to paste.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
@@ -1451,7 +1499,7 @@ Public Class FrmPSE
             Dim levelTag = DirectCast(TreeViewLevels.SelectedNode.Tag, Dictionary(Of String, Object))
             Dim targetProductTypeID As Integer = CInt(levelTag("ProductTypeID"))
             If targetProductTypeID <> sourceProductTypeID Then
-                StatusLogger.Add("Status: Source and target levels must have the same Product Type for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: Source and target levels must have the same Product Type for version " & selectedVersionID & ".")
                 MessageBox.Show("Cannot paste: Source and target levels must have the same Product Type.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1479,10 +1527,10 @@ Public Class FrmPSE
             LoadAssignedUnits()
             RollupDataAccess.UpdateLevelRollups(selectedLevelID)
             If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
-            copiedMappings.Clear()
-            StatusLogger.Add("Status: Units pasted successfully for version " & selectedVersionID & ".")
+            'copiedMappings.Clear()
+            UIHelper.Add("Status: Units pasted successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error pasting units for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error pasting units for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error pasting units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1491,9 +1539,9 @@ Public Class FrmPSE
         Try
             PanelDetails.Visible = Not PanelDetails.Visible
             BtnToggleDetails.Text = If(PanelDetails.Visible, "Hide Details", "Show Details")
-            StatusLogger.Add($"Status: Details panel {(If(PanelDetails.Visible, "shown", "hidden"))} for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Details panel {(If(PanelDetails.Visible, "shown", "hidden"))} for version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error toggling details panel for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error toggling details panel for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error toggling details panel: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1502,20 +1550,20 @@ Public Class FrmPSE
         Try
             ResetDetailsPane()
             btnDeleteUnit.Visible = False
-            StatusLogger.Add($"Status: Details pane reset for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Details pane reset for version {selectedVersionID}.")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error resetting details pane for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error resetting details pane for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error resetting details pane: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub BtnFinish_Click(sender As Object, e As EventArgs) Handles BtnFinish.Click
         Try
-            StatusLogger.Add($"Status: Session complete for version {selectedVersionID} at {DateTime.Now:HH:mm:ss}.")
+            UIHelper.Add($"Status: Session complete for version {selectedVersionID} at {DateTime.Now:HH:mm:ss}.")
             RollupDataAccess.RecalculateVersion(selectedVersionID)
-            RemoveTabFromTabControl($"PSE_{selectedProjectID}_{selectedVersionID}")
+            _mainForm.RemoveTabFromTabControl($"PSE_{selectedProjectID}_{selectedVersionID}")
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error closing form for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error closing form for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error closing form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1543,7 +1591,7 @@ Public Class FrmPSE
                     If actualUnit Is Nothing Then Return
                     existingActualUnits.Add(actualUnit)
                     ListboxExistingActualUnits.Items.Add(actualUnit.UnitName & " (" & actualUnit.UnitType & ")")
-                    StatusLogger.Add("New unit saved successfully—available for reuse.")
+                    UIHelper.Add("New unit saved successfully—available for reuse.")
                     ' Optional attach based on user choice
                     If chkAttachToLevel.Checked AndAlso selectedLevelID > 0 AndAlso CInt(TxtActualUnitQuantity.Text) > 0 Then
                         Dim newMapping As New ActualToLevelMappingModel With {
@@ -1558,14 +1606,14 @@ Public Class FrmPSE
                         If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
                     End If
                 Case Else
-                    StatusLogger.Add($"Status: Invalid save mode for version {selectedVersionID}.")
+                    UIHelper.Add($"Status: Invalid save mode for version {selectedVersionID}.")
                     MessageBox.Show("Invalid operation mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return
             End Select
             ResetDetailsPane()
             currentdetailsMode = DetailsMode.None
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error saving for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error saving for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error saving: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1574,18 +1622,18 @@ Public Class FrmPSE
         Try
             If e.Button = MouseButtons.Right AndAlso ListboxExistingActualUnits.SelectedIndex >= 0 Then
                 If ListboxExistingActualUnits.ContextMenuStrip Is Nothing Then
-                    StatusLogger.Add($"Status: Context menu not configured for version {selectedVersionID}.")
+                    UIHelper.Add($"Status: Context menu not configured for version {selectedVersionID}.")
                     MessageBox.Show("Context menu not configured.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return
                 End If
                 ListboxExistingActualUnits.ContextMenuStrip.Show(ListboxExistingActualUnits, e.Location)
-                StatusLogger.Add($"Status: Context menu opened for version {selectedVersionID}.")
+                UIHelper.Add($"Status: Context menu opened for version {selectedVersionID}.")
             ElseIf e.Button = MouseButtons.Right Then
-                StatusLogger.Add($"Status: Please select an actual unit for version {selectedVersionID} to show context menu.")
+                UIHelper.Add($"Status: Please select an actual unit for version {selectedVersionID} to show context menu.")
                 MessageBox.Show("Please select an actual unit to show the context menu.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error opening context menu for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error opening context menu for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error opening context menu: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1593,22 +1641,22 @@ Public Class FrmPSE
     Private Sub EditToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditToolStripMenuItem.Click, ListboxExistingActualUnits.DoubleClick
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                StatusLogger.Add("Status: Please select an actual unit to edit for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: Please select an actual unit to edit for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             selectedActualUnitID = existingActualUnits(ListboxExistingActualUnits.SelectedIndex).ActualUnitID
             Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
             If selectedActual Is Nothing Then
-                StatusLogger.Add("Status: Selected actual unit not found for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: Selected actual unit not found for version " & selectedVersionID & ".")
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
             currentdetailsMode = DetailsMode.EditGlobalUnit
             PopulateDetailsPane(selectedActual, True, 0)
-            StatusLogger.Add("Status: Editing actual unit " & selectedActual.UnitName & " for version " & selectedVersionID & ".")
+            UIHelper.Add("Status: Editing actual unit " & selectedActual.UnitName & " for version " & selectedVersionID & ".")
         Catch ex As Exception
-            StatusLogger.Add("Status: Error editing actual unit for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add("Status: Error editing actual unit for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error editing actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1616,14 +1664,14 @@ Public Class FrmPSE
     Private Sub DeleteActualUnitToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DeleteActualUnitToolStripMenuItem.Click
         Try
             If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                StatusLogger.Add("Status: Please select an actual unit to delete for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: Please select an actual unit to delete for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
 
             Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
             If selectedActual Is Nothing Then
-                StatusLogger.Add("Status: Selected actual unit not found for version " & selectedVersionID & ".")
+                UIHelper.Add("Status: Selected actual unit not found for version " & selectedVersionID & ".")
                 MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
@@ -1638,12 +1686,12 @@ Public Class FrmPSE
             existingActualUnits.RemoveAt(ListboxExistingActualUnits.SelectedIndex)
             ListboxExistingActualUnits.Items.RemoveAt(ListboxExistingActualUnits.SelectedIndex)
             If selectedLevelID > 0 Then LoadAssignedUnits() ' Refresh grid if unit was mapped
-            StatusLogger.Add($"Status: Actual unit '{selectedActual.UnitName}' deleted successfully for version {selectedVersionID}.")
+            UIHelper.Add($"Status: Actual unit '{selectedActual.UnitName}' deleted successfully for version {selectedVersionID}.")
         Catch ex As ApplicationException
-            StatusLogger.Add($"Status: Deletion blocked for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Deletion blocked for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show(ex.Message, "Deletion Blocked", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Catch ex As Exception
-            StatusLogger.Add($"Status: Error deleting unit for version {selectedVersionID}: {ex.Message}")
+            UIHelper.Add($"Status: Error deleting unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error deleting unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -1670,5 +1718,234 @@ Public Class FrmPSE
 
     End Sub
 
+    Private Sub TreeViewLevels_MouseDown(sender As Object, e As MouseEventArgs) Handles TreeViewLevels.MouseDown
+        If e.Button <> MouseButtons.Right Then Return
 
+        Dim clickedNode As TreeNode = TreeViewLevels.GetNodeAt(e.X, e.Y)
+        If clickedNode Is Nothing Then Return
+
+        TreeViewLevels.SelectedNode = clickedNode
+        Dim tag As Dictionary(Of String, Object) = DirectCast(clickedNode.Tag, Dictionary(Of String, Object))
+        Dim nodeType As String = CStr(tag("Type"))
+
+        ' Hide all menu items first
+        mnuCopyUnits.Visible = False
+        mnuPasteUnits.Visible = False
+        mnuCopyBuildingUnits.Visible = False
+        mnuPasteBuildingUnits.Visible = False
+        mnuClearBuildingCopy.Enabled = False
+
+        ' Show only the relevant ones
+        If nodeType = "Level" Then
+            mnuCopyUnits.Visible = True
+            mnuPasteUnits.Visible = True
+            mnuPasteUnits.Enabled = (copiedMappings.Count > 0)
+        ElseIf nodeType = "Building" Then
+            mnuCopyBuildingUnits.Visible = True
+            mnuPasteBuildingUnits.Visible = True
+            mnuPasteBuildingUnits.Enabled = (copiedBuildingMappings.Count > 0)
+        End If
+
+        mnuClearBuildingCopy.Enabled = (copiedMappings.Count > 0) Or (copiedBuildingMappings.Count > 0)
+
+        ' Show the menu
+        ContextMenuLevels.Show(TreeViewLevels, e.Location)
+    End Sub
+
+    Private Sub mnuCopyBuildingUnits_Click(sender As Object, e As EventArgs) Handles mnuCopyBuildingUnits.Click
+        Dim selectedNode As TreeNode = TreeViewLevels.SelectedNode
+        If selectedNode Is Nothing Then
+            MessageBox.Show("No building selected.", "Copy Units", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim tag As Dictionary(Of String, Object) = DirectCast(selectedNode.Tag, Dictionary(Of String, Object))
+        If CStr(tag("Type")) <> "Building" Then
+            MessageBox.Show("Please right-click on a Building node to copy from.", "Copy Units", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim buildingID As Integer = CInt(tag("ID"))
+
+        Try
+            ' Clear any previous copy
+            sourceBuildingStructure.Clear()
+            copiedBuildingMappings.Clear()
+
+            ' Fetch and sort levels by LevelNumber (LevelNumber is non-nullable Integer)
+            Dim levels As List(Of LevelModel) = ProjectDataAccess.GetLevelsByBuildingID(buildingID) _
+                .OrderBy(Function(l) l.LevelNumber) _
+                .ToList()
+
+            If levels.Count = 0 Then
+                MessageBox.Show("This building has no levels to copy.", "Copy Units", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Return
+            End If
+
+            Dim totalMappingsCopied As Integer = 0
+
+            For Each lvl As LevelModel In levels
+                ' Store the structure for paste-time validation
+                sourceBuildingStructure.Add(lvl.ProductTypeID)
+
+                ' Get mappings for this level
+                Dim mappings As List(Of ActualToLevelMappingModel) = ProjectDataAccess.GetActualToLevelMappingsByLevelID(lvl.LevelID)
+
+                Dim thisLevelList As New List(Of Tuple(Of Integer, Integer))
+                For Each m As ActualToLevelMappingModel In mappings
+                    thisLevelList.Add(New Tuple(Of Integer, Integer)(m.ActualUnitID, m.Quantity))
+                    totalMappingsCopied += 1
+                Next
+
+                copiedBuildingMappings.Add(thisLevelList)
+            Next
+
+            ' Success feedback
+            UIHelper.Add($"Status: Copied {totalMappingsCopied} unit mappings from {levels.Count} levels in Building ID {buildingID} (Version {selectedVersionID}). Ready to paste to a matching building.")
+            MessageBox.Show($"Copied {totalMappingsCopied} unit assignments from {levels.Count} levels.{vbCrLf}You can now paste to another building with the identical level structure.",
+                        "Building Units Copied", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+        Catch ex As Exception
+            UIHelper.Add("Status: Error copying building units: " & ex.Message)
+            MessageBox.Show("Error copying building units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub mnuPasteBuildingUnits_Click(sender As Object, e As EventArgs) Handles mnuPasteBuildingUnits.Click
+        Dim selectedNode As TreeNode = TreeViewLevels.SelectedNode
+        If selectedNode Is Nothing Then
+            MessageBox.Show("No building selected.", "Paste Units", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim tag As Dictionary(Of String, Object) = DirectCast(selectedNode.Tag, Dictionary(Of String, Object))
+        If CStr(tag("Type")) <> "Building" Then
+            MessageBox.Show("Please right-click on a Building node to paste to.", "Paste Units", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim targetBuildingID As Integer = CInt(tag("ID"))
+
+        ' Safety: Must have copied building data
+        If sourceBuildingStructure.Count = 0 OrElse copiedBuildingMappings.Count = 0 Then
+            MessageBox.Show("No building units have been copied yet.", "Paste Units", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        ' Safety: Must be same version
+        If selectedVersionID <= 0 Then
+            MessageBox.Show("Invalid version selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+
+        Try
+            ' Get target levels — same ordering as source
+            Dim targetLevels As List(Of LevelModel) = ProjectDataAccess.GetLevelsByBuildingID(targetBuildingID) _
+                .OrderBy(Function(l) l.LevelNumber) _
+                .ToList()
+
+            ' CRITICAL: Structure must match exactly
+            If targetLevels.Count <> sourceBuildingStructure.Count Then
+                MessageBox.Show($"Cannot paste: Target building has {targetLevels.Count} levels, but source has {sourceBuildingStructure.Count}.{vbCrLf}Level count must match exactly.",
+                                "Structure Mismatch", MessageBoxButtons.OK, MessageBoxIcon.Stop)
+                Return
+            End If
+
+            For i As Integer = 0 To targetLevels.Count - 1
+                If targetLevels(i).ProductTypeID <> sourceBuildingStructure(i) Then
+                    MessageBox.Show($"Cannot paste: Level {i + 1} Product Type mismatch.{vbCrLf}" &
+                                    $"Source: {GetProductTypeName(sourceBuildingStructure(i))} ({sourceBuildingStructure(i)}){vbCrLf}" &
+                                    $"Target: {GetProductTypeName(targetLevels(i).ProductTypeID)} ({targetLevels(i).ProductTypeID})",
+                                    "Structure Mismatch", MessageBoxButtons.OK, MessageBoxIcon.Stop)
+                    Return
+                End If
+            Next
+
+            ' Confirmation
+            Dim result = MessageBox.Show($"Paste {copiedBuildingMappings.Sum(Function(l) l.Count)} unit assignments to {targetLevels.Count} levels in this building?{vbCrLf}{vbCrLf}This will overwrite existing assignments on matching levels.",
+                                        "Confirm Paste to Building", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+            If result <> DialogResult.Yes Then Return
+
+            ' Begin transaction
+            Using conn = SqlConnectionManager.Instance.GetConnection()
+                Using tran = conn.BeginTransaction()
+                    Try
+                        For i As Integer = 0 To targetLevels.Count - 1
+                            Dim targetLevelID As Integer = targetLevels(i).LevelID
+                            Dim sourceMappings As List(Of Tuple(Of Integer, Integer)) = copiedBuildingMappings(i)
+
+                            ' Get current mappings for this level
+                            Dim currentMappings = ProjectDataAccess.GetActualToLevelMappingsByLevelID(targetLevelID)
+
+                            For Each src In sourceMappings
+                                Dim actualUnitID = src.Item1
+                                Dim quantity = src.Item2
+
+                                Dim existing = currentMappings.FirstOrDefault(Function(m) m.ActualUnitID = actualUnitID)
+                                If existing IsNot Nothing Then
+                                    ' Update quantity
+                                    existing.Quantity = quantity
+                                    dataAccess.SaveActualToLevelMapping(existing)
+                                Else
+                                    ' Insert new
+                                    Dim newMap As New ActualToLevelMappingModel With {
+                                        .VersionID = selectedVersionID,
+                                        .ActualUnitID = actualUnitID,
+                                        .LevelID = targetLevelID,
+                                        .Quantity = quantity
+                                    }
+                                    dataAccess.SaveActualToLevelMapping(newMap)
+                                End If
+                            Next
+
+                            ' Optional: Remove any mappings that exist in target but not in source?
+                            ' (Current behavior: leave them — safer)
+                            ' If you want full replace, uncomment below:
+                            ' Dim toDelete = currentMappings.Where(Function(m) Not sourceMappings.Any(Function(s) s.Item1 = m.ActualUnitID))
+                            ' For Each del In toDelete
+                            '     dataAccess.DeleteActualToLevelMapping(del.MappingID, conn, tran)
+                            ' Next
+                        Next
+
+                        tran.Commit()
+                    Catch ex As Exception
+                        tran.Rollback()
+                        Throw
+                    End Try
+                End Using
+            End Using
+
+            ' Refresh UI and rollups
+            LoadAssignedUnits()
+            For Each lvl In targetLevels
+                RollupDataAccess.UpdateLevelRollups(lvl.LevelID)
+            Next
+            If targetBuildingID > 0 Then
+                RollupDataAccess.UpdateBuildingRollups(targetBuildingID)
+            End If
+
+            ' Clear copy buffer
+            'sourceBuildingStructure.Clear()
+            'copiedBuildingMappings.Clear()
+
+            UIHelper.Add($"Status: Successfully pasted unit assignments to Building ID {targetBuildingID} (Version {selectedVersionID}).")
+            MessageBox.Show("Building unit assignments pasted successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+        Catch ex As Exception
+            UIHelper.Add("Status: Error pasting building units: " & ex.Message)
+            MessageBox.Show("Error pasting building units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+    Private Function GetProductTypeName(id As Integer) As String
+        Dim types = dataAccess.GetProductTypes()
+        Dim pt = types.FirstOrDefault(Function(t) t.ProductTypeID = id)
+        Return If(pt IsNot Nothing, pt.ProductTypeName, "Unknown")
+    End Function
+
+    Private Sub mnuClearBuildingCopy_Click(sender As Object, e As EventArgs) Handles mnuClearBuildingCopy.Click
+        copiedMappings.Clear()
+        sourceBuildingStructure.Clear()
+        copiedBuildingMappings.Clear()
+        UIHelper.Add("Status: copy buffer cleared.")
+    End Sub
 End Class
