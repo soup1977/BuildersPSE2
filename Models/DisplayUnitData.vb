@@ -21,23 +21,14 @@ Namespace BuildersPSE.Models
         Public Property Margin As Decimal
         Public Property ColorCode As String
 
-        Public ReadOnly Property ActualUnitID As Integer
-            Get
-                Return If(ActualUnit IsNot Nothing, ActualUnit.ActualUnitID, 0)
-            End Get
-        End Property
+        Public Property ActualUnitID As Integer
 
-        Public ReadOnly Property UnitName As String
-            Get
-                Return If(ActualUnit IsNot Nothing, ActualUnit.UnitName, String.Empty)
-            End Get
-        End Property
 
-        Public ReadOnly Property PlanSQFT As Decimal
-            Get
-                Return If(ActualUnit IsNot Nothing, ActualUnit.PlanSQFT, 0D)
-            End Get
-        End Property
+        Public Property UnitName As String
+
+
+        Public Property PlanSQFT As Decimal
+
 
         Public ReadOnly Property OptionalAdder As Decimal
             Get

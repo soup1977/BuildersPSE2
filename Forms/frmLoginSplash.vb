@@ -13,7 +13,7 @@ Public Class frmLoginSplash
 
         Dim currentLogon As String = WindowsIdentity.GetCurrent().Name.Trim()
         Dim defaultName As String = currentLogon.Substring(currentLogon.IndexOf("\"c) + 1)
-
+        lblversion.Text = My.Application.Info.Version.ToString()
         Try
             Using conn As SqlConnection = SqlConnectionManager.Instance.GetConnection()
 

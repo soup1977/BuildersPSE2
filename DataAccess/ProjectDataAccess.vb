@@ -476,6 +476,22 @@ Namespace DataAccess
             Return types
         End Function
 
+        Public Function GetProjectVersionStatus() As List(Of ProjectVersionStatus)
+            Dim types As New List(Of ProjectVersionStatus)
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectProjectStatus)
+                                                                           While reader.Read()
+                                                                               Dim pt As New ProjectVersionStatus With {
+                                                    .ProjVersionStatusID = reader.GetInt32(reader.GetOrdinal("ProjVersionStatusID")),
+                                                    .ProjVersionStatus = If(Not reader.IsDBNull(reader.GetOrdinal("ProjVersionStatus")), reader.GetString(reader.GetOrdinal("ProjVersionStatus")), String.Empty)
+                                                }
+                                                                               types.Add(pt)
+                                                                           End While
+                                                                       End Using
+                                                                   End Sub, "Error loading project Version Status")
+            Return types
+        End Function
+
 
         ' Updated: SaveActualUnit (use VersionID)
         Public Sub SaveActualUnit(actual As ActualUnitModel)
@@ -487,6 +503,7 @@ Namespace DataAccess
                 {"@PlanSQFT", actual.PlanSQFT},
                 {"@UnitType", actual.UnitType},
                 {"@ColorCode", actual.ColorCode},
+                {"@MarginPercent", actual.MarginPercent},
                 {"@OptionalAdder", actual.OptionalAdder}
             }
 
@@ -812,15 +829,7 @@ Namespace DataAccess
         End Function
 
 
-        ' Updated: GetMarginPercent (use VersionID)
-        Public Shared Function GetMarginPercent(versionID As Integer, productTypeID As Integer) As Decimal
-            Dim params As SqlParameter() = {New SqlParameter("@VersionID", versionID), New SqlParameter("@ProductTypeID", productTypeID)}
-            Dim valObj As Object = Nothing
-            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       valObj = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectMarginPercent, params)
-                                                                   End Sub, "Error fetching margin percent for version " & versionID)
-            Return If(valObj Is DBNull.Value OrElse valObj Is Nothing, 0D, CDec(valObj))
-        End Function
+
 
         ' GetRawUnitByID (unchanged)
         ' GetRawUnitByID (updated to retrieve all fields)
@@ -903,12 +912,21 @@ Namespace DataAccess
             End If
             Return margin
         End Function
-
+        ' Updated: GetMarginPercent (use VersionID)
+        Public Shared Function GetMarginPercent(versionID As Integer, productTypeID As Integer) As Decimal
+            Dim params As SqlParameter() = {New SqlParameter("@VersionID", versionID), New SqlParameter("@ProductTypeID", productTypeID)}
+            Dim valObj As Object = Nothing
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       valObj = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectMarginPercent, params)
+                                                                   End Sub, "Error fetching margin percent for version " & versionID)
+            Return If(valObj Is DBNull.Value OrElse valObj Is Nothing, 0D, CDec(valObj))
+        End Function
 
         Public Shared Function ComputeLevelUnitsDataTable(levelID As Integer) As DataTable
             Dim dt As New DataTable()
 
             ' Define columns once — matches your DisplayUnitData properties
+            dt.Columns.Add("ActualUnitID", GetType(Integer))
             dt.Columns.Add("MappingID", GetType(Integer))
             dt.Columns.Add("UnitName", GetType(String))
             dt.Columns.Add("ReferencedRawUnitName", GetType(String))
@@ -929,6 +947,8 @@ Namespace DataAccess
             dt.Columns.Add("OverallCost", GetType(Decimal))
             dt.Columns.Add("SellPrice", GetType(Decimal))
             dt.Columns.Add("Margin", GetType(Decimal))
+            dt.Columns.Add("ProductTypeID", GetType(Integer))
+            dt.Columns.Add("RawUnitID", GetType(Integer))
 
             Dim mappings As List(Of ActualToLevelMappingModel) = GetActualToLevelMappingsByLevelID(levelID)
             If Not mappings.Any() Then Return dt
@@ -964,6 +984,7 @@ Namespace DataAccess
                 If lumberadder > 0D Then lumberCost += (bdftPer * extSqft / 1000D) * lumberadder
 
                 Dim row As DataRow = dt.NewRow()
+                row("actualUnitID") = actual.ActualUnitID
                 row("MappingID") = mapping.MappingID
                 row("UnitName") = actual.UnitName
                 row("ReferencedRawUnitName") = raw.RawUnitName
@@ -991,6 +1012,8 @@ Namespace DataAccess
                 Dim sellPrice As Decimal = If(margin >= 1D, overallCost, overallCost / (1D - margin))
                 row("SellPrice") = sellPrice
                 row("Margin") = sellPrice - overallCost
+                row("ProductTypeID") = actual.ProductTypeID   ' This is the correct one — from ActualUnit
+                row("RawUnitID") = raw.RawUnitID              ' This is the real RawUnitID
 
                 unitBDFTs.Add(row.Field(Of Decimal)("BDFT"))
                 totalBDFT += row.Field(Of Decimal)("BDFT")
@@ -1012,7 +1035,7 @@ Namespace DataAccess
                     row("DeliveryCost") = (unitBDFT / totalBDFT) * deliveryTotal
 
                     Dim overallCost = row.Field(Of Decimal)("OverallCost")
-                    Dim margin = GetEffectiveMargin(versionID, CInt(row.Field(Of Integer?)("ActualUnitQuantity")), 0) ' fix if needed
+                    Dim margin = GetEffectiveMargin(versionID, CInt(row.Field(Of Integer?)("ProductTypeID")), row.Field(Of Integer)("RawUnitID"))
                     Dim sellPrice = If(margin >= 1D,
                               overallCost + row.Field(Of Decimal)("DeliveryCost"),
                               overallCost / (1D - margin) + row.Field(Of Decimal)("DeliveryCost"))

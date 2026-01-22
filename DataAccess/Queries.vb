@@ -70,8 +70,8 @@
         Public Const UpdateRawUnit As String = "UPDATE RawUnits SET RawUnitName = @RawUnitName, BF = @BF, LF = @LF, EWPLF = @EWPLF, SqFt = @SqFt, FCArea = @FCArea, LumberCost = @LumberCost, PlateCost = @PlateCost, ManufLaborCost = @ManufLaborCost, DesignLabor = @DesignLabor, MGMTLabor = @MGMTLabor, JobSuppliesCost = @JobSuppliesCost, ManHours = @ManHours, ItemCost = @ItemCost, OverallCost = @OverallCost, DeliveryCost = @DeliveryCost, TotalSellPrice = @TotalSellPrice, AvgSPFNo2 = @AvgSPFNo2, SPFNo2BDFT = @SPFNo2BDFT, Avg241800 = @Avg241800, MSR241800BDFT = @MSR241800BDFT, Avg242400 = @Avg242400, MSR242400BDFT = @MSR242400BDFT, Avg261800 = @Avg261800, MSR261800BDFT = @MSR261800BDFT, Avg262400 = @Avg262400, MSR262400BDFT = @MSR262400BDFT WHERE RawUnitID = @RawUnitID"
 
         ' ActualUnits (updated to use VersionID)
-        Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder, ColorCode) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder, @ColorCode)"
-        Public Const UpdateActualUnit As String = "UPDATE ActualUnits SET UnitName = @UnitName, PlanSQFT = @PlanSQFT, UnitType = @UnitType, OptionalAdder = @OptionalAdder, ColorCode = @ColorCode WHERE ActualUnitID = @ActualUnitID"
+        Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder, ColorCode, MarginPercent) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder, @ColorCode, @MarginPercent)"
+        Public Const UpdateActualUnit As String = "UPDATE ActualUnits SET UnitName = @UnitName, PlanSQFT = @PlanSQFT, UnitType = @UnitType, OptionalAdder = @OptionalAdder, ColorCode = @ColorCode, MarginPercent=@MarginPercent WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitsByVersion As String = "SELECT au.*, ru.RawUnitName FROM ActualUnits au JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID WHERE au.VersionID = @VersionID"
         Public Const DeleteActualUnit As String = "DELETE FROM ActualUnits WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitIDsByLevelID As String = "SELECT DISTINCT ActualUnitID FROM ActualToLevelMapping WHERE LevelID = @LevelID"
@@ -91,6 +91,8 @@
         Public Const DeleteCalculatedComponentsByActualUnitID As String = "DELETE FROM CalculatedComponents WHERE ActualUnitID = @ActualUnitID"
         Public Const InsertCalculatedComponent As String = "INSERT INTO CalculatedComponents (VersionID, ActualUnitID, ComponentType, Value) VALUES (@VersionID, @ActualUnitID, @ComponentType, @Value)"
         Public Const SelectCalculatedComponentsByActualUnitID As String = "SELECT * FROM CalculatedComponents WHERE ActualUnitID = @ActualUnitID"
+
+        Public Const SelectProjectStatus As String = "SELECT * FROM ProjVersionStatus order by ProjVersionStatusID"
 
         ' ProjectType (unchanged)
         Public Const SelectProjectTypes As String = "SELECT * FROM ProjectType ORDER BY ProjectTypeName"
@@ -158,8 +160,8 @@
 
         ' ProjectVersions Queries
         Public Const SelectProjectVersions As String = "SELECT pv.*, c.CustomerName, s.SalesName FROM ProjectVersions pv LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT JOIN Sales s ON pv.SalesID = s.SalesID WHERE ProjectID = @ProjectID ORDER BY VersionDate DESC"
-        Public Const InsertProjectVersion As String = "INSERT INTO ProjectVersions (ProjectID, VersionName, VersionDate, Description, LastModifiedDate, CustomerID, SalesID, MondayID) OUTPUT INSERTED.VersionID VALUES (@ProjectID, @VersionName, @VersionDate, @Description, GetDate(), @CustomerID, @SalesID, @MondayID)"
-        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID, MondayID=@MondayID WHERE VersionID = @VersionID"
+        Public Const InsertProjectVersion As String = "INSERT INTO ProjectVersions (ProjectID, VersionName, VersionDate, Description, LastModifiedDate, CustomerID, SalesID, MondayID, ProjVersionStatusID) OUTPUT INSERTED.VersionID VALUES (@ProjectID, @VersionName, @VersionDate, @Description, GetDate(), @CustomerID, @SalesID, @MondayID, @ProjVersionStatusID)"
+        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID, ProjVersionStatusID=@ProjVersionStatusID, MondayID=@MondayID WHERE VersionID = @VersionID"
 
         ' ProjectVersions Duplication Queries
         Public Const DuplicateBuildings As String = "INSERT INTO Buildings (BuildingName, BuildingType, ResUnits, BldgQty, VersionID, LastModifiedDate) OUTPUT INSERTED.BuildingID SELECT BuildingName, BuildingType, ResUnits, BldgQty, @NewVersionID, GetDate() FROM Buildings WHERE VersionID = @OriginalVersionID"
@@ -231,7 +233,7 @@
         ' RawUnitLumberHistory Queries
         Public Const InsertRawUnitLumberHistory As String = "INSERT INTO RawUnitLumberHistory (RawUnitID, VersionID, CostEffectiveDateID, LumberCost, AvgSPFNo2, Avg241800, Avg242400, Avg261800, Avg262400, UpdateDate, IsActive) OUTPUT INSERTED.HistoryID VALUES (@RawUnitID, @VersionID, @CostEffectiveDateID, @LumberCost, @AvgSPFNo2, @Avg241800, @Avg242400, @Avg261800, @Avg262400, GETDATE(), 1)"
         Public Const SelectLatestLumberHistoryByRawUnit As String = "SELECT TOP 1 * FROM RawUnitLumberHistory WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID ORDER BY UpdateDate DESC"
-        Public Const SelectLumberHistoryByVersion As String = "SELECT rlh.*, ru.RawUnitName FROM RawUnitLumberHistory rlh JOIN RawUnits ru ON rlh.RawUnitID = ru.RawUnitID WHERE rlh.VersionID = @VersionID ORDER BY rlh.UpdateDate DESC"
+        Public Const SelectLumberHistoryByVersion As String = "SELECT rlh.* FROM RawUnitLumberHistory rlh WHERE rlh.VersionID = @VersionID ORDER BY rlh.UpdateDate DESC OPTION (Recompile)"
         Public Const SelectLumberTypeIDByDesc As String = "SELECT LumberTypeID FROM LumberType WHERE LumberTypeDesc = @LumberTypeDesc"
         Public Const SelectLumberCostByTypeAndDate As String = "SELECT LumberCost FROM LumberCost WHERE LumberTypeID = @LumberTypeID AND CostEffectiveDateID = @CostEffectiveDateID"
         Public Const SetLumberHistoryActive As String = "UPDATE RawUnitLumberHistory SET IsActive = 0 WHERE RawUnitID = @RawUnitID AND VersionID = @VersionID; UPDATE RawUnitLumberHistory SET IsActive = 1 WHERE HistoryID = @HistoryID"

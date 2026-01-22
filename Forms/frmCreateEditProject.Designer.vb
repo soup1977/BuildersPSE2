@@ -37,6 +37,8 @@ Partial Class frmCreateEditProject
         Me.tabControlRight = New System.Windows.Forms.TabControl()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
         Me.pnlProjectInfo = New System.Windows.Forms.Panel()
+        Me.txtArchPlanDate = New System.Windows.Forms.MaskedTextBox()
+        Me.txtEngPlanDate = New System.Windows.Forms.MaskedTextBox()
         Me.btnViewMonday = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
         Me.txtMondayItemId = New System.Windows.Forms.TextBox()
@@ -155,8 +157,7 @@ Partial Class frmCreateEditProject
         Me.btnImportWalls = New System.Windows.Forms.Button()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
         Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
-        Me.txtEngPlanDate = New System.Windows.Forms.MaskedTextBox()
-        Me.txtArchPlanDate = New System.Windows.Forms.MaskedTextBox()
+        Me.cboProjectStatus = New System.Windows.Forms.ComboBox()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -285,6 +286,7 @@ Partial Class frmCreateEditProject
         '
         Me.pnlProjectInfo.AutoScroll = True
         Me.pnlProjectInfo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.pnlProjectInfo.Controls.Add(Me.cboProjectStatus)
         Me.pnlProjectInfo.Controls.Add(Me.txtArchPlanDate)
         Me.pnlProjectInfo.Controls.Add(Me.txtEngPlanDate)
         Me.pnlProjectInfo.Controls.Add(Me.btnViewMonday)
@@ -345,6 +347,28 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Name = "pnlProjectInfo"
         Me.pnlProjectInfo.Size = New System.Drawing.Size(681, 551)
         Me.pnlProjectInfo.TabIndex = 0
+        '
+        'txtArchPlanDate
+        '
+        Me.txtArchPlanDate.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
+        Me.txtArchPlanDate.Location = New System.Drawing.Point(476, 150)
+        Me.txtArchPlanDate.Mask = "00/00/0000"
+        Me.txtArchPlanDate.Name = "txtArchPlanDate"
+        Me.txtArchPlanDate.PromptChar = Global.Microsoft.VisualBasic.ChrW(32)
+        Me.txtArchPlanDate.Size = New System.Drawing.Size(102, 20)
+        Me.txtArchPlanDate.TabIndex = 60
+        Me.txtArchPlanDate.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
+        '
+        'txtEngPlanDate
+        '
+        Me.txtEngPlanDate.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
+        Me.txtEngPlanDate.Location = New System.Drawing.Point(476, 172)
+        Me.txtEngPlanDate.Mask = "00/00/0000"
+        Me.txtEngPlanDate.Name = "txtEngPlanDate"
+        Me.txtEngPlanDate.PromptChar = Global.Microsoft.VisualBasic.ChrW(32)
+        Me.txtEngPlanDate.Size = New System.Drawing.Size(102, 20)
+        Me.txtEngPlanDate.TabIndex = 59
+        Me.txtEngPlanDate.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
         '
         'btnViewMonday
         '
@@ -1214,6 +1238,7 @@ Partial Class frmCreateEditProject
         Me.dgvLevelVariance.ReadOnly = True
         Me.dgvLevelVariance.Size = New System.Drawing.Size(679, 393)
         Me.dgvLevelVariance.TabIndex = 7
+        Me.dgvLevelVariance.Visible = False
         '
         'nudLevelNumber
         '
@@ -1437,27 +1462,14 @@ Partial Class frmCreateEditProject
         Me.FileSystemWatcher1.EnableRaisingEvents = True
         Me.FileSystemWatcher1.SynchronizingObject = Me
         '
-        'txtEngPlanDate
+        'cboProjectStatus
         '
-        Me.txtEngPlanDate.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
-        Me.txtEngPlanDate.Location = New System.Drawing.Point(476, 172)
-        Me.txtEngPlanDate.Mask = "00/00/0000"
-        Me.txtEngPlanDate.Name = "txtEngPlanDate"
-        Me.txtEngPlanDate.PromptChar = Global.Microsoft.VisualBasic.ChrW(32)
-        Me.txtEngPlanDate.Size = New System.Drawing.Size(102, 20)
-        Me.txtEngPlanDate.TabIndex = 59
-        Me.txtEngPlanDate.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
-        '
-        'txtArchPlanDate
-        '
-        Me.txtArchPlanDate.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
-        Me.txtArchPlanDate.Location = New System.Drawing.Point(476, 150)
-        Me.txtArchPlanDate.Mask = "00/00/0000"
-        Me.txtArchPlanDate.Name = "txtArchPlanDate"
-        Me.txtArchPlanDate.PromptChar = Global.Microsoft.VisualBasic.ChrW(32)
-        Me.txtArchPlanDate.Size = New System.Drawing.Size(102, 20)
-        Me.txtArchPlanDate.TabIndex = 60
-        Me.txtArchPlanDate.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals
+        Me.cboProjectStatus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cboProjectStatus.FormattingEnabled = True
+        Me.cboProjectStatus.Location = New System.Drawing.Point(582, 42)
+        Me.cboProjectStatus.Name = "cboProjectStatus"
+        Me.cboProjectStatus.Size = New System.Drawing.Size(94, 21)
+        Me.cboProjectStatus.TabIndex = 61
         '
         'frmCreateEditProject
         '
@@ -1634,4 +1646,5 @@ Partial Class frmCreateEditProject
     Friend WithEvents RefreshToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents txtEngPlanDate As MaskedTextBox
     Friend WithEvents txtArchPlanDate As MaskedTextBox
+    Friend WithEvents cboProjectStatus As ComboBox
 End Class

@@ -388,11 +388,12 @@ Namespace DataAccess
             options.AddArgument("--disable-gpu")
             options.AddArgument("--disable-software-rasterizer")
             options.AddArgument("--window-size=1920,1080")
+            'options.AddArgument("--headless=new")
 
-            Dim driverService = EdgeDriverService.CreateDefaultService()
-            driverService.HideCommandPromptWindow = True
+            'Dim driverService = EdgeDriverService.CreateDefaultService()
+            'driverService.HideCommandPromptWindow = True
 
-            Using driver As IWebDriver = New EdgeDriver(driverService, options)
+            Using driver As IWebDriver = New EdgeDriver(options)
                 driver.Navigate().GoToUrl("https://www.cmegroup.com/markets/agriculture/lumber-and-softs/lumber.settlements.html")
 
                 Dim wait As New WebDriverWait(driver, TimeSpan.FromSeconds(7))

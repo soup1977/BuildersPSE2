@@ -344,9 +344,11 @@ Partial Public Class ProjectSummaryDataSet
         
         Private columnCreatedDate As Global.System.Data.DataColumn
         
-        Private columnbiddate As Global.System.Data.DataColumn
+        Private columnEstimatorName As Global.System.Data.DataColumn
         
-        Private columnEstimatorname As Global.System.Data.DataColumn
+        Private columnBidDate As Global.System.Data.DataColumn
+        
+        Private columnProjVersionStatus As Global.System.Data.DataColumn
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
@@ -489,17 +491,25 @@ Partial Public Class ProjectSummaryDataSet
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public ReadOnly Property biddateColumn() As Global.System.Data.DataColumn
+        Public ReadOnly Property EstimatorNameColumn() As Global.System.Data.DataColumn
             Get
-                Return Me.columnbiddate
+                Return Me.columnEstimatorName
             End Get
         End Property
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public ReadOnly Property EstimatornameColumn() As Global.System.Data.DataColumn
+        Public ReadOnly Property BidDateColumn() As Global.System.Data.DataColumn
             Get
-                Return Me.columnEstimatorname
+                Return Me.columnBidDate
+            End Get
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public ReadOnly Property ProjVersionStatusColumn() As Global.System.Data.DataColumn
+            Get
+                Return Me.columnProjVersionStatus
             End Get
         End Property
         
@@ -540,9 +550,9 @@ Partial Public Class ProjectSummaryDataSet
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Overloads Function AddProjectListRow(ByVal ProjectID As Integer, ByVal VersionName As String, ByVal VersionDate As Date, ByVal Description As String, ByVal LastModifiedDate As Date, ByVal MondayID As String, ByVal CustomerName As String, ByVal SalesName As String, ByVal ProjectName As String, ByVal JBID As String, ByVal Address As String, ByVal CreatedDate As Date, ByVal biddate As Date, ByVal Estimatorname As String) As ProjectListRow
+        Public Overloads Function AddProjectListRow(ByVal ProjectID As Integer, ByVal VersionName As String, ByVal VersionDate As Date, ByVal Description As String, ByVal LastModifiedDate As Date, ByVal MondayID As String, ByVal CustomerName As String, ByVal SalesName As String, ByVal ProjectName As String, ByVal JBID As String, ByVal Address As String, ByVal CreatedDate As Date, ByVal EstimatorName As String, ByVal BidDate As Date, ByVal ProjVersionStatus As String) As ProjectListRow
             Dim rowProjectListRow As ProjectListRow = CType(Me.NewRow,ProjectListRow)
-            Dim columnValuesArray() As Object = New Object() {Nothing, ProjectID, VersionName, VersionDate, Description, LastModifiedDate, MondayID, CustomerName, SalesName, ProjectName, JBID, Address, CreatedDate, biddate, Estimatorname}
+            Dim columnValuesArray() As Object = New Object() {Nothing, ProjectID, VersionName, VersionDate, Description, LastModifiedDate, MondayID, CustomerName, SalesName, ProjectName, JBID, Address, CreatedDate, EstimatorName, BidDate, ProjVersionStatus}
             rowProjectListRow.ItemArray = columnValuesArray
             Me.Rows.Add(rowProjectListRow)
             Return rowProjectListRow
@@ -584,8 +594,9 @@ Partial Public Class ProjectSummaryDataSet
             Me.columnJBID = MyBase.Columns("JBID")
             Me.columnAddress = MyBase.Columns("Address")
             Me.columnCreatedDate = MyBase.Columns("CreatedDate")
-            Me.columnbiddate = MyBase.Columns("biddate")
-            Me.columnEstimatorname = MyBase.Columns("Estimatorname")
+            Me.columnEstimatorName = MyBase.Columns("EstimatorName")
+            Me.columnBidDate = MyBase.Columns("BidDate")
+            Me.columnProjVersionStatus = MyBase.Columns("ProjVersionStatus")
         End Sub
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
@@ -617,10 +628,12 @@ Partial Public Class ProjectSummaryDataSet
             MyBase.Columns.Add(Me.columnAddress)
             Me.columnCreatedDate = New Global.System.Data.DataColumn("CreatedDate", GetType(Date), Nothing, Global.System.Data.MappingType.Element)
             MyBase.Columns.Add(Me.columnCreatedDate)
-            Me.columnbiddate = New Global.System.Data.DataColumn("biddate", GetType(Date), Nothing, Global.System.Data.MappingType.Element)
-            MyBase.Columns.Add(Me.columnbiddate)
-            Me.columnEstimatorname = New Global.System.Data.DataColumn("Estimatorname", GetType(String), Nothing, Global.System.Data.MappingType.Element)
-            MyBase.Columns.Add(Me.columnEstimatorname)
+            Me.columnEstimatorName = New Global.System.Data.DataColumn("EstimatorName", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnEstimatorName)
+            Me.columnBidDate = New Global.System.Data.DataColumn("BidDate", GetType(Date), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnBidDate)
+            Me.columnProjVersionStatus = New Global.System.Data.DataColumn("ProjVersionStatus", GetType(String), Nothing, Global.System.Data.MappingType.Element)
+            MyBase.Columns.Add(Me.columnProjVersionStatus)
             Me.Constraints.Add(New Global.System.Data.UniqueConstraint("Constraint1", New Global.System.Data.DataColumn() {Me.columnVersionID}, true))
             Me.columnVersionID.AutoIncrement = true
             Me.columnVersionID.AutoIncrementSeed = -1
@@ -643,7 +656,9 @@ Partial Public Class ProjectSummaryDataSet
             Me.columnJBID.MaxLength = 50
             Me.columnAddress.MaxLength = 200
             Me.columnCreatedDate.AllowDBNull = false
-            Me.columnEstimatorname.MaxLength = 50
+            Me.columnEstimatorName.MaxLength = 50
+            Me.columnProjVersionStatus.AllowDBNull = false
+            Me.columnProjVersionStatus.MaxLength = 50
         End Sub
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
@@ -1458,31 +1473,42 @@ Partial Public Class ProjectSummaryDataSet
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Property biddate() As Date
+        Public Property EstimatorName() As String
             Get
                 Try 
-                    Return CType(Me(Me.tableProjectList.biddateColumn),Date)
+                    Return CType(Me(Me.tableProjectList.EstimatorNameColumn),String)
                 Catch e As Global.System.InvalidCastException
-                    Throw New Global.System.Data.StrongTypingException("The value for column 'biddate' in table 'ProjectList' is DBNull.", e)
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'EstimatorName' in table 'ProjectList' is DBNull.", e)
                 End Try
             End Get
             Set
-                Me(Me.tableProjectList.biddateColumn) = value
+                Me(Me.tableProjectList.EstimatorNameColumn) = value
             End Set
         End Property
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Property Estimatorname() As String
+        Public Property BidDate() As Date
             Get
                 Try 
-                    Return CType(Me(Me.tableProjectList.EstimatornameColumn),String)
+                    Return CType(Me(Me.tableProjectList.BidDateColumn),Date)
                 Catch e As Global.System.InvalidCastException
-                    Throw New Global.System.Data.StrongTypingException("The value for column 'Estimatorname' in table 'ProjectList' is DBNull.", e)
+                    Throw New Global.System.Data.StrongTypingException("The value for column 'BidDate' in table 'ProjectList' is DBNull.", e)
                 End Try
             End Get
             Set
-                Me(Me.tableProjectList.EstimatornameColumn) = value
+                Me(Me.tableProjectList.BidDateColumn) = value
+            End Set
+        End Property
+        
+        <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
+        Public Property ProjVersionStatus() As String
+            Get
+                Return CType(Me(Me.tableProjectList.ProjVersionStatusColumn),String)
+            End Get
+            Set
+                Me(Me.tableProjectList.ProjVersionStatusColumn) = value
             End Set
         End Property
         
@@ -1548,26 +1574,26 @@ Partial Public Class ProjectSummaryDataSet
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Function IsbiddateNull() As Boolean
-            Return Me.IsNull(Me.tableProjectList.biddateColumn)
+        Public Function IsEstimatorNameNull() As Boolean
+            Return Me.IsNull(Me.tableProjectList.EstimatorNameColumn)
         End Function
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Sub SetbiddateNull()
-            Me(Me.tableProjectList.biddateColumn) = Global.System.Convert.DBNull
+        Public Sub SetEstimatorNameNull()
+            Me(Me.tableProjectList.EstimatorNameColumn) = Global.System.Convert.DBNull
         End Sub
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Function IsEstimatornameNull() As Boolean
-            Return Me.IsNull(Me.tableProjectList.EstimatornameColumn)
+        Public Function IsBidDateNull() As Boolean
+            Return Me.IsNull(Me.tableProjectList.BidDateColumn)
         End Function
         
         <Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")>  _
-        Public Sub SetEstimatornameNull()
-            Me(Me.tableProjectList.EstimatornameColumn) = Global.System.Convert.DBNull
+        Public Sub SetBidDateNull()
+            Me(Me.tableProjectList.BidDateColumn) = Global.System.Convert.DBNull
         End Sub
     End Class
     
@@ -2316,8 +2342,9 @@ Namespace ProjectSummaryDataSetTableAdapters
             tableMapping.ColumnMappings.Add("JBID", "JBID")
             tableMapping.ColumnMappings.Add("Address", "Address")
             tableMapping.ColumnMappings.Add("CreatedDate", "CreatedDate")
-            tableMapping.ColumnMappings.Add("biddate", "biddate")
-            tableMapping.ColumnMappings.Add("Estimatorname", "Estimatorname")
+            tableMapping.ColumnMappings.Add("EstimatorName", "EstimatorName")
+            tableMapping.ColumnMappings.Add("BidDate", "BidDate")
+            tableMapping.ColumnMappings.Add("ProjVersionStatus", "ProjVersionStatus")
             Me._adapter.TableMappings.Add(tableMapping)
         End Sub
         
@@ -2334,15 +2361,21 @@ Namespace ProjectSummaryDataSetTableAdapters
             Me._commandCollection = New Global.System.Data.SqlClient.SqlCommand(0) {}
             Me._commandCollection(0) = New Global.System.Data.SqlClient.SqlCommand()
             Me._commandCollection(0).Connection = Me.Connection
-            Me._commandCollection(0).CommandText = "SELECT "&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    p.JBID,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    pv.VersionName,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    pv.VersionDate,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    pv.Descriptio"& _ 
-                "n,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    pv.LastModifiedDate,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    pv.MondayID,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    c.CustomerName,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    s.Sales"& _ 
-                "Name,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"e.Estimatorname,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    p.ProjectName,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    p.Address,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    p.biddate,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"   "& _ 
-                " p.CreatedDate,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    p.ProjectID,"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    pv.VersionID"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"FROM Projects p"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"INNER JOIN"& _ 
-                " ProjectVersions pv "&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    ON pv.VersionID = ("&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"        SELECT TOP 1 v.VersionID"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"        FROM ProjectVersions v"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"        WHERE v.ProjectID = p.ProjectID"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"      "& _ 
-                "  ORDER BY v.VersionDate DESC, v.VersionID DESC"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"    )"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"LEFT JOIN Customer c ON "& _ 
-                "pv.CustomerID = c.CustomerID AND c.CustomerType = 1"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"LEFT JOIN Sales s     ON pv"& _ 
-                ".SalesID     = s.SalesID"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"Left Join Estimator E on p.EstimatorID = e.estimatorid"& _ 
-                ""&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"ORDER BY p.biddate DESC   -- or whatever ordering you actually want"
+            Me._commandCollection(0).CommandText = "/* or whatever ordering you actually want*/"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"SELECT        p.JBID, pv.VersionName"& _ 
+                ", pv.VersionDate, pv.Description, pv.LastModifiedDate, pv.MondayID, c.CustomerNa"& _ 
+                "me, s.SalesName, E.EstimatorName, p.ProjectName, p.Address, p.BidDate, p.Created"& _ 
+                "Date, p.ProjectID, pv.VersionID, "&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                         ProjVersionStatus.Pr"& _ 
+                "ojVersionStatus"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"FROM            Projects AS p INNER JOIN"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                     "& _ 
+                "    ProjectVersions AS pv ON pv.VersionID ="&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                             (SELEC"& _ 
+                "T        TOP (1) VersionID"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                               FROM            Proje"& _ 
+                "ctVersions AS v"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                               WHERE        (ProjectID = p.Proj"& _ 
+                "ectID)"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                               ORDER BY VersionDate DESC, VersionID DESC"& _ 
+                ") INNER JOIN"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                         ProjVersionStatus ON pv.ProjVersionStatus"& _ 
+                "ID = ProjVersionStatus.ProjVersionStatusID LEFT OUTER JOIN"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                    "& _ 
+                "     Customer AS c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT O"& _ 
+                "UTER JOIN"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                         Sales AS s ON pv.SalesID = s.SalesID LEFT OU"& _ 
+                "TER JOIN"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"                         Estimator AS E ON p.EstimatorID = E.Estimator"& _ 
+                "ID"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"ORDER BY p.BidDate DESC"
             Me._commandCollection(0).CommandType = Global.System.Data.CommandType.Text
         End Sub
         

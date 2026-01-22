@@ -128,7 +128,6 @@ Partial Class FrmPSE
         Me.BtnCancel = New System.Windows.Forms.Button()
         Me.LblReferencedRawUnit = New System.Windows.Forms.Label()
         Me.TxtReferencedRawUnit = New System.Windows.Forms.TextBox()
-        Me.Column1 = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.ContextMenuLevels.SuspendLayout()
         Me.TabControlData.SuspendLayout()
         Me.TabUnitBased.SuspendLayout()
@@ -253,7 +252,7 @@ Partial Class FrmPSE
         Me.GroupBox1.Controls.Add(Me.TxtTotalQuantity)
         Me.GroupBox1.Controls.Add(Me.LblTotalPlanSQFT)
         Me.GroupBox1.Controls.Add(Me.TxtTotalPlanSQFT)
-        Me.GroupBox1.Location = New System.Drawing.Point(395, 10)
+        Me.GroupBox1.Location = New System.Drawing.Point(465, 10)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(402, 243)
         Me.GroupBox1.TabIndex = 61
@@ -560,7 +559,7 @@ Partial Class FrmPSE
         '
         'btnReuseActualUnit
         '
-        Me.btnReuseActualUnit.Location = New System.Drawing.Point(226, 216)
+        Me.btnReuseActualUnit.Location = New System.Drawing.Point(263, 215)
         Me.btnReuseActualUnit.Name = "btnReuseActualUnit"
         Me.btnReuseActualUnit.Size = New System.Drawing.Size(163, 29)
         Me.btnReuseActualUnit.TabIndex = 53
@@ -574,7 +573,7 @@ Partial Class FrmPSE
         Me.ListboxExistingActualUnits.FormattingEnabled = True
         Me.ListboxExistingActualUnits.Location = New System.Drawing.Point(226, 23)
         Me.ListboxExistingActualUnits.Name = "ListboxExistingActualUnits"
-        Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(163, 186)
+        Me.ListboxExistingActualUnits.Size = New System.Drawing.Size(233, 186)
         Me.ListboxExistingActualUnits.TabIndex = 52
         '
         'ContextMenuActualUnits
@@ -645,7 +644,6 @@ Partial Class FrmPSE
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DataGridViewAssigned.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DataGridViewAssigned.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridViewAssigned.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.Column1})
         Me.DataGridViewAssigned.Location = New System.Drawing.Point(10, 273)
         Me.DataGridViewAssigned.Name = "DataGridViewAssigned"
         Me.DataGridViewAssigned.Size = New System.Drawing.Size(857, 287)
@@ -1084,11 +1082,6 @@ Partial Class FrmPSE
         Me.TxtReferencedRawUnit.Size = New System.Drawing.Size(119, 20)
         Me.TxtReferencedRawUnit.TabIndex = 15
         '
-        'Column1
-        '
-        Me.Column1.HeaderText = "Column1"
-        Me.Column1.Name = "Column1"
-        '
         'FrmPSE
         '
         Me.BackColor = System.Drawing.Color.LightGray
@@ -1219,5 +1212,4 @@ Partial Class FrmPSE
     Friend WithEvents mnuCopyBuildingUnits As ToolStripMenuItem
     Friend WithEvents mnuPasteBuildingUnits As ToolStripMenuItem
     Friend WithEvents mnuClearBuildingCopy As ToolStripMenuItem
-    Friend WithEvents Column1 As DataGridViewTextBoxColumn
 End Class

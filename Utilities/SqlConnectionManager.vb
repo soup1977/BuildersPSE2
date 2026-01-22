@@ -83,6 +83,8 @@ Namespace Utilities
             If parameters IsNot Nothing Then
                 cmd.Parameters.AddRange(parameters)
             End If
+            cmd.CommandTimeout = 120
+
             Return cmd.ExecuteReader(System.Data.CommandBehavior.CloseConnection) ' Auto-closes conn on reader close
         End Function
 

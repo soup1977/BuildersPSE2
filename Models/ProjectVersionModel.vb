@@ -10,4 +10,5 @@
     Public Property CustomerName As String
     Public Property SalesName As String
     Public Property MondayID As String
+    Public Property ProjVersionStatusID As Integer?
 End Class

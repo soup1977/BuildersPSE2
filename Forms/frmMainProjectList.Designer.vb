@@ -24,22 +24,23 @@ Partial Class frmMainProjectList
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Me.DataGridViewProjects = New System.Windows.Forms.DataGridView()
-        Me.ProjectListBindingSource = New System.Windows.Forms.BindingSource(Me.components)
-        Me.ProjectSummaryDataSet = New BuildersPSE2.ProjectSummaryDataSet()
         Me.txtSearch = New System.Windows.Forms.TextBox()
         Me.btnRefreshGrid = New System.Windows.Forms.Button()
+        Me.ProjectListBindingSource = New System.Windows.Forms.BindingSource(Me.components)
+        Me.ProjectSummaryDataSet = New BuildersPSE2.ProjectSummaryDataSet()
         Me.ProjectListTableAdapter = New BuildersPSE2.ProjectSummaryDataSetTableAdapters.ProjectListTableAdapter()
-        Me.JBID = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.JBID = New System.Windows.Forms.DataGridViewButtonColumn()
         Me.ProjectName = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.Address = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.biddate = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.CreatedDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.estimatorname = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.CustomerName = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.SalesName = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.VersionID = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.ProjectID = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.VersionName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.ProjVersionStatus = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.CreatedDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.VersionDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.Description = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.LastModifiedDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -59,23 +60,13 @@ Partial Class frmMainProjectList
         Me.DataGridViewProjects.AutoGenerateColumns = False
         Me.DataGridViewProjects.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DataGridViewProjects.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridViewProjects.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.JBID, Me.ProjectName, Me.Address, Me.biddate, Me.CreatedDate, Me.estimatorname, Me.CustomerName, Me.SalesName, Me.VersionID, Me.ProjectID, Me.VersionName, Me.VersionDate, Me.Description, Me.LastModifiedDate, Me.MondayID})
+        Me.DataGridViewProjects.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.JBID, Me.ProjectName, Me.Address, Me.biddate, Me.estimatorname, Me.CustomerName, Me.SalesName, Me.VersionID, Me.ProjectID, Me.VersionName, Me.ProjVersionStatus, Me.CreatedDate, Me.VersionDate, Me.Description, Me.LastModifiedDate, Me.MondayID})
         Me.DataGridViewProjects.DataSource = Me.ProjectListBindingSource
         Me.DataGridViewProjects.Location = New System.Drawing.Point(12, 40)
         Me.DataGridViewProjects.Name = "DataGridViewProjects"
         Me.DataGridViewProjects.ReadOnly = True
         Me.DataGridViewProjects.Size = New System.Drawing.Size(1021, 359)
         Me.DataGridViewProjects.TabIndex = 0
-        '
-        'ProjectListBindingSource
-        '
-        Me.ProjectListBindingSource.DataMember = "ProjectList"
-        Me.ProjectListBindingSource.DataSource = Me.ProjectSummaryDataSet
-        '
-        'ProjectSummaryDataSet
-        '
-        Me.ProjectSummaryDataSet.DataSetName = "ProjectSummaryDataSet"
-        Me.ProjectSummaryDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema
         '
         'txtSearch
         '
@@ -94,6 +85,16 @@ Partial Class frmMainProjectList
         Me.btnRefreshGrid.Text = "Refresh Projects"
         Me.btnRefreshGrid.UseVisualStyleBackColor = True
         '
+        'ProjectListBindingSource
+        '
+        Me.ProjectListBindingSource.DataMember = "ProjectList"
+        Me.ProjectListBindingSource.DataSource = Me.ProjectSummaryDataSet
+        '
+        'ProjectSummaryDataSet
+        '
+        Me.ProjectSummaryDataSet.DataSetName = "ProjectSummaryDataSet"
+        Me.ProjectSummaryDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema
+        '
         'ProjectListTableAdapter
         '
         Me.ProjectListTableAdapter.ClearBeforeFill = True
@@ -101,9 +102,12 @@ Partial Class frmMainProjectList
         'JBID
         '
         Me.JBID.DataPropertyName = "JBID"
+        Me.JBID.FlatStyle = System.Windows.Forms.FlatStyle.System
         Me.JBID.HeaderText = "Project Nbr"
         Me.JBID.Name = "JBID"
         Me.JBID.ReadOnly = True
+        Me.JBID.Resizable = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.JBID.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic
         '
         'ProjectName
         '
@@ -125,14 +129,6 @@ Partial Class frmMainProjectList
         Me.biddate.HeaderText = "Bid Date"
         Me.biddate.Name = "biddate"
         Me.biddate.ReadOnly = True
-        '
-        'CreatedDate
-        '
-        Me.CreatedDate.DataPropertyName = "CreatedDate"
-        Me.CreatedDate.HeaderText = "CreatedDate"
-        Me.CreatedDate.Name = "CreatedDate"
-        Me.CreatedDate.ReadOnly = True
-        Me.CreatedDate.Visible = False
         '
         'estimatorname
         '
@@ -177,6 +173,20 @@ Partial Class frmMainProjectList
         Me.VersionName.HeaderText = "VersionName"
         Me.VersionName.Name = "VersionName"
         Me.VersionName.ReadOnly = True
+        '
+        'ProjVersionStatus
+        '
+        Me.ProjVersionStatus.DataPropertyName = "ProjVersionStatus"
+        Me.ProjVersionStatus.HeaderText = "Status"
+        Me.ProjVersionStatus.Name = "ProjVersionStatus"
+        Me.ProjVersionStatus.ReadOnly = True
+        '
+        'CreatedDate
+        '
+        Me.CreatedDate.DataPropertyName = "CreatedDate"
+        Me.CreatedDate.HeaderText = "CreatedDate"
+        Me.CreatedDate.Name = "CreatedDate"
+        Me.CreatedDate.ReadOnly = True
         '
         'VersionDate
         '
@@ -234,17 +244,18 @@ Partial Class frmMainProjectList
     Friend WithEvents ProjectSummaryDataSet As ProjectSummaryDataSet
     Friend WithEvents ProjectListBindingSource As BindingSource
     Friend WithEvents ProjectListTableAdapter As ProjectSummaryDataSetTableAdapters.ProjectListTableAdapter
-    Friend WithEvents JBID As DataGridViewTextBoxColumn
+    Friend WithEvents JBID As DataGridViewButtonColumn
     Friend WithEvents ProjectName As DataGridViewTextBoxColumn
     Friend WithEvents Address As DataGridViewTextBoxColumn
     Friend WithEvents biddate As DataGridViewTextBoxColumn
-    Friend WithEvents CreatedDate As DataGridViewTextBoxColumn
     Friend WithEvents estimatorname As DataGridViewTextBoxColumn
     Friend WithEvents CustomerName As DataGridViewTextBoxColumn
     Friend WithEvents SalesName As DataGridViewTextBoxColumn
     Friend WithEvents VersionID As DataGridViewTextBoxColumn
     Friend WithEvents ProjectID As DataGridViewTextBoxColumn
     Friend WithEvents VersionName As DataGridViewTextBoxColumn
+    Friend WithEvents ProjVersionStatus As DataGridViewTextBoxColumn
+    Friend WithEvents CreatedDate As DataGridViewTextBoxColumn
     Friend WithEvents VersionDate As DataGridViewTextBoxColumn
     Friend WithEvents Description As DataGridViewTextBoxColumn
     Friend WithEvents LastModifiedDate As DataGridViewTextBoxColumn

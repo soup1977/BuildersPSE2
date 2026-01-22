@@ -3,8 +3,8 @@
 Imports System.Data.SqlClient
 Imports BuildersPSE2.BuildersPSE.Models
 Imports BuildersPSE2.DataAccess
-Imports Microsoft.VisualBasic.FileIO
 Imports BuildersPSE2.Utilities
+Imports Microsoft.VisualBasic.FileIO
 
 Public Class FrmPSE
     Inherits Form
@@ -398,7 +398,7 @@ Public Class FrmPSE
                 If sellPriceComponent IsNot Nothing Then
                     sellPricePerSQFT = sellPriceComponent.Value
                 End If
-                ListboxExistingActualUnits.Items.Add($"{unit.UnitName} ({unit.UnitType}) - {sellPricePerSQFT:C2}/SQFT")
+                ListboxExistingActualUnits.Items.Add($"{unit.UnitName} ({unit.UnitType})-({unit.PlanSQFT.ToString("F0")})-{sellPricePerSQFT:C2}/SQFT")
             Next
             UIHelper.Add("Status: Actual units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
         Catch ex As Exception
@@ -445,17 +445,45 @@ Public Class FrmPSE
     End Sub
     Private Sub LoadAssignedUnits()
         Try
-            bindingSource.DataSource = ProjectDataAccess.ComputeLevelUnitsDataTable(selectedLevelID)
-            ' displayUnits = ProjectDataAccess.ComputeLevelUnits(selectedLevelID)
-            'bindingSource.DataSource = displayUnits
-            bindingSource.ResetBindings(False)
+            ' 1. Let the DataAccess return the DataTable (unchanged)
+            Dim dt As DataTable = ProjectDataAccess.ComputeLevelUnitsDataTable(selectedLevelID)
 
+            ' 2. Bind the DataTable directly – this is what the grid expects
+            bindingSource.DataSource = dt
+
+            ' 3. Convert the DataTable back into your strongly-typed list for the totals routine
+            displayUnits = dt.AsEnumerable() _
+                         .Select(Function(row) New DisplayUnitData With {
+                             .ActualUnitID = row.Field(Of Integer)("ActualUnitID"),
+                             .MappingID = If(row.IsNull("MappingID"), -1, row.Field(Of Integer)("MappingID")),
+                             .UnitName = row.Field(Of String)("UnitName"),
+                             .ReferencedRawUnitName = row.Field(Of String)("ReferencedRawUnitName"),
+                             .PlanSQFT = row.Field(Of Decimal)("PlanSQFT"),
+                             .ActualUnitQuantity = row.Field(Of Integer)("ActualUnitQuantity"),
+                             .LF = row.Field(Of Decimal)("LF"),
+                             .BDFT = row.Field(Of Decimal)("BDFT"),
+                             .LumberCost = row.Field(Of Decimal)("LumberCost"),
+                             .PlateCost = row.Field(Of Decimal)("PlateCost"),
+                             .ManufLaborCost = row.Field(Of Decimal)("ManufLaborCost"),
+                             .DesignLabor = row.Field(Of Decimal)("DesignLabor"),
+                             .MGMTLabor = row.Field(Of Decimal)("MGMTLabor"),
+                             .JobSuppliesCost = row.Field(Of Decimal)("JobSuppliesCost"),
+                             .ManHours = row.Field(Of Decimal)("ManHours"),
+                             .ItemCost = row.Field(Of Decimal)("ItemCost"),
+                             .OverallCost = row.Field(Of Decimal)("OverallCost"),
+                             .DeliveryCost = row.Field(Of Decimal)("DeliveryCost"),
+                             .SellPrice = row.Field(Of Decimal)("SellPrice"),
+                             .Margin = row.Field(Of Decimal)("Margin"),
+                             .ColorCode = If(row.IsNull("ColorCode"), Nothing, row.Field(Of String)("ColorCode"))
+                         }).ToList()
+
+            bindingSource.ResetBindings(False)
             AddHandler DataGridViewAssigned.CellFormatting, AddressOf DataGridViewAssigned_CellFormatting
             DataGridViewAssigned.Refresh()
 
             UpdateLevelTotals()
         Catch ex As Exception
-            MessageBox.Show("Error loading assigned units: " & ex.Message)
+            MessageBox.Show("Error loading assigned units: " & ex.Message, "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -677,6 +705,7 @@ Public Class FrmPSE
 
 
     Private Sub BtnImportLevelData_Click(sender As Object, e As EventArgs) Handles BtnImportLevelData.Click
+        UIHelper.ShowBusy(frmMain)
         Dim ofd As New OpenFileDialog With {
         .Filter = "CSV Files|*.csv"
     }
@@ -705,19 +734,11 @@ Public Class FrmPSE
                 MessageBox.Show("Import failed: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Finally
                 isImporting = False
+                UIHelper.HideBusy(frmMain)
             End Try
         End If
     End Sub
 
-    ' Add in frmPSE.vb: New subroutine to handle CSV parsing and user-driven mapping, empowering users (servant leadership) while standardizing updates to prevent defects (Deming).
-    ' Revised ImportRawUnitsWithMapping in frmPSE.vb: Use case-insensitive key access by storing keys in upper case, change raw unit name key to "Elevation", and validate required headers accordingly. This resolves the "key not present" error by handling the actual CSV structure.
-    ' In frmPSE.vb
-    ' Modified to insert initial RawUnitLumberHistory record after each RawUnit insert or update
-    ' Explanation: After calling dataAccess.InsertRawUnit or dataAccess.UpdateRawUnit in the Confirm Mapping handler,
-    ' insert a RawUnitLumberHistory record with CostEffectiveDateID = NULL, copying LumberCost and Avg* fields from the model.
-    ' This ensures original history for form-based imports, keeping RawUnits static.
-    ' Minimal change: Added code inside the btnConfirm.Click handler after InsertRawUnit/UpdateRawUnit.
-    ' Streamlines truss design imports (Deming's quality focus) and provides auditable data (Servant leadership).
 
     Private Function ImportRawUnitsWithMapping(filePath As String, productTypeID As Integer) As Boolean
         Dim newRawData As New List(Of Dictionary(Of String, String))
@@ -1374,6 +1395,7 @@ Public Class FrmPSE
 
     Private Sub BtnRecalculate_Click(sender As Object, e As EventArgs) Handles BtnRecalculate.Click
         Try
+            UIHelper.ShowBusy(frmMain)
             If selectedLevelID <= 0 Then
                 UIHelper.Add("Status: Please select a level to recalculate for version " & selectedVersionID & ".")
                 MessageBox.Show("Please select a level before recalculating.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -1391,6 +1413,8 @@ Public Class FrmPSE
         Catch ex As Exception
             UIHelper.Add("Status: Error recalculating for version " & selectedVersionID & ": " & ex.Message)
             MessageBox.Show("Error recalculating: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            UIHelper.HideBusy(frmMain)
         End Try
     End Sub
     Private Sub RecalculateProject()
@@ -1405,22 +1429,37 @@ Public Class FrmPSE
     End Sub
     Private Sub DataGridViewAssigned_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridViewAssigned.CellContentClick
         Try
-            If e.ColumnIndex = colActions.Index AndAlso e.RowIndex >= 0 Then
-                Dim selectedUnit As DisplayUnitData = TryCast(bindingSource.Current, DisplayUnitData)
-                If selectedUnit Is Nothing Then
-                    UIHelper.Add($"Status: No unit selected for editing in version {selectedVersionID}.")
-                    MessageBox.Show("No unit selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                    Return
-                End If
-                selectedMappingID = selectedUnit.MappingID
-                selectedActualUnitID = selectedUnit.ActualUnit.ActualUnitID
-                currentdetailsMode = DetailsMode.EditMappingQuantity
-                PopulateDetailsPane(selectedUnit.ActualUnit, False, selectedUnit.ActualUnitQuantity)
-                UIHelper.Add($"Status: Editing mapping quantity for unit {selectedUnit.UnitName} in version {selectedVersionID}.")
+            If e.ColumnIndex <> colActions.Index OrElse e.RowIndex < 0 Then Return
+
+            Dim drv As DataRowView = TryCast(bindingSource.Current, DataRowView)
+            If drv Is Nothing Then
+                MessageBox.Show("No unit selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Return
             End If
+
+            Dim row As DataRow = drv.Row
+
+            ' ← ALL VALUES COME STRAIGHT FROM THE DATATABLE — NO LOOKUPS!
+            selectedMappingID = Convert.ToInt32(row("MappingID"))
+            selectedActualUnitID = Convert.ToInt32(row("ActualUnitID"))   ' ← YOU HAVE THIS!
+            Dim quantity = Convert.ToInt32(row("ActualUnitQuantity"))
+            Dim unitName = row("UnitName").ToString()
+
+            ' Load the full ActualUnit object only once (still needed for PopulateDetailsPane)
+            Dim actualUnit As ActualUnitModel = ProjectDataAccess.GetActualUnitByID(selectedActualUnitID)
+            If actualUnit Is Nothing Then
+                MessageBox.Show("Unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Return
+            End If
+
+            currentdetailsMode = DetailsMode.EditMappingQuantity
+            PopulateDetailsPane(actualUnit, False, quantity)
+
+            UIHelper.Add($"Status: Editing mapping quantity for unit {unitName} in version {selectedVersionID}.")
+
         Catch ex As Exception
-            UIHelper.Add($"Status: Error in cell click for version {selectedVersionID}: {ex.Message}")
-            MessageBox.Show("Error in cell click: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UIHelper.Add($"Status: Error in cell click: {ex.Message}")
+            MessageBox.Show("Error: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -1559,12 +1598,15 @@ Public Class FrmPSE
 
     Private Sub BtnFinish_Click(sender As Object, e As EventArgs) Handles BtnFinish.Click
         Try
+            UIHelper.ShowBusy(_mainForm)
             UIHelper.Add($"Status: Session complete for version {selectedVersionID} at {DateTime.Now:HH:mm:ss}.")
             RollupDataAccess.RecalculateVersion(selectedVersionID)
             _mainForm.RemoveTabFromTabControl($"PSE_{selectedProjectID}_{selectedVersionID}")
         Catch ex As Exception
             UIHelper.Add($"Status: Error closing form for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error closing form: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            UIHelper.HideBusy(_mainForm)
         End Try
     End Sub
 

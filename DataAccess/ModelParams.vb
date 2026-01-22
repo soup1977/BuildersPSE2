@@ -35,7 +35,8 @@ Namespace DataAccess
                 {"@Description", If(String.IsNullOrEmpty(model.Description), DBNull.Value, CType(model.Description, Object))},
                 {"@CustomerID", If(model.CustomerID.HasValue, CType(model.CustomerID.Value, Object), DBNull.Value)},
                 {"@SalesID", If(model.SalesID.HasValue, CType(model.SalesID.Value, Object), DBNull.Value)},
-                {"@MondayID", If(String.IsNullOrEmpty(model.MondayID), DBNull.Value, CType(model.MondayID, Object))}
+                {"@MondayID", If(String.IsNullOrEmpty(model.MondayID), DBNull.Value, CType(model.MondayID, Object))},
+                {"@ProjVersionStatusID", If(model.ProjVersionStatusID.HasValue, CType(model.ProjVersionStatusID.Value, Object), DBNull.Value)}
             }
         End Function
         Public Shared Function ForRawUnit(model As RawUnitModel, newVersionID As Integer) As Dictionary(Of String, Object)
@@ -90,6 +91,7 @@ Namespace DataAccess
         {"@UnitName", model.UnitName},
         {"@PlanSQFT", model.PlanSQFT},
         {"@UnitType", model.UnitType},
+        {"@MarginPercent", model.MarginPercent},
         {"@OptionalAdder", model.OptionalAdder},
         {"@ColorCode", If(String.IsNullOrEmpty(colorCode), DBNull.Value, CType(colorCode, Object))}
     }

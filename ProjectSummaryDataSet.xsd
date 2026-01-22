@@ -12,34 +12,20 @@
               <DbSource ConnectionRef="DbConn (MySettings)" DbObjectType="Unknown" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="false" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="false" UserGetMethodName="GetData" UserSourceName="Fill">
                 <SelectCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="true">
-                    <CommandText>SELECT 
-    p.JBID,
-    pv.VersionName,
-    pv.VersionDate,
-    pv.Description,
-    pv.LastModifiedDate,
-    pv.MondayID,
-    c.CustomerName,
-    s.SalesName,
-e.Estimatorname,
-    p.ProjectName,
-    p.Address,
-    p.biddate,
-    p.CreatedDate,
-    p.ProjectID,
-    pv.VersionID
-FROM Projects p
-INNER JOIN ProjectVersions pv 
-    ON pv.VersionID = (
-        SELECT TOP 1 v.VersionID
-        FROM ProjectVersions v
-        WHERE v.ProjectID = p.ProjectID
-        ORDER BY v.VersionDate DESC, v.VersionID DESC
-    )
-LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1
-LEFT JOIN Sales s     ON pv.SalesID     = s.SalesID
-Left Join Estimator E on p.EstimatorID = e.estimatorid
-ORDER BY p.biddate DESC   -- or whatever ordering you actually want</CommandText>
+                    <CommandText>/* or whatever ordering you actually want*/
+SELECT        p.JBID, pv.VersionName, pv.VersionDate, pv.Description, pv.LastModifiedDate, pv.MondayID, c.CustomerName, s.SalesName, E.EstimatorName, p.ProjectName, p.Address, p.BidDate, p.CreatedDate, p.ProjectID, pv.VersionID, 
+                         ProjVersionStatus.ProjVersionStatus
+FROM            Projects AS p INNER JOIN
+                         ProjectVersions AS pv ON pv.VersionID =
+                             (SELECT        TOP (1) VersionID
+                               FROM            ProjectVersions AS v
+                               WHERE        (ProjectID = p.ProjectID)
+                               ORDER BY VersionDate DESC, VersionID DESC) INNER JOIN
+                         ProjVersionStatus ON pv.ProjVersionStatusID = ProjVersionStatus.ProjVersionStatusID LEFT OUTER JOIN
+                         Customer AS c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT OUTER JOIN
+                         Sales AS s ON pv.SalesID = s.SalesID LEFT OUTER JOIN
+                         Estimator AS E ON p.EstimatorID = E.EstimatorID
+ORDER BY p.BidDate DESC</CommandText>
                     <Parameters />
                   </DbCommand>
                 </SelectCommand>
@@ -59,8 +45,9 @@ ORDER BY p.biddate DESC   -- or whatever ordering you actually want</CommandText
               <Mapping SourceColumn="JBID" DataSetColumn="JBID" />
               <Mapping SourceColumn="Address" DataSetColumn="Address" />
               <Mapping SourceColumn="CreatedDate" DataSetColumn="CreatedDate" />
-              <Mapping SourceColumn="biddate" DataSetColumn="biddate" />
-              <Mapping SourceColumn="Estimatorname" DataSetColumn="Estimatorname" />
+              <Mapping SourceColumn="EstimatorName" DataSetColumn="EstimatorName" />
+              <Mapping SourceColumn="BidDate" DataSetColumn="BidDate" />
+              <Mapping SourceColumn="ProjVersionStatus" DataSetColumn="ProjVersionStatus" />
             </Mappings>
             <Sources />
           </TableAdapter>
@@ -97,72 +84,79 @@ ORDER BY p.biddate DESC   -- or whatever ordering you actually want</CommandText
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="ProjectList" msprop:Generator_RowClassName="ProjectListRow" msprop:Generator_RowEvHandlerName="ProjectListRowChangeEventHandler" msprop:Generator_RowDeletedName="ProjectListRowDeleted" msprop:Generator_RowDeletingName="ProjectListRowDeleting" msprop:Generator_RowEvArgName="ProjectListRowChangeEvent" msprop:Generator_TablePropName="ProjectList" msprop:Generator_RowChangedName="ProjectListRowChanged" msprop:Generator_UserTableName="ProjectList" msprop:Generator_RowChangingName="ProjectListRowChanging" msprop:Generator_TableClassName="ProjectListDataTable" msprop:Generator_TableVarName="tableProjectList">
+        <xs:element name="ProjectList" msprop:Generator_RowEvHandlerName="ProjectListRowChangeEventHandler" msprop:Generator_RowDeletedName="ProjectListRowDeleted" msprop:Generator_RowDeletingName="ProjectListRowDeleting" msprop:Generator_RowEvArgName="ProjectListRowChangeEvent" msprop:Generator_TablePropName="ProjectList" msprop:Generator_RowChangedName="ProjectListRowChanged" msprop:Generator_UserTableName="ProjectList" msprop:Generator_RowChangingName="ProjectListRowChanging" msprop:Generator_RowClassName="ProjectListRow" msprop:Generator_TableClassName="ProjectListDataTable" msprop:Generator_TableVarName="tableProjectList">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="VersionID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_UserColumnName="VersionID" msprop:Generator_ColumnPropNameInTable="VersionIDColumn" msprop:Generator_ColumnPropNameInRow="VersionID" msprop:Generator_ColumnVarNameInTable="columnVersionID" type="xs:int" />
-              <xs:element name="ProjectID" msprop:Generator_UserColumnName="ProjectID" msprop:Generator_ColumnPropNameInTable="ProjectIDColumn" msprop:Generator_ColumnPropNameInRow="ProjectID" msprop:Generator_ColumnVarNameInTable="columnProjectID" type="xs:int" />
-              <xs:element name="VersionName" msprop:Generator_UserColumnName="VersionName" msprop:Generator_ColumnPropNameInTable="VersionNameColumn" msprop:Generator_ColumnPropNameInRow="VersionName" msprop:Generator_ColumnVarNameInTable="columnVersionName">
+              <xs:element name="VersionID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnPropNameInTable="VersionIDColumn" msprop:Generator_ColumnPropNameInRow="VersionID" msprop:Generator_UserColumnName="VersionID" msprop:Generator_ColumnVarNameInTable="columnVersionID" type="xs:int" />
+              <xs:element name="ProjectID" msprop:Generator_ColumnPropNameInTable="ProjectIDColumn" msprop:Generator_ColumnPropNameInRow="ProjectID" msprop:Generator_UserColumnName="ProjectID" msprop:Generator_ColumnVarNameInTable="columnProjectID" type="xs:int" />
+              <xs:element name="VersionName" msprop:Generator_ColumnPropNameInTable="VersionNameColumn" msprop:Generator_ColumnPropNameInRow="VersionName" msprop:Generator_UserColumnName="VersionName" msprop:Generator_ColumnVarNameInTable="columnVersionName">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="50" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="VersionDate" msprop:Generator_UserColumnName="VersionDate" msprop:Generator_ColumnPropNameInTable="VersionDateColumn" msprop:Generator_ColumnPropNameInRow="VersionDate" msprop:Generator_ColumnVarNameInTable="columnVersionDate" type="xs:dateTime" />
-              <xs:element name="Description" msprop:Generator_UserColumnName="Description" msprop:Generator_ColumnPropNameInTable="DescriptionColumn" msprop:Generator_ColumnPropNameInRow="Description" msprop:Generator_ColumnVarNameInTable="columnDescription" minOccurs="0">
+              <xs:element name="VersionDate" msprop:Generator_ColumnPropNameInTable="VersionDateColumn" msprop:Generator_ColumnPropNameInRow="VersionDate" msprop:Generator_UserColumnName="VersionDate" msprop:Generator_ColumnVarNameInTable="columnVersionDate" type="xs:dateTime" />
+              <xs:element name="Description" msprop:Generator_ColumnPropNameInTable="DescriptionColumn" msprop:Generator_ColumnPropNameInRow="Description" msprop:Generator_UserColumnName="Description" msprop:Generator_ColumnVarNameInTable="columnDescription" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="200" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="LastModifiedDate" msprop:Generator_UserColumnName="LastModifiedDate" msprop:Generator_ColumnPropNameInTable="LastModifiedDateColumn" msprop:Generator_ColumnPropNameInRow="LastModifiedDate" msprop:Generator_ColumnVarNameInTable="columnLastModifiedDate" type="xs:dateTime" />
-              <xs:element name="MondayID" msprop:Generator_UserColumnName="MondayID" msprop:Generator_ColumnPropNameInTable="MondayIDColumn" msprop:Generator_ColumnPropNameInRow="MondayID" msprop:Generator_ColumnVarNameInTable="columnMondayID" minOccurs="0">
+              <xs:element name="LastModifiedDate" msprop:Generator_ColumnPropNameInTable="LastModifiedDateColumn" msprop:Generator_ColumnPropNameInRow="LastModifiedDate" msprop:Generator_UserColumnName="LastModifiedDate" msprop:Generator_ColumnVarNameInTable="columnLastModifiedDate" type="xs:dateTime" />
+              <xs:element name="MondayID" msprop:Generator_ColumnPropNameInTable="MondayIDColumn" msprop:Generator_ColumnPropNameInRow="MondayID" msprop:Generator_UserColumnName="MondayID" msprop:Generator_ColumnVarNameInTable="columnMondayID" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="50" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="CustomerName" msprop:Generator_UserColumnName="CustomerName" msprop:Generator_ColumnPropNameInTable="CustomerNameColumn" msprop:Generator_ColumnPropNameInRow="CustomerName" msprop:Generator_ColumnVarNameInTable="columnCustomerName" minOccurs="0">
+              <xs:element name="CustomerName" msprop:Generator_ColumnPropNameInTable="CustomerNameColumn" msprop:Generator_ColumnPropNameInRow="CustomerName" msprop:Generator_UserColumnName="CustomerName" msprop:Generator_ColumnVarNameInTable="columnCustomerName" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="50" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="SalesName" msprop:Generator_UserColumnName="SalesName" msprop:Generator_ColumnPropNameInTable="SalesNameColumn" msprop:Generator_ColumnPropNameInRow="SalesName" msprop:Generator_ColumnVarNameInTable="columnSalesName" minOccurs="0">
+              <xs:element name="SalesName" msprop:Generator_ColumnPropNameInTable="SalesNameColumn" msprop:Generator_ColumnPropNameInRow="SalesName" msprop:Generator_UserColumnName="SalesName" msprop:Generator_ColumnVarNameInTable="columnSalesName" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="50" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="ProjectName" msprop:Generator_UserColumnName="ProjectName" msprop:Generator_ColumnPropNameInTable="ProjectNameColumn" msprop:Generator_ColumnPropNameInRow="ProjectName" msprop:Generator_ColumnVarNameInTable="columnProjectName">
+              <xs:element name="ProjectName" msprop:Generator_ColumnPropNameInTable="ProjectNameColumn" msprop:Generator_ColumnPropNameInRow="ProjectName" msprop:Generator_UserColumnName="ProjectName" msprop:Generator_ColumnVarNameInTable="columnProjectName">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="255" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="JBID" msprop:Generator_UserColumnName="JBID" msprop:Generator_ColumnPropNameInTable="JBIDColumn" msprop:Generator_ColumnPropNameInRow="JBID" msprop:Generator_ColumnVarNameInTable="columnJBID">
+              <xs:element name="JBID" msprop:Generator_ColumnPropNameInTable="JBIDColumn" msprop:Generator_ColumnPropNameInRow="JBID" msprop:Generator_UserColumnName="JBID" msprop:Generator_ColumnVarNameInTable="columnJBID">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="50" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="Address" msprop:Generator_UserColumnName="Address" msprop:Generator_ColumnPropNameInTable="AddressColumn" msprop:Generator_ColumnPropNameInRow="Address" msprop:Generator_ColumnVarNameInTable="columnAddress" minOccurs="0">
+              <xs:element name="Address" msprop:Generator_ColumnPropNameInTable="AddressColumn" msprop:Generator_ColumnPropNameInRow="Address" msprop:Generator_UserColumnName="Address" msprop:Generator_ColumnVarNameInTable="columnAddress" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="200" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="CreatedDate" msprop:Generator_UserColumnName="CreatedDate" msprop:Generator_ColumnPropNameInTable="CreatedDateColumn" msprop:Generator_ColumnPropNameInRow="CreatedDate" msprop:Generator_ColumnVarNameInTable="columnCreatedDate" type="xs:dateTime" />
-              <xs:element name="biddate" msprop:Generator_ColumnPropNameInRow="biddate" msprop:Generator_ColumnPropNameInTable="biddateColumn" msprop:Generator_ColumnVarNameInTable="columnbiddate" msprop:Generator_UserColumnName="biddate" type="xs:dateTime" minOccurs="0" />
-              <xs:element name="Estimatorname" msprop:Generator_ColumnPropNameInRow="Estimatorname" msprop:Generator_ColumnPropNameInTable="EstimatornameColumn" msprop:Generator_ColumnVarNameInTable="columnEstimatorname" msprop:Generator_UserColumnName="Estimatorname" minOccurs="0">
+              <xs:element name="CreatedDate" msprop:Generator_ColumnPropNameInTable="CreatedDateColumn" msprop:Generator_ColumnPropNameInRow="CreatedDate" msprop:Generator_UserColumnName="CreatedDate" msprop:Generator_ColumnVarNameInTable="columnCreatedDate" type="xs:dateTime" />
+              <xs:element name="EstimatorName" msprop:Generator_ColumnPropNameInRow="EstimatorName" msprop:Generator_ColumnPropNameInTable="EstimatorNameColumn" msprop:Generator_ColumnVarNameInTable="columnEstimatorName" msprop:Generator_UserColumnName="EstimatorName" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="BidDate" msprop:Generator_ColumnPropNameInRow="BidDate" msprop:Generator_ColumnPropNameInTable="BidDateColumn" msprop:Generator_ColumnVarNameInTable="columnBidDate" msprop:Generator_UserColumnName="BidDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="ProjVersionStatus" msprop:Generator_ColumnPropNameInRow="ProjVersionStatus" msprop:Generator_ColumnPropNameInTable="ProjVersionStatusColumn" msprop:Generator_ColumnVarNameInTable="columnProjVersionStatus" msprop:Generator_UserColumnName="ProjVersionStatus">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="50" />

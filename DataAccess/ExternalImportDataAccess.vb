@@ -82,13 +82,14 @@ Namespace DataAccess
                                                                                    ' New Step: Call shared function for Project + Version insert
                                                                                    Dim versionName As String = "Imported PSE " & Date.Now.ToString("yyyyMMdd")
                                                                                    Dim versionDesc As String = "Imported from PSE spreadsheet"
+                                                                                   Dim projstatusid As Integer = 1  ' Active
                                                                                    Dim ids As Tuple(Of Integer, Integer) = CreateProjectAndVersion(
                                                                                         conn, transaction,
                                                                                         jbid, projectName, versionName, versionDesc,
                                                                                         address, city, state, zip, bidDate, archPlansDated, engPlansDated,
                                                                                         milesToJobSite, totalNetSqft, totalGrossSqft, Nothing,
                                                                                         customerName, Nothing, architectName, engineerName,
-                                                                                        estimatorName, Nothing, salesName, Nothing, Nothing,
+                                                                                        estimatorName, Nothing, salesName, Nothing, Nothing, projstatusid,
                                                                                         True
                                                                                     )
                                                                                    Dim projectID As Integer = ids.Item1
@@ -205,6 +206,7 @@ Namespace DataAccess
                                                                                                 .UnitName = unitName,
                                                                                                 .PlanSQFT = planSqft,
                                                                                                 .UnitType = unitType,
+                                                                                                .MarginPercent = 0,
                                                                                                 .OptionalAdder = 1D
                                                                                             }
                                                                                            Dim newActualID As Integer = InsertActualUnitOnly(actualModel, rawID, newVersionID, conn, transaction)
@@ -414,14 +416,15 @@ Namespace DataAccess
                         ' New Step: Call shared function for Project + Version insert
                         Dim versionName As String = "Imported from MGMT " & Now.ToString("yyyyMMdd")
                         Dim versionDesc As String = "Imported from MGMT full model Estimate"
+                        Dim projstatusid As Integer = 1
                         Dim ids As Tuple(Of Integer, Integer) = CreateProjectAndVersion(
                                 conn, transaction,
                                 projectNumber, projectName, versionName, versionDesc,
                                 address, city, state, zip, biddate, archdate, engdate,
                                 miles, 0, 0, Nothing,
                                 customerName, Nothing, Nothing, Nothing,
-                                Nothing, estimatorID, Nothing, salesID, Nothing,
-                                False
+                                Nothing, estimatorID, Nothing, salesID, Nothing, projstatusid,
+                                True
                             )
                         newProjectID = ids.Item1
                         Dim versionID As Integer = ids.Item2
@@ -866,6 +869,7 @@ Namespace DataAccess
     Optional ByVal salesName As String = Nothing,
     Optional ByVal salesID As Integer? = Nothing,
     Optional ByVal MondayID As String = Nothing,
+    Optional ByVal ProjVersionStatusID As Integer? = Nothing,
     Optional ByVal insertDefaultSettings As Boolean = True
 ) As Tuple(Of Integer, Integer)
 
@@ -926,7 +930,8 @@ Namespace DataAccess
         .Description = description,
         .CustomerID = finalCustomerID,
         .SalesID = finalSalesID,
-        .MondayID = MondayID
+        .MondayID = MondayID,
+        .ProjVersionStatusID = ProjVersionStatusID
     }
             Dim versionParams = ModelParams.ForProjectVersion(versionModel)
             Dim versionID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectVersion, HelperDataAccess.BuildParameters(versionParams), conn, transaction)
@@ -1108,8 +1113,8 @@ Namespace DataAccess
             trans.Commit()
             RollupDataAccess.RecalculateVersion(versionID)
 
-            UIHelper.Add("All data imported and rollups recalculated.") ' Common append
-            UIHelper.HideBusy(frmMain)
+            'UIHelper.Add("All data imported and rollups recalculated.") ' Common append
+            ' UIHelper.HideBusy(frmMain)
             MessageBox.Show(If(importLog.Length > 0, importLog.ToString(), successMessage), "Import Summary", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End Sub
 

@@ -36,6 +36,8 @@ Partial Class frmMain
         Me.StatusStrip = New System.Windows.Forms.StatusStrip()
         Me.ttslUserName = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolStripStatusLabel = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.ToolStripProgressBar1 = New System.Windows.Forms.ToolStripProgressBar()
         Me.cmsStatusHistory = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
@@ -46,8 +48,6 @@ Partial Class frmMain
         Me.btnImportPSE = New System.Windows.Forms.Button()
         Me.btnCreateProject = New System.Windows.Forms.Button()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
-        Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel()
-        Me.ToolStripProgressBar1 = New System.Windows.Forms.ToolStripProgressBar()
         Me.MenuStrip.SuspendLayout()
         Me.StatusStrip.SuspendLayout()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -122,7 +122,7 @@ Partial Class frmMain
         '
         'StatusStrip
         '
-        Me.StatusStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ttslUserName, Me.ToolStripStatusLabel, Me.ToolStripStatusLabel1, Me.ToolStripProgressBar1})
+        Me.StatusStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ttslUserName, Me.ToolStripProgressBar1, Me.ToolStripStatusLabel, Me.ToolStripStatusLabel1})
         Me.StatusStrip.Location = New System.Drawing.Point(0, 687)
         Me.StatusStrip.Name = "StatusStrip"
         Me.StatusStrip.Size = New System.Drawing.Size(1384, 24)
@@ -140,16 +140,26 @@ Partial Class frmMain
         'ToolStripStatusLabel
         '
         Me.ToolStripStatusLabel.Name = "ToolStripStatusLabel"
-        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(1200, 19)
+        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(1231, 19)
         Me.ToolStripStatusLabel.Spring = True
         Me.ToolStripStatusLabel.Text = "Ready"
         Me.ToolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         Me.ToolStripStatusLabel.Visible = False
         '
+        'ToolStripStatusLabel1
+        '
+        Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(16, 19)
+        Me.ToolStripStatusLabel1.Text = "..."
+        '
+        'ToolStripProgressBar1
+        '
+        Me.ToolStripProgressBar1.Name = "ToolStripProgressBar1"
+        Me.ToolStripProgressBar1.Size = New System.Drawing.Size(100, 18)
+        '
         'cmsStatusHistory
         '
         Me.cmsStatusHistory.Name = "cmsStatusHistory"
-        Me.cmsStatusHistory.RightToLeft = System.Windows.Forms.RightToLeft.Inherit
         Me.cmsStatusHistory.Size = New System.Drawing.Size(61, 4)
         '
         'SplitContainer1
@@ -171,7 +181,7 @@ Partial Class frmMain
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.TabControl1)
         Me.SplitContainer1.Size = New System.Drawing.Size(1384, 663)
-        Me.SplitContainer1.SplitterDistance = 157
+        Me.SplitContainer1.SplitterDistance = 147
         Me.SplitContainer1.TabIndex = 8
         '
         'btnClose
@@ -230,19 +240,8 @@ Partial Class frmMain
         Me.TabControl1.Location = New System.Drawing.Point(0, 0)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(1223, 663)
+        Me.TabControl1.Size = New System.Drawing.Size(1233, 663)
         Me.TabControl1.TabIndex = 0
-        '
-        'ToolStripStatusLabel1
-        '
-        Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(16, 19)
-        Me.ToolStripStatusLabel1.Text = "..."
-        '
-        'ToolStripProgressBar1
-        '
-        Me.ToolStripProgressBar1.Name = "ToolStripProgressBar1"
-        Me.ToolStripProgressBar1.Size = New System.Drawing.Size(100, 18)
         '
         'frmMain
         '

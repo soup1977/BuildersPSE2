@@ -50,6 +50,10 @@ Public Class frmCreateEditProject
             cboProjectType.DisplayMember = "ProjectTypeName"
             cboProjectType.ValueMember = "ProjectTypeID"
 
+            cboProjectStatus.DataSource = da.GetProjectVersionStatus()
+            cboProjectStatus.DisplayMember = "ProjVersionStatus"
+            cboProjectStatus.ValueMember = "ProjVersionStatusID"
+
             cboEstimator.DataSource = HelperDataAccess.GetEstimators()
             cboEstimator.DisplayMember = "EstimatorName"
             cboEstimator.ValueMember = "EstimatorID"
@@ -120,15 +124,15 @@ Public Class frmCreateEditProject
         End If
     End Sub
 
-
-
-
     ' Initializes the tab control based on project state.
     Private Sub InitializeTabControl()
         Try
             tabControlRight.TabPages.Clear()
             tabControlRight.TabPages.Add(tabProjectInfo)
             tabControlRight.TabPages.Add(tabRollup)
+            If CurrentUser.IsAdmin Then
+                dgvLevelVariance.Visible = True
+            End If
             If Not isNewProject Then
                 tabControlRight.TabPages.Add(tabOverrides)
                 tabControlRight.TabPages.Add(tabBuildingInfo)
@@ -275,6 +279,7 @@ Public Class frmCreateEditProject
             cboSalesman.SelectedValue = If(selectedVersion.SalesID, 0)
             cboVersion.SelectedValue = currentVersionID
             txtMondayItemId.Text = selectedVersion.MondayID
+            cboProjectStatus.SelectedValue = selectedVersion.ProjVersionStatusID
         End If
     End Sub
 
@@ -349,6 +354,7 @@ Public Class frmCreateEditProject
     Private Sub PopulateProjectInfoControls(proj As ProjectModel)
         txtJBID.Text = proj.JBID
         cboProjectType.SelectedValue = proj.ProjectType.ProjectTypeID
+
         txtProjectName.Text = proj.ProjectName
         cboEstimator.SelectedValue = proj.Estimator.EstimatorID
         txtAddress.Text = proj.Address
@@ -775,10 +781,11 @@ Public Class frmCreateEditProject
         da.SaveProject(currentProject)
         Dim customerID As Integer? = If(cboCustomer.SelectedValue IsNot DBNull.Value, CInt(cboCustomer.SelectedValue), Nothing)
         Dim salesID As Integer? = If(cboSalesman.SelectedValue IsNot DBNull.Value, CInt(cboSalesman.SelectedValue), Nothing)
+        Dim projStatusID As Integer = If(cboProjectStatus.SelectedValue IsNot DBNull.Value, CInt(cboProjectStatus.SelectedValue), Nothing)
         If isNewProject AndAlso currentVersionID = 0 Then
             CreateInitialVersion(customerID, salesID)
         ElseIf currentVersionID > 0 Then
-            ProjVersionDataAccess.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtMondayItemId.Text, customerID, salesID)
+            ProjVersionDataAccess.UpdateProjectVersion(currentVersionID, cboVersion.Text, txtMondayItemId.Text, projStatusID, customerID, salesID)
         End If
     End Sub
 
@@ -1139,6 +1146,7 @@ Public Class frmCreateEditProject
 
     Private Sub btnRecalcRollup_Click(sender As Object, e As EventArgs) Handles btnRecalcRollup.Click
         Try
+            UIHelper.ShowBusy(frmMain)
             Dim currentTab As TabPage = tabControlRight.SelectedTab
             Dim selectedNode As TreeNode = tvProjectTree.SelectedNode
             UIHelper.Add("Recalculating rollup...")
@@ -1153,6 +1161,7 @@ Public Class frmCreateEditProject
             MessageBox.Show($"Error recalculating rollup: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             Me.Cursor = Cursors.Default
+            UIHelper.HideBusy(frmMain)
         End Try
     End Sub
 
@@ -2421,5 +2430,6 @@ Public Class frmCreateEditProject
         LoadProjectBuildings()
         RefreshProjectTree()
     End Sub
+
 
 End Class

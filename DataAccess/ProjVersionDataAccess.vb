@@ -24,7 +24,8 @@ Namespace DataAccess
                                                                    {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
                                                                    {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                    {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)},
-                                                                   {"@MondayID", Nothing}
+                                                                   {"@MondayID", Nothing},
+                                                                   {"@ProjVersionStatusID", 1}
                                                                }
                                                                        Dim newVersionIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertProjectVersion, HelperDataAccess.BuildParameters(params))
                                                                        newVersionID = CInt(newVersionIDObj)
@@ -98,7 +99,8 @@ Namespace DataAccess
                                                                                         {"@Description", If(String.IsNullOrEmpty(description), DBNull.Value, CType(description, Object))},
                                                                                         {"@CustomerID", DBNull.Value},
                                                                                         {"@SalesID", DBNull.Value},
-                                                                                        {"MondayID", Nothing}
+                                                                                        {"MondayID", Nothing},
+                                                                                        {"ProjVersionStatusID", 1}
                                                                                     }
                                                                                    Dim newVersionID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertProjectVersion, HelperDataAccess.BuildParameters(params), conn, transaction)
 
@@ -119,41 +121,51 @@ Namespace DataAccess
 
 
                                                                                    ' Fetch all lumber history records for the original version, grouped by RawUnit
+                                                                                   ' Fetch all lumber history records for the original version, grouped by RawUnit
                                                                                    Dim lumberHistories As New Dictionary(Of Integer, List(Of RawUnitLumberHistoryModel))
 
-                                                                                   Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(
-        Queries.SelectLumberHistoryByVersion,
-        {New SqlParameter("@VersionID", originalVersionID)})
+                                                                                   Using readConn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                                       readConn.Open()
 
-                                                                                       ' Cache column ordinals once for performance and safety
-                                                                                       Dim ordRawUnitID As Integer = reader.GetOrdinal("RawUnitID")
-                                                                                       Dim ordCostEffDateID As Integer = reader.GetOrdinal("CostEffectiveDateID")
-                                                                                       Dim ordLumberCost As Integer = reader.GetOrdinal("LumberCost")
-                                                                                       Dim ordAvgSPFNo2 As Integer = reader.GetOrdinal("AvgSPFNo2")
-                                                                                       Dim ordAvg241800 As Integer = reader.GetOrdinal("Avg241800")
-                                                                                       Dim ordAvg242400 As Integer = reader.GetOrdinal("Avg242400")
-                                                                                       Dim ordAvg261800 As Integer = reader.GetOrdinal("Avg261800")
-                                                                                       Dim ordAvg262400 As Integer = reader.GetOrdinal("Avg262400")
+                                                                                       ' Force ARITHABORT ON to match SSMS behavior and get the good plan
+                                                                                       Using setCmd As New SqlCommand("SET ARITHABORT ON", readConn)
+                                                                                           setCmd.ExecuteNonQuery()
+                                                                                       End Using
 
-                                                                                       While reader.Read()
-                                                                                           Dim rawID As Integer = reader.GetInt32(ordRawUnitID)
+                                                                                       Using cmd As New SqlCommand(Queries.SelectLumberHistoryByVersion, readConn)
+                                                                                           cmd.CommandTimeout = 120
+                                                                                           cmd.Parameters.AddWithValue("@VersionID", originalVersionID)
 
-                                                                                           If Not lumberHistories.ContainsKey(rawID) Then
-                                                                                               lumberHistories(rawID) = New List(Of RawUnitLumberHistoryModel)
-                                                                                           End If
+                                                                                           Using reader As SqlDataReader = cmd.ExecuteReader()
+                                                                                               Dim ordRawUnitID As Integer = reader.GetOrdinal("RawUnitID")
+                                                                                               Dim ordCostEffDateID As Integer = reader.GetOrdinal("CostEffectiveDateID")
+                                                                                               Dim ordLumberCost As Integer = reader.GetOrdinal("LumberCost")
+                                                                                               Dim ordAvgSPFNo2 As Integer = reader.GetOrdinal("AvgSPFNo2")
+                                                                                               Dim ordAvg241800 As Integer = reader.GetOrdinal("Avg241800")
+                                                                                               Dim ordAvg242400 As Integer = reader.GetOrdinal("Avg242400")
+                                                                                               Dim ordAvg261800 As Integer = reader.GetOrdinal("Avg261800")
+                                                                                               Dim ordAvg262400 As Integer = reader.GetOrdinal("Avg262400")
 
-                                                                                           lumberHistories(rawID).Add(New RawUnitLumberHistoryModel With {
-            .RawUnitID = rawID,
-            .CostEffectiveDateID = If(reader.IsDBNull(ordCostEffDateID), Nothing, CType(reader.GetInt32(ordCostEffDateID), Integer?)),
-            .LumberCost = reader.GetDecimal(ordLumberCost),
-            .AvgSPFNo2 = If(reader.IsDBNull(ordAvgSPFNo2), Nothing, CType(reader.GetDecimal(ordAvgSPFNo2), Decimal?)),
-            .Avg241800 = If(reader.IsDBNull(ordAvg241800), Nothing, CType(reader.GetDecimal(ordAvg241800), Decimal?)),
-            .Avg242400 = If(reader.IsDBNull(ordAvg242400), Nothing, CType(reader.GetDecimal(ordAvg242400), Decimal?)),
-            .Avg261800 = If(reader.IsDBNull(ordAvg261800), Nothing, CType(reader.GetDecimal(ordAvg261800), Decimal?)),
-            .Avg262400 = If(reader.IsDBNull(ordAvg262400), Nothing, CType(reader.GetDecimal(ordAvg262400), Decimal?))
-        })
-                                                                                       End While
+                                                                                               While reader.Read()
+                                                                                                   Dim rawID As Integer = reader.GetInt32(ordRawUnitID)
+                                                                                                   If Not lumberHistories.ContainsKey(rawID) Then
+                                                                                                       lumberHistories(rawID) = New List(Of RawUnitLumberHistoryModel)
+                                                                                                   End If
+                                                                                                   lumberHistories(rawID).Add(New RawUnitLumberHistoryModel With {
+                    .RawUnitID = rawID,
+                    .CostEffectiveDateID = If(reader.IsDBNull(ordCostEffDateID), Nothing, CType(reader.GetInt32(ordCostEffDateID), Integer?)),
+                    .LumberCost = reader.GetDecimal(ordLumberCost),
+                    .AvgSPFNo2 = If(reader.IsDBNull(ordAvgSPFNo2), Nothing, CType(reader.GetDecimal(ordAvgSPFNo2), Decimal?)),
+                    .Avg241800 = If(reader.IsDBNull(ordAvg241800), Nothing, CType(reader.GetDecimal(ordAvg241800), Decimal?)),
+                    .Avg242400 = If(reader.IsDBNull(ordAvg242400), Nothing, CType(reader.GetDecimal(ordAvg242400), Decimal?)),
+                    .Avg261800 = If(reader.IsDBNull(ordAvg261800), Nothing, CType(reader.GetDecimal(ordAvg261800), Decimal?)),
+                    .Avg262400 = If(reader.IsDBNull(ordAvg262400), Nothing, CType(reader.GetDecimal(ordAvg262400), Decimal?))
+                })
+                                                                                               End While
+                                                                                           End Using
+                                                                                       End Using
                                                                                    End Using
+
 
                                                                                    ' Now insert into new version using the rawIdMap (already populated)
                                                                                    For Each kvp In lumberHistories
@@ -202,7 +214,7 @@ Namespace DataAccess
                                                                                    ' Duplicate ActualUnits and create map
                                                                                    Dim actualIdMap As New Dictionary(Of Integer, Integer)
                                                                                    For Each actual In uniqueActualUnits
-                                                                                       Dim colorCode As String = If(actual.ColorCode Is Nothing, Nothing, actual.ColorCode.Trim())
+                                                                                       Dim colorCode As String = actual.ColorCode?.Trim()
                                                                                        params = ModelParams.ForActualUnit(actual, newVersionID, rawIdMap(actual.RawUnitID), colorCode)
                                                                                        Dim newActualUnitID As Integer = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Integer)(Queries.InsertActualUnit, HelperDataAccess.BuildParameters(params), conn, transaction)
                                                                                        actualIdMap.Add(actual.ActualUnitID, newActualUnitID)
@@ -279,7 +291,8 @@ Namespace DataAccess
                                                                            .SalesID = If(Not reader.IsDBNull(reader.GetOrdinal("SalesID")), reader.GetInt32(reader.GetOrdinal("SalesID")), Nothing),
                                                                            .CustomerName = If(Not reader.IsDBNull(reader.GetOrdinal("CustomerName")), reader.GetString(reader.GetOrdinal("CustomerName")), String.Empty),
                                                                            .SalesName = If(Not reader.IsDBNull(reader.GetOrdinal("SalesName")), reader.GetString(reader.GetOrdinal("SalesName")), String.Empty),
-                                                                           .MondayID = If(Not reader.IsDBNull(reader.GetOrdinal("MondayID")), reader.GetString(reader.GetOrdinal("MondayID")), String.Empty)
+                                                                           .MondayID = If(Not reader.IsDBNull(reader.GetOrdinal("MondayID")), reader.GetString(reader.GetOrdinal("MondayID")), String.Empty),
+                                                                           .ProjVersionStatusID = If(Not reader.IsDBNull(reader.GetOrdinal("ProjVersionStatusID")), reader.GetInt32(reader.GetOrdinal("ProjVersionStatusID")), Nothing)
                                                                        }
                                                                                versions.Add(version)
                                                                            End While
@@ -289,7 +302,7 @@ Namespace DataAccess
         End Function
 
         ' Update an existing project version (CustomerID restricted to CustomerType=1 via UI filtering and validation)
-        Public Shared Sub UpdateProjectVersion(versionID As Integer, versionName As String, mondayid As String, customerID As Integer?, salesID As Integer?)
+        Public Shared Sub UpdateProjectVersion(versionID As Integer, versionName As String, mondayid As String, projStatusid As Integer?, customerID As Integer?, salesID As Integer?)
             ' Validate CustomerID for CustomerType=1
             If customerID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(customerID, 1) Then
                 Throw New ArgumentException("CustomerID must reference a customer with CustomerType=1 (Customer).")
@@ -302,7 +315,8 @@ Namespace DataAccess
                                                                    {"@LastModifiedDate", Date.Now},
                                                                    {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                    {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)},
-                                                                   {"@MondayID", If(String.IsNullOrEmpty(mondayid), DBNull.Value, CType(mondayid, Object))}
+                                                                   {"@MondayID", If(String.IsNullOrEmpty(mondayid), DBNull.Value, CType(mondayid, Object))},
+                                                                   {"@ProjVersionStatusID", If(projStatusid.HasValue, CType(projStatusid.Value, Object), DBNull.Value)}
                                                                }
                                                                        SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateProjectVersion, HelperDataAccess.BuildParameters(params))
                                                                    End Sub, "Error updating project version " & versionID)

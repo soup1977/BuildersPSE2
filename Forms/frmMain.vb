@@ -4,6 +4,7 @@
 Imports System.Data.SqlClient
 Imports BuildersPSE2.DataAccess
 Imports BuildersPSE2.Utilities
+Imports Microsoft.VisualBasic.FileIO
 
 Public Class frmMain
 
@@ -223,11 +224,83 @@ Public Class frmMain
     End Sub
 
     Private Sub btnImportCSV_Click(sender As Object, e As EventArgs) Handles btnImportCSV.Click, ImportMGMTProjectToolStripMenuItem.Click
-        ' (your existing CSV import logic – unchanged except LogStatus calls)
-        ' ... existing code ...
 
-        ' At the end of successful import:
-        AddFormToTabControl(GetType(frmMainProjectList), "ProjectList") ' forces refresh
+        Try
+            Using openFileDialog As New OpenFileDialog()
+                openFileDialog.Filter = "CSV Files (*.csv)|*.csv"
+                openFileDialog.Title = "Select Project CSV File"
+                If openFileDialog.ShowDialog() = DialogResult.OK Then
+                    ' Prompt user to choose import type. Need to fix CSV export from MGMT to include project structure. Maybe add a new CSV only for Project structure?
+                    'Dim importTypeResult = MessageBox.Show("Import full Model Project? (Yes = Full, No = Project Info Only)", "Import Type", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                    'Dim isFullImport As Boolean = (importTypeResult = DialogResult.Yes)
+
+                    Dim isfullimport As Boolean = True ' For now, always do full import
+
+                    Using importDialog As New frmImportProjectDialog()
+                        ' Pre-fill ProjectName from CSV's Project field
+                        Using parser As New TextFieldParser(openFileDialog.FileName)
+                            parser.TextFieldType = FieldType.Delimited
+                            parser.SetDelimiters(",")
+                            If Not parser.EndOfData Then
+                                parser.ReadLine() ' Skip header
+                                If Not parser.EndOfData Then
+                                    Dim fields As String() = parser.ReadFields()
+                                    If fields.Length >= 3 Then
+                                        importDialog.txtProjectName.Text = fields(2).Trim() ' Project field
+                                    End If
+                                End If
+                            End If
+                        End Using
+
+                        If importDialog.ShowDialog() = DialogResult.OK Then
+                            Dim csvPath As String = openFileDialog.FileName
+                            Dim projName As String = importDialog.txtProjectName.Text.Trim()
+                            Dim custName As String = importDialog.cboCustomerName.Text.Trim()
+                            Dim estID As Integer? = If(importDialog.cboEstimator.SelectedIndex >= 0, CInt(importDialog.cboEstimator.SelectedValue), Nothing)
+                            Dim salID As Integer? = If(importDialog.cboSales.SelectedIndex >= 0, CInt(importDialog.cboSales.SelectedValue), Nothing)
+
+                            Dim address As String = importDialog.txtAddress.Text.Trim()
+                            Dim city As String = importDialog.txtCity.Text.Trim()
+                            Dim state As String = importDialog.cboState.Text.Trim()
+                            Dim zip As String = importDialog.txtZip.Text.Trim()
+                            Dim biddate As Date? = importDialog.dtpBidDate.Value.Date
+                            Dim archdate As Date? = importDialog.dtpArchPlansDated.Value.Date
+                            Dim engdate As Date? = importDialog.dtpEngPlansDated.Value.Date
+                            Dim miles As Integer? = CInt(importDialog.nudMilesToJobSite.Text.Trim())
+
+
+                            Task.Run(Sub()
+                                         Try
+                                             Dim dataAccess As New ProjectDataAccess()
+                                             Dim projectID As Integer = ExternalImportDataAccess.ImportProjectFromCSV(csvPath, projName, custName, estID, salID, address, city, state, zip, biddate, archdate, engdate, miles)
+
+
+                                             Me.Invoke(Sub()
+                                                           Debug.WriteLine($"Import completed successfully for ProjectID: {projectID}")
+                                                           'MessageBox.Show($"Project {projectID} imported successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                                                           AddFormToTabControl(GetType(frmMainProjectList), "ProjectList")
+                                                           Debug.WriteLine("Refreshed project list tab for ProjectID: " & projectID)
+                                                       End Sub)
+                                         Catch ex As Exception
+                                             Me.Invoke(Sub()
+                                                           Debug.WriteLine($"Import failed: {ex.Message}")
+                                                           MessageBox.Show($"Error importing project: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                                       End Sub)
+                                         End Try
+                                     End Sub)
+                        Else
+                            MessageBox.Show("Import cancelled.", "Import Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                        End If
+                    End Using
+                Else
+                    MessageBox.Show("No file selected.", "Import Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                End If
+            End Using
+        Catch ex As Exception
+            Debug.WriteLine($"Import error in btnImportCSV_Click: {ex.Message}")
+            MessageBox.Show($"Error importing project: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+
     End Sub
 
     Private Sub frmMain_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
