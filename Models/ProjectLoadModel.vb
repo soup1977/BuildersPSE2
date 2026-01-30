@@ -10,6 +10,6 @@
     Public Property OCSpacing As String
     Public Property LiveLoadDeflection As String
     Public Property TotalLoadDeflection As String
-    Public Property Absolute As String
-    Public Property Deflection As String
+    Public Property AbsoluteLL As String
+    Public Property AbsoluteTL As String
 End Class

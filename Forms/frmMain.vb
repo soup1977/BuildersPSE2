@@ -13,7 +13,8 @@ Public Class frmMain
     Private _previousTab As TabPage = Nothing
     Private _isRemovingTab As Boolean = False
 
-
+    ' === Activity Log Settings ===
+    Private Const MAX_LOG_ENTRIES As Integer = 500
 
     ' === Counters for multi-instance forms ===
     Private m_NewProjectCounter As Integer = 0
@@ -41,11 +42,64 @@ Public Class frmMain
     Private Sub LogStatus(message As String)
         Dim fullMessage As String = $"{message}  @{DateTime.Now:HH:mm:ss}"
         ToolStripStatusLabel.Text = fullMessage
-
-
     End Sub
 
+    ' ================================================================
+    '  ACTIVITY LOG PANEL (public for UIHelper access)
+    ' ================================================================
+    ''' <summary>
+    ''' Adds a timestamped message to the Activity Log panel.
+    ''' Thread-safe - can be called from any thread.
+    ''' </summary>
+    Public Sub AddToActivityLog(message As String)
+        If Me.InvokeRequired Then
+            Me.Invoke(Sub() AddToActivityLog(message))
+            Return
+        End If
 
+        Dim logEntry As String = $"[{DateTime.Now:HH:mm:ss}] {message}"
+
+        ' Insert at top (newest first)
+        lstActivityLog.Items.Insert(0, logEntry)
+
+        ' Trim old entries to prevent memory bloat
+        While lstActivityLog.Items.Count > MAX_LOG_ENTRIES
+            lstActivityLog.Items.RemoveAt(lstActivityLog.Items.Count - 1)
+        End While
+
+        ' Also write to debug output for development
+        Debug.WriteLine(logEntry)
+    End Sub
+
+    ''' <summary>
+    ''' Toggles the Activity Log panel visibility.
+    ''' </summary>
+    Public Sub ToggleActivityLog()
+        SplitContainerMain.Panel2Collapsed = Not SplitContainerMain.Panel2Collapsed
+        btnToggleLog.Text = If(SplitContainerMain.Panel2Collapsed, "Show Log", "Hide Log")
+
+        ' Set a reasonable default height when showing
+        If Not SplitContainerMain.Panel2Collapsed Then
+            SplitContainerMain.SplitterDistance = CInt(SplitContainerMain.Height * 0.75)
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Clears all entries from the Activity Log.
+    ''' </summary>
+    Public Sub ClearActivityLog()
+        lstActivityLog.Items.Clear()
+        AddToActivityLog("Log cleared")
+    End Sub
+
+    ' === Activity Log Event Handlers ===
+    Private Sub btnToggleLog_Click(sender As Object, e As EventArgs) Handles btnToggleLog.Click, ToggleActivityLogToolStripMenuItem.Click
+        ToggleActivityLog()
+    End Sub
+
+    Private Sub btnClearLog_Click(sender As Object, e As EventArgs) Handles btnClearLog.Click, ClearActivityLogToolStripMenuItem.Click
+        ClearActivityLog()
+    End Sub
 
     ' ================================================================
     '  TAB CONTROL EVENTS (previous tab tracking + auto-refresh)

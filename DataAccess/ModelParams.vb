@@ -36,7 +36,9 @@ Namespace DataAccess
                 {"@CustomerID", If(model.CustomerID.HasValue, CType(model.CustomerID.Value, Object), DBNull.Value)},
                 {"@SalesID", If(model.SalesID.HasValue, CType(model.SalesID.Value, Object), DBNull.Value)},
                 {"@MondayID", If(String.IsNullOrEmpty(model.MondayID), DBNull.Value, CType(model.MondayID, Object))},
-                {"@ProjVersionStatusID", If(model.ProjVersionStatusID.HasValue, CType(model.ProjVersionStatusID.Value, Object), DBNull.Value)}
+                {"@ProjVersionStatusID", If(model.ProjVersionStatusID.HasValue, CType(model.ProjVersionStatusID.Value, Object), DBNull.Value)},
+                {"@FuturesAdderAmt", If(model.FuturesAdderAmt.HasValue, CType(model.FuturesAdderAmt.Value, Object), DBNull.Value)},
+                {"@FuturesAdderProjTotal", If(model.FuturesAdderProjTotal.HasValue, CType(model.FuturesAdderProjTotal.Value, Object), DBNull.Value)}
             }
         End Function
         Public Shared Function ForRawUnit(model As RawUnitModel, newVersionID As Integer) As Dictionary(Of String, Object)
@@ -83,17 +85,19 @@ Namespace DataAccess
             }
         End Function
 
-        Public Shared Function ForActualUnit(model As ActualUnitModel, newVersionID As Integer, newRawUnitID As Integer, colorCode As String) As Dictionary(Of String, Object)
+        ' Update the ForActualUnit method to include SortOrder
+        Public Shared Function ForActualUnit(model As ActualUnitModel, versionID As Integer, rawUnitID As Integer, Optional colorCode As String = Nothing) As Dictionary(Of String, Object)
             Return New Dictionary(Of String, Object) From {
-        {"@VersionID", newVersionID},
-        {"@RawUnitID", newRawUnitID},
+        {"@VersionID", versionID},
+        {"@RawUnitID", rawUnitID},
         {"@ProductTypeID", model.ProductTypeID},
         {"@UnitName", model.UnitName},
         {"@PlanSQFT", model.PlanSQFT},
-        {"@UnitType", model.UnitType},
-        {"@MarginPercent", model.MarginPercent},
+        {"@UnitType", If(String.IsNullOrEmpty(model.UnitType), "Res", model.UnitType)},
         {"@OptionalAdder", model.OptionalAdder},
-        {"@ColorCode", If(String.IsNullOrEmpty(colorCode), DBNull.Value, CType(colorCode, Object))}
+        {"@ColorCode", If(String.IsNullOrEmpty(colorCode), DBNull.Value, CObj(colorCode))},
+        {"@MarginPercent", model.MarginPercent},
+        {"@SortOrder", model.SortOrder}
     }
         End Function
 

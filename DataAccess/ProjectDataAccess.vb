@@ -494,28 +494,29 @@ Namespace DataAccess
 
 
         ' Updated: SaveActualUnit (use VersionID)
-        Public Sub SaveActualUnit(actual As ActualUnitModel)
-            Dim paramsDict As New Dictionary(Of String, Object) From {
-                {"@VersionID", actual.VersionID},
-                {"@RawUnitID", actual.RawUnitID},
-                {"@ProductTypeID", actual.ProductTypeID},
-                {"@UnitName", actual.UnitName},
-                {"@PlanSQFT", actual.PlanSQFT},
-                {"@UnitType", actual.UnitType},
-                {"@ColorCode", actual.ColorCode},
-                {"@MarginPercent", actual.MarginPercent},
-                {"@OptionalAdder", actual.OptionalAdder}
-            }
+        ' Update the SaveActualUnit method to include SortOrder parameter
+        Public Sub SaveActualUnit(unit As ActualUnitModel)
+            Dim parameters As New Dictionary(Of String, Object) From {
+        {"@VersionID", unit.VersionID},
+        {"@RawUnitID", unit.RawUnitID},
+        {"@ProductTypeID", unit.ProductTypeID},
+        {"@UnitName", unit.UnitName},
+        {"@PlanSQFT", unit.PlanSQFT},
+        {"@UnitType", unit.UnitType},
+        {"@OptionalAdder", unit.OptionalAdder},
+        {"@ColorCode", If(String.IsNullOrEmpty(unit.ColorCode), DBNull.Value, CObj(unit.ColorCode))},
+        {"@MarginPercent", unit.MarginPercent},
+        {"@SortOrder", unit.SortOrder}
+    }
 
-            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       If actual.ActualUnitID = 0 Then
-                                                                           Dim newIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertActualUnit, HelperDataAccess.BuildParameters(paramsDict))
-                                                                           actual.ActualUnitID = CInt(newIDObj)
-                                                                       Else
-                                                                           paramsDict.Add("@ActualUnitID", actual.ActualUnitID)
-                                                                           SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateActualUnit, HelperDataAccess.BuildParameters(paramsDict))
-                                                                       End If
-                                                                   End Sub, "Error saving actual unit")
+            If unit.ActualUnitID > 0 Then
+                ' Update existing
+                parameters.Add("@ActualUnitID", unit.ActualUnitID)
+                SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateActualUnit, HelperDataAccess.BuildParameters(parameters))
+            Else
+                ' Insert new
+                unit.ActualUnitID = SqlConnectionManager.Instance.ExecuteScalar(Of Integer)(Queries.InsertActualUnit, HelperDataAccess.BuildParameters(parameters))
+            End If
         End Sub
 
         ' Updated: SaveActualToLevelMapping (use VersionID)
@@ -966,25 +967,32 @@ Namespace DataAccess
             For Each mapping In mappings
                 Dim actual = mapping.ActualUnit
                 Dim raw = GetRawUnitByID(actual.RawUnitID)
-                Dim history = LumberDataAccess.GetLatestLumberHistory(actual.RawUnitID, versionID)
 
-                If raw Is Nothing OrElse raw.SqFt.GetValueOrDefault() <= 0D Then Continue For
+                If raw Is Nothing Then Continue For
+
+                ' For walls (ProductTypeID = 3), use LF as the basis instead of SqFt
+                Dim isWallUnit As Boolean = (raw.ProductTypeID = 3)
+                Dim divisor As Decimal = If(isWallUnit, 1, raw.SqFt.GetValueOrDefault())
+
+                ' Skip if no valid divisor (prevents division by zero)
+                If divisor <= 0D Then Continue For
 
                 Dim planSqft As Decimal = actual.PlanSQFT
                 Dim opt As Decimal = actual.OptionalAdder
                 Dim qty As Integer = mapping.Quantity
                 Dim extSqft As Decimal = planSqft * qty * opt
 
-                Dim lfPer As Decimal = raw.LF.GetValueOrDefault() / raw.SqFt.Value
-                Dim bdftPer As Decimal = raw.BF.GetValueOrDefault() / raw.SqFt.Value
-                Dim lumberPer As Decimal = history.LumberCost / raw.SqFt.Value
+                Dim lfPer As Decimal = raw.LF.GetValueOrDefault() / divisor
+                Dim bdftPer As Decimal = raw.BF.GetValueOrDefault() / divisor
+                Dim history = LumberDataAccess.GetLatestLumberHistory(actual.RawUnitID, versionID)
+                Dim lumberPer As Decimal = history.LumberCost / divisor
 
                 Dim lumberCost As Decimal = lumberPer * extSqft
                 Dim lumberadder As Decimal = LumberDataAccess.GetLumberAdder(versionID, productTypeID)
                 If lumberadder > 0D Then lumberCost += (bdftPer * extSqft / 1000D) * lumberadder
 
                 Dim row As DataRow = dt.NewRow()
-                row("actualUnitID") = actual.ActualUnitID
+                row("ActualUnitID") = actual.ActualUnitID
                 row("MappingID") = mapping.MappingID
                 row("UnitName") = actual.UnitName
                 row("ReferencedRawUnitName") = raw.RawUnitName
@@ -994,26 +1002,26 @@ Namespace DataAccess
                 row("LF") = lfPer * extSqft
                 row("BDFT") = bdftPer * extSqft
                 row("LumberCost") = lumberCost
-                row("PlateCost") = (raw.PlateCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                row("ManufLaborCost") = (raw.ManufLaborCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                row("DesignLabor") = (raw.DesignLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                row("MGMTLabor") = (raw.MGMTLabor.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                row("JobSuppliesCost") = (raw.JobSuppliesCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                row("ManHours") = (raw.ManHours.GetValueOrDefault() / raw.SqFt.Value) * extSqft
-                row("ItemCost") = (raw.ItemCost.GetValueOrDefault() / raw.SqFt.Value) * extSqft
+                row("PlateCost") = (raw.PlateCost.GetValueOrDefault() / divisor) * extSqft
+                row("ManufLaborCost") = (raw.ManufLaborCost.GetValueOrDefault() / divisor) * extSqft
+                row("DesignLabor") = (raw.DesignLabor.GetValueOrDefault() / divisor) * extSqft
+                row("MGMTLabor") = (raw.MGMTLabor.GetValueOrDefault() / divisor) * extSqft
+                row("JobSuppliesCost") = (raw.JobSuppliesCost.GetValueOrDefault() / divisor) * extSqft
+                row("ManHours") = (raw.ManHours.GetValueOrDefault() / divisor) * extSqft
+                row("ItemCost") = (raw.ItemCost.GetValueOrDefault() / divisor) * extSqft
 
                 Dim overallCost As Decimal = row.Field(Of Decimal)("LumberCost") + row.Field(Of Decimal)("PlateCost") +
-                                    row.Field(Of Decimal)("ManufLaborCost") + row.Field(Of Decimal)("DesignLabor") +
-                                    row.Field(Of Decimal)("MGMTLabor") + row.Field(Of Decimal)("JobSuppliesCost") +
-                                    row.Field(Of Decimal)("ItemCost")
+                            row.Field(Of Decimal)("ManufLaborCost") + row.Field(Of Decimal)("DesignLabor") +
+                            row.Field(Of Decimal)("MGMTLabor") + row.Field(Of Decimal)("JobSuppliesCost") +
+                            row.Field(Of Decimal)("ItemCost")
                 row("OverallCost") = overallCost
 
                 Dim margin As Decimal = GetEffectiveMargin(versionID, productTypeID, raw.RawUnitID)
                 Dim sellPrice As Decimal = If(margin >= 1D, overallCost, overallCost / (1D - margin))
                 row("SellPrice") = sellPrice
                 row("Margin") = sellPrice - overallCost
-                row("ProductTypeID") = actual.ProductTypeID   ' This is the correct one — from ActualUnit
-                row("RawUnitID") = raw.RawUnitID              ' This is the real RawUnitID
+                row("ProductTypeID") = actual.ProductTypeID
+                row("RawUnitID") = raw.RawUnitID
 
                 unitBDFTs.Add(row.Field(Of Decimal)("BDFT"))
                 totalBDFT += row.Field(Of Decimal)("BDFT")
@@ -1037,8 +1045,8 @@ Namespace DataAccess
                     Dim overallCost = row.Field(Of Decimal)("OverallCost")
                     Dim margin = GetEffectiveMargin(versionID, CInt(row.Field(Of Integer?)("ProductTypeID")), row.Field(Of Integer)("RawUnitID"))
                     Dim sellPrice = If(margin >= 1D,
-                              overallCost + row.Field(Of Decimal)("DeliveryCost"),
-                              overallCost / (1D - margin) + row.Field(Of Decimal)("DeliveryCost"))
+                      overallCost + row.Field(Of Decimal)("DeliveryCost"),
+                      overallCost / (1D - margin) + row.Field(Of Decimal)("DeliveryCost"))
                     row("SellPrice") = sellPrice
                     row("Margin") = sellPrice - overallCost - row.Field(Of Decimal)("DeliveryCost")
                 Next

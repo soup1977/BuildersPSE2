@@ -66,8 +66,17 @@ Public Class FrmPSE
 
     Private copiedMappings As New List(Of Tuple(Of Integer, Integer)) ' (ActualUnitID, Quantity)
     Private sourceProductTypeID As Integer = -1
+    ' Add these class-level fields near the other Private fields (around line 30)
+    Private dragStartIndex As Integer = -1
+    Private isDragging As Boolean = False
 
     Private ReadOnly _mainForm As frmMain = CType(Application.OpenForms.OfType(Of frmMain)().FirstOrDefault(), frmMain)
+
+
+    Private unitNameColumnIndex As Integer = -1
+    Private colorCodeColumnIndex As Integer = -1
+
+
     Public Sub New(projectID As Integer, Optional versionID As Integer = 0)
         ' Check for versions before initializing
         Dim versions As List(Of ProjectVersionModel) = ProjVersionDataAccess.GetProjectVersions(projectID)
@@ -94,193 +103,91 @@ Public Class FrmPSE
     Private Sub SetupUI()
         CmbUnitType.Items.Clear()
         CmbUnitType.Items.AddRange(New Object() {"Res", "NonRes"})
+
+        ' Enable double buffering to reduce flicker
+        EnableDoubleBuffering(DataGridViewAssigned)
+
         DataGridViewAssigned.AutoGenerateColumns = False
-        bindingSource.DataSource = GetType(DisplayUnitData)
+
+        ' Don't pre-set DataSource type - it will be set when data loads
+        ' bindingSource.DataSource = GetType(DisplayUnitData)  ' REMOVE THIS LINE
+
         DataGridViewAssigned.DataSource = bindingSource
         AddCalculatedColumns()
         ChkDetailedView.Checked = False
         ToggleGridView()
     End Sub
 
+    Private Sub DataGridViewAssigned_DataError(sender As Object, e As DataGridViewDataErrorEventArgs) _
+    Handles DataGridViewAssigned.DataError
+        ' Suppress data binding errors (especially during design-time or before data loads)
+        ' Log if needed for debugging:
+        ' Debug.WriteLine($"DataGridView Error: {e.Exception.Message} at row {e.RowIndex}, col {e.ColumnIndex}")
+        e.ThrowException = False
+    End Sub
+
+    ''' <summary>
+    ''' Enables double buffering on a DataGridView to reduce flicker during updates.
+    ''' </summary>
+    Private Shared Sub EnableDoubleBuffering(dgv As DataGridView)
+        Dim dgvType As Type = GetType(DataGridView)
+        Dim pi As System.Reflection.PropertyInfo = dgvType.GetProperty(
+        "DoubleBuffered",
+        System.Reflection.BindingFlags.Instance Or System.Reflection.BindingFlags.NonPublic)
+        pi?.SetValue(dgv, True, Nothing)
+    End Sub
+
     Private Sub AddCalculatedColumns()
+        ' Reset cache when rebuilding columns
+        unitNameColumnIndex = -1
+        colorCodeColumnIndex = -1
+
         DataGridViewAssigned.Columns.Clear()
 
-        colActualUnitID = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "ActualUnitID",
-            .HeaderText = "Actual Unit ID",
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colActualUnitID)
+        ' Hidden ID columns
+        colActualUnitID = CreateTextColumn("ActualUnitID", "Actual Unit ID")
+        colMappingID = CreateTextColumn("MappingID", "Mapping ID")
 
-        colMappingID = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "MappingID",
-            .HeaderText = "Mapping ID",
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colMappingID)
+        ' Visible base columns (always shown)
+        colUnitName = CreateTextColumn("UnitName", "Actual Unit Name", True, True)
+        colReferencedRawUnitName = CreateTextColumn("ReferencedRawUnitName", "Referenced Raw Unit Name", True, True)
+        colPlanSQFT = CreateTextColumn("PlanSQFT", "Plan SQFT", True)
+        colActualUnitQuantity = CreateTextColumn("ActualUnitQuantity", "Actual Unit Quantity", True)
 
-        colUnitName = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "UnitName",
-            .HeaderText = "Actual Unit Name",
-            .ReadOnly = True,
-            .Visible = True,
-            .SortMode = DataGridViewColumnSortMode.Automatic
-        }
-        DataGridViewAssigned.Columns.Add(colUnitName)
+        ' Detail columns (hidden by default, toggled by ChkDetailedView)
+        colLF = CreateTextColumn("LF", "LF")
+        colBDFT = CreateTextColumn("BDFT", "BDFT")
+        colLumberCost = CreateTextColumn("LumberCost", "Lumber $$")
+        colPlateCost = CreateTextColumn("PlateCost", "Plate $$")
+        colManufLaborCost = CreateTextColumn("ManufLaborCost", "Manuf Labor $$")
+        colDesignLabor = CreateTextColumn("DesignLabor", "Design Labor $$")
+        colMGMTLabor = CreateTextColumn("MGMTLabor", "MGMT Labor $$")
+        colJobSuppliesCost = CreateTextColumn("JobSuppliesCost", "Job Supplies $$")
+        colManHours = CreateTextColumn("ManHours", "Man Hours")
+        colItemCost = CreateTextColumn("ItemCost", "Item $$")
+        colDeliveryCost = CreateTextColumn("DeliveryCost", "Delivery $$")
+        colOverallCost = CreateTextColumn("OverallCost", "Overall Cost")
+        colSellPrice = CreateTextColumn("SellPrice", "Sell Price")
+        colMargin = CreateTextColumn("Margin", "Margin $$")
+        colColorCode = CreateTextColumn("ColorCode", "ColorCode", False, False, "colColorCode")
 
-        colReferencedRawUnitName = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "ReferencedRawUnitName",
-            .HeaderText = "Referenced Raw Unit Name",
-            .ReadOnly = True,
-            .Visible = True,
-            .SortMode = DataGridViewColumnSortMode.Automatic
-        }
-        DataGridViewAssigned.Columns.Add(colReferencedRawUnitName)
+        ' Add all text columns
+        DataGridViewAssigned.Columns.AddRange({
+        colActualUnitID, colMappingID, colUnitName, colReferencedRawUnitName,
+        colPlanSQFT, colActualUnitQuantity, colLF, colBDFT, colLumberCost,
+        colPlateCost, colManufLaborCost, colDesignLabor, colMGMTLabor,
+        colJobSuppliesCost, colManHours, colItemCost, colDeliveryCost,
+        colOverallCost, colSellPrice, colMargin, colColorCode
+    })
 
-        colPlanSQFT = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "PlanSQFT",
-            .HeaderText = "Plan SQFT",
-            .ReadOnly = True,
-            .Visible = True
-        }
-        DataGridViewAssigned.Columns.Add(colPlanSQFT)
-
-        colActualUnitQuantity = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "ActualUnitQuantity",
-            .HeaderText = "Actual Unit Quantity",
-            .ReadOnly = True,
-            .Visible = True
-        }
-        DataGridViewAssigned.Columns.Add(colActualUnitQuantity)
-
-        colLF = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "LF",
-            .HeaderText = "LF",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colLF)
-
-        colBDFT = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "BDFT",
-            .HeaderText = "BDFT",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colBDFT)
-
-        colLumberCost = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "LumberCost",
-            .HeaderText = "Lumber $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colLumberCost)
-
-        colPlateCost = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "PlateCost",
-            .HeaderText = "Plate $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colPlateCost)
-
-        colManufLaborCost = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "ManufLaborCost",
-            .HeaderText = "Manuf Labor $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colManufLaborCost)
-
-        colDesignLabor = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "DesignLabor",
-            .HeaderText = "Design Labor $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colDesignLabor)
-
-        colMGMTLabor = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "MGMTLabor",
-            .HeaderText = "MGMT Labor $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colMGMTLabor)
-
-        colJobSuppliesCost = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "JobSuppliesCost",
-            .HeaderText = "Job Supplies $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colJobSuppliesCost)
-
-        colManHours = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "ManHours",
-            .HeaderText = "Man Hours",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colManHours)
-
-        colItemCost = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "ItemCost",
-            .HeaderText = "Item $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colItemCost)
-
-        colDeliveryCost = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "DeliveryCost",
-            .HeaderText = "Delivery $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colDeliveryCost)
-
-        colOverallCost = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "OverallCost",
-            .HeaderText = "Overall Cost",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colOverallCost)
-
-        colSellPrice = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "SellPrice",
-            .HeaderText = "Sell Price",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colSellPrice)
-
-        colMargin = New DataGridViewTextBoxColumn With {
-            .DataPropertyName = "Margin",
-            .HeaderText = "Margin $$",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colMargin)
-
-        colColorCode = New DataGridViewTextBoxColumn With {
-            .Name = "colColorCode",
-            .DataPropertyName = "ColorCode",
-            .HeaderText = "ColorCode",
-            .ReadOnly = True,
-            .Visible = False
-        }
-        DataGridViewAssigned.Columns.Add(colColorCode)
-
+        ' Button column (special case - not a text column)
         colActions = New DataGridViewButtonColumn With {
-            .Name = "ActionsColumn",
-            .HeaderText = "Actions",
-            .Text = "Edit",
-            .UseColumnTextForButtonValue = True,
-            .Visible = True
-        }
+        .Name = "ActionsColumn",
+        .HeaderText = "Actions",
+        .Text = "Edit",
+        .UseColumnTextForButtonValue = True,
+        .Visible = True
+    }
         DataGridViewAssigned.Columns.Add(colActions)
     End Sub
 
@@ -328,14 +235,16 @@ Public Class FrmPSE
                 Return
             End If
             For Each bldg In buildings
-                Dim bldgNode As New TreeNode(String.Format("{0} ({1})", bldg.BuildingName, "x" & bldg.BldgQty))
-                bldgNode.Tag = New Dictionary(Of String, Object) From {{"Type", "Building"}, {"ID", bldg.BuildingID}}
+                Dim bldgNode As New TreeNode(String.Format("{0} ({1})", bldg.BuildingName, "x" & bldg.BldgQty)) With {
+                    .Tag = New Dictionary(Of String, Object) From {{"Type", "Building"}, {"ID", bldg.BuildingID}}
+                }
                 projectNode.Nodes.Add(bldgNode)
 
                 Dim levels = ProjectDataAccess.GetLevelsByBuildingID(bldg.BuildingID)
                 For Each lvl In levels
-                    Dim levelNode As New TreeNode(String.Format("{0} ({1})", lvl.LevelName, lvl.ProductTypeName))
-                    levelNode.Tag = New Dictionary(Of String, Object) From {{"Type", "Level"}, {"ID", lvl.LevelID}, {"ProductTypeID", lvl.ProductTypeID}}
+                    Dim levelNode As New TreeNode(String.Format("{0} ({1})", lvl.LevelName, lvl.ProductTypeName)) With {
+                        .Tag = New Dictionary(Of String, Object) From {{"Type", "Level"}, {"ID", lvl.LevelID}, {"ProductTypeID", lvl.ProductTypeID}}
+                    }
                     bldgNode.Nodes.Add(levelNode)
                 Next
             Next
@@ -384,6 +293,38 @@ Public Class FrmPSE
             MessageBox.Show("Error loading raw units: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    ''' <summary>
+    ''' Formats an ActualUnit for display in the listbox using consistent naming.
+    ''' Returns just the unit name portion (column 1).
+    ''' </summary>
+    Private Function FormatActualUnitName(unit As ActualUnitModel) As String
+        Return $"{unit.UnitName} ({unit.UnitType}) - ({unit.PlanSQFT:F0})"
+    End Function
+
+    ''' <summary>
+    ''' Gets the sell price per SQFT display string for an ActualUnit (column 2).
+    ''' </summary>
+    Private Function FormatActualUnitPrice(unit As ActualUnitModel) As String
+        Dim sellPricePerSQFT As Decimal = 0D
+        Dim sellPriceComponent = unit.CalculatedComponents?.FirstOrDefault(Function(c) c.ComponentType = "SellPrice/SQFT")
+        If sellPriceComponent IsNot Nothing Then
+            sellPricePerSQFT = sellPriceComponent.Value
+        End If
+        Return $"{sellPricePerSQFT:C2}/SQFT"
+    End Function
+
+    ''' <summary>
+    ''' Refreshes the ListboxExistingActualUnits with current filter applied.
+    ''' </summary>
+    Private Sub RefreshExistingActualUnitsList()
+        ListboxExistingActualUnits.Items.Clear()
+        For Each unit In existingActualUnits
+            ' Store simple identifier - actual display handled by DrawItem
+            ListboxExistingActualUnits.Items.Add(unit.UnitName)
+        Next
+    End Sub
+
     Private Sub FilterActualUnits(productTypeID As Integer)
         ListboxExistingActualUnits.Items.Clear()
         Try
@@ -392,14 +333,7 @@ Public Class FrmPSE
                 UIHelper.Add("Status: No actual units found for this version and product type.")
                 Return
             End If
-            For Each unit In existingActualUnits
-                Dim sellPricePerSQFT As Decimal = 0D
-                Dim sellPriceComponent = unit.CalculatedComponents?.FirstOrDefault(Function(c) c.ComponentType = "SellPrice/SQFT")
-                If sellPriceComponent IsNot Nothing Then
-                    sellPricePerSQFT = sellPriceComponent.Value
-                End If
-                ListboxExistingActualUnits.Items.Add($"{unit.UnitName} ({unit.UnitType})-({unit.PlanSQFT.ToString("F0")})-{sellPricePerSQFT:C2}/SQFT")
-            Next
+            RefreshExistingActualUnitsList()
             UIHelper.Add("Status: Actual units loaded for version " & selectedVersionID & " and product type " & productTypeID & ".")
         Catch ex As Exception
             UIHelper.Add("Status: Error loading actual units: " & ex.Message)
@@ -408,9 +342,11 @@ Public Class FrmPSE
     End Sub
 
     Private Sub ListboxExistingActualUnits_DrawItem(sender As Object, e As DrawItemEventArgs) Handles ListboxExistingActualUnits.DrawItem
-        If e.Index < 0 Then Exit Sub
-        Dim itemText As String = ListboxExistingActualUnits.Items(e.Index).ToString()
+        If e.Index < 0 OrElse e.Index >= existingActualUnits.Count Then Exit Sub
+
         Dim unit As ActualUnitModel = existingActualUnits(e.Index)
+
+        ' Determine background color from ColorCode
         Dim backColor As Color = Color.White
         If Not String.IsNullOrEmpty(unit.ColorCode) Then
             Try
@@ -420,141 +356,212 @@ Public Class FrmPSE
             End Try
         End If
 
-        ' Draw the background (ColorCode-based) to cover entire bounds
-        e.Graphics.FillRectangle(New SolidBrush(backColor), e.Bounds)
+        ' Draw the background
+        Using backBrush As New SolidBrush(backColor)
+            e.Graphics.FillRectangle(backBrush, e.Bounds)
+        End Using
 
         ' Draw selection highlight if selected
         If (e.State And DrawItemState.Selected) = DrawItemState.Selected Then
-            ' Use semi-transparent light blue highlight
-            Dim highlightColor As Color = Color.FromArgb(128, SystemColors.Highlight) ' 50% opacity
-            e.Graphics.FillRectangle(New SolidBrush(highlightColor), e.Bounds)
-            ' Draw a 1-pixel border inside bounds to avoid overlap
+            Dim highlightColor As Color = Color.FromArgb(128, SystemColors.Highlight)
+            Using highlightBrush As New SolidBrush(highlightColor)
+                e.Graphics.FillRectangle(highlightBrush, e.Bounds)
+            End Using
             Using pen As New Pen(Color.Black, 1)
                 Dim borderRect As New Rectangle(e.Bounds.X + 1, e.Bounds.Y + 1, e.Bounds.Width - 2, e.Bounds.Height - 2)
                 e.Graphics.DrawRectangle(pen, borderRect)
             End Using
         End If
 
-        ' Set text color: white for black background, black for all others
+        ' Calculate text color based on luminance
         Dim luminance As Double = (0.299 * backColor.R + 0.587 * backColor.G + 0.114 * backColor.B) / 255
         Dim textColor As Color = If(luminance < 0.5, Color.White, Color.Black)
 
-        ' Draw the text
-        e.Graphics.DrawString(itemText, e.Font, New SolidBrush(textColor), e.Bounds.X, e.Bounds.Y)
+        ' Define column widths
+        Dim col1Width As Integer = CInt(e.Bounds.Width * 0.65) ' 65% for name
+        Dim col2Start As Integer = e.Bounds.X + col1Width
 
+        ' Get display text for each column
+        Dim col1Text As String = FormatActualUnitName(unit)
+        Dim col2Text As String = FormatActualUnitPrice(unit)
+
+        ' Draw column 1 (left-aligned)
+        Dim col1Rect As New Rectangle(e.Bounds.X + 2, e.Bounds.Y, col1Width - 4, e.Bounds.Height)
+        Using textBrush As New SolidBrush(textColor)
+            Using sf As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter, .FormatFlags = StringFormatFlags.NoWrap}
+                e.Graphics.DrawString(col1Text, e.Font, textBrush, col1Rect, sf)
+            End Using
+        End Using
+
+        ' Draw column 2 (right-aligned)
+        Dim col2Rect As New Rectangle(col2Start, e.Bounds.Y, e.Bounds.Width - col1Width - 4, e.Bounds.Height)
+        Using textBrush As New SolidBrush(textColor)
+            Using sf As New StringFormat With {.Alignment = StringAlignment.Far, .Trimming = StringTrimming.EllipsisCharacter}
+                e.Graphics.DrawString(col2Text, e.Font, textBrush, col2Rect, sf)
+            End Using
+        End Using
+
+        ' Draw vertical separator line
+        Using pen As New Pen(Color.FromArgb(64, textColor), 1)
+            e.Graphics.DrawLine(pen, col2Start - 2, e.Bounds.Y + 2, col2Start - 2, e.Bounds.Bottom - 2)
+        End Using
     End Sub
     Private Sub LoadAssignedUnits()
         Try
-            ' 1. Let the DataAccess return the DataTable (unchanged)
+            ' Suspend UI updates
+            DataGridViewAssigned.SuspendLayout()
+            bindingSource.RaiseListChangedEvents = False
+
             Dim dt As DataTable = ProjectDataAccess.ComputeLevelUnitsDataTable(selectedLevelID)
 
-            ' 2. Bind the DataTable directly – this is what the grid expects
+            ' Clear and rebind - this ensures columns reconnect to new DataTable
+            bindingSource.DataSource = Nothing
             bindingSource.DataSource = dt
 
-            ' 3. Convert the DataTable back into your strongly-typed list for the totals routine
             displayUnits = dt.AsEnumerable() _
-                         .Select(Function(row) New DisplayUnitData With {
-                             .ActualUnitID = row.Field(Of Integer)("ActualUnitID"),
-                             .MappingID = If(row.IsNull("MappingID"), -1, row.Field(Of Integer)("MappingID")),
-                             .UnitName = row.Field(Of String)("UnitName"),
-                             .ReferencedRawUnitName = row.Field(Of String)("ReferencedRawUnitName"),
-                             .PlanSQFT = row.Field(Of Decimal)("PlanSQFT"),
-                             .ActualUnitQuantity = row.Field(Of Integer)("ActualUnitQuantity"),
-                             .LF = row.Field(Of Decimal)("LF"),
-                             .BDFT = row.Field(Of Decimal)("BDFT"),
-                             .LumberCost = row.Field(Of Decimal)("LumberCost"),
-                             .PlateCost = row.Field(Of Decimal)("PlateCost"),
-                             .ManufLaborCost = row.Field(Of Decimal)("ManufLaborCost"),
-                             .DesignLabor = row.Field(Of Decimal)("DesignLabor"),
-                             .MGMTLabor = row.Field(Of Decimal)("MGMTLabor"),
-                             .JobSuppliesCost = row.Field(Of Decimal)("JobSuppliesCost"),
-                             .ManHours = row.Field(Of Decimal)("ManHours"),
-                             .ItemCost = row.Field(Of Decimal)("ItemCost"),
-                             .OverallCost = row.Field(Of Decimal)("OverallCost"),
-                             .DeliveryCost = row.Field(Of Decimal)("DeliveryCost"),
-                             .SellPrice = row.Field(Of Decimal)("SellPrice"),
-                             .Margin = row.Field(Of Decimal)("Margin"),
-                             .ColorCode = If(row.IsNull("ColorCode"), Nothing, row.Field(Of String)("ColorCode"))
-                         }).ToList()
-
-            bindingSource.ResetBindings(False)
-            AddHandler DataGridViewAssigned.CellFormatting, AddressOf DataGridViewAssigned_CellFormatting
-            DataGridViewAssigned.Refresh()
+                 .Select(Function(row) New DisplayUnitData With {
+                     .ActualUnitID = row.Field(Of Integer)("ActualUnitID"),
+                     .MappingID = If(row.IsNull("MappingID"), -1, row.Field(Of Integer)("MappingID")),
+                     .UnitName = row.Field(Of String)("UnitName"),
+                     .ReferencedRawUnitName = row.Field(Of String)("ReferencedRawUnitName"),
+                     .PlanSQFT = row.Field(Of Decimal)("PlanSQFT"),
+                     .ActualUnitQuantity = row.Field(Of Integer)("ActualUnitQuantity"),
+                     .LF = row.Field(Of Decimal)("LF"),
+                     .BDFT = row.Field(Of Decimal)("BDFT"),
+                     .LumberCost = row.Field(Of Decimal)("LumberCost"),
+                     .PlateCost = row.Field(Of Decimal)("PlateCost"),
+                     .ManufLaborCost = row.Field(Of Decimal)("ManufLaborCost"),
+                     .DesignLabor = row.Field(Of Decimal)("DesignLabor"),
+                     .MGMTLabor = row.Field(Of Decimal)("MGMTLabor"),
+                     .JobSuppliesCost = row.Field(Of Decimal)("JobSuppliesCost"),
+                     .ManHours = row.Field(Of Decimal)("ManHours"),
+                     .ItemCost = row.Field(Of Decimal)("ItemCost"),
+                     .OverallCost = row.Field(Of Decimal)("OverallCost"),
+                     .DeliveryCost = row.Field(Of Decimal)("DeliveryCost"),
+                     .SellPrice = row.Field(Of Decimal)("SellPrice"),
+                     .Margin = row.Field(Of Decimal)("Margin"),
+                     .ColorCode = If(row.IsNull("ColorCode"), Nothing, row.Field(Of String)("ColorCode"))
+                 }).ToList()
 
             UpdateLevelTotals()
         Catch ex As Exception
             MessageBox.Show("Error loading assigned units: " & ex.Message, "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            ' Always resume UI updates
+            bindingSource.RaiseListChangedEvents = True
+            bindingSource.ResetBindings(True)  ' Changed to True to force full refresh
+            DataGridViewAssigned.ResumeLayout(True)  ' Force layout
+            DataGridViewAssigned.Refresh()
         End Try
     End Sub
 
     Private Sub DataGridViewAssigned_CellFormatting(sender As Object, e As DataGridViewCellFormattingEventArgs) _
-    Handles DataGridViewAssigned.CellFormatting
+Handles DataGridViewAssigned.CellFormatting
 
-        ' Only color the UnitName column
-        If e.ColumnIndex < 0 Then Return
-        If DataGridViewAssigned.Columns(e.ColumnIndex).DataPropertyName <> "UnitName" Then Return
+        ' Cache column indices on first call
+        If unitNameColumnIndex < 0 Then
+            unitNameColumnIndex = If(colUnitName IsNot Nothing, colUnitName.Index, -1)
+            colorCodeColumnIndex = If(colColorCode IsNot Nothing, colColorCode.Index, -1)
+        End If
+
+        ' Quick exit for non-target columns
+        If e.ColumnIndex <> unitNameColumnIndex OrElse e.RowIndex < 0 Then Return
+        If colorCodeColumnIndex < 0 Then Return
 
         Dim row As DataGridViewRow = DataGridViewAssigned.Rows(e.RowIndex)
         If row.IsNewRow Then Return
 
-        ' Safest way: get value directly from the hidden ColorCode cell
-        Dim colorCell = row.Cells("colColorCode")
-        If colorCell IsNot Nothing AndAlso colorCell.Value IsNot Nothing AndAlso Not IsDBNull(colorCell.Value) Then
-            Dim colorCode As String = colorCell.Value.ToString().Trim()
-            If Not String.IsNullOrEmpty(colorCode) Then
-                Try
-                    Dim clr = ColorTranslator.FromHtml("#" & colorCode)
-                    e.CellStyle.BackColor = clr
-                    e.CellStyle.SelectionBackColor = clr
-                Catch
-                    ' ignore bad color
-                End Try
-            End If
-        End If
+        Dim colorValue As Object = row.Cells(colorCodeColumnIndex).Value
+        If colorValue Is Nothing OrElse IsDBNull(colorValue) Then Return
+
+        Dim colorCode As String = colorValue.ToString().Trim()
+        If String.IsNullOrEmpty(colorCode) OrElse colorCode = "N/A" Then Return
+
+        Try
+            Dim backColor As Color = ColorTranslator.FromHtml("#" & colorCode)
+            e.CellStyle.BackColor = backColor
+            e.CellStyle.SelectionBackColor = backColor
+
+            ' Calculate luminance and set text color: white for dark backgrounds, black for light
+            Dim luminance As Double = (0.299 * backColor.R + 0.587 * backColor.G + 0.114 * backColor.B) / 255
+            Dim textColor As Color = If(luminance < 0.5, Color.White, Color.Black)
+            e.CellStyle.ForeColor = textColor
+            e.CellStyle.SelectionForeColor = textColor
+        Catch
+            ' Ignore invalid color
+        End Try
     End Sub
 
     Private Sub UpdateLevelTotals()
-        Dim totalSQFT As Decimal = displayUnits.Sum(Function(u) u.PlanSQFT * u.ActualUnitQuantity)
-        TxtTotalPlanSQFT.Text = totalSQFT.ToString("F2")
-        TxtTotalQuantity.Text = displayUnits.Sum(Function(u) u.ActualUnitQuantity).ToString("F0")
-        TxtTotalLF.Text = displayUnits.Sum(Function(u) u.LF).ToString("F2")
-        TxtTotalBDFT.Text = displayUnits.Sum(Function(u) u.BDFT).ToString("F2")
-        TxtTotalLumberCost.Text = displayUnits.Sum(Function(u) u.LumberCost).ToString("C2")
-        TxtTotalPlateCost.Text = displayUnits.Sum(Function(u) u.PlateCost).ToString("C2")
-        TxtTotalManufLaborCost.Text = displayUnits.Sum(Function(u) u.ManufLaborCost).ToString("C2")
-        TxtTotalDesignLabor.Text = displayUnits.Sum(Function(u) u.DesignLabor).ToString("C2")
-        TxtTotalMGMTLabor.Text = displayUnits.Sum(Function(u) u.MGMTLabor).ToString("C2")
-        TxtTotalJobSuppliesCost.Text = displayUnits.Sum(Function(u) u.JobSuppliesCost).ToString("C2")
-        TxtTotalManHours.Text = displayUnits.Sum(Function(u) u.ManHours).ToString("C2")
-        TxtTotalItemCost.Text = displayUnits.Sum(Function(u) u.ItemCost).ToString("C2")
-        TxtTotalOverallCost.Text = displayUnits.Sum(Function(u) u.OverallCost).ToString("C2")
-        TxtTotalSellPrice.Text = displayUnits.Sum(Function(u) u.SellPrice).ToString("C2")
-        TxtTotalMargin.Text = displayUnits.Sum(Function(u) u.Margin).ToString("C2")
-        If CInt(TxtTotalSellPrice.Text) > 0 Then
-            txtTotMargin.Text = (CDec(TxtTotalMargin.Text) / CDec(TxtTotalSellPrice.Text)).ToString("P2")
-        Else
-            txtTotMargin.Text = "0.00"
-        End If
-        txtTotalDeliveryCost.Text = displayUnits.Sum(Function(u) u.DeliveryCost).ToString("C2")
-        UIHelper.Add($"Total Adjusted SQFT: {totalSQFT} - Recalc complete. No variations detected... yet.")
+        ' Single pass aggregation
+        Dim totals As New DisplayUnitTotals()
+
+        For Each u In displayUnits
+            Dim extQty As Integer = u.ActualUnitQuantity
+            totals.PlanSQFT += u.PlanSQFT * extQty
+            totals.Quantity += extQty
+            totals.LF += u.LF
+            totals.BDFT += u.BDFT
+            totals.LumberCost += u.LumberCost
+            totals.PlateCost += u.PlateCost
+            totals.ManufLaborCost += u.ManufLaborCost
+            totals.DesignLabor += u.DesignLabor
+            totals.MGMTLabor += u.MGMTLabor
+            totals.JobSuppliesCost += u.JobSuppliesCost
+            totals.ManHours += u.ManHours
+            totals.ItemCost += u.ItemCost
+            totals.OverallCost += u.OverallCost
+            totals.SellPrice += u.SellPrice
+            totals.Margin += u.Margin
+            totals.DeliveryCost += u.DeliveryCost
+        Next
+
+        TxtTotalPlanSQFT.Text = totals.PlanSQFT.ToString("F2")
+        TxtTotalQuantity.Text = totals.Quantity.ToString("F0")
+        TxtTotalLF.Text = totals.LF.ToString("F2")
+        TxtTotalBDFT.Text = totals.BDFT.ToString("F2")
+        TxtTotalLumberCost.Text = totals.LumberCost.ToString("C2")
+        TxtTotalPlateCost.Text = totals.PlateCost.ToString("C2")
+        TxtTotalManufLaborCost.Text = totals.ManufLaborCost.ToString("C2")
+        TxtTotalDesignLabor.Text = totals.DesignLabor.ToString("C2")
+        TxtTotalMGMTLabor.Text = totals.MGMTLabor.ToString("C2")
+        TxtTotalJobSuppliesCost.Text = totals.JobSuppliesCost.ToString("C2")
+        TxtTotalManHours.Text = totals.ManHours.ToString("F2")
+        TxtTotalItemCost.Text = totals.ItemCost.ToString("C2")
+        TxtTotalOverallCost.Text = totals.OverallCost.ToString("C2")
+        TxtTotalSellPrice.Text = totals.SellPrice.ToString("C2")
+        TxtTotalMargin.Text = totals.Margin.ToString("C2")
+        txtTotMargin.Text = If(totals.SellPrice > 0, (totals.Margin / totals.SellPrice).ToString("P2"), "0.00%")
+        txtTotalDeliveryCost.Text = totals.DeliveryCost.ToString("C2")
+
+        UIHelper.Add($"Total Adjusted SQFT: {totals.PlanSQFT} - Recalc complete.")
     End Sub
+
+    ' Add helper structure
+    Private Structure DisplayUnitTotals
+        Public PlanSQFT As Decimal
+        Public Quantity As Integer
+        Public LF As Decimal
+        Public BDFT As Decimal
+        Public LumberCost As Decimal
+        Public PlateCost As Decimal
+        Public ManufLaborCost As Decimal
+        Public DesignLabor As Decimal
+        Public MGMTLabor As Decimal
+        Public JobSuppliesCost As Decimal
+        Public ManHours As Decimal
+        Public ItemCost As Decimal
+        Public OverallCost As Decimal
+        Public SellPrice As Decimal
+        Public Margin As Decimal
+        Public DeliveryCost As Decimal
+    End Structure
 
     Private Sub UpdateSelectedRawPreview()
         Try
             Dim currentRawUnit = If(ListBoxAvailableUnits.SelectedIndex >= 0, rawUnits.FirstOrDefault(Function(r) r.RawUnitName = ListBoxAvailableUnits.Items(ListBoxAvailableUnits.SelectedIndex).ToString()), Nothing)
             If currentRawUnit Is Nothing OrElse currentRawUnit.SqFt.GetValueOrDefault() <= 0 Then
-                TxtLumberPerSQFT.Text = "0.00"
-                TxtPlatePerSQFT.Text = "0.00"
-                TxtBDFTPerSQFT.Text = "0.00"
-                TxtManufLaborPerSQFT.Text = "0.00"
-                TxtDesignLaborPerSQFT.Text = "0.00"
-                TxtMGMTLaborPerSQFT.Text = "0.00"
-                TxtJobSuppliesPerSQFT.Text = "0.00"
-                TxtManHoursPerSQFT.Text = "0.00"
-                TxtItemCostPerSQFT.Text = "0.00"
-                TxtOverallCostPerSQFT.Text = "0.00"
-                TxtDeliveryCostPerSQFT.Text = "0.00"
-                TxtTotalSellPricePerSQFT.Text = "0.00"
+                ClearPerSQFTTextBoxes()
                 UIHelper.Add($"Status: No valid raw unit or zero SQFT for version {selectedVersionID}.")
                 Return
             End If
@@ -616,7 +623,7 @@ Public Class FrmPSE
             Dim sqft As Decimal
             Dim adder As Decimal
             If String.IsNullOrEmpty(TxtUnitName.Text) OrElse Not Decimal.TryParse(TxtPlanSQFT.Text, sqft) OrElse sqft <= 0 OrElse
-           Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
+       Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
                 UIHelper.Add("Status: Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.")
                 MessageBox.Show("Invalid input—Name, SQFT (>0), and Adder (≥1) must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return Nothing
@@ -629,6 +636,9 @@ Public Class FrmPSE
                 Return Nothing
             End If
 
+            ' Calculate next sort order (append to end)
+            Dim nextSortOrder As Integer = If(existingActualUnits.Any(), existingActualUnits.Max(Function(u) u.SortOrder) + 1, 1)
+
             Dim actualUnit As New ActualUnitModel With {
             .VersionID = selectedVersionID,
             .RawUnitID = rawUnit.RawUnitID,
@@ -638,7 +648,8 @@ Public Class FrmPSE
             .ColorCode = txtColorCode.Text,
             .UnitType = If(CmbUnitType.SelectedItem?.ToString(), "Res"),
             .OptionalAdder = adder,
-            .MarginPercent = ProjectDataAccess.GetEffectiveMargin(Me.selectedVersionID, rawUnit.ProductTypeID, rawUnit.RawUnitID)
+            .MarginPercent = ProjectDataAccess.GetEffectiveMargin(Me.selectedVersionID, rawUnit.ProductTypeID, rawUnit.RawUnitID),
+            .SortOrder = nextSortOrder
         }
 
             dataAccess.SaveActualUnit(actualUnit)
@@ -875,93 +886,16 @@ Public Class FrmPSE
                                                          .ProductTypeID = mappedProductTypeID,
                                                          .RawUnitName = newName
                                                      }
-                                                         Dim decVal As Decimal
-                                                         Dim upperKey As String
-                                                         ' Required fields
-                                                         upperKey = "BF".ToUpper()
-                                                         model.BF = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "LF".ToUpper()
-                                                         model.LF = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "EWPLF".ToUpper()
-                                                         model.EWPLF = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "SQFT".ToUpper()
-                                                         model.SqFt = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "FCAREA".ToUpper()
-                                                         model.FCArea = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "LUMBERCOST".ToUpper()
-                                                         model.LumberCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "PLATECOST".ToUpper()
-                                                         model.PlateCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "MANUFLABORCOST".ToUpper()
-                                                         model.ManufLaborCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "DESIGNLABOR".ToUpper()
-                                                         model.DesignLabor = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "MGMTLABOR".ToUpper()
-                                                         model.MGMTLabor = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "JOBSUPPLIESCOST".ToUpper()
-                                                         model.JobSuppliesCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "MANHOURS".ToUpper()
-                                                         model.ManHours = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "ITEMCOST".ToUpper()
-                                                         model.ItemCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "OVERALLCOST".ToUpper()
-                                                         model.OverallCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "DELIVERYCOST".ToUpper()
-                                                         model.DeliveryCost = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "TOTALSELLPRICE".ToUpper()
-                                                         model.TotalSellPrice = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "AVGSPFNO2".ToUpper()
-                                                         model.AvgSPFNo2 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         ' Optional fields for Component Export
-                                                         upperKey = "SPFNO2BDFT".ToUpper()
-                                                         model.SPFNo2BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "AVG2X4-1800".ToUpper()
-                                                         model.Avg241800 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "2X4-1800BDFT".ToUpper()
-                                                         model.MSR241800BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "AVG2X4-2400".ToUpper()
-                                                         model.Avg242400 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "2X4-2400BDFT".ToUpper()
-                                                         model.MSR242400BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "AVG2X6-1800".ToUpper()
-                                                         model.Avg261800 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "2X6-1800BDFT".ToUpper()
-                                                         model.MSR261800BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "AVG2X6-2400".ToUpper()
-                                                         model.Avg262400 = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-                                                         upperKey = "2X6-2400BDFT".ToUpper()
-                                                         model.MSR262400BDFT = If(rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal), CType(decVal, Decimal?), Nothing)
-
+                                                         ' Single call replaces ~50 lines of repetitive parsing
+                                                         PopulateRawUnitFromCsv(model, rowData)
                                                          Try
                                                              If mapTo = "Create New" Then
                                                                  ' Insert new RawUnit
                                                                  Dim newRawUnitID As Integer = dataAccess.InsertRawUnit(model)
                                                                  model.RawUnitID = newRawUnitID
                                                                  ' Fetch the CostEffectiveDateID based on AvgSPFNo2
-                                                                 Dim costEffectiveID As Object = DBNull.Value
-                                                                 If model.AvgSPFNo2.HasValue Then
-                                                                     Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", model.AvgSPFNo2.Value)}
-                                                                     costEffectiveID = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectCostEffectiveDateIDByCost, fetchParams)
-                                                                 End If
-
-                                                                 ' Insert initial RawUnitLumberHistory record
-                                                                 Dim historyParams As New Dictionary(Of String, Object) From {
-                                                                 {"@RawUnitID", model.RawUnitID},
-                                                                 {"@VersionID", selectedVersionID},
-                                                                 {"@CostEffectiveDateID", costEffectiveID},
-                                                                 {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-                                                                 {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-                                                                 {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-                                                                 {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-                                                                 {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-                                                                 {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)}
-                                                             }
-                                                                 Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
-                                                                 .CommandTimeout = 0
-                                                             }
-                                                                 cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
-                                                                 Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
-                                                                 Debug.WriteLine("Created initial RawUnitLumberHistory for RawUnitID: " & model.RawUnitID & ", HistoryID: " & historyID)
+                                                                 ' Instead of the 15-line block, use:
+                                                                 InsertRawUnitLumberHistory(model, conn, transaction)
                                                              Else
                                                                  Dim existing As RawUnitModel = allRawUnits.FirstOrDefault(Function(ru) ru.RawUnitName.Trim().ToUpper() = mapTo.Trim().ToUpper())
                                                                  If existing Is Nothing Then
@@ -969,58 +903,14 @@ Public Class FrmPSE
                                                                      Dim newRawUnitID As Integer = dataAccess.InsertRawUnit(model)
                                                                      model.RawUnitID = newRawUnitID
                                                                      ' Fetch the CostEffectiveDateID based on AvgSPFNo2
-                                                                     Dim costEffectiveID As Object = DBNull.Value
-                                                                     If model.AvgSPFNo2.HasValue Then
-                                                                         Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", model.AvgSPFNo2.Value)}
-                                                                         costEffectiveID = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectCostEffectiveDateIDByCost, fetchParams)
-                                                                     End If
-
-                                                                     ' Insert initial RawUnitLumberHistory record
-                                                                     Dim historyParams As New Dictionary(Of String, Object) From {
-                                                                     {"@RawUnitID", model.RawUnitID},
-                                                                     {"@VersionID", selectedVersionID},
-                                                                     {"@CostEffectiveDateID", costEffectiveID},
-                                                                     {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-                                                                     {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-                                                                     {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-                                                                     {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-                                                                     {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-                                                                     {"@Avg262400", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)}
-                                                                 }
-                                                                     Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
-                                                                     .CommandTimeout = 0
-                                                                 }
-                                                                     cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
-                                                                     Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
-                                                                     Debug.WriteLine("Created initial RawUnitLumberHistory for RawUnitID: " & model.RawUnitID & ", HistoryID: " & historyID)
+                                                                     ' Instead of the 15-line block, use:
+                                                                     InsertRawUnitLumberHistory(model, conn, transaction)
                                                                  Else
                                                                      model.RawUnitID = existing.RawUnitID
                                                                      dataAccess.UpdateRawUnit(model)
                                                                      ' Fetch the CostEffectiveDateID based on AvgSPFNo2
-                                                                     Dim costEffectiveID As Object = DBNull.Value
-                                                                     If model.AvgSPFNo2.HasValue Then
-                                                                         Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", model.AvgSPFNo2.Value)}
-                                                                         costEffectiveID = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectCostEffectiveDateIDByCost, fetchParams)
-                                                                     End If
-
-                                                                     ' Insert initial RawUnitLumberHistory record
-                                                                     Dim historyParams As New Dictionary(Of String, Object) From {
-                                                                     {"@RawUnitID", model.RawUnitID},
-                                                                     {"@VersionID", selectedVersionID},
-                                                                     {"@CostEffectiveDateID", costEffectiveID},
-                                                                     {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
-                                                                     {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
-                                                                     {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
-                                                                     {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
-                                                                     {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
-                                                                     {"@Avg262400", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)}
-                                                                 }
-                                                                     Dim cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {
-                                                                     .CommandTimeout = 0
-                                                                 }
-                                                                     cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
-                                                                     Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
-                                                                     Debug.WriteLine("Created initial RawUnitLumberHistory for RawUnitID: " & model.RawUnitID & ", HistoryID: " & historyID)
+                                                                     ' Instead of the 15-line block, use:
+                                                                     InsertRawUnitLumberHistory(model, conn, transaction)
                                                                  End If
                                                              End If
                                                          Catch ex As Exception
@@ -1097,18 +987,10 @@ Public Class FrmPSE
 
     Private Sub btnReuseActualUnit_Click(sender As Object, e As EventArgs) Handles btnReuseActualUnit.Click
         Try
-            If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                UIHelper.Add($"Status: Please select an actual unit to reuse for version {selectedVersionID}.")
-                MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
-            selectedActualUnitID = existingActualUnits(ListboxExistingActualUnits.SelectedIndex).ActualUnitID
-            Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
-            If selectedActual Is Nothing Then
-                UIHelper.Add($"Status: Selected actual unit not found for version {selectedVersionID}.")
-                MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
+            Dim selectedActual = GetSelectedActualUnit()
+            If selectedActual Is Nothing Then Return
+
+            selectedActualUnitID = selectedActual.ActualUnitID
             currentdetailsMode = DetailsMode.ReuseUnit
             PopulateDetailsPane(selectedActual, False, 1)
             UIHelper.Add($"Status: Reusing actual unit {selectedActual.UnitName} for version {selectedVersionID}.")
@@ -1137,8 +1019,11 @@ Public Class FrmPSE
             TxtOptionalAdder.Text = actual.OptionalAdder.ToString()
             CmbUnitType.SelectedItem = actual.UnitType
             txtColorCode.Text = actual.ColorCode
-            TxtReferencedRawUnit.Text = actual.ReferencedRawUnitName
+            'TxtReferencedRawUnit.Text = actual.ReferencedRawUnitName
             TxtActualUnitQuantity.Text = quantity.ToString()
+
+            ' Populate RawUnit ComboBox for edit modes
+            PopulateRawUnitComboBox(actual.ProductTypeID, actual.RawUnitID)
 
             ' Enable/disable fields based on mode
             TxtUnitName.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
@@ -1146,8 +1031,12 @@ Public Class FrmPSE
             TxtOptionalAdder.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
             txtColorCode.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
             CmbUnitType.Enabled = currentdetailsMode = DetailsMode.NewUnit OrElse currentdetailsMode = DetailsMode.EditGlobalUnit
-            TxtReferencedRawUnit.Enabled = False
+            'TxtReferencedRawUnit.Enabled = False
             TxtActualUnitQuantity.Enabled = currentdetailsMode = DetailsMode.ReuseUnit OrElse currentdetailsMode = DetailsMode.EditMappingQuantity
+
+            ' Enable RawUnit selection in EditGlobalUnit and EditMappingQuantity modes
+            CmbRawUnitSelection.Enabled = currentdetailsMode = DetailsMode.EditGlobalUnit OrElse currentdetailsMode = DetailsMode.EditMappingQuantity
+            CmbRawUnitSelection.Visible = currentdetailsMode = DetailsMode.EditGlobalUnit OrElse currentdetailsMode = DetailsMode.EditMappingQuantity
 
             ' Explicit reset for delete button
             btnDeleteUnit.Visible = False
@@ -1160,7 +1049,7 @@ Public Class FrmPSE
             Select Case currentdetailsMode
                 Case DetailsMode.NewUnit
                     btnSave.Text = "Save New Unit"
-                    chkAttachToLevel.Visible = True  ' Show option in NewUnit mode
+                    chkAttachToLevel.Visible = True
                 Case DetailsMode.EditGlobalUnit
                     btnSave.Text = "Save Unit Changes"
                     btnDeleteUnit.Text = "Delete Unit"
@@ -1168,7 +1057,7 @@ Public Class FrmPSE
                 Case DetailsMode.ReuseUnit
                     btnSave.Text = "Save and Attach"
                 Case DetailsMode.EditMappingQuantity
-                    btnSave.Text = "Save Quantity"
+                    btnSave.Text = "Save Changes"
                     btnDeleteUnit.Text = "Delete Mapping"
                     btnDeleteUnit.Visible = True
             End Select
@@ -1188,6 +1077,31 @@ Public Class FrmPSE
             UIHelper.Add($"Status: Error opening details pane for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error opening details pane: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    ''' <summary>
+    ''' Populates the RawUnit selection ComboBox with matching ProductType units.
+    ''' </summary>
+    Private Sub PopulateRawUnitComboBox(productTypeID As Integer, currentRawUnitID As Integer)
+        ' IMPORTANT: Clear DataSource BEFORE clearing Items
+        CmbRawUnitSelection.DataSource = Nothing
+
+        ' Now set up the new binding
+        CmbRawUnitSelection.DisplayMember = "RawUnitName"
+        CmbRawUnitSelection.ValueMember = "RawUnitID"
+
+        Dim availableRawUnits = ProjectDataAccess.GetRawUnitsByVersionID(selectedVersionID) _
+        .Where(Function(r) r.ProductTypeID = productTypeID).ToList()
+
+        If availableRawUnits.Any() Then
+            CmbRawUnitSelection.DataSource = availableRawUnits
+
+            ' Select current RawUnit
+            Dim currentIndex = availableRawUnits.FindIndex(Function(r) r.RawUnitID = currentRawUnitID)
+            If currentIndex >= 0 Then
+                CmbRawUnitSelection.SelectedIndex = currentIndex
+            End If
+        End If
     End Sub
 
     Private Sub UpdatePerSQFTFields(components As List(Of CalculatedComponentModel))
@@ -1223,7 +1137,7 @@ Public Class FrmPSE
             Dim sqft As Decimal
             Dim adder As Decimal
             If Not Decimal.TryParse(TxtPlanSQFT.Text, sqft) OrElse sqft <= 0 OrElse
-               Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
+           Not Decimal.TryParse(TxtOptionalAdder.Text, adder) OrElse adder < 1 Then
                 UIHelper.Add($"Status: Invalid input for version {selectedVersionID}—SQFT (>0) and Adder (≥1) must be valid.")
                 MessageBox.Show("Invalid input—SQFT (>0) and Adder (≥1) must be valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
@@ -1236,6 +1150,19 @@ Public Class FrmPSE
                 Return
             End If
 
+            ' Check if RawUnit was changed via ComboBox
+            Dim selectedRawUnit As RawUnitModel = Nothing
+            Dim rawUnitChanged As Boolean = False
+            If CmbRawUnitSelection.Visible AndAlso CmbRawUnitSelection.SelectedItem IsNot Nothing Then
+                selectedRawUnit = TryCast(CmbRawUnitSelection.SelectedItem, RawUnitModel)
+                If selectedRawUnit IsNot Nothing AndAlso selectedRawUnit.RawUnitID <> updatedUnit.RawUnitID Then
+                    rawUnitChanged = True
+                    updatedUnit.RawUnitID = selectedRawUnit.RawUnitID
+                    UIHelper.Add($"Status: RawUnit changing from ID {updatedUnit.RawUnitID} to '{selectedRawUnit.RawUnitName}' (ID {selectedRawUnit.RawUnitID}).")
+                End If
+            End If
+
+            ' Update standard fields
             updatedUnit.VersionID = selectedVersionID
             updatedUnit.UnitName = TxtUnitName.Text
             updatedUnit.PlanSQFT = sqft
@@ -1243,15 +1170,32 @@ Public Class FrmPSE
             updatedUnit.ColorCode = txtColorCode.Text
             updatedUnit.UnitType = If(CmbUnitType.SelectedItem?.ToString(), "Res")
 
+            ' Save the ActualUnit (now includes RawUnitID if changed)
             dataAccess.SaveActualUnit(updatedUnit)
-            Dim rawUnit = ProjectDataAccess.GetRawUnitByID(updatedUnit.RawUnitID)
-            If rawUnit IsNot Nothing Then
-                updatedUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnit, Me.selectedVersionID)
+
+            ' Recalculate components - use new RawUnit if changed, otherwise existing
+            Dim rawUnitForCalc As RawUnitModel = If(rawUnitChanged AndAlso selectedRawUnit IsNot Nothing,
+                                             selectedRawUnit,
+                                             ProjectDataAccess.GetRawUnitByID(updatedUnit.RawUnitID))
+            If rawUnitForCalc IsNot Nothing Then
+                updatedUnit.CalculatedComponents = CalculateComponentsFromRaw(rawUnitForCalc, selectedVersionID)
                 dataAccess.SaveCalculatedComponents(updatedUnit)
             End If
 
-            LoadExistingActualUnits()
-            UIHelper.Add($"Status: Actual unit {updatedUnit.UnitName} updated successfully for version {selectedVersionID}.")
+            ' Update the unit in the existing list and refresh display
+            Dim index As Integer = existingActualUnits.FindIndex(Function(u) u.ActualUnitID = selectedActualUnitID)
+            If index >= 0 Then
+                existingActualUnits(index) = updatedUnit
+                RefreshExistingActualUnitsList()
+            End If
+
+            If selectedLevelID > 0 Then
+                LoadAssignedUnits()
+                UpdateRollups()
+            End If
+
+            UIHelper.Add($"Status: Actual unit '{updatedUnit.UnitName}' updated successfully for version {selectedVersionID}." &
+                 If(rawUnitChanged, $" RawUnit changed to '{selectedRawUnit?.RawUnitName}'.", ""))
         Catch ex As Exception
             UIHelper.Add($"Status: Error updating actual unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error updating actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -1264,21 +1208,44 @@ Public Class FrmPSE
                 MessageBox.Show("Invalid mapping selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
-            Dim mapping As ActualToLevelMappingModel = ProjectDataAccess.GetActualToLevelMappingsByLevelID(selectedLevelID).FirstOrDefault(Function(m) m.MappingID = selectedMappingID)
+
+            Dim mapping As ActualToLevelMappingModel = ProjectDataAccess.GetActualToLevelMappingsByLevelID(selectedLevelID) _
+            .FirstOrDefault(Function(m) m.MappingID = selectedMappingID)
             If mapping Is Nothing Then
                 UIHelper.Add($"Status: Mapping not found for ID {selectedMappingID} in version {selectedVersionID}.")
                 MessageBox.Show("Mapping not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End If
+
+            ' Update quantity
             mapping.Quantity = quantity
             dataAccess.SaveActualToLevelMapping(mapping)
+
+            ' Check if RawUnit was changed
+            Dim selectedRawUnit As RawUnitModel = TryCast(CmbRawUnitSelection.SelectedItem, RawUnitModel)
+            If selectedRawUnit IsNot Nothing AndAlso selectedRawUnit.RawUnitID <> mapping.ActualUnit.RawUnitID Then
+                ' Update the ActualUnit's RawUnitID
+                Dim actualUnit = ProjectDataAccess.GetActualUnitByID(mapping.ActualUnitID)
+                If actualUnit IsNot Nothing Then
+                    actualUnit.RawUnitID = selectedRawUnit.RawUnitID
+
+                    ' Save the updated ActualUnit
+                    dataAccess.SaveActualUnit(actualUnit)
+
+                    ' Recalculate components based on new RawUnit
+                    actualUnit.CalculatedComponents = CalculateComponentsFromRaw(selectedRawUnit, selectedVersionID)
+                    dataAccess.SaveCalculatedComponents(actualUnit)
+
+                    UIHelper.Add($"Status: RawUnit changed to '{selectedRawUnit.RawUnitName}' for ActualUnit '{actualUnit.UnitName}'.")
+                End If
+            End If
+
             LoadAssignedUnits()
-            RollupDataAccess.UpdateLevelRollups(selectedLevelID)
-            If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
-            UIHelper.Add($"Status: Mapping quantity updated for unit {mapping.ActualUnit.UnitName} in version {selectedVersionID}.")
+            UpdateRollups()
+            UIHelper.Add($"Status: Mapping updated for unit {mapping.ActualUnit.UnitName} in version {selectedVersionID}.")
         Catch ex As Exception
-            UIHelper.Add($"Status: Error updating mapping quantity for version {selectedVersionID}: {ex.Message}")
-            MessageBox.Show("Error updating mapping quantity: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UIHelper.Add($"Status: Error updating mapping for version {selectedVersionID}: {ex.Message}")
+            MessageBox.Show("Error updating mapping: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -1328,7 +1295,6 @@ Public Class FrmPSE
         Try
             Select Case currentdetailsMode
                 Case DetailsMode.EditGlobalUnit
-                    ' Existing global delete logic (assume from prior: dataAccess.DeleteActualUnit(selectedActualUnitID), remove from lists, refresh)
                     Dim selectedActual As ActualUnitModel = ProjectDataAccess.GetActualUnitByID(selectedActualUnitID)
                     If selectedActual Is Nothing Then Return
                     Dim mappings = dataAccess.GetActualToLevelMappingsByActualUnitID(selectedActual.ActualUnitID)
@@ -1338,10 +1304,7 @@ Public Class FrmPSE
                     End If
                     dataAccess.DeleteActualUnit(selectedActual.ActualUnitID)
                     existingActualUnits.RemoveAll(Function(u) u.ActualUnitID = selectedActualUnitID)
-                    ListboxExistingActualUnits.Items.Clear()
-                    For Each unit In existingActualUnits
-                        ListboxExistingActualUnits.Items.Add(unit.UnitName & " (" & unit.UnitType & ")")
-                    Next
+                    RefreshExistingActualUnitsList()
                     If selectedLevelID > 0 Then LoadAssignedUnits()
                     UIHelper.Add($"Status: Actual unit deleted for version {selectedVersionID}.")
 
@@ -1354,8 +1317,7 @@ Public Class FrmPSE
                     If result <> DialogResult.Yes Then Return
                     dataAccess.DeleteActualToLevelMapping(selectedMappingID)
                     LoadAssignedUnits()
-                    RollupDataAccess.UpdateLevelRollups(selectedLevelID)
-                    If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
+                    UpdateRollups()
                     ResetDetailsPane()
                     UIHelper.Add($"Status: Mapping deleted for version {selectedVersionID}.")
 
@@ -1376,7 +1338,7 @@ Public Class FrmPSE
             TxtPlanSQFT.Text = String.Empty
             TxtOptionalAdder.Text = String.Empty
             CmbUnitType.SelectedIndex = -1
-            TxtReferencedRawUnit.Text = String.Empty
+            'TxtReferencedRawUnit.Text = String.Empty
             TxtActualUnitQuantity.Text = String.Empty
             btnDeleteUnit.Text = "Delete"
             btnDeleteUnit.Visible = False
@@ -1402,8 +1364,7 @@ Public Class FrmPSE
                 Return
             End If
             LoadAssignedUnits()
-            RollupDataAccess.UpdateLevelRollups(selectedLevelID)
-            If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
+            UpdateRollups()
             If MsgBox("Recalculate entire project for version " & selectedVersionID & "?", MsgBoxStyle.YesNo, "Confirm") = MsgBoxResult.Yes Then
                 RecalculateAllActualUnits(selectedVersionID)
                 RecalculateProject()
@@ -1564,8 +1525,7 @@ Public Class FrmPSE
             Next
 
             LoadAssignedUnits()
-            RollupDataAccess.UpdateLevelRollups(selectedLevelID)
-            If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
+            UpdateRollups()
             'copiedMappings.Clear()
             UIHelper.Add("Status: Units pasted successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
@@ -1631,21 +1591,29 @@ Public Class FrmPSE
                 Case DetailsMode.NewUnit
                     Dim actualUnit As ActualUnitModel = CreateAndSaveActualUnit()
                     If actualUnit Is Nothing Then Return
-                    existingActualUnits.Add(actualUnit)
-                    ListboxExistingActualUnits.Items.Add(actualUnit.UnitName & " (" & actualUnit.UnitType & ")")
+                    ' Only add to list if it matches current filter (ProductTypeID)
+                    Dim currentProductTypeID As Integer = -1
+                    If TreeViewLevels.SelectedNode IsNot Nothing AndAlso TreeViewLevels.SelectedNode.Level = 2 Then
+                        Dim levelTag = DirectCast(TreeViewLevels.SelectedNode.Tag, Dictionary(Of String, Object))
+                        currentProductTypeID = CInt(levelTag("ProductTypeID"))
+                    End If
+                    If currentProductTypeID = -1 OrElse actualUnit.ProductTypeID = currentProductTypeID Then
+                        existingActualUnits.Add(actualUnit)
+                        ' DrawItem handles display - just add placeholder
+                        ListboxExistingActualUnits.Items.Add(actualUnit.UnitName)
+                    End If
                     UIHelper.Add("New unit saved successfully—available for reuse.")
                     ' Optional attach based on user choice
                     If chkAttachToLevel.Checked AndAlso selectedLevelID > 0 AndAlso CInt(TxtActualUnitQuantity.Text) > 0 Then
                         Dim newMapping As New ActualToLevelMappingModel With {
-                        .VersionID = selectedVersionID,
-                        .ActualUnitID = actualUnit.ActualUnitID,
-                        .LevelID = selectedLevelID,
-                        .Quantity = CInt(TxtActualUnitQuantity.Text)
-                    }
+                            .VersionID = selectedVersionID,
+                            .ActualUnitID = actualUnit.ActualUnitID,
+                            .LevelID = selectedLevelID,
+                            .Quantity = CInt(TxtActualUnitQuantity.Text)
+                        }
                         dataAccess.SaveActualToLevelMapping(newMapping)
-                        LoadAssignedUnits()  ' Refresh grid if attached
-                        RollupDataAccess.UpdateLevelRollups(selectedLevelID)
-                        If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
+                        LoadAssignedUnits()
+                        UpdateRollups()
                     End If
                 Case Else
                     UIHelper.Add($"Status: Invalid save mode for version {selectedVersionID}.")
@@ -1662,6 +1630,7 @@ Public Class FrmPSE
 
     Private Sub ListboxExistingActualUnits_MouseDown(sender As Object, e As MouseEventArgs) Handles ListboxExistingActualUnits.MouseDown
         Try
+            ' Handle right-click context menu (existing logic)
             If e.Button = MouseButtons.Right AndAlso ListboxExistingActualUnits.SelectedIndex >= 0 Then
                 If ListboxExistingActualUnits.ContextMenuStrip Is Nothing Then
                     UIHelper.Add($"Status: Context menu not configured for version {selectedVersionID}.")
@@ -1670,67 +1639,143 @@ Public Class FrmPSE
                 End If
                 ListboxExistingActualUnits.ContextMenuStrip.Show(ListboxExistingActualUnits, e.Location)
                 UIHelper.Add($"Status: Context menu opened for version {selectedVersionID}.")
-            ElseIf e.Button = MouseButtons.Right Then
-                UIHelper.Add($"Status: Please select an actual unit for version {selectedVersionID} to show context menu.")
-                MessageBox.Show("Please select an actual unit to show the context menu.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            ElseIf e.Button = MouseButtons.Left Then
+                ' Start drag operation
+                Dim index As Integer = ListboxExistingActualUnits.IndexFromPoint(e.Location)
+                If index >= 0 Then
+                    dragStartIndex = index
+                    isDragging = False ' Will be set true on MouseMove if threshold met
+                End If
             End If
         Catch ex As Exception
-            UIHelper.Add($"Status: Error opening context menu for version {selectedVersionID}: {ex.Message}")
-            MessageBox.Show("Error opening context menu: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UIHelper.Add($"Status: Error in mouse down for version {selectedVersionID}: {ex.Message}")
+        End Try
+    End Sub
+    Private Sub ListboxExistingActualUnits_MouseMove(sender As Object, e As MouseEventArgs) Handles ListboxExistingActualUnits.MouseMove
+        If e.Button = MouseButtons.Left AndAlso dragStartIndex >= 0 AndAlso Not isDragging Then
+            ' Start drag if moved enough (prevents accidental drags)
+            If Math.Abs(e.Y - ListboxExistingActualUnits.GetItemRectangle(dragStartIndex).Y) > 5 Then
+                isDragging = True
+                ListboxExistingActualUnits.DoDragDrop(dragStartIndex, DragDropEffects.Move)
+            End If
+        End If
+    End Sub
+
+    Private Sub ListboxExistingActualUnits_MouseUp(sender As Object, e As MouseEventArgs) Handles ListboxExistingActualUnits.MouseUp
+        dragStartIndex = -1
+        isDragging = False
+    End Sub
+
+    Private Sub ListboxExistingActualUnits_DragOver(sender As Object, e As DragEventArgs) Handles ListboxExistingActualUnits.DragOver
+        e.Effect = DragDropEffects.Move
+    End Sub
+
+    Private Sub ListboxExistingActualUnits_DragDrop(sender As Object, e As DragEventArgs) Handles ListboxExistingActualUnits.DragDrop
+        Try
+            Dim targetPoint As Point = ListboxExistingActualUnits.PointToClient(New Point(e.X, e.Y))
+            Dim targetIndex As Integer = ListboxExistingActualUnits.IndexFromPoint(targetPoint)
+
+            ' If dropped below all items, target is last position
+            If targetIndex < 0 Then
+                targetIndex = ListboxExistingActualUnits.Items.Count - 1
+            End If
+
+            Dim sourceIndex As Integer = CInt(e.Data.GetData(GetType(Integer)))
+
+            If sourceIndex <> targetIndex AndAlso sourceIndex >= 0 Then
+                ' Reorder the backing list
+                Dim movedUnit As ActualUnitModel = existingActualUnits(sourceIndex)
+                existingActualUnits.RemoveAt(sourceIndex)
+                existingActualUnits.Insert(targetIndex, movedUnit)
+
+                ' Reorder the listbox items
+                Dim movedItem As Object = ListboxExistingActualUnits.Items(sourceIndex)
+                ListboxExistingActualUnits.Items.RemoveAt(sourceIndex)
+                ListboxExistingActualUnits.Items.Insert(targetIndex, movedItem)
+
+                ' Select the moved item
+                ListboxExistingActualUnits.SelectedIndex = targetIndex
+
+                ' Persist the new sort order to database
+                SaveActualUnitsSortOrder()
+
+                UIHelper.Add($"Status: Reordered '{movedUnit.UnitName}' from position {sourceIndex + 1} to {targetIndex + 1}.")
+            End If
+        Catch ex As Exception
+            UIHelper.Add($"Status: Error during drag-drop reorder: {ex.Message}")
+            MessageBox.Show("Error reordering items: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            dragStartIndex = -1
+            isDragging = False
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Persists the current sort order of actual units to the database.
+    ''' </summary>
+    Private Sub SaveActualUnitsSortOrder()
+        Try
+            Using conn As SqlConnection = SqlConnectionManager.Instance.GetConnection()
+                Using tran As SqlTransaction = conn.BeginTransaction()
+                    Try
+                        For i As Integer = 0 To existingActualUnits.Count - 1
+                            Dim unit As ActualUnitModel = existingActualUnits(i)
+                            unit.SortOrder = i + 1 ' 1-based sort order
+
+                            Using cmd As New SqlCommand(Queries.UpdateActualUnitsSortOrderBatch, conn, tran)
+                                cmd.Parameters.AddWithValue("@SortOrder", unit.SortOrder)
+                                cmd.Parameters.AddWithValue("@ActualUnitID", unit.ActualUnitID)
+                                cmd.Parameters.AddWithValue("@VersionID", selectedVersionID)
+                                cmd.ExecuteNonQuery()
+                            End Using
+                        Next
+                        tran.Commit()
+                        UIHelper.Add($"Status: Sort order saved for {existingActualUnits.Count} units.")
+                    Catch ex As Exception
+                        tran.Rollback()
+                        Throw
+                    End Try
+                End Using
+            End Using
+        Catch ex As Exception
+            UIHelper.Add($"Status: Error saving sort order: {ex.Message}")
+            MessageBox.Show("Error saving sort order: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub EditToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EditToolStripMenuItem.Click, ListboxExistingActualUnits.DoubleClick
         Try
-            If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                UIHelper.Add("Status: Please select an actual unit to edit for version " & selectedVersionID & ".")
-                MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
-            selectedActualUnitID = existingActualUnits(ListboxExistingActualUnits.SelectedIndex).ActualUnitID
-            Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
-            If selectedActual Is Nothing Then
-                UIHelper.Add("Status: Selected actual unit not found for version " & selectedVersionID & ".")
-                MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
+            Dim selectedActual = GetSelectedActualUnit()
+            If selectedActual Is Nothing Then Return
+
+            selectedActualUnitID = selectedActual.ActualUnitID
             currentdetailsMode = DetailsMode.EditGlobalUnit
             PopulateDetailsPane(selectedActual, True, 0)
-            UIHelper.Add("Status: Editing actual unit " & selectedActual.UnitName & " for version " & selectedVersionID & ".")
+            UIHelper.Add($"Status: Editing actual unit {selectedActual.UnitName} for version {selectedVersionID}.")
         Catch ex As Exception
-            UIHelper.Add("Status: Error editing actual unit for version " & selectedVersionID & ": " & ex.Message)
+            UIHelper.Add($"Status: Error editing actual unit for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show("Error editing actual unit: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     Private Sub DeleteActualUnitToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DeleteActualUnitToolStripMenuItem.Click
         Try
-            If ListboxExistingActualUnits.SelectedIndex < 0 Then
-                UIHelper.Add("Status: Please select an actual unit to delete for version " & selectedVersionID & ".")
-                MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
-
-            Dim selectedActual As ActualUnitModel = existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
-            If selectedActual Is Nothing Then
-                UIHelper.Add("Status: Selected actual unit not found for version " & selectedVersionID & ".")
-                MessageBox.Show("Selected actual unit not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Return
-            End If
+            Dim selectedActual = GetSelectedActualUnit()
+            If selectedActual Is Nothing Then Return
 
             Dim mappings = dataAccess.GetActualToLevelMappingsByActualUnitID(selectedActual.ActualUnitID)
             If mappings.Any() Then
-                Dim result = MessageBox.Show($"The unit '{selectedActual.UnitName}' is used in {mappings.Count} level(s) for version {selectedVersionID}. Deleting it will remove it from all levels. Continue?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+                Dim result = MessageBox.Show($"The unit '{selectedActual.UnitName}' is used in {mappings.Count} level(s). Deleting will remove it from all levels. Continue?",
+                "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
                 If result <> DialogResult.Yes Then Return
             End If
 
             dataAccess.DeleteActualUnit(selectedActual.ActualUnitID)
             existingActualUnits.RemoveAt(ListboxExistingActualUnits.SelectedIndex)
             ListboxExistingActualUnits.Items.RemoveAt(ListboxExistingActualUnits.SelectedIndex)
-            If selectedLevelID > 0 Then LoadAssignedUnits() ' Refresh grid if unit was mapped
-            UIHelper.Add($"Status: Actual unit '{selectedActual.UnitName}' deleted successfully for version {selectedVersionID}.")
+            If selectedLevelID > 0 Then LoadAssignedUnits()
+            UIHelper.Add($"Status: Actual unit '{selectedActual.UnitName}' deleted for version {selectedVersionID}.")
         Catch ex As ApplicationException
-            UIHelper.Add($"Status: Deletion blocked for version {selectedVersionID}: {ex.Message}")
             MessageBox.Show(ex.Message, "Deletion Blocked", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Catch ex As Exception
             UIHelper.Add($"Status: Error deleting unit for version {selectedVersionID}: {ex.Message}")
@@ -1990,4 +2035,133 @@ Public Class FrmPSE
         copiedBuildingMappings.Clear()
         UIHelper.Add("Status: copy buffer cleared.")
     End Sub
+
+    ''' <summary>
+    ''' Inserts a RawUnitLumberHistory record for the given model within the provided transaction.
+    ''' </summary>
+    Private Sub InsertRawUnitLumberHistory(model As RawUnitModel, conn As SqlConnection, transaction As SqlTransaction)
+        ' Fetch the CostEffectiveDateID based on AvgSPFNo2
+        Dim costEffectiveID As Object = DBNull.Value
+        If model.AvgSPFNo2.HasValue Then
+            Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", model.AvgSPFNo2.Value)}
+            costEffectiveID = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.SelectCostEffectiveDateIDByCost, fetchParams)
+        End If
+
+        Dim historyParams As New Dictionary(Of String, Object) From {
+            {"@RawUnitID", model.RawUnitID},
+            {"@VersionID", selectedVersionID},
+            {"@CostEffectiveDateID", costEffectiveID},
+            {"@LumberCost", If(model.LumberCost.HasValue, CType(model.LumberCost.Value, Object), DBNull.Value)},
+            {"@AvgSPFNo2", If(model.AvgSPFNo2.HasValue, CType(model.AvgSPFNo2.Value, Object), DBNull.Value)},
+            {"@Avg241800", If(model.Avg241800.HasValue, CType(model.Avg241800.Value, Object), DBNull.Value)},
+            {"@Avg242400", If(model.Avg242400.HasValue, CType(model.Avg242400.Value, Object), DBNull.Value)},
+            {"@Avg261800", If(model.Avg261800.HasValue, CType(model.Avg261800.Value, Object), DBNull.Value)},
+            {"@Avg262400", If(model.Avg262400.HasValue, CType(model.Avg262400.Value, Object), DBNull.Value)}
+        }
+
+        Using cmdHistory As New SqlCommand(Queries.InsertRawUnitLumberHistory, conn, transaction) With {.CommandTimeout = 0}
+            cmdHistory.Parameters.AddRange(HelperDataAccess.BuildParameters(historyParams))
+            Dim historyID As Integer = CInt(cmdHistory.ExecuteScalar())
+            Debug.WriteLine($"Created RawUnitLumberHistory for RawUnitID: {model.RawUnitID}, HistoryID: {historyID}")
+        End Using
+    End Sub
+    ''' <summary>
+    ''' Parses a nullable decimal value from CSV row data (case-insensitive key lookup).
+    ''' </summary>
+    Private Shared Function ParseCsvDecimal(rowData As Dictionary(Of String, String), key As String) As Decimal?
+        Dim decVal As Decimal
+        Dim upperKey As String = key.ToUpper()
+        If rowData.ContainsKey(upperKey) AndAlso Decimal.TryParse(rowData(upperKey), decVal) Then
+            Return decVal
+        End If
+        Return Nothing
+    End Function
+
+    ''' <summary>
+    ''' Populates a RawUnitModel from CSV row data using standardized field mapping.
+    ''' </summary>
+    Private Shared Sub PopulateRawUnitFromCsv(model As RawUnitModel, rowData As Dictionary(Of String, String))
+        ' Required fields
+        model.BF = ParseCsvDecimal(rowData, "BF")
+        model.LF = ParseCsvDecimal(rowData, "LF")
+        model.EWPLF = ParseCsvDecimal(rowData, "EWPLF")
+        model.SqFt = ParseCsvDecimal(rowData, "SQFT")
+        model.FCArea = ParseCsvDecimal(rowData, "FCAREA")
+        model.LumberCost = ParseCsvDecimal(rowData, "LUMBERCOST")
+        model.PlateCost = ParseCsvDecimal(rowData, "PLATECOST")
+        model.ManufLaborCost = ParseCsvDecimal(rowData, "MANUFLABORCOST")
+        model.DesignLabor = ParseCsvDecimal(rowData, "DESIGNLABOR")
+        model.MGMTLabor = ParseCsvDecimal(rowData, "MGMTLABOR")
+        model.JobSuppliesCost = ParseCsvDecimal(rowData, "JOBSUPPLIESCOST")
+        model.ManHours = ParseCsvDecimal(rowData, "MANHOURS")
+        model.ItemCost = ParseCsvDecimal(rowData, "ITEMCOST")
+        model.OverallCost = ParseCsvDecimal(rowData, "OVERALLCOST")
+        model.DeliveryCost = ParseCsvDecimal(rowData, "DELIVERYCOST")
+        model.TotalSellPrice = ParseCsvDecimal(rowData, "TOTALSELLPRICE")
+        model.AvgSPFNo2 = ParseCsvDecimal(rowData, "AVGSPFNO2")
+
+        ' Optional fields for Component Export
+        model.SPFNo2BDFT = ParseCsvDecimal(rowData, "SPFNO2BDFT")
+        model.Avg241800 = ParseCsvDecimal(rowData, "AVG2X4-1800")
+        model.MSR241800BDFT = ParseCsvDecimal(rowData, "2X4-1800BDFT")
+        model.Avg242400 = ParseCsvDecimal(rowData, "AVG2X4-2400")
+        model.MSR242400BDFT = ParseCsvDecimal(rowData, "2X4-2400BDFT")
+        model.Avg261800 = ParseCsvDecimal(rowData, "AVG2X6-1800")
+        model.MSR261800BDFT = ParseCsvDecimal(rowData, "2X6-1800BDFT")
+        model.Avg262400 = ParseCsvDecimal(rowData, "AVG2X6-2400")
+        model.MSR262400BDFT = ParseCsvDecimal(rowData, "2X6-2400BDFT")
+    End Sub
+
+    ''' <summary>
+    ''' Creates a standard read-only text column for the DataGridView.
+    ''' </summary>
+    Private Function CreateTextColumn(dataProperty As String, header As String,
+                                       Optional visible As Boolean = False,
+                                       Optional sortable As Boolean = False,
+                                       Optional name As String = Nothing) As DataGridViewTextBoxColumn
+        Return New DataGridViewTextBoxColumn With {
+            .Name = If(name, dataProperty),
+            .DataPropertyName = dataProperty,
+            .HeaderText = header,
+            .ReadOnly = True,
+            .Visible = visible,
+            .SortMode = If(sortable, DataGridViewColumnSortMode.Automatic, DataGridViewColumnSortMode.NotSortable)
+        }
+    End Function
+
+    ''' <summary>
+    ''' Updates level and building rollups for the current selection.
+    ''' </summary>
+    Private Sub UpdateRollups()
+        If selectedLevelID > 0 Then RollupDataAccess.UpdateLevelRollups(selectedLevelID)
+        If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
+    End Sub
+    ''' <summary>
+    ''' Resets all per-SQFT preview textboxes to zero.
+    ''' </summary>
+    Private Sub ClearPerSQFTTextBoxes()
+        TxtLumberPerSQFT.Text = "0.00"
+        TxtPlatePerSQFT.Text = "0.00"
+        TxtBDFTPerSQFT.Text = "0.00"
+        TxtManufLaborPerSQFT.Text = "0.00"
+        TxtDesignLaborPerSQFT.Text = "0.00"
+        TxtMGMTLaborPerSQFT.Text = "0.00"
+        TxtJobSuppliesPerSQFT.Text = "0.00"
+        TxtManHoursPerSQFT.Text = "0.00"
+        TxtItemCostPerSQFT.Text = "0.00"
+        TxtOverallCostPerSQFT.Text = "0.00"
+        TxtDeliveryCostPerSQFT.Text = "0.00"
+        TxtTotalSellPricePerSQFT.Text = "0.00"
+    End Sub
+
+    ''' <summary>
+    ''' Gets the selected actual unit from the listbox, returning Nothing if invalid.
+    ''' </summary>
+    Private Function GetSelectedActualUnit(Optional showError As Boolean = True) As ActualUnitModel
+        If ListboxExistingActualUnits.SelectedIndex < 0 Then
+            If showError Then MessageBox.Show("Please select an existing actual unit from the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return Nothing
+        End If
+        Return existingActualUnits(ListboxExistingActualUnits.SelectedIndex)
+    End Function
 End Class

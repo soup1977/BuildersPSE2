@@ -33,32 +33,44 @@ Partial Class frmMain
         Me.EditLumberToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EditConfigurationToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EditIEPulldownsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToggleActivityLogToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ClearActivityLogToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.StatusStrip = New System.Windows.Forms.StatusStrip()
         Me.ttslUserName = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolStripStatusLabel = New System.Windows.Forms.ToolStripStatusLabel()
-        Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel()
-        Me.ToolStripProgressBar1 = New System.Windows.Forms.ToolStripProgressBar()
         Me.cmsStatusHistory = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.btnToggleLog = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
         Me.btnImportCSV = New System.Windows.Forms.Button()
         Me.btnEditLumber = New System.Windows.Forms.Button()
         Me.btnMondayList = New System.Windows.Forms.Button()
         Me.btnImportPSE = New System.Windows.Forms.Button()
         Me.btnCreateProject = New System.Windows.Forms.Button()
+        Me.SplitContainerMain = New System.Windows.Forms.SplitContainer()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.lstActivityLog = New System.Windows.Forms.ListBox()
+        Me.PanelLogHeader = New System.Windows.Forms.Panel()
+        Me.btnClearLog = New System.Windows.Forms.Button()
+        Me.lblLogHeader = New System.Windows.Forms.Label()
         Me.MenuStrip.SuspendLayout()
         Me.StatusStrip.SuspendLayout()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
         Me.SplitContainer1.Panel2.SuspendLayout()
         Me.SplitContainer1.SuspendLayout()
+        CType(Me.SplitContainerMain, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.SplitContainerMain.Panel1.SuspendLayout()
+        Me.SplitContainerMain.Panel2.SuspendLayout()
+        Me.SplitContainerMain.SuspendLayout()
+        Me.PanelLogHeader.SuspendLayout()
         Me.SuspendLayout()
         '
         'MenuStrip
         '
-        Me.MenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileMenu, Me.ToolsToolStripMenuItem})
+        Me.MenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileMenu, Me.ToolsToolStripMenuItem, Me.ViewToolStripMenuItem})
         Me.MenuStrip.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip.Name = "MenuStrip"
         Me.MenuStrip.Size = New System.Drawing.Size(1384, 24)
@@ -120,9 +132,29 @@ Partial Class frmMain
         Me.EditIEPulldownsToolStripMenuItem.Size = New System.Drawing.Size(171, 22)
         Me.EditIEPulldownsToolStripMenuItem.Text = "Edit IE Pulldowns"
         '
+        'ViewToolStripMenuItem
+        '
+        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToggleActivityLogToolStripMenuItem, Me.ClearActivityLogToolStripMenuItem})
+        Me.ViewToolStripMenuItem.Name = "ViewToolStripMenuItem"
+        Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(44, 20)
+        Me.ViewToolStripMenuItem.Text = "&View"
+        '
+        'ToggleActivityLogToolStripMenuItem
+        '
+        Me.ToggleActivityLogToolStripMenuItem.Name = "ToggleActivityLogToolStripMenuItem"
+        Me.ToggleActivityLogToolStripMenuItem.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.L), System.Windows.Forms.Keys)
+        Me.ToggleActivityLogToolStripMenuItem.Size = New System.Drawing.Size(216, 22)
+        Me.ToggleActivityLogToolStripMenuItem.Text = "Toggle Activity Log"
+        '
+        'ClearActivityLogToolStripMenuItem
+        '
+        Me.ClearActivityLogToolStripMenuItem.Name = "ClearActivityLogToolStripMenuItem"
+        Me.ClearActivityLogToolStripMenuItem.Size = New System.Drawing.Size(216, 22)
+        Me.ClearActivityLogToolStripMenuItem.Text = "Clear Activity Log"
+        '
         'StatusStrip
         '
-        Me.StatusStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ttslUserName, Me.ToolStripProgressBar1, Me.ToolStripStatusLabel, Me.ToolStripStatusLabel1})
+        Me.StatusStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ttslUserName, Me.ToolStripStatusLabel})
         Me.StatusStrip.Location = New System.Drawing.Point(0, 687)
         Me.StatusStrip.Name = "StatusStrip"
         Me.StatusStrip.Size = New System.Drawing.Size(1384, 24)
@@ -140,22 +172,11 @@ Partial Class frmMain
         'ToolStripStatusLabel
         '
         Me.ToolStripStatusLabel.Name = "ToolStripStatusLabel"
-        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(1231, 19)
+        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(1318, 19)
         Me.ToolStripStatusLabel.Spring = True
         Me.ToolStripStatusLabel.Text = "Ready"
         Me.ToolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         Me.ToolStripStatusLabel.Visible = False
-        '
-        'ToolStripStatusLabel1
-        '
-        Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(16, 19)
-        Me.ToolStripStatusLabel1.Text = "..."
-        '
-        'ToolStripProgressBar1
-        '
-        Me.ToolStripProgressBar1.Name = "ToolStripProgressBar1"
-        Me.ToolStripProgressBar1.Size = New System.Drawing.Size(100, 18)
         '
         'cmsStatusHistory
         '
@@ -170,6 +191,7 @@ Partial Class frmMain
         '
         'SplitContainer1.Panel1
         '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnToggleLog)
         Me.SplitContainer1.Panel1.Controls.Add(Me.btnClose)
         Me.SplitContainer1.Panel1.Controls.Add(Me.btnImportCSV)
         Me.SplitContainer1.Panel1.Controls.Add(Me.btnEditLumber)
@@ -179,10 +201,20 @@ Partial Class frmMain
         '
         'SplitContainer1.Panel2
         '
-        Me.SplitContainer1.Panel2.Controls.Add(Me.TabControl1)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.SplitContainerMain)
         Me.SplitContainer1.Size = New System.Drawing.Size(1384, 663)
         Me.SplitContainer1.SplitterDistance = 147
         Me.SplitContainer1.TabIndex = 8
+        '
+        'btnToggleLog
+        '
+        Me.btnToggleLog.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.btnToggleLog.Location = New System.Drawing.Point(12, 596)
+        Me.btnToggleLog.Name = "btnToggleLog"
+        Me.btnToggleLog.Size = New System.Drawing.Size(127, 27)
+        Me.btnToggleLog.TabIndex = 8
+        Me.btnToggleLog.Text = "Show Log"
+        Me.btnToggleLog.UseVisualStyleBackColor = True
         '
         'btnClose
         '
@@ -234,6 +266,28 @@ Partial Class frmMain
         Me.btnCreateProject.TabIndex = 4
         Me.btnCreateProject.Text = "Create Project"
         '
+        'SplitContainerMain
+        '
+        Me.SplitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.SplitContainerMain.Location = New System.Drawing.Point(0, 0)
+        Me.SplitContainerMain.Name = "SplitContainerMain"
+        Me.SplitContainerMain.Orientation = System.Windows.Forms.Orientation.Horizontal
+        '
+        'SplitContainerMain.Panel1
+        '
+        Me.SplitContainerMain.Panel1.Controls.Add(Me.TabControl1)
+        Me.SplitContainerMain.Panel1MinSize = 200
+        '
+        'SplitContainerMain.Panel2
+        '
+        Me.SplitContainerMain.Panel2.Controls.Add(Me.lstActivityLog)
+        Me.SplitContainerMain.Panel2.Controls.Add(Me.PanelLogHeader)
+        Me.SplitContainerMain.Panel2Collapsed = True
+        Me.SplitContainerMain.Panel2MinSize = 100
+        Me.SplitContainerMain.Size = New System.Drawing.Size(1233, 663)
+        Me.SplitContainerMain.SplitterDistance = 200
+        Me.SplitContainerMain.TabIndex = 1
+        '
         'TabControl1
         '
         Me.TabControl1.Dock = System.Windows.Forms.DockStyle.Fill
@@ -242,6 +296,54 @@ Partial Class frmMain
         Me.TabControl1.SelectedIndex = 0
         Me.TabControl1.Size = New System.Drawing.Size(1233, 663)
         Me.TabControl1.TabIndex = 0
+        '
+        'lstActivityLog
+        '
+        Me.lstActivityLog.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(30, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.lstActivityLog.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.lstActivityLog.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lstActivityLog.Font = New System.Drawing.Font("Consolas", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lstActivityLog.ForeColor = System.Drawing.Color.LightGray
+        Me.lstActivityLog.FormattingEnabled = True
+        Me.lstActivityLog.ItemHeight = 14
+        Me.lstActivityLog.Location = New System.Drawing.Point(0, 24)
+        Me.lstActivityLog.Name = "lstActivityLog"
+        Me.lstActivityLog.Size = New System.Drawing.Size(150, 22)
+        Me.lstActivityLog.TabIndex = 0
+        '
+        'PanelLogHeader
+        '
+        Me.PanelLogHeader.BackColor = System.Drawing.Color.FromArgb(CType(CType(45, Byte), Integer), CType(CType(45, Byte), Integer), CType(CType(48, Byte), Integer))
+        Me.PanelLogHeader.Controls.Add(Me.btnClearLog)
+        Me.PanelLogHeader.Controls.Add(Me.lblLogHeader)
+        Me.PanelLogHeader.Dock = System.Windows.Forms.DockStyle.Top
+        Me.PanelLogHeader.Location = New System.Drawing.Point(0, 0)
+        Me.PanelLogHeader.Name = "PanelLogHeader"
+        Me.PanelLogHeader.Size = New System.Drawing.Size(150, 24)
+        Me.PanelLogHeader.TabIndex = 1
+        '
+        'btnClearLog
+        '
+        Me.btnClearLog.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnClearLog.FlatAppearance.BorderSize = 0
+        Me.btnClearLog.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnClearLog.ForeColor = System.Drawing.Color.White
+        Me.btnClearLog.Location = New System.Drawing.Point(100, 1)
+        Me.btnClearLog.Name = "btnClearLog"
+        Me.btnClearLog.Size = New System.Drawing.Size(47, 22)
+        Me.btnClearLog.TabIndex = 1
+        Me.btnClearLog.Text = "Clear"
+        Me.btnClearLog.UseVisualStyleBackColor = True
+        '
+        'lblLogHeader
+        '
+        Me.lblLogHeader.AutoSize = True
+        Me.lblLogHeader.ForeColor = System.Drawing.Color.White
+        Me.lblLogHeader.Location = New System.Drawing.Point(6, 5)
+        Me.lblLogHeader.Name = "lblLogHeader"
+        Me.lblLogHeader.Size = New System.Drawing.Size(62, 13)
+        Me.lblLogHeader.TabIndex = 0
+        Me.lblLogHeader.Text = "Activity Log"
         '
         'frmMain
         '
@@ -254,6 +356,7 @@ Partial Class frmMain
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MainMenuStrip = Me.MenuStrip
         Me.Name = "frmMain"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Builders PSE"
         Me.MenuStrip.ResumeLayout(False)
         Me.MenuStrip.PerformLayout()
@@ -263,6 +366,12 @@ Partial Class frmMain
         Me.SplitContainer1.Panel2.ResumeLayout(False)
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainer1.ResumeLayout(False)
+        Me.SplitContainerMain.Panel1.ResumeLayout(False)
+        Me.SplitContainerMain.Panel2.ResumeLayout(False)
+        CType(Me.SplitContainerMain, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.SplitContainerMain.ResumeLayout(False)
+        Me.PanelLogHeader.ResumeLayout(False)
+        Me.PanelLogHeader.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -292,6 +401,13 @@ Partial Class frmMain
     Friend WithEvents EditIEPulldownsToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ttslUserName As ToolStripStatusLabel
     Friend WithEvents btnClose As Button
-    Friend WithEvents ToolStripStatusLabel1 As ToolStripStatusLabel
-    Friend WithEvents ToolStripProgressBar1 As ToolStripProgressBar
+    Friend WithEvents SplitContainerMain As SplitContainer
+    Friend WithEvents lstActivityLog As ListBox
+    Friend WithEvents PanelLogHeader As Panel
+    Friend WithEvents lblLogHeader As Label
+    Friend WithEvents btnClearLog As Button
+    Friend WithEvents btnToggleLog As Button
+    Friend WithEvents ViewToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ToggleActivityLogToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ClearActivityLogToolStripMenuItem As ToolStripMenuItem
 End Class

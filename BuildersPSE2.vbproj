@@ -196,6 +196,9 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\RichTextBoxWithToolbar.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="DataAccess\HelperDataAccess.vb" />
     <Compile Include="DataAccess\IEDataAccess.vb" />
     <Compile Include="DataAccess\LumberDataAccess.vb" />
@@ -364,6 +367,8 @@
     <Compile Include="ProjectSummaryDataSet.vb">
       <DependentUpon>ProjectSummaryDataSet.xsd</DependentUpon>
     </Compile>
+    <Compile Include="Services\RollupCalculationService.vb" />
+    <Compile Include="Services\RollupFormatter.vb" />
     <Compile Include="Utilities\ActualsImporter.vb" />
     <Compile Include="Utilities\CurrentUser.vb" />
     <Compile Include="Utilities\modDialogs.vb" />

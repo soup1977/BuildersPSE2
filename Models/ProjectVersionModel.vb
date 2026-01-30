@@ -11,4 +11,7 @@
     Public Property SalesName As String
     Public Property MondayID As String
     Public Property ProjVersionStatusID As Integer?
+    Public Property FuturesAdderAmt As Decimal?
+    Public Property FuturesAdderProjTotal As Decimal?
+
 End Class

@@ -37,6 +37,7 @@ Partial Class frmCreateEditProject
         Me.tabControlRight = New System.Windows.Forms.TabControl()
         Me.tabProjectInfo = New System.Windows.Forms.TabPage()
         Me.pnlProjectInfo = New System.Windows.Forms.Panel()
+        Me.cboProjectStatus = New System.Windows.Forms.ComboBox()
         Me.txtArchPlanDate = New System.Windows.Forms.MaskedTextBox()
         Me.txtEngPlanDate = New System.Windows.Forms.MaskedTextBox()
         Me.btnViewMonday = New System.Windows.Forms.Button()
@@ -97,6 +98,7 @@ Partial Class frmCreateEditProject
         Me.Contract = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.PriorSettle = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.PullDate = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.Active = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.btnPullFutures = New System.Windows.Forms.Button()
         Me.Label7 = New System.Windows.Forms.Label()
         Me.txtActiveRoofSPFPrice = New System.Windows.Forms.TextBox()
@@ -157,7 +159,6 @@ Partial Class frmCreateEditProject
         Me.btnImportWalls = New System.Windows.Forms.Button()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
         Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
-        Me.cboProjectStatus = New System.Windows.Forms.ComboBox()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -347,6 +348,15 @@ Partial Class frmCreateEditProject
         Me.pnlProjectInfo.Name = "pnlProjectInfo"
         Me.pnlProjectInfo.Size = New System.Drawing.Size(681, 551)
         Me.pnlProjectInfo.TabIndex = 0
+        '
+        'cboProjectStatus
+        '
+        Me.cboProjectStatus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cboProjectStatus.FormattingEnabled = True
+        Me.cboProjectStatus.Location = New System.Drawing.Point(582, 42)
+        Me.cboProjectStatus.Name = "cboProjectStatus"
+        Me.cboProjectStatus.Size = New System.Drawing.Size(94, 21)
+        Me.cboProjectStatus.TabIndex = 61
         '
         'txtArchPlanDate
         '
@@ -862,15 +872,15 @@ Partial Class frmCreateEditProject
         '
         'lvFutures
         '
-        Me.lvFutures.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.Contract, Me.PriorSettle, Me.PullDate})
+        Me.lvFutures.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.Contract, Me.PriorSettle, Me.PullDate, Me.Active})
         Me.lvFutures.FullRowSelect = True
         Me.lvFutures.GridLines = True
         Me.lvFutures.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
         Me.lvFutures.HideSelection = False
-        Me.lvFutures.Location = New System.Drawing.Point(413, 251)
+        Me.lvFutures.Location = New System.Drawing.Point(402, 251)
         Me.lvFutures.MultiSelect = False
         Me.lvFutures.Name = "lvFutures"
-        Me.lvFutures.Size = New System.Drawing.Size(265, 192)
+        Me.lvFutures.Size = New System.Drawing.Size(276, 192)
         Me.lvFutures.TabIndex = 62
         Me.lvFutures.UseCompatibleStateImageBehavior = False
         Me.lvFutures.View = System.Windows.Forms.View.Details
@@ -889,8 +899,15 @@ Partial Class frmCreateEditProject
         Me.PullDate.Text = "PullDate"
         Me.PullDate.Width = 100
         '
+        'Active
+        '
+        Me.Active.Text = "Active"
+        Me.Active.TextAlign = System.Windows.Forms.HorizontalAlignment.Center
+        Me.Active.Width = 50
+        '
         'btnPullFutures
         '
+        Me.btnPullFutures.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnPullFutures.Location = New System.Drawing.Point(587, 449)
         Me.btnPullFutures.Name = "btnPullFutures"
         Me.btnPullFutures.Size = New System.Drawing.Size(91, 31)
@@ -1074,6 +1091,9 @@ Partial Class frmCreateEditProject
         '
         'pnlBuildingInfo
         '
+        Me.pnlBuildingInfo.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.pnlBuildingInfo.AutoScroll = True
         Me.pnlBuildingInfo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.pnlBuildingInfo.Controls.Add(Me.dgvBuildingVariance)
@@ -1087,7 +1107,6 @@ Partial Class frmCreateEditProject
         Me.pnlBuildingInfo.Controls.Add(Me.txtBuildingType)
         Me.pnlBuildingInfo.Controls.Add(Me.lblNbrUnits)
         Me.pnlBuildingInfo.Controls.Add(Me.nudNbrUnits)
-        Me.pnlBuildingInfo.Dock = System.Windows.Forms.DockStyle.Top
         Me.pnlBuildingInfo.Location = New System.Drawing.Point(0, 0)
         Me.pnlBuildingInfo.Name = "pnlBuildingInfo"
         Me.pnlBuildingInfo.Size = New System.Drawing.Size(681, 507)
@@ -1104,6 +1123,7 @@ Partial Class frmCreateEditProject
         Me.dgvBuildingVariance.ReadOnly = True
         Me.dgvBuildingVariance.Size = New System.Drawing.Size(679, 347)
         Me.dgvBuildingVariance.TabIndex = 10
+        Me.dgvBuildingVariance.Visible = False
         '
         'lblPlanUnits
         '
@@ -1192,6 +1212,7 @@ Partial Class frmCreateEditProject
         '
         'btnSaveBuildingInfo
         '
+        Me.btnSaveBuildingInfo.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnSaveBuildingInfo.Location = New System.Drawing.Point(559, 513)
         Me.btnSaveBuildingInfo.Name = "btnSaveBuildingInfo"
         Me.btnSaveBuildingInfo.Size = New System.Drawing.Size(119, 30)
@@ -1302,7 +1323,7 @@ Partial Class frmCreateEditProject
         'btnImportMiTek
         '
         Me.btnImportMiTek.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnImportMiTek.Location = New System.Drawing.Point(695, 161)
+        Me.btnImportMiTek.Location = New System.Drawing.Point(695, 452)
         Me.btnImportMiTek.Name = "btnImportMiTek"
         Me.btnImportMiTek.Size = New System.Drawing.Size(99, 40)
         Me.btnImportMiTek.TabIndex = 8
@@ -1312,7 +1333,7 @@ Partial Class frmCreateEditProject
         'btnImportBisTrack
         '
         Me.btnImportBisTrack.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnImportBisTrack.Location = New System.Drawing.Point(695, 207)
+        Me.btnImportBisTrack.Location = New System.Drawing.Point(695, 498)
         Me.btnImportBisTrack.Name = "btnImportBisTrack"
         Me.btnImportBisTrack.Size = New System.Drawing.Size(99, 30)
         Me.btnImportBisTrack.TabIndex = 9
@@ -1322,16 +1343,16 @@ Partial Class frmCreateEditProject
         'btnRecalcRollup
         '
         Me.btnRecalcRollup.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnRecalcRollup.Location = New System.Drawing.Point(691, 398)
+        Me.btnRecalcRollup.Location = New System.Drawing.Point(695, 288)
         Me.btnRecalcRollup.Name = "btnRecalcRollup"
-        Me.btnRecalcRollup.Size = New System.Drawing.Size(104, 44)
+        Me.btnRecalcRollup.Size = New System.Drawing.Size(99, 44)
         Me.btnRecalcRollup.TabIndex = 46
         Me.btnRecalcRollup.Text = "Recalculate Rollup"
         '
         'btnPreviewIncExc
         '
         Me.btnPreviewIncExc.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnPreviewIncExc.Location = New System.Drawing.Point(695, 299)
+        Me.btnPreviewIncExc.Location = New System.Drawing.Point(695, 187)
         Me.btnPreviewIncExc.Name = "btnPreviewIncExc"
         Me.btnPreviewIncExc.Size = New System.Drawing.Size(100, 27)
         Me.btnPreviewIncExc.TabIndex = 26
@@ -1341,7 +1362,7 @@ Partial Class frmCreateEditProject
         'btnGenerateProjectReport
         '
         Me.btnGenerateProjectReport.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnGenerateProjectReport.Location = New System.Drawing.Point(695, 332)
+        Me.btnGenerateProjectReport.Location = New System.Drawing.Point(695, 220)
         Me.btnGenerateProjectReport.Name = "btnGenerateProjectReport"
         Me.btnGenerateProjectReport.Size = New System.Drawing.Size(100, 27)
         Me.btnGenerateProjectReport.TabIndex = 25
@@ -1351,7 +1372,7 @@ Partial Class frmCreateEditProject
         'btnDeleteProject
         '
         Me.btnDeleteProject.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnDeleteProject.Location = New System.Drawing.Point(695, 481)
+        Me.btnDeleteProject.Location = New System.Drawing.Point(694, 371)
         Me.btnDeleteProject.Name = "btnDeleteProject"
         Me.btnDeleteProject.Size = New System.Drawing.Size(100, 27)
         Me.btnDeleteProject.TabIndex = 24
@@ -1371,7 +1392,7 @@ Partial Class frmCreateEditProject
         'btnClose
         '
         Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnClose.Location = New System.Drawing.Point(695, 514)
+        Me.btnClose.Location = New System.Drawing.Point(694, 404)
         Me.btnClose.Name = "btnClose"
         Me.btnClose.Size = New System.Drawing.Size(100, 27)
         Me.btnClose.TabIndex = 22
@@ -1390,7 +1411,7 @@ Partial Class frmCreateEditProject
         'btnSaveProjectInfo
         '
         Me.btnSaveProjectInfo.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(695, 448)
+        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(694, 338)
         Me.btnSaveProjectInfo.Name = "btnSaveProjectInfo"
         Me.btnSaveProjectInfo.Size = New System.Drawing.Size(100, 27)
         Me.btnSaveProjectInfo.TabIndex = 20
@@ -1410,10 +1431,10 @@ Partial Class frmCreateEditProject
         'SplitContainer1.Panel2
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnLinkMonday)
-        Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportMiTek)
-        Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportBisTrack)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportWalls)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportMiTek)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnOpenProjectBuilder)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportBisTrack)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnRecalcRollup)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnPreviewIncExc)
         Me.SplitContainer1.Panel2.Controls.Add(Me.tabControlRight)
@@ -1430,7 +1451,7 @@ Partial Class frmCreateEditProject
         'btnLinkMonday
         '
         Me.btnLinkMonday.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnLinkMonday.Location = New System.Drawing.Point(695, 243)
+        Me.btnLinkMonday.Location = New System.Drawing.Point(695, 534)
         Me.btnLinkMonday.Name = "btnLinkMonday"
         Me.btnLinkMonday.Size = New System.Drawing.Size(99, 30)
         Me.btnLinkMonday.TabIndex = 48
@@ -1440,7 +1461,7 @@ Partial Class frmCreateEditProject
         'btnImportWalls
         '
         Me.btnImportWalls.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnImportWalls.Location = New System.Drawing.Point(695, 131)
+        Me.btnImportWalls.Location = New System.Drawing.Point(695, 132)
         Me.btnImportWalls.Name = "btnImportWalls"
         Me.btnImportWalls.Size = New System.Drawing.Size(99, 24)
         Me.btnImportWalls.TabIndex = 47
@@ -1461,15 +1482,6 @@ Partial Class frmCreateEditProject
         '
         Me.FileSystemWatcher1.EnableRaisingEvents = True
         Me.FileSystemWatcher1.SynchronizingObject = Me
-        '
-        'cboProjectStatus
-        '
-        Me.cboProjectStatus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.cboProjectStatus.FormattingEnabled = True
-        Me.cboProjectStatus.Location = New System.Drawing.Point(582, 42)
-        Me.cboProjectStatus.Name = "cboProjectStatus"
-        Me.cboProjectStatus.Size = New System.Drawing.Size(94, 21)
-        Me.cboProjectStatus.TabIndex = 61
         '
         'frmCreateEditProject
         '
@@ -1647,4 +1659,5 @@ Partial Class frmCreateEditProject
     Friend WithEvents txtEngPlanDate As MaskedTextBox
     Friend WithEvents txtArchPlanDate As MaskedTextBox
     Friend WithEvents cboProjectStatus As ComboBox
+    Friend WithEvents Active As ColumnHeader
 End Class

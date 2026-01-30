@@ -115,7 +115,7 @@ Partial Class frmInclusionsExclusions
         Me.colWallExcluded = New System.Windows.Forms.DataGridViewCheckBoxColumn()
         Me.colWallOptional = New System.Windows.Forms.DataGridViewCheckBoxColumn()
         Me.tabNotes = New System.Windows.Forms.TabPage()
-        Me.txtGeneralNotes = New System.Windows.Forms.TextBox()
+        Me.txtGeneralNotes = New BuildersPSE2.RichTextBoxWithToolbar()
         Me.btnSave = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
         Me.tabControl.SuspendLayout()
@@ -189,7 +189,7 @@ Partial Class frmInclusionsExclusions
         'cboCorridorRimRibbon
         '
         Me.cboCorridorRimRibbon.FormattingEnabled = True
-        Me.cboCorridorRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
+        Me.cboCorridorRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon", "Neither"})
         Me.cboCorridorRimRibbon.Location = New System.Drawing.Point(230, 360)
         Me.cboCorridorRimRibbon.Name = "cboCorridorRimRibbon"
         Me.cboCorridorRimRibbon.Size = New System.Drawing.Size(121, 21)
@@ -198,7 +198,7 @@ Partial Class frmInclusionsExclusions
         'cboIntRimRibbon
         '
         Me.cboIntRimRibbon.FormattingEnabled = True
-        Me.cboIntRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
+        Me.cboIntRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon", "Neither"})
         Me.cboIntRimRibbon.Location = New System.Drawing.Point(230, 333)
         Me.cboIntRimRibbon.Name = "cboIntRimRibbon"
         Me.cboIntRimRibbon.Size = New System.Drawing.Size(121, 21)
@@ -207,7 +207,7 @@ Partial Class frmInclusionsExclusions
         'cboExtRimRibbon
         '
         Me.cboExtRimRibbon.FormattingEnabled = True
-        Me.cboExtRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon"})
+        Me.cboExtRimRibbon.Items.AddRange(New Object() {"Rim", "Ribbon", "Neither"})
         Me.cboExtRimRibbon.Location = New System.Drawing.Point(230, 306)
         Me.cboExtRimRibbon.Name = "cboExtRimRibbon"
         Me.cboExtRimRibbon.Size = New System.Drawing.Size(121, 21)
@@ -454,7 +454,7 @@ Partial Class frmInclusionsExclusions
         Me.lblAbsolute.Name = "lblAbsolute"
         Me.lblAbsolute.Size = New System.Drawing.Size(82, 32)
         Me.lblAbsolute.TabIndex = 8
-        Me.lblAbsolute.Text = "Absolute"
+        Me.lblAbsolute.Text = "Absolute LL"
         Me.lblAbsolute.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
         'lblDeflection
@@ -465,7 +465,7 @@ Partial Class frmInclusionsExclusions
         Me.lblDeflection.Name = "lblDeflection"
         Me.lblDeflection.Size = New System.Drawing.Size(86, 32)
         Me.lblDeflection.TabIndex = 9
-        Me.lblDeflection.Text = "Deflection"
+        Me.lblDeflection.Text = "Absolute TL"
         Me.lblDeflection.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
         'lblRoof
@@ -1004,12 +1004,15 @@ Partial Class frmInclusionsExclusions
         '
         'txtGeneralNotes
         '
-        Me.txtGeneralNotes.Location = New System.Drawing.Point(6, 6)
-        Me.txtGeneralNotes.Multiline = True
+        Me.txtGeneralNotes.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.txtGeneralNotes.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtGeneralNotes.Location = New System.Drawing.Point(3, 3)
         Me.txtGeneralNotes.Name = "txtGeneralNotes"
-        Me.txtGeneralNotes.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.txtGeneralNotes.Size = New System.Drawing.Size(880, 504)
-        Me.txtGeneralNotes.TabIndex = 0
+        Me.txtGeneralNotes.Rtf = "{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 " &
+    "Microsoft Sans Serif;}}" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "{\*\generator Riched20 10.0.26100}\viewkind4\uc1 " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "\par" &
+    "d\f0\fs17\par" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "}" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10)
+        Me.txtGeneralNotes.Size = New System.Drawing.Size(886, 508)
+        Me.txtGeneralNotes.TabIndex = 1
         '
         'btnSave
         '
@@ -1053,7 +1056,6 @@ Partial Class frmInclusionsExclusions
         Me.tabWallItems.ResumeLayout(False)
         CType(Me.dgvWallItems, System.ComponentModel.ISupportInitialize).EndInit()
         Me.tabNotes.ResumeLayout(False)
-        Me.tabNotes.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -1098,8 +1100,6 @@ Partial Class frmInclusionsExclusions
     Friend WithEvents colWallIncluded As DataGridViewCheckBoxColumn
     Friend WithEvents colWallExcluded As DataGridViewCheckBoxColumn
     Friend WithEvents colWallOptional As DataGridViewCheckBoxColumn
-    Friend WithEvents tabNotes As TabPage
-    Friend WithEvents txtGeneralNotes As TextBox
     Friend WithEvents btnSave As Button
     Friend WithEvents btnClose As Button
     Friend WithEvents Label1 As Label
@@ -1155,4 +1155,6 @@ Partial Class frmInclusionsExclusions
     Friend WithEvents cmbTotalLoadDeflection_Corridor As ComboBox
     Friend WithEvents cmbAbsolute_Corridor As ComboBox
     Friend WithEvents cmbDeflection_Corridor As ComboBox
+    Friend WithEvents tabNotes As TabPage
+    Friend WithEvents txtGeneralNotes As RichTextBoxWithToolbar
 End Class

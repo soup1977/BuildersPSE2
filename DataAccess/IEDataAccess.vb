@@ -42,7 +42,7 @@ Namespace DataAccess
             For Each load As ProjectLoadModel In loads
                 dt.Rows.Add(load.Category, load.TCLL, load.TCDL, load.BCLL, load.BCDL,
                             load.OCSpacing, load.LiveLoadDeflection, load.TotalLoadDeflection,
-                            load.Absolute, load.Deflection)
+                            load.AbsoluteLL, load.AbsoluteTL)
             Next
 
             Return dt
@@ -119,8 +119,8 @@ Namespace DataAccess
                                                                                    .OCSpacing = If(Not reader.IsDBNull(reader.GetOrdinal("OCSpacing")), reader.GetString(reader.GetOrdinal("OCSpacing")), String.Empty),
                                                                                    .LiveLoadDeflection = If(Not reader.IsDBNull(reader.GetOrdinal("LiveLoadDeflection")), reader.GetString(reader.GetOrdinal("LiveLoadDeflection")), String.Empty),
                                                                                    .TotalLoadDeflection = If(Not reader.IsDBNull(reader.GetOrdinal("TotalLoadDeflection")), reader.GetString(reader.GetOrdinal("TotalLoadDeflection")), String.Empty),
-                                                                                   .Absolute = If(Not reader.IsDBNull(reader.GetOrdinal("Absolute")), reader.GetString(reader.GetOrdinal("Absolute")), String.Empty),
-                                                                                   .Deflection = If(Not reader.IsDBNull(reader.GetOrdinal("Deflection")), reader.GetString(reader.GetOrdinal("Deflection")), String.Empty)
+                                                                                   .AbsoluteLL = If(Not reader.IsDBNull(reader.GetOrdinal("AbsoluteLL")), reader.GetString(reader.GetOrdinal("AbsoluteLL")), String.Empty),
+                                                                                   .AbsoluteTL = If(Not reader.IsDBNull(reader.GetOrdinal("AbsoluteTL")), reader.GetString(reader.GetOrdinal("AbsoluteTL")), String.Empty)
                                                                                }
                                                                                loads.Add(load)
                                                                            End While
@@ -152,8 +152,8 @@ Namespace DataAccess
                                                                                        {"@OCSpacing", If(String.IsNullOrEmpty(load.OCSpacing), DBNull.Value, CObj(load.OCSpacing))},
                                                                                        {"@LiveLoadDeflection", If(String.IsNullOrEmpty(load.LiveLoadDeflection), DBNull.Value, CObj(load.LiveLoadDeflection))},
                                                                                        {"@TotalLoadDeflection", If(String.IsNullOrEmpty(load.TotalLoadDeflection), DBNull.Value, CObj(load.TotalLoadDeflection))},
-                                                                                       {"@Absolute", If(String.IsNullOrEmpty(load.Absolute), DBNull.Value, CObj(load.Absolute))},
-                                                                                       {"@Deflection", If(String.IsNullOrEmpty(load.Deflection), DBNull.Value, CObj(load.Deflection))}
+                                                                                       {"@AbsoluteLL", If(String.IsNullOrEmpty(load.AbsoluteLL), DBNull.Value, CObj(load.AbsoluteLL))},
+                                                                                       {"@AbsoluteTL", If(String.IsNullOrEmpty(load.AbsoluteTL), DBNull.Value, CObj(load.AbsoluteTL))}
                                                                                    }
                                                                                    Dim newIDObj As Object = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)(Queries.InsertProjectLoad, HelperDataAccess.BuildParameters(paramsDict), conn, transaction)
                                                                                    load.LoadID = CInt(newIDObj)

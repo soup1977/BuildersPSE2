@@ -12,6 +12,8 @@ Namespace BuildersPSE.Models
         Public Property VersionID As Integer ' FK to Projects
         Public Property ProductTypeID As Integer ' FK to ProductType (e.g., 1 for Floor)
         Public Property ColorCode As String = String.Empty
+        ' Add this property to the ActualUnitModel class
+        Public Property SortOrder As Integer = 1
 
         Public Property MarginPercent As Decimal = 0D ' Default to 0%, used in calculations
         Public Property ReferencedRawUnitName As String ' Joined from RawUnits for display/reference

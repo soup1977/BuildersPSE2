@@ -70,14 +70,18 @@
         Public Const UpdateRawUnit As String = "UPDATE RawUnits SET RawUnitName = @RawUnitName, BF = @BF, LF = @LF, EWPLF = @EWPLF, SqFt = @SqFt, FCArea = @FCArea, LumberCost = @LumberCost, PlateCost = @PlateCost, ManufLaborCost = @ManufLaborCost, DesignLabor = @DesignLabor, MGMTLabor = @MGMTLabor, JobSuppliesCost = @JobSuppliesCost, ManHours = @ManHours, ItemCost = @ItemCost, OverallCost = @OverallCost, DeliveryCost = @DeliveryCost, TotalSellPrice = @TotalSellPrice, AvgSPFNo2 = @AvgSPFNo2, SPFNo2BDFT = @SPFNo2BDFT, Avg241800 = @Avg241800, MSR241800BDFT = @MSR241800BDFT, Avg242400 = @Avg242400, MSR242400BDFT = @MSR242400BDFT, Avg261800 = @Avg261800, MSR261800BDFT = @MSR261800BDFT, Avg262400 = @Avg262400, MSR262400BDFT = @MSR262400BDFT WHERE RawUnitID = @RawUnitID"
 
         ' ActualUnits (updated to use VersionID)
-        Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder, ColorCode, MarginPercent) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder, @ColorCode, @MarginPercent)"
-        Public Const UpdateActualUnit As String = "UPDATE ActualUnits SET UnitName = @UnitName, PlanSQFT = @PlanSQFT, UnitType = @UnitType, OptionalAdder = @OptionalAdder, ColorCode = @ColorCode, MarginPercent=@MarginPercent WHERE ActualUnitID = @ActualUnitID"
-        Public Const SelectActualUnitsByVersion As String = "SELECT au.*, ru.RawUnitName FROM ActualUnits au JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID WHERE au.VersionID = @VersionID"
+        Public Const InsertActualUnit As String = "INSERT INTO ActualUnits (VersionID, RawUnitID, ProductTypeID, UnitName, PlanSQFT, UnitType, OptionalAdder, ColorCode, MarginPercent, SortOrder) OUTPUT INSERTED.ActualUnitID VALUES (@VersionID, @RawUnitID, @ProductTypeID, @UnitName, @PlanSQFT, @UnitType, @OptionalAdder, @ColorCode, @MarginPercent, @SortOrder)"
+        ' Replace the existing UpdateActualUnit query to include RawUnitID
+        Public Const UpdateActualUnit As String = "UPDATE ActualUnits SET RawUnitID = @RawUnitID, UnitName = @UnitName, PlanSQFT = @PlanSQFT, UnitType = @UnitType, OptionalAdder = @OptionalAdder, ColorCode = @ColorCode, MarginPercent = @MarginPercent, SortOrder = @SortOrder WHERE ActualUnitID = @ActualUnitID"
+        Public Const SelectActualUnitsByVersion As String = "SELECT au.*, ru.RawUnitName FROM ActualUnits au JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID WHERE au.VersionID = @VersionID ORDER BY au.SortOrder, au.ActualUnitID"
         Public Const DeleteActualUnit As String = "DELETE FROM ActualUnits WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitIDsByLevelID As String = "SELECT DISTINCT ActualUnitID FROM ActualToLevelMapping WHERE LevelID = @LevelID"
         Public Const CountMappingsByActualUnitID As String = "SELECT COUNT(*) FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID"
         Public Const SelectActualUnitByID As String = "SELECT au.*, ru.RawUnitName AS ReferencedRawUnitName FROM ActualUnits au JOIN RawUnits ru ON au.RawUnitID = ru.RawUnitID WHERE au.ActualUnitID = @ActualUnitID"
         Public Const SelectActualToLevelMappingsByActualUnitID As String = "SELECT * FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID"
+        ' Add new query for bulk sort order update
+        Public Const UpdateActualUnitSortOrder As String = "UPDATE ActualUnits SET SortOrder = @SortOrder WHERE ActualUnitID = @ActualUnitID"
+        Public Const UpdateActualUnitsSortOrderBatch As String = "UPDATE ActualUnits SET SortOrder = @SortOrder WHERE ActualUnitID = @ActualUnitID AND VersionID = @VersionID"
 
 
         ' ActualToLevelMapping (updated to use VersionID)
@@ -158,10 +162,15 @@
         Public Const CalculateWallBaseCost As String = "SELECT SUM(l.OverallCost) AS WallBaseCost FROM Levels l WHERE l.BuildingID = @BuildingID AND l.ProductTypeID = 3"
 
 
-        ' ProjectVersions Queries
+        ' Update SelectProjectVersions to include new fields
         Public Const SelectProjectVersions As String = "SELECT pv.*, c.CustomerName, s.SalesName FROM ProjectVersions pv LEFT JOIN Customer c ON pv.CustomerID = c.CustomerID AND c.CustomerType = 1 LEFT JOIN Sales s ON pv.SalesID = s.SalesID WHERE ProjectID = @ProjectID ORDER BY VersionDate DESC"
-        Public Const InsertProjectVersion As String = "INSERT INTO ProjectVersions (ProjectID, VersionName, VersionDate, Description, LastModifiedDate, CustomerID, SalesID, MondayID, ProjVersionStatusID) OUTPUT INSERTED.VersionID VALUES (@ProjectID, @VersionName, @VersionDate, @Description, GetDate(), @CustomerID, @SalesID, @MondayID, @ProjVersionStatusID)"
-        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID, ProjVersionStatusID=@ProjVersionStatusID, MondayID=@MondayID WHERE VersionID = @VersionID"
+
+        ' Update InsertProjectVersion to include new fields
+        Public Const InsertProjectVersion As String = "INSERT INTO ProjectVersions (ProjectID, VersionName, VersionDate, Description, LastModifiedDate, CustomerID, SalesID, MondayID, ProjVersionStatusID, FuturesAdderAmt, FuturesAdderProjTotal) OUTPUT INSERTED.VersionID VALUES (@ProjectID, @VersionName, @VersionDate, @Description, GetDate(), @CustomerID, @SalesID, @MondayID, @ProjVersionStatusID, @FuturesAdderAmt, @FuturesAdderProjTotal)"
+
+        ' Update UpdateProjectVersion to include new fields
+        Public Const UpdateProjectVersion As String = "UPDATE ProjectVersions SET VersionName = @VersionName, LastModifiedDate = GetDate(), CustomerID = @CustomerID, SalesID = @SalesID, ProjVersionStatusID=@ProjVersionStatusID, MondayID=@MondayID, FuturesAdderAmt=@FuturesAdderAmt, FuturesAdderProjTotal=@FuturesAdderProjTotal WHERE VersionID = @VersionID"
+
 
         ' ProjectVersions Duplication Queries
         Public Const DuplicateBuildings As String = "INSERT INTO Buildings (BuildingName, BuildingType, ResUnits, BldgQty, VersionID, LastModifiedDate) OUTPUT INSERTED.BuildingID SELECT BuildingName, BuildingType, ResUnits, BldgQty, @NewVersionID, GetDate() FROM Buildings WHERE VersionID = @OriginalVersionID"
@@ -180,7 +189,7 @@
         ' ProjectLoads
         Public Const SelectProjectLoads As String = "SELECT * FROM ProjectLoads WHERE ProjectID = @ProjectID ORDER BY Category desc"
         Public Const DeleteProjectLoads As String = "DELETE FROM ProjectLoads WHERE ProjectID = @ProjectID"
-        Public Const InsertProjectLoad As String = "INSERT INTO ProjectLoads (ProjectID,  Category, TCLL, TCDL, BCLL, BCDL, OCSpacing, LiveLoadDeflection, TotalLoadDeflection, Absolute, Deflection) OUTPUT INSERTED.LoadID VALUES (@ProjectID,  @Category, @TCLL, @TCDL, @BCLL, @BCDL, @OCSpacing, @LiveLoadDeflection, @TotalLoadDeflection, @Absolute, @Deflection)"
+        Public Const InsertProjectLoad As String = "INSERT INTO ProjectLoads (ProjectID,  Category, TCLL, TCDL, BCLL, BCDL, OCSpacing, LiveLoadDeflection, TotalLoadDeflection, AbsoluteLL, AbsoluteTL) OUTPUT INSERTED.LoadID VALUES (@ProjectID,  @Category, @TCLL, @TCDL, @BCLL, @BCDL, @OCSpacing, @LiveLoadDeflection, @TotalLoadDeflection, @AbsoluteLL, @AbsoluteTL)"
 
         ' ProjectBearingStyles
         Public Const SelectProjectBearingStyles As String = "SELECT * FROM ProjectBearingStyles WHERE ProjectID = @ProjectID "
@@ -249,11 +258,27 @@
 
 
         '--- Lumber Futures -------------------------------------------------
-        Public Const SelectLumberFuturesByVersion As String = "SELECT LumberFutureID, ContractMonth, PriorSettle, PullDate FROM LumberFutures WHERE VersionID = @VersionID ORDER BY PullDate"
+        Public Const SelectLumberFuturesByVersion As String = "SELECT LumberFutureID, ContractMonth, PriorSettle, PullDate, Active FROM LumberFutures WHERE VersionID = @VersionID ORDER BY PullDate"
         Public Const UpsertLumberFuture As String = "IF EXISTS (SELECT 1 FROM LumberFutures WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth) UPDATE LumberFutures SET PriorSettle = @PriorSettle, PullDate = GETDATE() WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth ELSE INSERT INTO LumberFutures (VersionID, ContractMonth, PriorSettle) VALUES (@VersionID, @ContractMonth, @PriorSettle)"
         Public Const UpdateProjectProductSettingLumberAdder As String = "UPDATE ProjectProductSettings SET LumberAdder = @LumberAdder WHERE VersionID = @VersionID AND ProductTypeID = @ProductTypeID"
         Public Const InsertLumberFuture As String = "INSERT INTO LumberFutures (VersionID, ContractMonth, PriorSettle, PullDate) VALUES (@VersionID, @ContractMonth, @PriorSettle, GETDATE())"
+        '-- Make one record active (demote others first)
+        Public Const SetActiveLumberFuture As String = "
+UPDATE LumberFutures 
+SET Active = 0 
+WHERE VersionID = @VersionID;
 
+UPDATE LumberFutures 
+SET Active = 1 
+WHERE LumberFutureID = @LumberFutureID 
+  AND VersionID = @VersionID;
+"
+
+' Or using the history table pattern you already have:
+Public Const SetLumberFutureActive As String = "
+UPDATE LumberFutures SET Active = 0 WHERE VersionID = @VersionID;
+UPDATE LumberFutures SET Active = 1 WHERE LumberFutureID = @LumberFutureID AND VersionID = @VersionID;
+"
         Public Const UpdateLumberFuture As String = "UPDATE LumberFutures SET PriorSettle = @PriorSettle, PullDate = GETDATE() WHERE VersionID = @VersionID AND ContractMonth = @ContractMonth"
 
         ' Project summary – includes City, State, Architect, Engineer, plan dates and Salesman

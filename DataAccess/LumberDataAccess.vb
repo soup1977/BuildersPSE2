@@ -468,10 +468,11 @@ Namespace DataAccess
                     Using rdr = cmd.ExecuteReader()
                         While rdr.Read()
                             Dim f As New LumberFutures With {
-                        .ID = rdr.GetInt32(0),           ' Primary key
+                        .LumberFutureID = rdr.GetInt32(0),           ' Primary key
                         .ContractMonth = rdr.GetString(1).Trim(),
                         .PriorSettle = If(rdr.IsDBNull(2), Nothing, CDec(rdr.GetDecimal(2))),
-                        .PullDate = rdr.GetDateTime(3)               ' This is the key line
+                        .PullDate = rdr.GetDateTime(3),
+                        .Active = If(rdr.IsDBNull(4), Nothing, rdr.GetBoolean(4))
                     }
                             result.Add(f)
                         End While
@@ -485,6 +486,28 @@ Namespace DataAccess
 
             Return result
         End Function
+
+        Public Shared Sub SetActiveLumberFuture(versionId As Integer, lumberFutureId As Integer)
+            Using conn = SqlConnectionManager.Instance.GetConnection()
+                Using tx = conn.BeginTransaction()
+                    Try
+                        SqlConnectionManager.Instance.ExecuteNonQueryTransactional(
+                    Queries.SetActiveLumberFuture,
+                    {
+                        New SqlParameter("@VersionID", versionId),
+                        New SqlParameter("@LumberFutureID", lumberFutureId)
+                    },
+                    conn, tx)
+
+                        tx.Commit()
+                    Catch
+                        tx.Rollback()
+                        Throw
+                    End Try
+                End Using
+            End Using
+        End Sub
+
 
         Public Shared Function MonthNameToNumber(name As String) As Integer
             Select Case name

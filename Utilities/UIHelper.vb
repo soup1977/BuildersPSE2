@@ -16,7 +16,8 @@ Public Module UIHelper
         If _busyCount = 0 Then
             _originalCursor = form.Cursor
             form.Cursor = Cursors.WaitCursor
-            SetStatus(message & "  ", marquee:=True)
+            SetStatus(message)
+            Add(message) ' Log to activity panel
         End If
         _busyCount += 1
     End Sub
@@ -33,72 +34,69 @@ Public Module UIHelper
         End If
     End Sub
 
-    ' Tiny wrappers so you don’t have to know the exact ToolStripStatusLabel names
-    Private Sub SetStatus(text As String, marquee As Boolean)
+    ' Tiny wrappers so you don't have to know the exact ToolStripStatusLabel names
+    Private Sub SetStatus(text As String)
         Dim f As frmMain = TryCast(Application.OpenForms("frmMain"), frmMain)
         If f IsNot Nothing AndAlso f.StatusStrip IsNot Nothing Then
-            f.ToolStripStatusLabel1.Text = text
-            f.ToolStripProgressBar1.Style = If(marquee, ProgressBarStyle.Marquee, ProgressBarStyle.Blocks)
-            f.ToolStripProgressBar1.Visible = True
+            f.ToolStripStatusLabel.Text = text & "  "
+
         End If
     End Sub
 
     Private Sub ClearStatus()
         Dim f As frmMain = TryCast(Application.OpenForms("frmMain"), frmMain)
         If f IsNot Nothing AndAlso f.StatusStrip IsNot Nothing Then
-            f.ToolStripStatusLabel1.Text = "Ready"
-            f.ToolStripProgressBar1.Visible = False
+            f.ToolStripStatusLabel.Text = "Ready"
+
         End If
     End Sub
 
     ''' <summary>
-    ''' Adds (or sets) a short message to the MainForm status strip label.
+    ''' Adds a timestamped message to the Activity Log panel in frmMain.
     ''' Safe to call from any thread (invokes if needed).
+    ''' Also writes to Debug output for development.
     ''' </summary>
-    ''' <param name="text">Text to display</param>
-    ''' <param name="append">True = add to existing text (with space), False = replace</param>
-    ''' <param name="clearAfterMs">Optional auto-clear after X milliseconds (0 = never)</param>
-    Public Sub Add(text As String,
-                         Optional append As Boolean = True,
-                         Optional clearAfterMs As Integer = 0)
+    ''' <param name="text">Text to display in the activity log</param>
 
+
+    Public Sub Add(text As String)
+
+        ' Always write to debug output
+        Debug.WriteLine($"[{DateTime.Now:HH:mm:ss}] {text}")
+
+        ' Get main form and add to activity log
         Dim main As frmMain = TryCast(Application.OpenForms("frmMain"), frmMain)
         If main Is Nothing OrElse main.IsDisposed Then Return
 
-        Dim label As ToolStripStatusLabel = main.ToolStripStatusLabel1
-        If label Is Nothing Then Return
-        append = False
-        Dim finalText As String = If(append AndAlso Not String.IsNullOrWhiteSpace(label.Text) AndAlso label.Text.TrimEnd() <> "Ready",
-                                    label.Text.TrimEnd() & "  •  " & text,
-                                    text)
+        ' Use the new public method on frmMain (handles thread safety internally)
+        main.AddToActivityLog(text)
+    End Sub
 
-        ' Thread-safe invoke
+    ''' <summary>
+    ''' Toggles the Activity Log panel visibility from anywhere in the application.
+    ''' </summary>
+    Public Sub ToggleActivityLog()
+        Dim main As frmMain = TryCast(Application.OpenForms("frmMain"), frmMain)
+        If main Is Nothing OrElse main.IsDisposed Then Return
+
         If main.InvokeRequired Then
-            main.Invoke(Sub()
-                            label.Text = finalText
-                            If clearAfterMs > 0 Then
-                                Dim timer As New Timer With {.Interval = clearAfterMs, .Tag = label}
-                                AddHandler timer.Tick, Sub(s, e)
-                                                           Dim t As Timer = DirectCast(s, Timer)
-                                                           Dim lbl As ToolStripStatusLabel = DirectCast(t.Tag, ToolStripStatusLabel)
-                                                           lbl.Text = "Ready"
-                                                           t.Stop()
-                                                           t.Dispose()
-                                                       End Sub
-                                timer.Start()
-                            End If
-                        End Sub)
+            main.Invoke(Sub() main.ToggleActivityLog())
         Else
-            label.Text = finalText
-            If clearAfterMs > 0 Then
-                Dim timer As New Timer With {.Interval = clearAfterMs}
-                AddHandler timer.Tick, Sub()
-                                           label.Text = "Ready"
-                                           timer.Stop()
-                                           timer.Dispose()
-                                       End Sub
-                timer.Start()
-            End If
+            main.ToggleActivityLog()
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Clears all entries from the Activity Log.
+    ''' </summary>
+    Public Sub ClearActivityLog()
+        Dim main As frmMain = TryCast(Application.OpenForms("frmMain"), frmMain)
+        If main Is Nothing OrElse main.IsDisposed Then Return
+
+        If main.InvokeRequired Then
+            main.Invoke(Sub() main.ClearActivityLog())
+        Else
+            main.ClearActivityLog()
         End If
     End Sub
 

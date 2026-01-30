@@ -26,10 +26,10 @@ Partial Class WallImportMappingForm
         Me.btnCancel = New System.Windows.Forms.Button()
         Me.lblHeader = New System.Windows.Forms.Label()
         Me.dgvMapping = New System.Windows.Forms.DataGridView()
-        Me.chkCreateLevels = New System.Windows.Forms.CheckBox()
         Me.colCSVKey = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colArrow = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colTarget = New System.Windows.Forms.DataGridViewComboBoxColumn()
+        Me.chkCreateLevels = New System.Windows.Forms.CheckBox()
         CType(Me.dgvMapping, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -82,18 +82,6 @@ Partial Class WallImportMappingForm
         Me.dgvMapping.Size = New System.Drawing.Size(776, 377)
         Me.dgvMapping.TabIndex = 3
         '
-        'chkCreateLevels
-        '
-        Me.chkCreateLevels.AutoSize = True
-        Me.chkCreateLevels.Checked = True
-        Me.chkCreateLevels.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkCreateLevels.Location = New System.Drawing.Point(16, 421)
-        Me.chkCreateLevels.Name = "chkCreateLevels"
-        Me.chkCreateLevels.Size = New System.Drawing.Size(194, 17)
-        Me.chkCreateLevels.TabIndex = 4
-        Me.chkCreateLevels.Text = "Create missing levels automatically?"
-        Me.chkCreateLevels.UseVisualStyleBackColor = True
-        '
         'colCSVKey
         '
         Me.colCSVKey.DataPropertyName = "CsvKey"
@@ -110,6 +98,19 @@ Partial Class WallImportMappingForm
         Me.colTarget.DataPropertyName = "TargetBuildingID"
         Me.colTarget.HeaderText = "Target Building"
         Me.colTarget.Name = "colTarget"
+        '
+        'chkCreateLevels
+        '
+        Me.chkCreateLevels.AutoSize = True
+        Me.chkCreateLevels.Checked = True
+        Me.chkCreateLevels.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkCreateLevels.Location = New System.Drawing.Point(16, 421)
+        Me.chkCreateLevels.Name = "chkCreateLevels"
+        Me.chkCreateLevels.Size = New System.Drawing.Size(194, 17)
+        Me.chkCreateLevels.TabIndex = 4
+        Me.chkCreateLevels.Text = "Create missing levels automatically?"
+        Me.chkCreateLevels.UseVisualStyleBackColor = True
+        Me.chkCreateLevels.Visible = False
         '
         'WallImportMappingForm
         '

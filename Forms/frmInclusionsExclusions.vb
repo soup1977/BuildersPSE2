@@ -71,12 +71,12 @@ Public Class frmInclusionsExclusions
         cmbTotalLoadDeflection_Floor.Items.AddRange(totalDeflOptions)
         cmbTotalLoadDeflection_Corridor.Items.AddRange(totalDeflOptions)
 
-        Dim absoluteOptions = ieda.GetComboOptions("Absolute").ToArray()
+        Dim absoluteOptions = ieda.GetComboOptions("AbsoluteLL").ToArray()
         cmbAbsolute_Roof.Items.AddRange(absoluteOptions)
         cmbAbsolute_Floor.Items.AddRange(absoluteOptions)
         cmbAbsolute_Corridor.Items.AddRange(absoluteOptions)
 
-        Dim deflectionOptions = ieda.GetComboOptions("Deflection").ToArray()
+        Dim deflectionOptions = ieda.GetComboOptions("AbsoluteTL").ToArray()
         cmbDeflection_Roof.Items.AddRange(deflectionOptions)
         cmbDeflection_Floor.Items.AddRange(deflectionOptions)
         cmbDeflection_Corridor.Items.AddRange(deflectionOptions)
@@ -183,8 +183,8 @@ Public Class frmInclusionsExclusions
                     cmbOCSpacing_Roof.Text = .OCSpacing
                     cmbLiveLoadDeflection_Roof.Text = .LiveLoadDeflection
                     cmbTotalLoadDeflection_Roof.Text = .TotalLoadDeflection
-                    cmbAbsolute_Roof.Text = .Absolute
-                    cmbDeflection_Roof.Text = .Deflection
+                    cmbAbsolute_Roof.Text = .AbsoluteLL
+                    cmbDeflection_Roof.Text = .AbsoluteTL
                 End With
                 With loads(1) ' Floor
                     cmbTCLL_Floor.Text = .TCLL
@@ -194,8 +194,8 @@ Public Class frmInclusionsExclusions
                     cmbOCSpacing_Floor.Text = .OCSpacing
                     cmbLiveLoadDeflection_Floor.Text = .LiveLoadDeflection
                     cmbTotalLoadDeflection_Floor.Text = .TotalLoadDeflection
-                    cmbAbsolute_Floor.Text = .Absolute
-                    cmbDeflection_Floor.Text = .Deflection
+                    cmbAbsolute_Floor.Text = .AbsoluteLL
+                    cmbDeflection_Floor.Text = .AbsoluteTL
                 End With
                 With loads(2) ' Corridor
                     cmbTCLL_Corridor.Text = .TCLL
@@ -205,8 +205,8 @@ Public Class frmInclusionsExclusions
                     cmbOCSpacing_Corridor.Text = .OCSpacing
                     cmbLiveLoadDeflection_Corridor.Text = .LiveLoadDeflection
                     cmbTotalLoadDeflection_Corridor.Text = .TotalLoadDeflection
-                    cmbAbsolute_Corridor.Text = .Absolute
-                    cmbDeflection_Corridor.Text = .Deflection
+                    cmbAbsolute_Corridor.Text = .AbsoluteLL
+                    cmbDeflection_Corridor.Text = .AbsoluteTL
                 End With
             End If
 
@@ -214,7 +214,12 @@ Public Class frmInclusionsExclusions
             ' Load Notes
             Dim note = ieda.GetProjectGeneralNotes(ProjectID)
             If note IsNot Nothing Then
-                txtGeneralNotes.Text = note.Notes
+                If note.Notes.StartsWith("{\rtf") Then
+                    txtGeneralNotes.Rtf = note.Notes
+                Else
+                    txtGeneralNotes.Text = note.Notes
+                End If
+
             End If
 
             ' Load Items (Roof, Floor, Wall)
@@ -276,8 +281,8 @@ Public Class frmInclusionsExclusions
     .OCSpacing = cmbOCSpacing_Roof.Text,
     .LiveLoadDeflection = cmbLiveLoadDeflection_Roof.Text,
     .TotalLoadDeflection = cmbTotalLoadDeflection_Roof.Text,
-    .Absolute = cmbAbsolute_Roof.Text,
-    .Deflection = cmbDeflection_Roof.Text
+    .AbsoluteLL = cmbAbsolute_Roof.Text,
+    .AbsoluteTL = cmbDeflection_Roof.Text
 },
                 New ProjectLoadModel With {
     .ProjectID = ProjectID,
@@ -289,8 +294,8 @@ Public Class frmInclusionsExclusions
     .OCSpacing = cmbOCSpacing_Floor.Text,
     .LiveLoadDeflection = cmbLiveLoadDeflection_Floor.Text,
     .TotalLoadDeflection = cmbTotalLoadDeflection_Floor.Text,
-    .Absolute = cmbAbsolute_Floor.Text,
-    .Deflection = cmbDeflection_Floor.Text
+    .AbsoluteLL = cmbAbsolute_Floor.Text,
+    .AbsoluteTL = cmbDeflection_Floor.Text
 },
                 New ProjectLoadModel With {
     .ProjectID = ProjectID,
@@ -302,8 +307,8 @@ Public Class frmInclusionsExclusions
     .OCSpacing = cmbOCSpacing_Corridor.Text,
     .LiveLoadDeflection = cmbLiveLoadDeflection_Corridor.Text,
     .TotalLoadDeflection = cmbTotalLoadDeflection_Corridor.Text,
-    .Absolute = cmbAbsolute_Corridor.Text,
-    .Deflection = cmbDeflection_Corridor.Text
+    .AbsoluteLL = cmbAbsolute_Corridor.Text,
+    .AbsoluteTL = cmbDeflection_Corridor.Text
 }
             }
             ieda.SaveProjectLoads(ProjectID, loads)
@@ -326,7 +331,7 @@ Public Class frmInclusionsExclusions
             ' Save Notes
             Dim note As New ProjectGeneralNotesModel With {
             .ProjectID = ProjectID,
-            .Notes = txtGeneralNotes.Text
+            .Notes = txtGeneralNotes.Rtf
         }
             Dim existingNote = ieda.GetProjectGeneralNotes(ProjectID)
             If existingNote IsNot Nothing Then note.NoteID = existingNote.NoteID

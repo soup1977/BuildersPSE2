@@ -7,7 +7,7 @@ Namespace DataAccess
 
 
     Public Class ProjVersionDataAccess
-        Public Shared Function CreateProjectVersion(projectID As Integer, versionName As String, description As String, customerID As Integer?, salesID As Integer?) As Integer
+        Public Shared Function CreateProjectVersion(projectID As Integer, versionName As String, description As String, customerID As Integer?, salesID As Integer?, Optional futuresAdderAmt As Decimal? = Nothing, Optional futuresAdderProjTotal As Decimal? = Nothing) As Integer
             ' Validate CustomerID for CustomerType=1
             If customerID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(customerID, 1) Then
                 Throw New ArgumentException("CustomerID must reference a customer with CustomerType=1 (Customer).")
@@ -25,7 +25,9 @@ Namespace DataAccess
                                                                    {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                    {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)},
                                                                    {"@MondayID", Nothing},
-                                                                   {"@ProjVersionStatusID", 1}
+                                                                   {"@ProjVersionStatusID", 1},
+                                                           {"@FuturesAdderAmt", If(futuresAdderAmt.HasValue, CType(futuresAdderAmt.Value, Object), DBNull.Value)},
+                                                           {"@FuturesAdderProjTotal", If(futuresAdderProjTotal.HasValue, CType(futuresAdderProjTotal.Value, Object), DBNull.Value)}
                                                                }
                                                                        Dim newVersionIDObj As Object = SqlConnectionManager.Instance.ExecuteScalar(Of Object)(Queries.InsertProjectVersion, HelperDataAccess.BuildParameters(params))
                                                                        newVersionID = CInt(newVersionIDObj)
@@ -292,8 +294,10 @@ Namespace DataAccess
                                                                            .CustomerName = If(Not reader.IsDBNull(reader.GetOrdinal("CustomerName")), reader.GetString(reader.GetOrdinal("CustomerName")), String.Empty),
                                                                            .SalesName = If(Not reader.IsDBNull(reader.GetOrdinal("SalesName")), reader.GetString(reader.GetOrdinal("SalesName")), String.Empty),
                                                                            .MondayID = If(Not reader.IsDBNull(reader.GetOrdinal("MondayID")), reader.GetString(reader.GetOrdinal("MondayID")), String.Empty),
-                                                                           .ProjVersionStatusID = If(Not reader.IsDBNull(reader.GetOrdinal("ProjVersionStatusID")), reader.GetInt32(reader.GetOrdinal("ProjVersionStatusID")), Nothing)
-                                                                       }
+                                                                           .ProjVersionStatusID = If(Not reader.IsDBNull(reader.GetOrdinal("ProjVersionStatusID")), reader.GetInt32(reader.GetOrdinal("ProjVersionStatusID")), Nothing),
+                                                                            .FuturesAdderAmt = If(Not reader.IsDBNull(reader.GetOrdinal("FuturesAdderAmt")), reader.GetDecimal(reader.GetOrdinal("FuturesAdderAmt")), Nothing),
+                                                                            .FuturesAdderProjTotal = If(Not reader.IsDBNull(reader.GetOrdinal("FuturesAdderProjTotal")), reader.GetDecimal(reader.GetOrdinal("FuturesAdderProjTotal")), Nothing)
+                                                                           }
                                                                                versions.Add(version)
                                                                            End While
                                                                        End Using
@@ -302,7 +306,7 @@ Namespace DataAccess
         End Function
 
         ' Update an existing project version (CustomerID restricted to CustomerType=1 via UI filtering and validation)
-        Public Shared Sub UpdateProjectVersion(versionID As Integer, versionName As String, mondayid As String, projStatusid As Integer?, customerID As Integer?, salesID As Integer?)
+        Public Shared Sub UpdateProjectVersion(versionID As Integer, versionName As String, mondayid As String, projStatusid As Integer?, customerID As Integer?, salesID As Integer?, Optional futuresAdderAmt As Decimal? = Nothing, Optional futuresAdderProjTotal As Decimal? = Nothing)
             ' Validate CustomerID for CustomerType=1
             If customerID.HasValue AndAlso Not HelperDataAccess.ValidateCustomerType(customerID, 1) Then
                 Throw New ArgumentException("CustomerID must reference a customer with CustomerType=1 (Customer).")
@@ -316,8 +320,10 @@ Namespace DataAccess
                                                                    {"@CustomerID", If(customerID.HasValue, CType(customerID.Value, Object), DBNull.Value)},
                                                                    {"@SalesID", If(salesID.HasValue, CType(salesID.Value, Object), DBNull.Value)},
                                                                    {"@MondayID", If(String.IsNullOrEmpty(mondayid), DBNull.Value, CType(mondayid, Object))},
-                                                                   {"@ProjVersionStatusID", If(projStatusid.HasValue, CType(projStatusid.Value, Object), DBNull.Value)}
-                                                               }
+                                                                   {"@ProjVersionStatusID", If(projStatusid.HasValue, CType(projStatusid.Value, Object), DBNull.Value)},
+                                                                   {"@FuturesAdderAmt", If(futuresAdderAmt.HasValue, CType(futuresAdderAmt.Value, Object), DBNull.Value)},
+                                                                   {"@FuturesAdderProjTotal", If(futuresAdderProjTotal.HasValue, CType(futuresAdderProjTotal.Value, Object), DBNull.Value)}
+                                                                    }
                                                                        SqlConnectionManager.Instance.ExecuteNonQuery(Queries.UpdateProjectVersion, HelperDataAccess.BuildParameters(params))
                                                                    End Sub, "Error updating project version " & versionID)
         End Sub
