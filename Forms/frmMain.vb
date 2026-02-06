@@ -380,4 +380,15 @@ Public Class frmMain
         Me.Close()
     End Sub
 
+    Private Sub btnPriceLock_Click(sender As Object, e As EventArgs) Handles btnPriceLock.Click
+        Using frm As New frmPriceLockList()
+            frm.ShowDialog()
+        End Using
+    End Sub
+
+    Private Sub btnPriceLockAdmin_Click(sender As Object, e As EventArgs) Handles btnPriceLockAdmin.Click
+        Using frm As New frmPriceLockAdmin()
+            frm.ShowDialog()
+        End Using
+    End Sub
 End Class

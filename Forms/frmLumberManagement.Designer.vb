@@ -37,13 +37,13 @@ Partial Class frmLumberManagement
         Me.lstLumberType.FormattingEnabled = True
         Me.lstLumberType.Location = New System.Drawing.Point(58, 18)
         Me.lstLumberType.Name = "lstLumberType"
-        Me.lstLumberType.Size = New System.Drawing.Size(108, 173)
+        Me.lstLumberType.Size = New System.Drawing.Size(163, 173)
         Me.lstLumberType.TabIndex = 0
         '
         'lstCostEffective
         '
         Me.lstCostEffective.FormattingEnabled = True
-        Me.lstCostEffective.Location = New System.Drawing.Point(198, 18)
+        Me.lstCostEffective.Location = New System.Drawing.Point(227, 18)
         Me.lstCostEffective.Name = "lstCostEffective"
         Me.lstCostEffective.Size = New System.Drawing.Size(108, 173)
         Me.lstCostEffective.TabIndex = 1
@@ -59,7 +59,7 @@ Partial Class frmLumberManagement
         '
         'btnAddCostEffective
         '
-        Me.btnAddCostEffective.Location = New System.Drawing.Point(198, 197)
+        Me.btnAddCostEffective.Location = New System.Drawing.Point(227, 197)
         Me.btnAddCostEffective.Name = "btnAddCostEffective"
         Me.btnAddCostEffective.Size = New System.Drawing.Size(52, 27)
         Me.btnAddCostEffective.TabIndex = 3
@@ -76,6 +76,7 @@ Partial Class frmLumberManagement
         '
         'btnSaveLumberCosts
         '
+        Me.btnSaveLumberCosts.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnSaveLumberCosts.Location = New System.Drawing.Point(595, 454)
         Me.btnSaveLumberCosts.Name = "btnSaveLumberCosts"
         Me.btnSaveLumberCosts.Size = New System.Drawing.Size(74, 29)
@@ -85,6 +86,7 @@ Partial Class frmLumberManagement
         '
         'btnExitForm
         '
+        Me.btnExitForm.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnExitForm.Location = New System.Drawing.Point(684, 454)
         Me.btnExitForm.Name = "btnExitForm"
         Me.btnExitForm.Size = New System.Drawing.Size(65, 28)

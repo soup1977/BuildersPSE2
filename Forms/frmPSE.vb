@@ -3,6 +3,7 @@
 Imports System.Data.SqlClient
 Imports BuildersPSE2.BuildersPSE.Models
 Imports BuildersPSE2.DataAccess
+Imports BuildersPSE2.Services
 Imports BuildersPSE2.Utilities
 Imports Microsoft.VisualBasic.FileIO
 
@@ -1380,7 +1381,7 @@ Handles DataGridViewAssigned.CellFormatting
     End Sub
     Private Sub RecalculateProject()
         Try
-            RollupDataAccess.RecalculateVersion(selectedVersionID)
+            RollupCalculationService.RecalculateVersion(selectedVersionID)
             LoadAssignedUnits()
             UIHelper.Add("Status: Project recalculated successfully for version " & selectedVersionID & ".")
         Catch ex As Exception
@@ -1560,7 +1561,7 @@ Handles DataGridViewAssigned.CellFormatting
         Try
             UIHelper.ShowBusy(_mainForm)
             UIHelper.Add($"Status: Session complete for version {selectedVersionID} at {DateTime.Now:HH:mm:ss}.")
-            RollupDataAccess.RecalculateVersion(selectedVersionID)
+            RollupCalculationService.RecalculateVersion(selectedVersionID)
             _mainForm.RemoveTabFromTabControl($"PSE_{selectedProjectID}_{selectedVersionID}")
         Catch ex As Exception
             UIHelper.Add($"Status: Error closing form for version {selectedVersionID}: {ex.Message}")
@@ -2005,10 +2006,10 @@ Handles DataGridViewAssigned.CellFormatting
             ' Refresh UI and rollups
             LoadAssignedUnits()
             For Each lvl In targetLevels
-                RollupDataAccess.UpdateLevelRollups(lvl.LevelID)
+                RollupCalculationService.UpdateLevelRollups(lvl.LevelID)
             Next
             If targetBuildingID > 0 Then
-                RollupDataAccess.UpdateBuildingRollups(targetBuildingID)
+                RollupCalculationService.UpdateBuildingRollups(targetBuildingID)
             End If
 
             ' Clear copy buffer
@@ -2133,8 +2134,8 @@ Handles DataGridViewAssigned.CellFormatting
     ''' Updates level and building rollups for the current selection.
     ''' </summary>
     Private Sub UpdateRollups()
-        If selectedLevelID > 0 Then RollupDataAccess.UpdateLevelRollups(selectedLevelID)
-        If selectedBuildingID > 0 Then RollupDataAccess.UpdateBuildingRollups(selectedBuildingID)
+        If selectedLevelID > 0 Then RollupCalculationService.UpdateLevelRollups(selectedLevelID)
+        If selectedBuildingID > 0 Then RollupCalculationService.UpdateBuildingRollups(selectedBuildingID)
     End Sub
     ''' <summary>
     ''' Resets all per-SQFT preview textboxes to zero.

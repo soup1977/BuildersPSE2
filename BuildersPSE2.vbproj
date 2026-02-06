@@ -87,11 +87,11 @@
     <Reference Include="ClosedXML.Parser, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1d5f7376574c51ec, processorArchitecture=MSIL">
       <HintPath>packages\ClosedXML.Parser.2.0.0\lib\netstandard2.0\ClosedXML.Parser.dll</HintPath>
     </Reference>
-    <Reference Include="DocumentFormat.OpenXml, Version=3.3.0.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
-      <HintPath>packages\DocumentFormat.OpenXml.3.3.0\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
+    <Reference Include="DocumentFormat.OpenXml, Version=3.4.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>packages\DocumentFormat.OpenXml.3.4.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
-    <Reference Include="DocumentFormat.OpenXml.Framework, Version=3.3.0.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
-      <HintPath>packages\DocumentFormat.OpenXml.Framework.3.3.0\lib\net46\DocumentFormat.OpenXml.Framework.dll</HintPath>
+    <Reference Include="DocumentFormat.OpenXml.Framework, Version=3.4.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>packages\DocumentFormat.OpenXml.Framework.3.4.1\lib\net46\DocumentFormat.OpenXml.Framework.dll</HintPath>
     </Reference>
     <Reference Include="ExcelNumberFormat, Version=1.1.0.0, Culture=neutral, PublicKeyToken=23c6f5d73be07eca, processorArchitecture=MSIL">
       <HintPath>packages\ExcelNumberFormat.1.1.0\lib\net20\ExcelNumberFormat.dll</HintPath>
@@ -99,8 +99,8 @@
     <Reference Include="HtmlAgilityPack, Version=1.12.4.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>packages\HtmlAgilityPack.1.12.4\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.10.0.1\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.10.0.2\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
@@ -133,7 +133,7 @@
       <HintPath>packages\RBush.Signed.4.0.0\lib\net47\RBush.dll</HintPath>
     </Reference>
     <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
-      <HintPath>packages\SixLabors.Fonts.1.0.0\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
+      <HintPath>packages\SixLabors.Fonts.1.0.1\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -144,8 +144,8 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
-    <Reference Include="System.IO.Pipelines, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.IO.Pipelines.10.0.1\lib\net462\System.IO.Pipelines.dll</HintPath>
+    <Reference Include="System.IO.Pipelines, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.IO.Pipelines.10.0.2\lib\net462\System.IO.Pipelines.dll</HintPath>
     </Reference>
     <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
@@ -158,11 +158,11 @@
       <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Security" />
-    <Reference Include="System.Text.Encodings.Web, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.Text.Encodings.Web.10.0.1\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    <Reference Include="System.Text.Encodings.Web, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Text.Encodings.Web.10.0.2\lib\net462\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
-    <Reference Include="System.Text.Json, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.Text.Json.10.0.1\lib\net462\System.Text.Json.dll</HintPath>
+    <Reference Include="System.Text.Json, Version=10.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Text.Json.10.0.2\lib\net462\System.Text.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
@@ -175,15 +175,18 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
     <Reference Include="WebDriver, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Selenium.WebDriver.4.39.0\lib\net462\WebDriver.dll</HintPath>
+      <HintPath>packages\Selenium.WebDriver.4.40.0\lib\net462\WebDriver.dll</HintPath>
     </Reference>
     <Reference Include="WebDriver.Support, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Selenium.Support.4.39.0\lib\netstandard2.0\WebDriver.Support.dll</HintPath>
+      <HintPath>packages\Selenium.Support.4.40.0\lib\netstandard2.0\WebDriver.Support.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
+    <Import Include="OpenQA.Selenium" />
+    <Import Include="OpenQA.Selenium.Edge" />
+    <Import Include="OpenQA.Selenium.Support.UI" />
     <Import Include="System" />
     <Import Include="System.Collections" />
     <Import Include="System.Collections.Generic" />
@@ -202,17 +205,31 @@
     <Compile Include="DataAccess\HelperDataAccess.vb" />
     <Compile Include="DataAccess\IEDataAccess.vb" />
     <Compile Include="DataAccess\LumberDataAccess.vb" />
-    <Compile Include="DataAccess\ModelParams.vb" />
+    <Compile Include="DataAccess\PriceLockDataAccess.vb" />
+    <Compile Include="DataAccess\PriceLockQueries.vb" />
+    <Compile Include="DataAccess\PriceLockQueries_RandomLengths.vb" />
     <Compile Include="DataAccess\ProjectDataAccess.vb" />
     <Compile Include="DataAccess\ProjVersionDataAccess.vb" />
     <Compile Include="DataAccess\Queries.vb" />
     <Compile Include="DataAccess\ExternalImportDataAccess.vb" />
     <Compile Include="DataAccess\ReportsDataAccess.vb" />
-    <Compile Include="DataAccess\RollupDataAccess.vb" />
+    <Compile Include="DataAccess\TableOperations.vb" />
     <Compile Include="Forms\frmActualsMatcher.Designer.vb">
       <DependentUpon>frmActualsMatcher.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmActualsMatcher.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmBuilderManagement.Designer.vb">
+      <DependentUpon>frmBuilderManagement.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmBuilderManagement.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmComponentPricingEdit.Designer.vb">
+      <DependentUpon>frmComponentPricingEdit.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmComponentPricingEdit.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\frmCreateEditProject.Designer.vb">
@@ -270,6 +287,78 @@
     <Compile Include="Forms\frmMondaySearch.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialCategoryManagement.Designer.vb">
+      <DependentUpon>frmMaterialCategoryManagement.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialCategoryManagement.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialCategoryRLMapping.Designer.vb">
+      <DependentUpon>frmMaterialCategoryRLMapping.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialCategoryRLMapping.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialPricingAdd.Designer.vb">
+      <DependentUpon>frmMaterialPricingAdd.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialPricingAdd.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialPricingEdit.Designer.vb">
+      <DependentUpon>frmMaterialPricingEdit.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMaterialPricingEdit.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMitekImport.Designer.vb">
+      <DependentUpon>frmMitekImport.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmMitekImport.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmOptionManagement.Designer.vb">
+      <DependentUpon>frmOptionManagement.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmOptionManagement.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPlanManagement.Designer.vb">
+      <DependentUpon>frmPlanManagement.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPlanManagement.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockAdmin.Designer.vb">
+      <DependentUpon>frmPriceLockAdmin.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockAdmin.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockComparison.Designer.vb">
+      <DependentUpon>frmPriceLockComparison.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockComparison.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockCopy.Designer.vb">
+      <DependentUpon>frmPriceLockCopy.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockCopy.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockDetail.Designer.vb">
+      <DependentUpon>frmPriceLockDetail.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockDetail.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockList.Designer.vb">
+      <DependentUpon>frmPriceLockList.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockList.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\frmPSE.Designer.vb">
       <DependentUpon>frmPSE.vb</DependentUpon>
     </Compile>
@@ -292,6 +381,36 @@
       <DependentUpon>frmLumberManagement.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmLumberManagement.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockNew.Designer.vb">
+      <DependentUpon>frmPriceLockNew.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmPriceLockNew.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmRandomLengthsImportEdit.Designer.vb">
+      <DependentUpon>frmRandomLengthsImportEdit.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmRandomLengthsImportEdit.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmRandomLengthsImportManager.Designer.vb">
+      <DependentUpon>frmRandomLengthsImportManager.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmRandomLengthsImportManager.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmSubdivisionManagement.Designer.vb">
+      <DependentUpon>frmSubdivisionManagement.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmSubdivisionManagement.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmSubdivisionPlanAssignment.Designer.vb">
+      <DependentUpon>frmSubdivisionPlanAssignment.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PriceLock\frmSubdivisionPlanAssignment.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\ProjectBuilderForm.Designer.vb">
@@ -329,6 +448,7 @@
     <Compile Include="Models\LumberFutures.vb" />
     <Compile Include="Models\LumberTypeModel.vb" />
     <Compile Include="Models\MondayBoardItem.vb" />
+    <Compile Include="Models\PriceLockModels.vb" />
     <Compile Include="Models\ProductTypeModel.vb" />
     <Compile Include="Models\ProjectBearingStylesModel.vb" />
     <Compile Include="Models\ProjectDesignInfoModel.vb" />
@@ -412,6 +532,21 @@
     <EmbeddedResource Include="Forms\frmMondaySearch.resx">
       <DependentUpon>frmMondaySearch.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmComponentPricingEdit.resx">
+      <DependentUpon>frmComponentPricingEdit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmMaterialCategoryManagement.resx">
+      <DependentUpon>frmMaterialCategoryManagement.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmMaterialPricingAdd.resx">
+      <DependentUpon>frmMaterialPricingAdd.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmOptionManagement.resx">
+      <DependentUpon>frmOptionManagement.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmPlanManagement.resx">
+      <DependentUpon>frmPlanManagement.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmPSE.resx">
       <DependentUpon>frmPSE.vb</DependentUpon>
     </EmbeddedResource>
@@ -420,6 +555,24 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmVersionDialog.resx">
       <DependentUpon>frmVersionDialog.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmPriceLockAdmin.resx">
+      <DependentUpon>frmPriceLockAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmPriceLockDetail.resx">
+      <DependentUpon>frmPriceLockDetail.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmPriceLockList.resx">
+      <DependentUpon>frmPriceLockList.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmRandomLengthsImportManager.resx">
+      <DependentUpon>frmRandomLengthsImportManager.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmSubdivisionManagement.resx">
+      <DependentUpon>frmSubdivisionManagement.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PriceLock\frmSubdivisionPlanAssignment.resx">
+      <DependentUpon>frmSubdivisionPlanAssignment.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ProjectBuilderForm.resx">
       <DependentUpon>ProjectBuilderForm.vb</DependentUpon>
@@ -439,6 +592,9 @@
   <ItemGroup>
     <None Include=".editorconfig" />
     <None Include="BuildersPSEKey.pfx" />
+    <None Include="Forms\PriceLock\Market Report And Pricing 2.2.26.xlsx" />
+    <None Include="Forms\PriceLock\Price Lock Running Spreadsheet 2024.xlsx" />
+    <None Include="Forms\PriceLock\Trumark Homes - 35%27 Series - Jan 26 Pricelock 20 margin - Pricelock20260203-152532.80.csv" />
     <None Include="IncExcDataSet.xsc">
       <DependentUpon>IncExcDataSet.xsd</DependentUpon>
     </None>
@@ -525,16 +681,17 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="BuildersPSEicon.ico" />
+    <Content Include="DataAccess\Pricelockquery.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\Selenium.WebDriver.4.39.0\build\Selenium.WebDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Selenium.WebDriver.4.39.0\build\Selenium.WebDriver.targets'))" />
     <Error Condition="!Exists('packages\Microsoft.SqlServer.Types.170.1000.7\build\net472\Microsoft.SqlServer.Types.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.SqlServer.Types.170.1000.7\build\net472\Microsoft.SqlServer.Types.props'))" />
     <Error Condition="!Exists('packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
+    <Error Condition="!Exists('packages\Selenium.WebDriver.4.40.0\build\Selenium.WebDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Selenium.WebDriver.4.40.0\build\Selenium.WebDriver.targets'))" />
   </Target>
-  <Import Project="packages\Selenium.WebDriver.4.39.0\build\Selenium.WebDriver.targets" Condition="Exists('packages\Selenium.WebDriver.4.39.0\build\Selenium.WebDriver.targets')" />
   <Import Project="packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
+  <Import Project="packages\Selenium.WebDriver.4.40.0\build\Selenium.WebDriver.targets" Condition="Exists('packages\Selenium.WebDriver.4.40.0\build\Selenium.WebDriver.targets')" />
 </Project>

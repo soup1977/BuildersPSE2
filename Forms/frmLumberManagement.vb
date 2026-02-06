@@ -128,7 +128,7 @@ Public Class frmLumberManagement
     End Sub
 
     Private Sub btnAddCostEffective_Click(sender As Object, e As EventArgs) Handles btnAddCostEffective.Click
-        Dim input As String = InputBox("Enter new effective date (yyyy-MM-dd):", "Add Cost Effective Date")
+        Dim input As String = InputBox("Enter new effective date (yyyy-MM-dd):", "Add Cost Effective Date", DateTime.Today.ToString("yyyy-MM-dd"))
         Dim effectiveDate As Date
         If Date.TryParse(input, effectiveDate) Then
             Try
