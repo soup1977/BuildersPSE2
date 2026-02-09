@@ -42,6 +42,8 @@ Partial Class frmMain
         Me.cmsStatusHistory = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.btnPriceLockAdmin = New System.Windows.Forms.Button()
+        Me.btnPriceLock = New System.Windows.Forms.Button()
         Me.btnToggleLog = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
         Me.btnImportCSV = New System.Windows.Forms.Button()
@@ -172,7 +174,7 @@ Partial Class frmMain
         'ToolStripStatusLabel
         '
         Me.ToolStripStatusLabel.Name = "ToolStripStatusLabel"
-        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(1318, 19)
+        Me.ToolStripStatusLabel.Size = New System.Drawing.Size(1349, 19)
         Me.ToolStripStatusLabel.Spring = True
         Me.ToolStripStatusLabel.Text = "Ready"
         Me.ToolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
@@ -191,6 +193,8 @@ Partial Class frmMain
         '
         'SplitContainer1.Panel1
         '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnPriceLockAdmin)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.btnPriceLock)
         Me.SplitContainer1.Panel1.Controls.Add(Me.btnToggleLog)
         Me.SplitContainer1.Panel1.Controls.Add(Me.btnClose)
         Me.SplitContainer1.Panel1.Controls.Add(Me.btnImportCSV)
@@ -205,6 +209,24 @@ Partial Class frmMain
         Me.SplitContainer1.Size = New System.Drawing.Size(1384, 663)
         Me.SplitContainer1.SplitterDistance = 147
         Me.SplitContainer1.TabIndex = 8
+        '
+        'btnPriceLockAdmin
+        '
+        Me.btnPriceLockAdmin.Location = New System.Drawing.Point(12, 463)
+        Me.btnPriceLockAdmin.Name = "btnPriceLockAdmin"
+        Me.btnPriceLockAdmin.Size = New System.Drawing.Size(127, 30)
+        Me.btnPriceLockAdmin.TabIndex = 10
+        Me.btnPriceLockAdmin.Text = "Price Lock Admin"
+        Me.btnPriceLockAdmin.UseVisualStyleBackColor = True
+        '
+        'btnPriceLock
+        '
+        Me.btnPriceLock.Location = New System.Drawing.Point(12, 427)
+        Me.btnPriceLock.Name = "btnPriceLock"
+        Me.btnPriceLock.Size = New System.Drawing.Size(127, 30)
+        Me.btnPriceLock.TabIndex = 9
+        Me.btnPriceLock.Text = "Price Locks"
+        Me.btnPriceLock.UseVisualStyleBackColor = True
         '
         'btnToggleLog
         '
@@ -243,7 +265,7 @@ Partial Class frmMain
         '
         'btnMondayList
         '
-        Me.btnMondayList.Location = New System.Drawing.Point(12, 224)
+        Me.btnMondayList.Location = New System.Drawing.Point(12, 499)
         Me.btnMondayList.Name = "btnMondayList"
         Me.btnMondayList.Size = New System.Drawing.Size(127, 31)
         Me.btnMondayList.TabIndex = 2
@@ -410,4 +432,6 @@ Partial Class frmMain
     Friend WithEvents ViewToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ToggleActivityLogToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ClearActivityLogToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents btnPriceLock As Button
+    Friend WithEvents btnPriceLockAdmin As Button
 End Class

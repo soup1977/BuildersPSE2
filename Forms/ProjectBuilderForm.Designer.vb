@@ -23,14 +23,14 @@ Partial Class ProjectBuilderForm
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.dgvProjBlder = New System.Windows.Forms.DataGridView()
+        Me.BtnSaveProjectBuilder = New System.Windows.Forms.Button()
+        Me.btnClose = New System.Windows.Forms.Button()
         Me.colBuildingName = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colBldgQty = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colResUnits = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colNumFloors = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colNumRoofs = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colNumWalls = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.BtnSaveProjectBuilder = New System.Windows.Forms.Button()
-        Me.btnClose = New System.Windows.Forms.Button()
         CType(Me.dgvProjBlder, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -44,6 +44,26 @@ Partial Class ProjectBuilderForm
         Me.dgvProjBlder.Name = "dgvProjBlder"
         Me.dgvProjBlder.Size = New System.Drawing.Size(800, 270)
         Me.dgvProjBlder.TabIndex = 0
+        '
+        'BtnSaveProjectBuilder
+        '
+        Me.BtnSaveProjectBuilder.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.BtnSaveProjectBuilder.Location = New System.Drawing.Point(570, 379)
+        Me.BtnSaveProjectBuilder.Name = "BtnSaveProjectBuilder"
+        Me.BtnSaveProjectBuilder.Size = New System.Drawing.Size(106, 31)
+        Me.BtnSaveProjectBuilder.TabIndex = 1
+        Me.BtnSaveProjectBuilder.Text = "Apply"
+        Me.BtnSaveProjectBuilder.UseVisualStyleBackColor = True
+        '
+        'btnClose
+        '
+        Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnClose.Location = New System.Drawing.Point(682, 379)
+        Me.btnClose.Name = "btnClose"
+        Me.btnClose.Size = New System.Drawing.Size(106, 31)
+        Me.btnClose.TabIndex = 2
+        Me.btnClose.Text = "Close"
+        Me.btnClose.UseVisualStyleBackColor = True
         '
         'colBuildingName
         '
@@ -74,26 +94,7 @@ Partial Class ProjectBuilderForm
         '
         Me.colNumWalls.HeaderText = "Number of Wall Levels"
         Me.colNumWalls.Name = "colNumWalls"
-        '
-        'BtnSaveProjectBuilder
-        '
-        Me.BtnSaveProjectBuilder.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.BtnSaveProjectBuilder.Location = New System.Drawing.Point(570, 379)
-        Me.BtnSaveProjectBuilder.Name = "BtnSaveProjectBuilder"
-        Me.BtnSaveProjectBuilder.Size = New System.Drawing.Size(106, 31)
-        Me.BtnSaveProjectBuilder.TabIndex = 1
-        Me.BtnSaveProjectBuilder.Text = "Apply"
-        Me.BtnSaveProjectBuilder.UseVisualStyleBackColor = True
-        '
-        'btnClose
-        '
-        Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnClose.Location = New System.Drawing.Point(682, 379)
-        Me.btnClose.Name = "btnClose"
-        Me.btnClose.Size = New System.Drawing.Size(106, 31)
-        Me.btnClose.TabIndex = 2
-        Me.btnClose.Text = "Close"
-        Me.btnClose.UseVisualStyleBackColor = True
+        Me.colNumWalls.Visible = False
         '
         'ProjectBuilderForm
         '
@@ -111,12 +112,12 @@ Partial Class ProjectBuilderForm
     End Sub
 
     Friend WithEvents dgvProjBlder As DataGridView
+    Friend WithEvents BtnSaveProjectBuilder As Button
+    Friend WithEvents btnClose As Button
     Friend WithEvents colBuildingName As DataGridViewTextBoxColumn
     Friend WithEvents colBldgQty As DataGridViewTextBoxColumn
     Friend WithEvents colResUnits As DataGridViewTextBoxColumn
     Friend WithEvents colNumFloors As DataGridViewTextBoxColumn
     Friend WithEvents colNumRoofs As DataGridViewTextBoxColumn
     Friend WithEvents colNumWalls As DataGridViewTextBoxColumn
-    Friend WithEvents BtnSaveProjectBuilder As Button
-    Friend WithEvents btnClose As Button
 End Class

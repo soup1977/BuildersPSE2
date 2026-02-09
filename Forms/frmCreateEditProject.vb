@@ -1167,7 +1167,7 @@ Public Class frmCreateEditProject
             UIHelper.Add("Recalculating rollup...")
             Me.Cursor = Cursors.WaitCursor
             SaveOverrides()
-            RollupDataAccess.RecalculateVersion(currentVersionID)
+            RollupCalculationService.RecalculateVersion(currentVersionID)
             RefreshRollupData()
             RestoreRollupGrid(currentTab, selectedNode)
             UIHelper.Add("Rollup recalculated successfully")
@@ -1521,7 +1521,7 @@ Public Class frmCreateEditProject
                     SqlConnectionManager.Instance.ExecuteNonQueryTransactional("UPDATE RawUnitLumberHistory SET IsActive = 1, UpdateDate = GETDATE() WHERE CostEffectiveDateID = @CostEffectiveDateID AND VersionID = @VersionID", HelperDataAccess.BuildParameters(activateParams), conn, transaction)
                     transaction.Commit()
                     UIHelper.Add($"Set CostEffectiveDateID {costEffectiveID} as active for VersionID {currentVersionID}")
-                    RollupDataAccess.RecalculateVersion(currentVersionID)
+                    RollupCalculationService.RecalculateVersion(currentVersionID)
                     LoadVersionSpecificData()
                 Catch ex As Exception
                     transaction.Rollback()
@@ -1560,7 +1560,7 @@ Public Class frmCreateEditProject
             }
             SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteLumberHistory, HelperDataAccess.BuildParameters(params))
             UIHelper.Add($"Deleted lumber history for CostEffectiveDateID {costEffectiveID}")
-            RollupDataAccess.RecalculateVersion(currentVersionID)
+            RollupCalculationService.RecalculateVersion(currentVersionID)
             LoadVersionSpecificData()
         End If
     End Sub
@@ -1979,7 +1979,7 @@ Public Class frmCreateEditProject
             Next
             'Freeze first two columns of datagrid
             dgvLevelVariance.Columns(1).Frozen = True
-            dgvLevelVariance.Visible = False
+
         Catch ex As Exception
             Dim stackTrace As New Diagnostics.StackTrace(ex, True)
             Dim frame As Diagnostics.StackFrame = stackTrace.GetFrame(0)
@@ -2423,8 +2423,8 @@ Public Class frmCreateEditProject
         Dim msg = $"Set {f.ContractMonth} as the active lumber futures contract?" & vbCrLf & vbCrLf &
                       "This will make it the default price source for this version."
 
-            If MessageBox.Show(msg, "Confirm Active Contract", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-                Try
+        If MessageBox.Show(msg, "Confirm Active Contract", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
+            Try
                 ' Replace with your actual method name / implementation
                 LumberDataAccess.SetActiveLumberFuture(currentVersionID, f.LumberFutureID)
 
@@ -2434,11 +2434,11 @@ Public Class frmCreateEditProject
                 ' Optional: give feedback
                 MessageBox.Show($"{f.ContractMonth} is now the active contract.", "Updated", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
-                Catch ex As Exception
-                    MessageBox.Show("Could not set active contract:" & vbCrLf & ex.Message,
+            Catch ex As Exception
+                MessageBox.Show("Could not set active contract:" & vbCrLf & ex.Message,
                                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                End Try
-            End If
+            End Try
+        End If
 
 
         ' Double-click on any other column: Calculate and save Futures Adder values
@@ -2569,4 +2569,5 @@ Public Class frmCreateEditProject
         End If
 
     End Sub
+
 End Class
