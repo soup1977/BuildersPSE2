@@ -1,17 +1,18 @@
 ﻿' =====================================================
 ' frmMitekImport.vb
 ' Import component pricing from MiTek CSV export
+' ENHANCED: Smart option resolution with fuzzy matching
 ' BuildersPSE2 - PriceLock Module
 ' =====================================================
 
 Option Strict On
 Option Explicit On
 
-Imports System.Windows.Forms
-Imports System.Drawing
 Imports System.IO
 Imports System.Text.RegularExpressions
+Imports System.Windows.Forms
 Imports BuildersPSE2.DataAccess
+Imports BuildersPSE2.Forms.PriceLock
 Imports BuildersPSE2.Models
 
 Partial Public Class frmMitekImport
@@ -23,6 +24,7 @@ Partial Public Class frmMitekImport
     Private _priceLock As PLPriceLock
     Private _importData As List(Of MitekImportRow)
     Private _productTypes As List(Of PLProductType)
+    Private _optionMappings As Dictionary(Of String, OptionMapping)
 
 #End Region
 
@@ -32,6 +34,7 @@ Partial Public Class frmMitekImport
         _priceLock = priceLock
         _dataAccess = dataAccess
         _importData = New List(Of MitekImportRow)()
+        _optionMappings = New Dictionary(Of String, OptionMapping)(StringComparer.OrdinalIgnoreCase)
         InitializeComponent()
         Me.Text = $"Import MiTek CSV - {_priceLock.SubdivisionName}"
     End Sub
@@ -58,6 +61,10 @@ Partial Public Class frmMitekImport
         End Using
     End Sub
 
+    Private Sub btnResolveOptions_Click(sender As Object, e As EventArgs) Handles btnResolveOptions.Click
+        ResolveOptions()
+    End Sub
+
     Private Sub btnImport_Click(sender As Object, e As EventArgs) Handles btnImport.Click
         PerformImport()
     End Sub
@@ -73,10 +80,11 @@ Partial Public Class frmMitekImport
 
     Private Sub SetupPreviewGrid()
         dgvPreview.Columns.Clear()
-        dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "Status", .HeaderText = "Status", .Width = 70})
+        dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "Status", .HeaderText = "Status", .Width = 80})
         dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "PlanName", .HeaderText = "Plan", .Width = 100})
         dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "ElevationName", .HeaderText = "Elevation", .Width = 80})
-        dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "OptionName", .HeaderText = "Option", .Width = 150})
+        dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "OptionName", .HeaderText = "Option (CSV)", .Width = 150})
+        dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "ResolvedOption", .HeaderText = "Option (Resolved)", .Width = 150})
         dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "ProductType", .HeaderText = "Type", .Width = 60})
         dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "TrueCost", .HeaderText = "True Cost", .Width = 80, .DefaultCellStyle = New DataGridViewCellStyle() With {.Format = "C2", .Alignment = DataGridViewContentAlignment.MiddleRight}})
         dgvPreview.Columns.Add(New DataGridViewTextBoxColumn() With {.Name = "Price", .HeaderText = "Sell Price", .Width = 80, .DefaultCellStyle = New DataGridViewCellStyle() With {.Format = "C2", .Alignment = DataGridViewContentAlignment.MiddleRight}})
@@ -98,6 +106,7 @@ Partial Public Class frmMitekImport
             Application.DoEvents()
 
             _importData.Clear()
+            _optionMappings.Clear()
             dgvPreview.Rows.Clear()
 
             ' Read and parse CSV
@@ -114,28 +123,42 @@ Partial Public Class frmMitekImport
                 End If
             Next
 
-            ' Validate and display preview
+            ' Collect unique option names for resolution
+            CollectUniqueOptions()
+
+            ' Initial validation (without option resolution)
             ValidateImportData()
             DisplayPreview()
 
-            lblRecordCount.Text = $"{_importData.Count} records found"
-            lblStatus.Text = "Ready to import"
-            lblStatus.ForeColor = Color.Green
-            btnImport.Enabled = _importData.Count > 0
+            Dim optionCount = _optionMappings.Count
+            lblRecordCount.Text = $"{_importData.Count} records found, {optionCount} unique option(s)"
+
+            ' Enable resolve button if there are options
+            btnResolveOptions.Enabled = optionCount > 0
+            btnResolveOptions.Text = $"Resolve {optionCount} Option(s)..."
+
+            ' Require option resolution before import if there are options
+            If optionCount > 0 Then
+                lblStatus.Text = "Click 'Resolve Options' to review option mappings"
+                lblStatus.ForeColor = System.Drawing.Color.Orange
+                btnImport.Enabled = False
+            Else
+                lblStatus.Text = "Ready to import (no options to resolve)"
+                lblStatus.ForeColor = System.Drawing.Color.Green
+                btnImport.Enabled = _importData.Count > 0
+            End If
 
         Catch ex As Exception
             lblStatus.Text = $"Error: {ex.Message}"
-            lblStatus.ForeColor = Color.Red
+            lblStatus.ForeColor = System.Drawing.Color.Red
             btnImport.Enabled = False
+            btnResolveOptions.Enabled = False
         Finally
             Cursor = Cursors.Default
         End Try
     End Sub
 
     Private Function ParseCsvLine(line As String, lineNum As Integer) As MitekImportRow
-        ' CSV format: Plan Name, Subdivision, Elevation/Description, Product Type, True Cost, Sell Price
-        ' Example: Plan 2094,Tanterra,Elev A,Roof,"$5,610.01","$6,981.45"
-
         Try
             Dim parts = ParseCsvFields(line)
             If parts.Count < 6 Then Return Nothing
@@ -150,37 +173,31 @@ Partial Public Class frmMitekImport
                 .RawPrice = parts(5).Trim()
             }
 
-            ' Parse plan name (keep "Plan " prefix for matching)
+            ' Normalize the full description (fix whitespace and dash issues)
+            Dim normalizedDesc = TextNormalizer.NormalizeElevationName(row.RawFullDescription)
+
+            ' Parse plan name
             row.PlanName = row.RawPlanName.Trim()
 
-            ' Parse elevation/description (keep "Elev " prefix for matching)
-            row.ElevationName = row.RawFullDescription.Trim()
+            ' Extract base elevation (normalized)
+            row.ElevationName = TextNormalizer.ExtractBaseElevation(normalizedDesc)
 
-            ' Parse option from full description
-            row.OptionName = ExtractOptionName(row.RawFullDescription)
-
-            ' If there's an option, extract the base elevation name
-            If Not String.IsNullOrEmpty(row.OptionName) Then
-                ' Extract base elevation (e.g., "Elev A" from "Elev A - Opt Outdoor Room")
-                Dim dashIndex = row.RawFullDescription.IndexOf(" -", StringComparison.Ordinal)
-                If dashIndex > 0 Then
-                    row.ElevationName = row.RawFullDescription.Substring(0, dashIndex).Trim()
-                End If
-            End If
+            ' Extract option (keep original formatting for user review)
+            row.OptionName = TextNormalizer.ExtractOptionPart(normalizedDesc)
 
             ' Parse product type
             row.ProductTypeName = row.RawProductType
 
-            ' Parse true cost (remove $, commas, quotes)
+            ' Parse true cost
             Dim trueCostStr = row.RawTrueCost.Replace("$", "").Replace(",", "").Replace("""", "").Trim()
-            If Decimal.TryParse(trueCostStr, row.TrueCost) = False Then
+            If Not Decimal.TryParse(trueCostStr, row.TrueCost) Then
                 row.Notes = "Invalid true cost format"
                 row.Status = ImportStatus.Error
             End If
 
-            ' Parse sell price (remove $, commas, quotes)
+            ' Parse sell price
             Dim priceStr = row.RawPrice.Replace("$", "").Replace(",", "").Replace("""", "").Trim()
-            If Decimal.TryParse(priceStr, row.Price) = False Then
+            If Not Decimal.TryParse(priceStr, row.Price) Then
                 row.Notes = "Invalid price format"
                 row.Status = ImportStatus.Error
             End If
@@ -197,7 +214,6 @@ Partial Public Class frmMitekImport
     End Function
 
     Private Function ParseCsvFields(line As String) As List(Of String)
-        ' Handle CSV with quoted fields containing commas
         Dim fields As New List(Of String)()
         Dim inQuotes = False
         Dim currentField As New System.Text.StringBuilder()
@@ -217,47 +233,30 @@ Partial Public Class frmMitekImport
         Return fields
     End Function
 
-    Private Function ExtractOptionName(fullDescription As String) As String
-        ' Full description might be "Elev A - Opt Outdoor Room", "Elev A - Outdoor Room Opt", or just "Elev A"
-        ' We need to extract the option part
+    Private Sub CollectUniqueOptions()
+        _optionMappings.Clear()
 
-        If String.IsNullOrEmpty(fullDescription) Then Return Nothing
+        For Each row In _importData
+            If String.IsNullOrEmpty(row.OptionName) Then Continue For
 
-        ' Look for " - " pattern (common separator for options)
-        Dim dashIndex = fullDescription.IndexOf(" - ", StringComparison.Ordinal)
-        If dashIndex > 0 Then
-            Dim optPart = fullDescription.Substring(dashIndex + 3).Trim()
-            ' Remove common prefixes like "Opt ", "Opt. ", etc.
-            optPart = Regex.Replace(optPart, "^Opt\.?\s*", "", RegexOptions.IgnoreCase).Trim()
-            If Not String.IsNullOrEmpty(optPart) Then Return optPart
-        End If
-
-        ' Look for " Opt" suffix pattern (e.g., "Outdoor Room Opt")
-        If fullDescription.EndsWith(" Opt", StringComparison.OrdinalIgnoreCase) Then
-            ' Look backwards for the elevation part
-            Dim elevPattern = "^Elev\s+[A-Z]\s+"
-            Dim match = Regex.Match(fullDescription, elevPattern, RegexOptions.IgnoreCase)
-            If match.Success Then
-                Dim optPart = fullDescription.Substring(match.Length).Trim()
-                ' Remove trailing "Opt"
-                If optPart.EndsWith(" Opt", StringComparison.OrdinalIgnoreCase) Then
-                    optPart = optPart.Substring(0, optPart.Length - 4).Trim()
-                End If
-                If Not String.IsNullOrEmpty(optPart) Then Return optPart
+            If Not _optionMappings.ContainsKey(row.OptionName) Then
+                _optionMappings(row.OptionName) = New OptionMapping() With {
+                    .CsvOptionName = row.OptionName,
+                    .ResolvedOptionName = row.OptionName,
+                    .IsNewOption = True,
+                    .UserConfirmed = False,
+                    .OccurrenceCount = 1
+                }
+            Else
+                _optionMappings(row.OptionName).OccurrenceCount += 1
             End If
-        End If
-
-        Return Nothing ' No option - this is a base elevation
-    End Function
+        Next
+    End Sub
 
     Private Sub ValidateImportData()
         ' Get existing plans for this subdivision
         Dim existingPlans = _dataAccess.GetPlansBySubdivision(_priceLock.SubdivisionID)
         Dim existingPlanDict = existingPlans.ToDictionary(Function(p) p.PlanName.ToUpper(), Function(p) p)
-
-        ' Get existing options
-        Dim existingOptions = _dataAccess.GetOptions()
-        Dim existingOptionDict = existingOptions.ToDictionary(Function(o) o.OptionName.ToUpper(), Function(o) o)
 
         ' Get existing pricing for this lock
         Dim existingPricing = _dataAccess.GetComponentPricingByLock(_priceLock.PriceLockID)
@@ -268,14 +267,14 @@ Partial Public Class frmMitekImport
             row.Status = ImportStatus.New
             Dim notes As New List(Of String)()
 
-            ' Check Plan (match with full name including "Plan " prefix)
+            ' Check Plan
             Dim planKey = row.PlanName.ToUpper()
             If existingPlanDict.ContainsKey(planKey) Then
                 row.PlanID = existingPlanDict(planKey).PlanID
 
-                ' Check Elevation (match with full name including "Elev " prefix)
+                ' Check Elevation
                 Dim elevations = _dataAccess.GetElevationsByPlan(row.PlanID.Value)
-                Dim elev = elevations.FirstOrDefault(Function(e) e.ElevationName.Equals(row.ElevationName, StringComparison.OrdinalIgnoreCase))
+                Dim elev = elevations.FirstOrDefault(Function(el) el.ElevationName.Equals(row.ElevationName, StringComparison.OrdinalIgnoreCase))
                 If elev IsNot Nothing Then
                     row.ElevationID = elev.ElevationID
                 Else
@@ -287,17 +286,6 @@ Partial Public Class frmMitekImport
                 If Not chkCreateMissingPlans.Checked Then row.Status = ImportStatus.Skip
             End If
 
-            ' Check Option (if applicable)
-            If Not String.IsNullOrEmpty(row.OptionName) Then
-                Dim optKey = row.OptionName.ToUpper()
-                If existingOptionDict.ContainsKey(optKey) Then
-                    row.OptionID = existingOptionDict(optKey).OptionID
-                Else
-                    notes.Add($"Option '{row.OptionName}' will be created")
-                    If Not chkCreateMissingOptions.Checked Then row.Status = ImportStatus.Skip
-                End If
-            End If
-
             ' Check Product Type
             Dim pt = _productTypes.FirstOrDefault(Function(p) p.ProductTypeName.Equals(row.ProductTypeName, StringComparison.OrdinalIgnoreCase))
             If pt IsNot Nothing Then
@@ -307,13 +295,24 @@ Partial Public Class frmMitekImport
                 row.Status = ImportStatus.Error
             End If
 
-            ' Check if pricing already exists
+            ' Option will be resolved separately via the resolver dialog
+            If Not String.IsNullOrEmpty(row.OptionName) Then
+                If _optionMappings.ContainsKey(row.OptionName) Then
+                    Dim mapping = _optionMappings(row.OptionName)
+                    row.ResolvedOptionName = mapping.ResolvedOptionName
+                    row.OptionID = mapping.ResolvedOptionID
+                End If
+            End If
+
+            ' Check if pricing already exists (only if we have all IDs)
             If row.PlanID.HasValue AndAlso row.ElevationID.HasValue AndAlso row.ProductTypeID.HasValue Then
+                Dim existingOptionID = row.OptionID
                 Dim existing = existingPricing.FirstOrDefault(Function(cp) _
                     CBool(cp.PlanID = row.PlanID.Value AndAlso
                     cp.ElevationID = row.ElevationID.Value AndAlso
                     cp.ProductTypeID = row.ProductTypeID.Value AndAlso
-                    (cp.OptionID Is Nothing AndAlso row.OptionID Is Nothing OrElse cp.OptionID = row.OptionID)))
+                    ((cp.OptionID Is Nothing OrElse cp.OptionID = 0) AndAlso existingOptionID Is Nothing) OrElse
+                    (cp.OptionID IsNot Nothing AndAlso existingOptionID IsNot Nothing AndAlso cp.OptionID = existingOptionID)))
 
                 If existing IsNot Nothing Then
                     row.ExistingPricingID = existing.ComponentPricingID
@@ -331,13 +330,13 @@ Partial Public Class frmMitekImport
 
         For Each row In _importData
             Dim statusText = row.Status.ToString()
-            ' Add values in the correct order matching the column setup
             Dim dgvRow = dgvPreview.Rows.Add()
 
             dgvPreview.Rows(dgvRow).Cells("Status").Value = statusText
             dgvPreview.Rows(dgvRow).Cells("PlanName").Value = row.PlanName
             dgvPreview.Rows(dgvRow).Cells("ElevationName").Value = row.ElevationName
             dgvPreview.Rows(dgvRow).Cells("OptionName").Value = If(row.OptionName, "")
+            dgvPreview.Rows(dgvRow).Cells("ResolvedOption").Value = If(row.ResolvedOptionName, If(row.OptionName, ""))
             dgvPreview.Rows(dgvRow).Cells("ProductType").Value = row.ProductTypeName
             dgvPreview.Rows(dgvRow).Cells("TrueCost").Value = row.TrueCost
             dgvPreview.Rows(dgvRow).Cells("Price").Value = row.Price
@@ -346,15 +345,59 @@ Partial Public Class frmMitekImport
             ' Color code by status
             Select Case row.Status
                 Case ImportStatus.New
-                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = Color.LightGreen
+                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = System.Drawing.Color.LightGreen
                 Case ImportStatus.Update
-                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = Color.LightYellow
+                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = System.Drawing.Color.LightYellow
                 Case ImportStatus.Skip
-                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = Color.LightGray
+                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = System.Drawing.Color.LightGray
                 Case ImportStatus.Error
-                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = Color.LightPink
+                    dgvPreview.Rows(dgvRow).DefaultCellStyle.BackColor = System.Drawing.Color.LightPink
             End Select
+
+            ' Highlight if option name differs from resolved
+            If Not String.IsNullOrEmpty(row.OptionName) AndAlso
+               Not String.IsNullOrEmpty(row.ResolvedOptionName) AndAlso
+               Not row.OptionName.Equals(row.ResolvedOptionName, StringComparison.OrdinalIgnoreCase) Then
+                dgvPreview.Rows(dgvRow).Cells("ResolvedOption").Style.ForeColor = System.Drawing.Color.Blue
+                dgvPreview.Rows(dgvRow).Cells("ResolvedOption").Style.Font = New System.Drawing.Font(dgvPreview.Font, System.Drawing.FontStyle.Bold)
+            End If
         Next
+    End Sub
+
+#End Region
+
+#Region "Option Resolution"
+
+    Private Sub ResolveOptions()
+        Dim optionNames = _optionMappings.Keys.ToList()
+
+        Using resolver As New frmOptionResolver(optionNames, _dataAccess)
+            If resolver.ShowDialog(Me) = DialogResult.OK Then
+                ' Update our mappings with the resolved values
+                For Each resolved In resolver.ResolvedMappings
+                    If _optionMappings.ContainsKey(resolved.CsvOptionName) Then
+                        _optionMappings(resolved.CsvOptionName) = resolved
+                    End If
+                Next
+
+                ' Update the import data with resolved options
+                For Each row In _importData
+                    If Not String.IsNullOrEmpty(row.OptionName) AndAlso _optionMappings.ContainsKey(row.OptionName) Then
+                        Dim mapping = _optionMappings(row.OptionName)
+                        row.ResolvedOptionName = mapping.ResolvedOptionName
+                        row.OptionID = mapping.ResolvedOptionID
+                    End If
+                Next
+
+                ' Re-validate and refresh display
+                ValidateImportData()
+                DisplayPreview()
+
+                lblStatus.Text = "Options resolved. Ready to import."
+                lblStatus.ForeColor = System.Drawing.Color.Green
+                btnImport.Enabled = _importData.Count > 0
+            End If
+        End Using
     End Sub
 
 #End Region
@@ -374,6 +417,28 @@ Partial Public Class frmMitekImport
             Dim skipped = 0
             Dim errors = 0
 
+            ' Get margin values from the price lock
+            Dim adjustedMargin As Decimal = If(_priceLock.AdjustedMarginBaseModels, 0.15D)
+            Dim optionMargin As Decimal = If(_priceLock.OptionMargin, adjustedMargin)
+
+            ' First, create any new options that were confirmed
+            Dim createdOptions As New Dictionary(Of String, Integer)(StringComparer.OrdinalIgnoreCase)
+            For Each kvp In _optionMappings
+                Dim mapping = kvp.Value
+                If mapping.IsNewOption AndAlso mapping.UserConfirmed AndAlso Not mapping.ResolvedOptionID.HasValue Then
+                    Dim newOptionID = _dataAccess.FindOrCreateOption(mapping.ResolvedOptionName)
+                    mapping.ResolvedOptionID = newOptionID
+                    createdOptions(mapping.CsvOptionName) = newOptionID
+                End If
+            Next
+
+            ' Update import rows with newly created option IDs
+            For Each row In _importData
+                If Not String.IsNullOrEmpty(row.OptionName) AndAlso createdOptions.ContainsKey(row.OptionName) Then
+                    row.OptionID = createdOptions(row.OptionName)
+                End If
+            Next
+
             For i = 0 To _importData.Count - 1
                 Dim row = _importData(i)
                 prgImport.Value = i + 1
@@ -389,7 +454,6 @@ Partial Public Class frmMitekImport
                     If Not row.PlanID.HasValue AndAlso chkCreateMissingPlans.Checked Then
                         Dim newPlan As New PLPlan() With {.PlanName = row.PlanName, .IsActive = True}
                         row.PlanID = _dataAccess.InsertPlan(newPlan)
-                        ' Assign to subdivision
                         _dataAccess.AssignPlanToSubdivision(_priceLock.SubdivisionID, row.PlanID.Value)
                     End If
 
@@ -399,9 +463,11 @@ Partial Public Class frmMitekImport
                         row.ElevationID = _dataAccess.InsertElevation(newElev)
                     End If
 
-                    ' Create missing option if needed
-                    If Not String.IsNullOrEmpty(row.OptionName) AndAlso Not row.OptionID.HasValue AndAlso chkCreateMissingOptions.Checked Then
-                        row.OptionID = _dataAccess.FindOrCreateOption(row.OptionName)
+                    ' Get option ID from mapping if not already set
+                    If Not String.IsNullOrEmpty(row.OptionName) AndAlso Not row.OptionID.HasValue Then
+                        If _optionMappings.ContainsKey(row.OptionName) Then
+                            row.OptionID = _optionMappings(row.OptionName).ResolvedOptionID
+                        End If
                     End If
 
                     ' Skip if we still don't have required IDs
@@ -410,19 +476,34 @@ Partial Public Class frmMitekImport
                         Continue For
                     End If
 
+                    ' Determine which margin to use based on whether this is an option
+                    Dim isOption As Boolean = row.OptionID.HasValue AndAlso row.OptionID.Value > 0
+                    Dim marginToApply As Decimal = If(isOption, optionMargin, adjustedMargin)
+                    Dim marginSource As String = If(isOption, "Option", "Adjusted")
+
+                    ' Calculate prices using margin formula: Price = Cost / (1 - Margin)
+                    Dim calculatedPrice As Decimal = 0D
+                    If row.TrueCost > 0 AndAlso marginToApply < 1 Then
+                        calculatedPrice = row.TrueCost / (1 - marginToApply)
+                    End If
+
                     ' Create or update pricing
                     If row.Status = ImportStatus.Update AndAlso row.ExistingPricingID.HasValue Then
-                        ' Update existing
                         Dim existing = _dataAccess.GetComponentPricingByID(row.ExistingPricingID.Value)
                         If existing IsNot Nothing Then
                             existing.Cost = row.TrueCost
                             existing.MgmtSellPrice = row.Price
+                            existing.AppliedMargin = marginToApply
+                            existing.CalculatedPrice = calculatedPrice
+                            existing.FinalPrice = calculatedPrice
+                            existing.PriceSentToSales = calculatedPrice
+                            existing.PriceSentToBuilder = calculatedPrice
+                            existing.MarginSource = marginSource
                             existing.ModifiedBy = Environment.UserName
                             _dataAccess.UpdateComponentPricing(existing)
                             updated += 1
                         End If
                     Else
-                        ' Insert new
                         Dim pricing As New PLComponentPricing() With {
                             .PriceLockID = _priceLock.PriceLockID,
                             .PlanID = row.PlanID.Value,
@@ -431,7 +512,13 @@ Partial Public Class frmMitekImport
                             .ProductTypeID = row.ProductTypeID.Value,
                             .Cost = row.TrueCost,
                             .MgmtSellPrice = row.Price,
-                            .IsAdder = (row.OptionID.HasValue),
+                            .AppliedMargin = marginToApply,
+                            .CalculatedPrice = calculatedPrice,
+                            .FinalPrice = calculatedPrice,
+                            .PriceSentToSales = calculatedPrice,
+                            .PriceSentToBuilder = calculatedPrice,
+                            .MarginSource = marginSource,
+                            .IsAdder = isOption,
                             .ModifiedBy = Environment.UserName
                         }
                         _dataAccess.InsertComponentPricing(pricing)
@@ -448,7 +535,10 @@ Partial Public Class frmMitekImport
                 $"New records: {imported}" & vbCrLf &
                 $"Updated: {updated}" & vbCrLf &
                 $"Skipped: {skipped}" & vbCrLf &
-                $"Errors: {errors}",
+                $"Errors: {errors}" & vbCrLf & vbCrLf &
+                $"Margins applied:" & vbCrLf &
+                $"  Adjusted: {adjustedMargin:P1}" & vbCrLf &
+                $"  Option: {optionMargin:P1}",
                 "Import Results", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
             Me.DialogResult = DialogResult.OK
@@ -486,6 +576,7 @@ Public Class MitekImportRow
     Public Property PlanName As String
     Public Property ElevationName As String
     Public Property OptionName As String
+    Public Property ResolvedOptionName As String
     Public Property ProductTypeName As String
     Public Property TrueCost As Decimal
     Public Property Price As Decimal
@@ -503,10 +594,10 @@ Public Class MitekImportRow
 End Class
 
 Public Enum ImportStatus
-    [New]       ' Will be inserted
-    Update      ' Will update existing
-    Skip        ' Will be skipped
-    [Error]     ' Has errors
+    [New]
+    Update
+    Skip
+    [Error]
 End Enum
 
 #End Region

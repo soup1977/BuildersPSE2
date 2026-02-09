@@ -2,6 +2,7 @@
 ' frmComponentPricingEdit.vb
 ' Dialog for editing a component pricing record
 ' ENHANCED: Margin source selection and price update prompts
+' ENHANCED: Allow editing Plan/Elevation/Option on existing records
 ' BuildersPSE2 - PriceLock Module
 ' =====================================================
 
@@ -23,15 +24,20 @@ Public Class frmComponentPricingEdit
     Private _isNew As Boolean
     Private _previousCalculatedPrice As Decimal?
 
-    ' NEW: Track reference units for adder
+    ' Track reference units for adder
     Private _referenceUnits As List(Of PLReferenceUnit)
-    ' =====================================================
-    ' ADD THESE FIELDS in the "Fields" region (around line 20)
-    ' =====================================================
 
     ' Previous Price Lock reference data (for display only)
     Private _hasPreviousPricing As Boolean = False
 
+    ' Track if key fields are unlocked for editing
+    Private _keyFieldsUnlocked As Boolean = False
+
+    ' Store original values for change detection
+    Private _originalPlanID As Integer
+    Private _originalElevationID As Integer
+    Private _originalOptionID As Integer?
+    Private _originalProductTypeID As Integer
 
 #End Region
 
@@ -46,13 +52,18 @@ Public Class frmComponentPricingEdit
         If _isNew Then
             _componentPricing = New PLComponentPricing() With {
                 .PriceLockID = priceLock.PriceLockID,
-                .MarginSource = "Adjusted" ' Default to Adjusted margin
+                .MarginSource = "Adjusted"
             }
+        Else
+            ' Store original values for existing records
+            _originalPlanID = componentPricing.PlanID
+            _originalElevationID = componentPricing.ElevationID
+            _originalOptionID = componentPricing.OptionID
+            _originalProductTypeID = componentPricing.ProductTypeID
         End If
 
         InitializeComponent()
 
-        ' Set form title after InitializeComponent
         Me.Text = If(_isNew, "Add Component Pricing", "Edit Component Pricing")
     End Sub
 
@@ -61,36 +72,38 @@ Public Class frmComponentPricingEdit
 #Region "Form Events"
 
     Private Sub frmComponentPricingEdit_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
-        ' ENHANCED: Initialize margin source combo
+        ' Initialize margin source combo
         cboMarginSource.Items.AddRange(New String() {"Adjusted", "Option"})
         LoadDropdowns()
         LoadComponentData()
 
+        ' Setup unlock button for existing records
+        SetupUnlockButton()
     End Sub
 
     Private Sub cboPlan_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboPlan.SelectedIndexChanged
         LoadElevations()
-        btnAddElevation.Enabled = _isNew AndAlso cboPlan.SelectedItem IsNot Nothing
+        btnAddElevation.Enabled = (cboPlan.SelectedItem IsNot Nothing) AndAlso (_isNew OrElse _keyFieldsUnlocked)
+
+        ' Reload reference units if this is an adder and we're in unlock mode
+        If chkIsAdder.Checked AndAlso _keyFieldsUnlocked Then
+            LoadReferenceUnits()
+        End If
     End Sub
 
-    ' ENHANCED: Update margin source based on option selection
     Private Sub cboOption_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboOption.SelectedIndexChanged
         If _isNew AndAlso cboOption.SelectedItem IsNot Nothing Then
             Dim optionID = CInt(DirectCast(cboOption.SelectedItem, ListItem).Value)
             If optionID > 0 Then
-                ' Options default to Option margin
                 cboMarginSource.SelectedItem = "Option"
                 nudAppliedMargin.Value = _priceLock.OptionMargin.GetValueOrDefault(0.3D)
             Else
-                ' Base elevations default to Adjusted margin
                 cboMarginSource.SelectedItem = "Adjusted"
                 nudAppliedMargin.Value = _priceLock.AdjustedMarginBaseModels.GetValueOrDefault(0.15D)
             End If
         End If
     End Sub
 
-    ' ENHANCED: Update applied margin when margin source changes
     Private Sub cboMarginSource_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboMarginSource.SelectedIndexChanged
         If cboMarginSource.SelectedItem Is Nothing Then Return
 
@@ -101,11 +114,9 @@ Public Class frmComponentPricingEdit
             nudAppliedMargin.Value = _priceLock.AdjustedMarginBaseModels.GetValueOrDefault(0.15D)
         End If
 
-        ' Recalculate with new margin
         CalculatePrice()
     End Sub
 
-    ' ENHANCED: Detect cost/margin changes
     Private Sub nudCost_ValueChanged(sender As Object, e As EventArgs) Handles nudCost.ValueChanged
         CalculatePrice()
     End Sub
@@ -131,7 +142,6 @@ Public Class frmComponentPricingEdit
         Me.Close()
     End Sub
 
-    ' Add this handler for the IsAdder checkbox
     Private Sub chkIsAdder_CheckedChanged(sender As Object, e As EventArgs) Handles chkIsAdder.CheckedChanged
         UpdateAdderControlsVisibility()
         If chkIsAdder.Checked Then
@@ -140,12 +150,81 @@ Public Class frmComponentPricingEdit
         CalculatePrice()
     End Sub
 
-    ' Add this handler for reference unit selection
     Private Sub cboReferenceUnit_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboReferenceUnit.SelectedIndexChanged
         UpdateAdderCostDisplay()
         CalculatePrice()
     End Sub
 
+    ''' <summary>
+    ''' Handles the unlock button click to enable editing of key fields
+    ''' </summary>
+    Private Sub btnUnlockKeyFields_Click(sender As Object, e As EventArgs) Handles btnUnlockKeyFields.Click
+        UnlockKeyFieldsForEditing()
+    End Sub
+
+#End Region
+
+#Region "Unlock Key Fields"
+
+    ''' <summary>
+    ''' Setup the unlock button visibility and state
+    ''' </summary>
+    Private Sub SetupUnlockButton()
+        ' Only show unlock button for existing records
+        btnUnlockKeyFields.Visible = Not _isNew
+        lblUnlockWarning.Visible = False
+
+        If Not _isNew Then
+            btnUnlockKeyFields.Text = "🔓 Unlock Plan/Elev/Option"
+            btnUnlockKeyFields.Enabled = True
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Unlocks the key identifier fields for editing after user confirmation
+    ''' </summary>
+    Private Sub UnlockKeyFieldsForEditing()
+        Dim msg = "WARNING: You are about to enable editing of the Plan, Elevation, Option, and Product Type fields." & vbCrLf & vbCrLf &
+                  "This should only be done to CORRECT data entry errors, not to repurpose a pricing record." & vbCrLf & vbCrLf &
+                  "Changes to these fields will:" & vbCrLf &
+                  "  • Update the existing record's classification" & vbCrLf &
+                  "  • NOT create a new pricing record" & vbCrLf &
+                  "  • May affect historical comparisons" & vbCrLf & vbCrLf &
+                  "Are you sure you want to unlock these fields?"
+
+        Dim result = MessageBox.Show(msg, "Confirm Unlock", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)
+
+        If result = DialogResult.Yes Then
+            _keyFieldsUnlocked = True
+
+            ' Enable the key fields
+            cboPlan.Enabled = True
+            cboElevation.Enabled = True
+            cboOption.Enabled = True
+            cboProductType.Enabled = True
+
+            ' Enable add buttons
+            btnAddPlan.Enabled = True
+            btnAddElevation.Enabled = (cboPlan.SelectedItem IsNot Nothing)
+            btnAddOption.Enabled = True
+
+            ' Update UI to show unlocked state
+            btnUnlockKeyFields.Text = "🔓 Fields Unlocked"
+            btnUnlockKeyFields.Enabled = False
+            btnUnlockKeyFields.BackColor = Color.LightGreen
+
+            ' Show warning label
+            lblUnlockWarning.Text = "⚠️ Key fields are unlocked for editing. Save will update this record's classification."
+            lblUnlockWarning.ForeColor = Color.DarkOrange
+            lblUnlockWarning.Visible = True
+
+            ' Highlight the unlocked fields
+            cboPlan.BackColor = Color.LightYellow
+            cboElevation.BackColor = Color.LightYellow
+            cboOption.BackColor = Color.LightYellow
+            cboProductType.BackColor = Color.LightYellow
+        End If
+    End Sub
 
 #End Region
 
@@ -156,22 +235,17 @@ Public Class frmComponentPricingEdit
         If String.IsNullOrWhiteSpace(planName) Then Return
 
         Try
-            ' Create the plan
             Dim newPlan As New PLPlan() With {
                 .PlanName = planName.Trim(),
                 .IsActive = True
             }
             newPlan.PlanID = _dataAccess.InsertPlan(newPlan)
-
-            ' Assign to this subdivision
             _dataAccess.AssignPlanToSubdivision(_priceLock.SubdivisionID, newPlan.PlanID)
 
-            ' Reload and select
             LoadPlans()
             SelectComboItem(cboPlan, newPlan.PlanID)
 
             MessageBox.Show($"Plan '{planName}' created and assigned to subdivision.", "Plan Added", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
         Catch ex As Exception
             MessageBox.Show($"Error adding plan: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -196,12 +270,10 @@ Public Class frmComponentPricingEdit
             }
             newElev.ElevationID = _dataAccess.InsertElevation(newElev)
 
-            ' Reload and select
             LoadElevations()
             SelectComboItem(cboElevation, newElev.ElevationID)
 
             MessageBox.Show($"Elevation '{elevName}' added.", "Elevation Added", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
         Catch ex As Exception
             MessageBox.Show($"Error adding elevation: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -218,12 +290,10 @@ Public Class frmComponentPricingEdit
             }
             newOption.OptionID = _dataAccess.InsertOption(newOption)
 
-            ' Reload and select
             LoadOptions()
             SelectComboItem(cboOption, newOption.OptionID)
 
             MessageBox.Show($"Option '{optionName}' added.", "Option Added", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
         Catch ex As Exception
             MessageBox.Show($"Error adding option: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -307,7 +377,7 @@ Public Class frmComponentPricingEdit
             cboMarginSource.SelectedItem = "Adjusted"
             nudAppliedMargin.Value = _priceLock.AdjustedMarginBaseModels.GetValueOrDefault(0.15D)
             btnAddElevation.Enabled = False
-            pnlAdderSettings.Visible = False ' Hide adder panel for new records initially
+            pnlAdderSettings.Visible = False
             Return
         End If
 
@@ -321,7 +391,6 @@ Public Class frmComponentPricingEdit
 
         chkIsAdder.Checked = _componentPricing.IsAdder
 
-        ' Load reference units if this is an adder
         If _componentPricing.IsAdder Then
             UpdateAdderControlsVisibility()
             LoadReferenceUnits()
@@ -338,15 +407,10 @@ Public Class frmComponentPricingEdit
 
         CalculatePrice()
         lblPriceDiffWarning.Visible = _componentPricing.HasPriceDifference
-        ' =====================================================
-        ' ADD THIS LINE at the END of LoadComponentData method
-        ' (before the "End Sub", around line 285)
-        ' =====================================================
 
-        ' Populate the previous price lock comparison panel
         PopulatePreviousPricingPanel()
 
-        ' Disable key fields for existing records
+        ' Disable key fields for existing records (until unlocked)
         cboPlan.Enabled = False
         cboElevation.Enabled = False
         cboOption.Enabled = False
@@ -356,16 +420,7 @@ Public Class frmComponentPricingEdit
         btnAddOption.Enabled = False
     End Sub
 
-    ' =====================================================
-    ' ADD THIS METHOD in the "Data Loading" region
-    ' (after LoadComponentData, around line 290)
-    ' =====================================================
-
-    ''' <summary>
-    ''' Populates the previous pricing comparison panel with data from the previous price lock
-    ''' </summary>
     Private Sub PopulatePreviousPricingPanel()
-        ' Hide for new records
         If _isNew Then
             grpPreviousPricing.Visible = False
             Return
@@ -375,7 +430,6 @@ Public Class frmComponentPricingEdit
         _hasPreviousPricing = _componentPricing.HasPreviousPricing
 
         If Not _hasPreviousPricing Then
-            ' No previous data - show N/A for all
             lblPrevSalesValue.Text = "N/A"
             lblPrevSalesValue.ForeColor = Color.Gray
             lblPctChgSalesValue.Text = "N/A"
@@ -387,7 +441,6 @@ Public Class frmComponentPricingEdit
             Return
         End If
 
-        ' Previous Sent to Sales
         If _componentPricing.PreviousPriceSentToSales.HasValue Then
             lblPrevSalesValue.Text = _componentPricing.PreviousPriceSentToSales.Value.ToString("C2")
             lblPrevSalesValue.ForeColor = Color.Black
@@ -396,11 +449,9 @@ Public Class frmComponentPricingEdit
             lblPrevSalesValue.ForeColor = Color.Gray
         End If
 
-        ' % Change Sales
         If _componentPricing.PctChangeSentToSales.HasValue Then
             Dim pctChange = _componentPricing.PctChangeSentToSales.Value
             lblPctChgSalesValue.Text = pctChange.ToString("P1")
-            ' Color code
             If pctChange > 0.05D Then
                 lblPctChgSalesValue.ForeColor = Color.Red
                 lblPctChgSalesValue.Font = New Font(lblPctChgSalesValue.Font, FontStyle.Bold)
@@ -419,7 +470,6 @@ Public Class frmComponentPricingEdit
             lblPctChgSalesValue.ForeColor = Color.Gray
         End If
 
-        ' Previous Sent to Builder
         If _componentPricing.PreviousPriceSentToBuilder.HasValue Then
             lblPrevBuilderValue.Text = _componentPricing.PreviousPriceSentToBuilder.Value.ToString("C2")
             lblPrevBuilderValue.ForeColor = Color.Black
@@ -428,11 +478,9 @@ Public Class frmComponentPricingEdit
             lblPrevBuilderValue.ForeColor = Color.Gray
         End If
 
-        ' % Change Builder
         If _componentPricing.PctChangeSentToBuilder.HasValue Then
             Dim pctChange = _componentPricing.PctChangeSentToBuilder.Value
             lblPctChgBuilderValue.Text = pctChange.ToString("P1")
-            ' Color code
             If pctChange > 0.05D Then
                 lblPctChgBuilderValue.ForeColor = Color.Red
                 lblPctChgBuilderValue.Font = New Font(lblPctChgBuilderValue.Font, FontStyle.Bold)
@@ -451,6 +499,7 @@ Public Class frmComponentPricingEdit
             lblPctChgBuilderValue.ForeColor = Color.Gray
         End If
     End Sub
+
     Private Sub SelectComboItem(combo As ComboBox, value As Integer)
         For i = 0 To combo.Items.Count - 1
             Dim item = TryCast(combo.Items(i), ListItem)
@@ -465,26 +514,14 @@ Public Class frmComponentPricingEdit
 
 #Region "Adder Support"
 
-    ''' <summary>
-    ''' Shows/hides the adder-specific controls based on IsAdder checkbox
-    ''' </summary>
     Private Sub UpdateAdderControlsVisibility()
         pnlAdderSettings.Visible = chkIsAdder.Checked
-
-        ' Shift other controls when panel is shown/hidden
-        Dim offset = If(chkIsAdder.Checked, 60, 0)
-        ' Note: In a real implementation, you might want to use anchoring or a TableLayoutPanel
-        ' to handle the dynamic repositioning more elegantly
     End Sub
 
-    ''' <summary>
-    ''' Loads potential reference units for this adder
-    ''' </summary>
     Private Sub LoadReferenceUnits()
         cboReferenceUnit.Items.Clear()
         cboReferenceUnit.Items.Add(New ListItem("(Select reference unit...)", 0))
 
-        ' Need plan and product type to be selected first
         If cboPlan.SelectedItem Is Nothing OrElse cboProductType.SelectedItem Is Nothing Then
             cboReferenceUnit.SelectedIndex = 0
             Return
@@ -500,7 +537,6 @@ Public Class frmComponentPricingEdit
             cboReferenceUnit.Items.Add(New ListItem($"{unit.ElevationName} - Cost: {unit.Cost:C2}", unit.ComponentPricingID))
         Next
 
-        ' Select existing reference unit if editing
         If Not _isNew AndAlso _componentPricing.BaseComponentPricingID.HasValue Then
             SelectComboItem(cboReferenceUnit, _componentPricing.BaseComponentPricingID.Value)
         Else
@@ -508,9 +544,6 @@ Public Class frmComponentPricingEdit
         End If
     End Sub
 
-    ''' <summary>
-    ''' Updates the displayed adder cost based on selected reference unit
-    ''' </summary>
     Private Sub UpdateAdderCostDisplay()
         If Not chkIsAdder.Checked Then
             lblAdderCost.Text = ""
@@ -542,9 +575,6 @@ Public Class frmComponentPricingEdit
         End If
     End Sub
 
-    ''' <summary>
-    ''' Gets the effective cost for calculation (full cost or adder cost)
-    ''' </summary>
     Private Function GetEffectiveCostForCalculation() As Decimal
         If Not chkIsAdder.Checked Then
             Return nudCost.Value
@@ -552,7 +582,7 @@ Public Class frmComponentPricingEdit
 
         Dim selectedRef = TryCast(cboReferenceUnit.SelectedItem, ListItem)
         If selectedRef Is Nothing OrElse CInt(selectedRef.Value) = 0 Then
-            Return nudCost.Value ' No reference selected, use full cost
+            Return nudCost.Value
         End If
 
         Dim refID = CInt(selectedRef.Value)
@@ -560,8 +590,7 @@ Public Class frmComponentPricingEdit
 
         If refUnit IsNot Nothing AndAlso refUnit.Cost.HasValue Then
             Dim adderCost = nudCost.Value - refUnit.Cost.Value
-            ' CHANGED: Allow negative adder costs (discounts/credits)
-            Return adderCost  ' Removed the conditional that forced non-negative values
+            Return adderCost
         End If
 
         Return nudCost.Value
@@ -569,11 +598,10 @@ Public Class frmComponentPricingEdit
 
 #End Region
 
-
 #Region "Calculation"
 
     Private Sub CalculatePrice()
-        Dim cost = GetEffectiveCostForCalculation() ' Changed from nudCost.Value
+        Dim cost = GetEffectiveCostForCalculation()
         Dim margin = nudAppliedMargin.Value
 
         If margin >= 1 Then
@@ -584,7 +612,6 @@ Public Class frmComponentPricingEdit
         Dim calculated = cost / (1 - margin)
         Dim rounded = Math.Ceiling(calculated)
 
-        ' Show both adder cost and calculated price for adders
         If chkIsAdder.Checked Then
             lblCalculatedPrice.Text = $"{rounded:C2} (from adder cost {cost:C2})"
         Else
@@ -593,12 +620,10 @@ Public Class frmComponentPricingEdit
 
         _componentPricing.CalculatedPrice = calculated
 
-        ' Update adder cost display when cost changes
         If chkIsAdder.Checked Then
             UpdateAdderCostDisplay()
         End If
 
-        ' Prompt to update final/builder price if calculated price changed
         If Not _isNew AndAlso _previousCalculatedPrice.HasValue AndAlso _previousCalculatedPrice.Value <> calculated Then
             Dim msg = $"The calculated price has changed from {_previousCalculatedPrice.Value:C2} to {calculated:C2}." & vbCrLf & vbCrLf &
                       "Do you want to update the Final Price and Builder Price to match?"
@@ -639,7 +664,6 @@ Public Class frmComponentPricingEdit
             Return False
         End If
 
-        ' NEW: Validate adder has a reference unit selected
         If chkIsAdder.Checked Then
             Dim selectedRef = TryCast(cboReferenceUnit.SelectedItem, ListItem)
             If selectedRef Is Nothing OrElse CInt(selectedRef.Value) = 0 Then
@@ -654,6 +678,31 @@ Public Class frmComponentPricingEdit
             txtPriceNote.Focus()
             Return False
         End If
+
+        ' Additional validation when key fields are changed
+        If Not _isNew AndAlso _keyFieldsUnlocked Then
+            Dim newPlanID = CInt(DirectCast(cboPlan.SelectedItem, ListItem).Value)
+            Dim newElevationID = CInt(DirectCast(cboElevation.SelectedItem, ListItem).Value)
+            Dim newOptionVal = CInt(DirectCast(cboOption.SelectedItem, ListItem).Value)
+            Dim newOptionID As Integer? = If(newOptionVal = 0, Nothing, CType(newOptionVal, Integer?))
+            Dim newProductTypeID = CInt(DirectCast(cboProductType.SelectedItem, ListItem).Value)
+
+            Dim keyFieldsChanged = (newPlanID <> _originalPlanID) OrElse
+                                   (newElevationID <> _originalElevationID) OrElse
+                                   (newOptionID <> _originalOptionID) OrElse
+                                   (newProductTypeID <> _originalProductTypeID)
+
+            If keyFieldsChanged Then
+                Dim confirmMsg = "You have changed one or more key fields (Plan, Elevation, Option, or Product Type)." & vbCrLf & vbCrLf &
+                                 "This will UPDATE the existing record's classification." & vbCrLf & vbCrLf &
+                                 "Are you sure you want to save these changes?"
+
+                If MessageBox.Show(confirmMsg, "Confirm Key Field Changes", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) = DialogResult.No Then
+                    Return False
+                End If
+            End If
+        End If
+
         Return True
     End Function
 
@@ -668,7 +717,6 @@ Public Class frmComponentPricingEdit
             _componentPricing.ProductTypeID = CInt(DirectCast(cboProductType.SelectedItem, ListItem).Value)
             _componentPricing.IsAdder = chkIsAdder.Checked
 
-            ' NEW: Save reference unit for adders
             If chkIsAdder.Checked Then
                 Dim selectedRef = TryCast(cboReferenceUnit.SelectedItem, ListItem)
                 If selectedRef IsNot Nothing AndAlso CInt(selectedRef.Value) > 0 Then

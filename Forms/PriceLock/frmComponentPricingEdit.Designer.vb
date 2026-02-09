@@ -72,6 +72,8 @@ Partial Class frmComponentPricingEdit
         Me.lblPrevBuilderValue = New System.Windows.Forms.Label()
         Me.lblPctChgBuilderCaption = New System.Windows.Forms.Label()
         Me.lblPctChgBuilderValue = New System.Windows.Forms.Label()
+        Me.btnUnlockKeyFields = New System.Windows.Forms.Button()
+        Me.lblUnlockWarning = New System.Windows.Forms.Label()
         CType(Me.nudMgmtSellPrice, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudCost, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudAppliedMargin, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -84,7 +86,7 @@ Partial Class frmComponentPricingEdit
         'lblMarginSource
         '
         Me.lblMarginSource.AutoSize = True
-        Me.lblMarginSource.Location = New System.Drawing.Point(20, 251)
+        Me.lblMarginSource.Location = New System.Drawing.Point(20, 262)
         Me.lblMarginSource.Name = "lblMarginSource"
         Me.lblMarginSource.Size = New System.Drawing.Size(79, 13)
         Me.lblMarginSource.TabIndex = 10
@@ -94,7 +96,7 @@ Partial Class frmComponentPricingEdit
         '
         Me.cboMarginSource.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboMarginSource.FormattingEnabled = True
-        Me.cboMarginSource.Location = New System.Drawing.Point(150, 248)
+        Me.cboMarginSource.Location = New System.Drawing.Point(150, 259)
         Me.cboMarginSource.Name = "cboMarginSource"
         Me.cboMarginSource.Size = New System.Drawing.Size(150, 21)
         Me.cboMarginSource.TabIndex = 11
@@ -102,7 +104,7 @@ Partial Class frmComponentPricingEdit
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(20, 23)
+        Me.Label1.Location = New System.Drawing.Point(20, 34)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(31, 13)
         Me.Label1.TabIndex = 0
@@ -112,14 +114,14 @@ Partial Class frmComponentPricingEdit
         '
         Me.cboPlan.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboPlan.FormattingEnabled = True
-        Me.cboPlan.Location = New System.Drawing.Point(120, 20)
+        Me.cboPlan.Location = New System.Drawing.Point(120, 31)
         Me.cboPlan.Name = "cboPlan"
         Me.cboPlan.Size = New System.Drawing.Size(260, 21)
         Me.cboPlan.TabIndex = 1
         '
         'btnAddPlan
         '
-        Me.btnAddPlan.Location = New System.Drawing.Point(385, 19)
+        Me.btnAddPlan.Location = New System.Drawing.Point(385, 30)
         Me.btnAddPlan.Name = "btnAddPlan"
         Me.btnAddPlan.Size = New System.Drawing.Size(50, 23)
         Me.btnAddPlan.TabIndex = 2
@@ -129,7 +131,7 @@ Partial Class frmComponentPricingEdit
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(20, 53)
+        Me.Label2.Location = New System.Drawing.Point(20, 64)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(54, 13)
         Me.Label2.TabIndex = 3
@@ -139,14 +141,14 @@ Partial Class frmComponentPricingEdit
         '
         Me.cboElevation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboElevation.FormattingEnabled = True
-        Me.cboElevation.Location = New System.Drawing.Point(120, 50)
+        Me.cboElevation.Location = New System.Drawing.Point(120, 61)
         Me.cboElevation.Name = "cboElevation"
         Me.cboElevation.Size = New System.Drawing.Size(260, 21)
         Me.cboElevation.TabIndex = 4
         '
         'btnAddElevation
         '
-        Me.btnAddElevation.Location = New System.Drawing.Point(385, 49)
+        Me.btnAddElevation.Location = New System.Drawing.Point(385, 60)
         Me.btnAddElevation.Name = "btnAddElevation"
         Me.btnAddElevation.Size = New System.Drawing.Size(50, 23)
         Me.btnAddElevation.TabIndex = 5
@@ -156,7 +158,7 @@ Partial Class frmComponentPricingEdit
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(20, 83)
+        Me.Label3.Location = New System.Drawing.Point(20, 94)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(41, 13)
         Me.Label3.TabIndex = 6
@@ -166,14 +168,14 @@ Partial Class frmComponentPricingEdit
         '
         Me.cboOption.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboOption.FormattingEnabled = True
-        Me.cboOption.Location = New System.Drawing.Point(120, 80)
+        Me.cboOption.Location = New System.Drawing.Point(120, 91)
         Me.cboOption.Name = "cboOption"
         Me.cboOption.Size = New System.Drawing.Size(260, 21)
         Me.cboOption.TabIndex = 7
         '
         'btnAddOption
         '
-        Me.btnAddOption.Location = New System.Drawing.Point(385, 79)
+        Me.btnAddOption.Location = New System.Drawing.Point(385, 90)
         Me.btnAddOption.Name = "btnAddOption"
         Me.btnAddOption.Size = New System.Drawing.Size(50, 23)
         Me.btnAddOption.TabIndex = 8
@@ -183,7 +185,7 @@ Partial Class frmComponentPricingEdit
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(20, 113)
+        Me.Label4.Location = New System.Drawing.Point(20, 124)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(74, 13)
         Me.Label4.TabIndex = 9
@@ -193,7 +195,7 @@ Partial Class frmComponentPricingEdit
         '
         Me.cboProductType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cboProductType.FormattingEnabled = True
-        Me.cboProductType.Location = New System.Drawing.Point(120, 110)
+        Me.cboProductType.Location = New System.Drawing.Point(120, 121)
         Me.cboProductType.Name = "cboProductType"
         Me.cboProductType.Size = New System.Drawing.Size(150, 21)
         Me.cboProductType.TabIndex = 10
@@ -201,7 +203,7 @@ Partial Class frmComponentPricingEdit
         'chkIsAdder
         '
         Me.chkIsAdder.AutoSize = True
-        Me.chkIsAdder.Location = New System.Drawing.Point(120, 140)
+        Me.chkIsAdder.Location = New System.Drawing.Point(120, 151)
         Me.chkIsAdder.Name = "chkIsAdder"
         Me.chkIsAdder.Size = New System.Drawing.Size(178, 17)
         Me.chkIsAdder.TabIndex = 11
@@ -212,7 +214,7 @@ Partial Class frmComponentPricingEdit
         '
         Me.Label5.AutoSize = True
         Me.Label5.ForeColor = System.Drawing.Color.Gray
-        Me.Label5.Location = New System.Drawing.Point(20, 231)
+        Me.Label5.Location = New System.Drawing.Point(20, 242)
         Me.Label5.Name = "Label5"
         Me.Label5.Size = New System.Drawing.Size(121, 13)
         Me.Label5.TabIndex = 12
@@ -221,7 +223,7 @@ Partial Class frmComponentPricingEdit
         'Label6
         '
         Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(20, 278)
+        Me.Label6.Location = New System.Drawing.Point(20, 289)
         Me.Label6.Name = "Label6"
         Me.Label6.Size = New System.Drawing.Size(90, 13)
         Me.Label6.TabIndex = 13
@@ -230,7 +232,7 @@ Partial Class frmComponentPricingEdit
         'nudMgmtSellPrice
         '
         Me.nudMgmtSellPrice.DecimalPlaces = 2
-        Me.nudMgmtSellPrice.Location = New System.Drawing.Point(150, 276)
+        Me.nudMgmtSellPrice.Location = New System.Drawing.Point(150, 287)
         Me.nudMgmtSellPrice.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudMgmtSellPrice.Name = "nudMgmtSellPrice"
         Me.nudMgmtSellPrice.Size = New System.Drawing.Size(100, 20)
@@ -239,7 +241,7 @@ Partial Class frmComponentPricingEdit
         'Label7
         '
         Me.Label7.AutoSize = True
-        Me.Label7.Location = New System.Drawing.Point(20, 304)
+        Me.Label7.Location = New System.Drawing.Point(20, 315)
         Me.Label7.Name = "Label7"
         Me.Label7.Size = New System.Drawing.Size(31, 13)
         Me.Label7.TabIndex = 15
@@ -248,7 +250,7 @@ Partial Class frmComponentPricingEdit
         'nudCost
         '
         Me.nudCost.DecimalPlaces = 2
-        Me.nudCost.Location = New System.Drawing.Point(150, 302)
+        Me.nudCost.Location = New System.Drawing.Point(150, 313)
         Me.nudCost.Maximum = New Decimal(New Integer() {999999, 0, 0, 0})
         Me.nudCost.Name = "nudCost"
         Me.nudCost.Size = New System.Drawing.Size(100, 20)
@@ -258,7 +260,7 @@ Partial Class frmComponentPricingEdit
         '
         Me.Label8.AutoSize = True
         Me.Label8.ForeColor = System.Drawing.Color.Gray
-        Me.Label8.Location = New System.Drawing.Point(20, 325)
+        Me.Label8.Location = New System.Drawing.Point(20, 336)
         Me.Label8.Name = "Label8"
         Me.Label8.Size = New System.Drawing.Size(146, 13)
         Me.Label8.TabIndex = 17
@@ -267,7 +269,7 @@ Partial Class frmComponentPricingEdit
         'Label9
         '
         Me.Label9.AutoSize = True
-        Me.Label9.Location = New System.Drawing.Point(20, 353)
+        Me.Label9.Location = New System.Drawing.Point(20, 364)
         Me.Label9.Name = "Label9"
         Me.Label9.Size = New System.Drawing.Size(80, 13)
         Me.Label9.TabIndex = 18
@@ -277,7 +279,7 @@ Partial Class frmComponentPricingEdit
         '
         Me.nudAppliedMargin.DecimalPlaces = 2
         Me.nudAppliedMargin.Increment = New Decimal(New Integer() {1, 0, 0, 131072})
-        Me.nudAppliedMargin.Location = New System.Drawing.Point(150, 350)
+        Me.nudAppliedMargin.Location = New System.Drawing.Point(150, 361)
         Me.nudAppliedMargin.Maximum = New Decimal(New Integer() {1, 0, 0, 0})
         Me.nudAppliedMargin.Name = "nudAppliedMargin"
         Me.nudAppliedMargin.Size = New System.Drawing.Size(80, 20)
@@ -285,7 +287,7 @@ Partial Class frmComponentPricingEdit
         '
         'btnRecalculate
         '
-        Me.btnRecalculate.Location = New System.Drawing.Point(240, 348)
+        Me.btnRecalculate.Location = New System.Drawing.Point(240, 359)
         Me.btnRecalculate.Name = "btnRecalculate"
         Me.btnRecalculate.Size = New System.Drawing.Size(85, 23)
         Me.btnRecalculate.TabIndex = 20
@@ -295,7 +297,7 @@ Partial Class frmComponentPricingEdit
         'Label10
         '
         Me.Label10.AutoSize = True
-        Me.Label10.Location = New System.Drawing.Point(20, 383)
+        Me.Label10.Location = New System.Drawing.Point(20, 394)
         Me.Label10.Name = "Label10"
         Me.Label10.Size = New System.Drawing.Size(87, 13)
         Me.Label10.TabIndex = 21
@@ -305,7 +307,7 @@ Partial Class frmComponentPricingEdit
         '
         Me.lblCalculatedPrice.AutoSize = True
         Me.lblCalculatedPrice.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblCalculatedPrice.Location = New System.Drawing.Point(150, 383)
+        Me.lblCalculatedPrice.Location = New System.Drawing.Point(150, 394)
         Me.lblCalculatedPrice.Name = "lblCalculatedPrice"
         Me.lblCalculatedPrice.Size = New System.Drawing.Size(0, 13)
         Me.lblCalculatedPrice.TabIndex = 22
@@ -422,7 +424,7 @@ Partial Class frmComponentPricingEdit
         Me.pnlAdderSettings.Controls.Add(Me.cboReferenceUnit)
         Me.pnlAdderSettings.Controls.Add(Me.lblAdderCostLabel)
         Me.pnlAdderSettings.Controls.Add(Me.lblAdderCost)
-        Me.pnlAdderSettings.Location = New System.Drawing.Point(23, 163)
+        Me.pnlAdderSettings.Location = New System.Drawing.Point(23, 174)
         Me.pnlAdderSettings.Name = "pnlAdderSettings"
         Me.pnlAdderSettings.Size = New System.Drawing.Size(460, 55)
         Me.pnlAdderSettings.TabIndex = 12
@@ -558,6 +560,26 @@ Partial Class frmComponentPricingEdit
         Me.lblPctChgBuilderValue.TabIndex = 7
         Me.lblPctChgBuilderValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
+        'btnUnlockKeyFields
+        '
+        Me.btnUnlockKeyFields.Location = New System.Drawing.Point(307, 119)
+        Me.btnUnlockKeyFields.Name = "btnUnlockKeyFields"
+        Me.btnUnlockKeyFields.Size = New System.Drawing.Size(180, 25)
+        Me.btnUnlockKeyFields.TabIndex = 35
+        Me.btnUnlockKeyFields.Text = "🔓 Unlock Plan/Elev/Option"
+        Me.btnUnlockKeyFields.UseVisualStyleBackColor = True
+        Me.btnUnlockKeyFields.Visible = False
+        '
+        'lblUnlockWarning
+        '
+        Me.lblUnlockWarning.AutoSize = True
+        Me.lblUnlockWarning.ForeColor = System.Drawing.Color.DarkOrange
+        Me.lblUnlockWarning.Location = New System.Drawing.Point(117, 9)
+        Me.lblUnlockWarning.Name = "lblUnlockWarning"
+        Me.lblUnlockWarning.Size = New System.Drawing.Size(0, 13)
+        Me.lblUnlockWarning.TabIndex = 36
+        Me.lblUnlockWarning.Visible = False
+        '
         'frmComponentPricingEdit
         '
         Me.AcceptButton = Me.btnOK
@@ -603,6 +625,8 @@ Partial Class frmComponentPricingEdit
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.cboMarginSource)
         Me.Controls.Add(Me.lblMarginSource)
+        Me.Controls.Add(Me.btnUnlockKeyFields)
+        Me.Controls.Add(Me.lblUnlockWarning)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
         Me.MaximizeBox = False
         Me.MinimizeBox = False
@@ -676,5 +700,8 @@ Partial Class frmComponentPricingEdit
     Friend WithEvents lblPrevBuilderValue As Label
     Friend WithEvents lblPctChgBuilderCaption As Label
     Friend WithEvents lblPctChgBuilderValue As Label
+
+    Friend WithEvents btnUnlockKeyFields As Button
+    Friend WithEvents lblUnlockWarning As Label
 
 End Class

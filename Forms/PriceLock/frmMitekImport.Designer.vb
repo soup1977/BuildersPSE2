@@ -55,185 +55,203 @@ Partial Public Class frmMitekImport
     ' Buttons
     Friend WithEvents btnImport As Button
     Friend WithEvents btnCancel As Button
+    ' Add this declaration with other controls:
+    Friend WithEvents btnResolveOptions As Button
 
     ''' <summary>
     ''' Required method for Designer support - do not modify
     ''' the contents of this method with the code editor.
     ''' </summary>
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container()
-
-        Me.lblFileLabel = New Label()
-        Me.txtFilePath = New TextBox()
-        Me.btnBrowse = New Button()
-
-        Me.grpOptions = New GroupBox()
-        Me.chkCreateMissingPlans = New CheckBox()
-        Me.chkCreateMissingElevations = New CheckBox()
-        Me.chkCreateMissingOptions = New CheckBox()
-        Me.chkUpdateExisting = New CheckBox()
-
-        Me.lblStatus = New Label()
-        Me.lblRecordCount = New Label()
-        Me.lblPreview = New Label()
-        Me.dgvPreview = New DataGridView()
-        Me.prgImport = New ProgressBar()
-        Me.btnImport = New Button()
-        Me.btnCancel = New Button()
-
+        Me.lblFileLabel = New System.Windows.Forms.Label()
+        Me.txtFilePath = New System.Windows.Forms.TextBox()
+        Me.btnBrowse = New System.Windows.Forms.Button()
+        Me.grpOptions = New System.Windows.Forms.GroupBox()
+        Me.chkCreateMissingPlans = New System.Windows.Forms.CheckBox()
+        Me.chkCreateMissingElevations = New System.Windows.Forms.CheckBox()
+        Me.chkCreateMissingOptions = New System.Windows.Forms.CheckBox()
+        Me.chkUpdateExisting = New System.Windows.Forms.CheckBox()
+        Me.lblStatus = New System.Windows.Forms.Label()
+        Me.lblRecordCount = New System.Windows.Forms.Label()
+        Me.lblPreview = New System.Windows.Forms.Label()
+        Me.dgvPreview = New System.Windows.Forms.DataGridView()
+        Me.prgImport = New System.Windows.Forms.ProgressBar()
+        Me.btnImport = New System.Windows.Forms.Button()
+        Me.btnCancel = New System.Windows.Forms.Button()
+        Me.btnResolveOptions = New System.Windows.Forms.Button()
         Me.grpOptions.SuspendLayout()
         CType(Me.dgvPreview, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
-
         '
-        ' lblFileLabel
+        'lblFileLabel
         '
         Me.lblFileLabel.AutoSize = True
-        Me.lblFileLabel.Location = New Point(15, 18)
+        Me.lblFileLabel.Location = New System.Drawing.Point(15, 18)
         Me.lblFileLabel.Name = "lblFileLabel"
+        Me.lblFileLabel.Size = New System.Drawing.Size(50, 13)
+        Me.lblFileLabel.TabIndex = 1
         Me.lblFileLabel.Text = "CSV File:"
-
         '
-        ' txtFilePath
+        'txtFilePath
         '
-        Me.txtFilePath.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-        Me.txtFilePath.Location = New Point(80, 15)
+        Me.txtFilePath.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtFilePath.Location = New System.Drawing.Point(80, 15)
         Me.txtFilePath.Name = "txtFilePath"
-        Me.txtFilePath.Width = 650
-
+        Me.txtFilePath.Size = New System.Drawing.Size(650, 20)
+        Me.txtFilePath.TabIndex = 2
         '
-        ' btnBrowse
+        'btnBrowse
         '
-        Me.btnBrowse.Anchor = AnchorStyles.Top Or AnchorStyles.Right
-        Me.btnBrowse.Location = New Point(740, 13)
+        Me.btnBrowse.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnBrowse.Location = New System.Drawing.Point(740, 13)
         Me.btnBrowse.Name = "btnBrowse"
+        Me.btnBrowse.Size = New System.Drawing.Size(80, 23)
+        Me.btnBrowse.TabIndex = 3
         Me.btnBrowse.Text = "Browse..."
-        Me.btnBrowse.Width = 80
-
         '
-        ' grpOptions
+        'grpOptions
         '
         Me.grpOptions.Controls.Add(Me.chkCreateMissingPlans)
         Me.grpOptions.Controls.Add(Me.chkCreateMissingElevations)
         Me.grpOptions.Controls.Add(Me.chkCreateMissingOptions)
         Me.grpOptions.Controls.Add(Me.chkUpdateExisting)
-        Me.grpOptions.Location = New Point(15, 50)
+        Me.grpOptions.Location = New System.Drawing.Point(15, 50)
         Me.grpOptions.Name = "grpOptions"
-        Me.grpOptions.Size = New Size(400, 100)
+        Me.grpOptions.Size = New System.Drawing.Size(400, 100)
+        Me.grpOptions.TabIndex = 4
+        Me.grpOptions.TabStop = False
         Me.grpOptions.Text = "Import Options"
-
         '
-        ' chkCreateMissingPlans
+        'chkCreateMissingPlans
         '
         Me.chkCreateMissingPlans.AutoSize = True
         Me.chkCreateMissingPlans.Checked = True
-        Me.chkCreateMissingPlans.CheckState = CheckState.Checked
-        Me.chkCreateMissingPlans.Location = New Point(15, 22)
+        Me.chkCreateMissingPlans.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkCreateMissingPlans.Location = New System.Drawing.Point(15, 22)
         Me.chkCreateMissingPlans.Name = "chkCreateMissingPlans"
+        Me.chkCreateMissingPlans.Size = New System.Drawing.Size(123, 17)
+        Me.chkCreateMissingPlans.TabIndex = 0
         Me.chkCreateMissingPlans.Text = "Create missing Plans"
-
         '
-        ' chkCreateMissingElevations
+        'chkCreateMissingElevations
         '
         Me.chkCreateMissingElevations.AutoSize = True
         Me.chkCreateMissingElevations.Checked = True
-        Me.chkCreateMissingElevations.CheckState = CheckState.Checked
-        Me.chkCreateMissingElevations.Location = New Point(15, 44)
+        Me.chkCreateMissingElevations.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkCreateMissingElevations.Location = New System.Drawing.Point(15, 44)
         Me.chkCreateMissingElevations.Name = "chkCreateMissingElevations"
+        Me.chkCreateMissingElevations.Size = New System.Drawing.Size(146, 17)
+        Me.chkCreateMissingElevations.TabIndex = 1
         Me.chkCreateMissingElevations.Text = "Create missing Elevations"
-
         '
-        ' chkCreateMissingOptions
+        'chkCreateMissingOptions
         '
         Me.chkCreateMissingOptions.AutoSize = True
         Me.chkCreateMissingOptions.Checked = True
-        Me.chkCreateMissingOptions.CheckState = CheckState.Checked
-        Me.chkCreateMissingOptions.Location = New Point(15, 66)
+        Me.chkCreateMissingOptions.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkCreateMissingOptions.Location = New System.Drawing.Point(15, 66)
         Me.chkCreateMissingOptions.Name = "chkCreateMissingOptions"
+        Me.chkCreateMissingOptions.Size = New System.Drawing.Size(133, 17)
+        Me.chkCreateMissingOptions.TabIndex = 2
         Me.chkCreateMissingOptions.Text = "Create missing Options"
-
         '
-        ' chkUpdateExisting
+        'chkUpdateExisting
         '
         Me.chkUpdateExisting.AutoSize = True
         Me.chkUpdateExisting.Checked = True
-        Me.chkUpdateExisting.CheckState = CheckState.Checked
-        Me.chkUpdateExisting.Location = New Point(200, 22)
+        Me.chkUpdateExisting.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkUpdateExisting.Location = New System.Drawing.Point(200, 22)
         Me.chkUpdateExisting.Name = "chkUpdateExisting"
+        Me.chkUpdateExisting.Size = New System.Drawing.Size(171, 17)
+        Me.chkUpdateExisting.TabIndex = 3
         Me.chkUpdateExisting.Text = "Update existing pricing records"
-
         '
-        ' lblStatus
+        'lblStatus
         '
         Me.lblStatus.AutoSize = True
-        Me.lblStatus.Location = New Point(430, 70)
+        Me.lblStatus.Location = New System.Drawing.Point(430, 70)
         Me.lblStatus.Name = "lblStatus"
-        Me.lblStatus.Text = ""
-
+        Me.lblStatus.Size = New System.Drawing.Size(0, 13)
+        Me.lblStatus.TabIndex = 5
         '
-        ' lblRecordCount
+        'lblRecordCount
         '
         Me.lblRecordCount.AutoSize = True
-        Me.lblRecordCount.Location = New Point(430, 95)
+        Me.lblRecordCount.Location = New System.Drawing.Point(430, 95)
         Me.lblRecordCount.Name = "lblRecordCount"
-        Me.lblRecordCount.Text = ""
-
+        Me.lblRecordCount.Size = New System.Drawing.Size(0, 13)
+        Me.lblRecordCount.TabIndex = 6
         '
-        ' lblPreview
+        'lblPreview
         '
         Me.lblPreview.AutoSize = True
-        Me.lblPreview.Font = New Font(Me.Font, FontStyle.Bold)
-        Me.lblPreview.Location = New Point(15, 160)
+        Me.lblPreview.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold)
+        Me.lblPreview.Location = New System.Drawing.Point(15, 160)
         Me.lblPreview.Name = "lblPreview"
+        Me.lblPreview.Size = New System.Drawing.Size(56, 13)
+        Me.lblPreview.TabIndex = 7
         Me.lblPreview.Text = "Preview:"
-
         '
-        ' dgvPreview
+        'dgvPreview
         '
         Me.dgvPreview.AllowUserToAddRows = False
         Me.dgvPreview.AllowUserToDeleteRows = False
-        Me.dgvPreview.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right Or AnchorStyles.Bottom
-        Me.dgvPreview.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-        Me.dgvPreview.BackgroundColor = SystemColors.Window
-        Me.dgvPreview.Location = New Point(15, 180)
+        Me.dgvPreview.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.dgvPreview.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
+        Me.dgvPreview.BackgroundColor = System.Drawing.SystemColors.Window
+        Me.dgvPreview.Location = New System.Drawing.Point(15, 180)
         Me.dgvPreview.Name = "dgvPreview"
         Me.dgvPreview.ReadOnly = True
         Me.dgvPreview.RowHeadersVisible = False
-        Me.dgvPreview.SelectionMode = DataGridViewSelectionMode.FullRowSelect
-        Me.dgvPreview.Size = New Size(850, 350)
-
+        Me.dgvPreview.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
+        Me.dgvPreview.Size = New System.Drawing.Size(850, 350)
+        Me.dgvPreview.TabIndex = 8
         '
-        ' prgImport
+        'prgImport
         '
-        Me.prgImport.Anchor = AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
-        Me.prgImport.Location = New Point(15, 540)
+        Me.prgImport.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.prgImport.Location = New System.Drawing.Point(15, 540)
         Me.prgImport.Name = "prgImport"
-        Me.prgImport.Size = New Size(600, 23)
+        Me.prgImport.Size = New System.Drawing.Size(600, 23)
+        Me.prgImport.TabIndex = 9
         Me.prgImport.Visible = False
-
         '
-        ' btnImport
+        'btnImport
         '
-        Me.btnImport.Anchor = AnchorStyles.Bottom Or AnchorStyles.Right
+        Me.btnImport.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnImport.Enabled = False
-        Me.btnImport.Location = New Point(710, 575)
+        Me.btnImport.Location = New System.Drawing.Point(710, 575)
         Me.btnImport.Name = "btnImport"
-        Me.btnImport.Size = New Size(80, 30)
+        Me.btnImport.Size = New System.Drawing.Size(80, 30)
+        Me.btnImport.TabIndex = 10
         Me.btnImport.Text = "Import"
-
         '
-        ' btnCancel
+        'btnCancel
         '
-        Me.btnCancel.Anchor = AnchorStyles.Bottom Or AnchorStyles.Right
-        Me.btnCancel.Location = New Point(800, 575)
+        Me.btnCancel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnCancel.Location = New System.Drawing.Point(800, 575)
         Me.btnCancel.Name = "btnCancel"
-        Me.btnCancel.Size = New Size(80, 30)
+        Me.btnCancel.Size = New System.Drawing.Size(80, 30)
+        Me.btnCancel.TabIndex = 11
         Me.btnCancel.Text = "Cancel"
-
         '
-        ' frmMitekImport
+        'btnResolveOptions
         '
-        Me.ClientSize = New Size(900, 650)
+        Me.btnResolveOptions.Enabled = False
+        Me.btnResolveOptions.Location = New System.Drawing.Point(15, 575)
+        Me.btnResolveOptions.Name = "btnResolveOptions"
+        Me.btnResolveOptions.Size = New System.Drawing.Size(150, 28)
+        Me.btnResolveOptions.TabIndex = 0
+        Me.btnResolveOptions.Text = "Resolve Options..."
+        '
+        'frmMitekImport
+        '
+        Me.ClientSize = New System.Drawing.Size(900, 650)
+        Me.Controls.Add(Me.btnResolveOptions)
         Me.Controls.Add(Me.lblFileLabel)
         Me.Controls.Add(Me.txtFilePath)
         Me.Controls.Add(Me.btnBrowse)
@@ -245,11 +263,10 @@ Partial Public Class frmMitekImport
         Me.Controls.Add(Me.prgImport)
         Me.Controls.Add(Me.btnImport)
         Me.Controls.Add(Me.btnCancel)
-        Me.MinimumSize = New Size(800, 500)
+        Me.MinimumSize = New System.Drawing.Size(800, 500)
         Me.Name = "frmMitekImport"
-        Me.StartPosition = FormStartPosition.CenterParent
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "Import MiTek CSV"
-
         Me.grpOptions.ResumeLayout(False)
         Me.grpOptions.PerformLayout()
         CType(Me.dgvPreview, System.ComponentModel.ISupportInitialize).EndInit()

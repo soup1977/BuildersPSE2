@@ -681,16 +681,22 @@ Namespace DataAccess
         ''' <summary>Deletes an ActualUnit (checks for existing mappings first).</summary>
         Public Sub DeleteActualUnit(actualUnitID As Integer)
             SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
-                                                                       Dim mappingParams As SqlParameter() = {New SqlParameter("@ActualUnitID", actualUnitID)}
+                                                                       ' Use NEW parameter for count check
                                                                        Dim mappingCount As Integer = CInt(SqlConnectionManager.Instance.ExecuteScalar(Of Object)(
-                                                                           "SELECT COUNT(*) FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID", mappingParams))
+                                                                   "SELECT COUNT(*) FROM ActualToLevelMapping WHERE ActualUnitID = @ActualUnitID",
+                                                                   {New SqlParameter("@ActualUnitID", actualUnitID)}))
 
                                                                        If mappingCount > 0 Then
-                                                                           Throw New ApplicationException($"Cannot delete ActualUnit with {mappingCount} existing level mapping(s).")
+                                                                           Throw New ApplicationException($"Error deleting actual unit {actualUnitID}: The unit is used in {mappingCount} level mapping(s). Remove the mappings first.")
                                                                        End If
 
-                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteCalculatedComponentsByActualUnitID, mappingParams)
-                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteActualUnit, mappingParams)
+                                                                       ' Use NEW parameter for delete components
+                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteCalculatedComponentsByActualUnitID,
+                                                                   {New SqlParameter("@ActualUnitID", actualUnitID)})
+
+                                                                       ' Use NEW parameter for delete unit
+                                                                       SqlConnectionManager.Instance.ExecuteNonQuery(Queries.DeleteActualUnit,
+                                                                   {New SqlParameter("@ActualUnitID", actualUnitID)})
                                                                    End Sub, "Error deleting actual unit " & actualUnitID)
         End Sub
 

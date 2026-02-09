@@ -243,6 +243,29 @@ Namespace DataAccess
              END
              SELECT OptionID FROM PL_Options WHERE OptionName = @OptionName"
 
+        ''' <summary>Merge duplicate options - reassigns all component pricing from source to target option</summary>
+        Public Const MergeOptions As String =
+            "-- Reassign all component pricing records from source option to target option
+             UPDATE PL_ComponentPricing
+             SET OptionID = @TargetOptionID,
+                 ModifiedDate = GETDATE(),
+                 ModifiedBy = @ModifiedBy
+             WHERE OptionID = @SourceOptionID;
+             
+             -- Deactivate the source option (soft delete)
+             UPDATE PL_Options
+             SET IsActive = 0,
+                 OptionDescription = ISNULL(OptionDescription, '') + ' [MERGED INTO OptionID ' + CAST(@TargetOptionID AS VARCHAR(10)) + ']',
+                 ModifiedDate = GETDATE()
+             WHERE OptionID = @SourceOptionID;
+             
+             -- Return count of records updated
+             SELECT @@ROWCOUNT AS RecordsUpdated"
+
+        ''' <summary>Get count of component pricing records using an option</summary>
+        Public Const GetOptionUsageCount As String =
+            "SELECT COUNT(*) FROM PL_ComponentPricing WHERE OptionID = @OptionID"
+
 #End Region
 
 #Region "Product Types"

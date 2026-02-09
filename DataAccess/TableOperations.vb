@@ -347,17 +347,18 @@ Namespace DataAccess
 
         Public Sub UpdateActualUnit(model As ActualUnitModel, conn As SqlConnection, tran As SqlTransaction)
             Dim params As New Dictionary(Of String, Object) From {
-                {"@ActualUnitID", model.ActualUnitID},
-                {"@UnitName", ToDb(model.UnitName)},
-                {"@PlanSQFT", model.PlanSQFT},
-                {"@UnitType", ToDb(model.UnitType)},
-                {"@OptionalAdder", model.OptionalAdder},
-                {"@ColorCode", ToDb(model.ColorCode)},
-                {"@MarginPercent", model.MarginPercent},
-                {"@SortOrder", model.SortOrder}
-            }
+        {"@ActualUnitID", model.ActualUnitID},
+        {"@RawUnitID", model.RawUnitID},
+        {"@UnitName", ToDb(model.UnitName)},
+        {"@PlanSQFT", model.PlanSQFT},
+        {"@UnitType", ToDb(model.UnitType)},
+        {"@OptionalAdder", model.OptionalAdder},
+        {"@ColorCode", ToDb(model.ColorCode)},
+        {"@MarginPercent", model.MarginPercent},
+        {"@SortOrder", model.SortOrder}
+    }
             SqlConnectionManager.Instance.ExecuteNonQueryTransactional(
-                Queries.UpdateActualUnit, HelperDataAccess.BuildParameters(params), conn, tran)
+        Queries.UpdateActualUnit, HelperDataAccess.BuildParameters(params), conn, tran)
         End Sub
 
         '===========================================================================

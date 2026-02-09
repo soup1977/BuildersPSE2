@@ -389,6 +389,44 @@ Namespace DataAccess
             End Using
         End Function
 
+        ''' <summary>
+        ''' Merges a source option into a target option by reassigning all component pricing
+        ''' references and deactivating the source option.
+        ''' </summary>
+        ''' <param name="sourceOptionID">The duplicate option to be merged away</param>
+        ''' <param name="targetOptionID">The option to keep</param>
+        ''' <param name="modifiedBy">User performing the merge</param>
+        ''' <returns>Number of component pricing records that were reassigned</returns>
+        Public Function MergeOptions(sourceOptionID As Integer, targetOptionID As Integer, modifiedBy As String) As Integer
+            If sourceOptionID = targetOptionID Then
+                Throw New ArgumentException("Source and target options cannot be the same.")
+            End If
+
+            Using conn As New SqlConnection(_connectionString)
+                Using cmd As New SqlCommand(PriceLockQueries.MergeOptions, conn)
+                    cmd.Parameters.AddWithValue("@SourceOptionID", sourceOptionID)
+                    cmd.Parameters.AddWithValue("@TargetOptionID", targetOptionID)
+                    cmd.Parameters.AddWithValue("@ModifiedBy", If(modifiedBy, CObj(DBNull.Value)))
+                    conn.Open()
+                    Dim result = cmd.ExecuteScalar()
+                    Return If(result IsNot Nothing AndAlso result IsNot DBNull.Value, CInt(result), 0)
+                End Using
+            End Using
+        End Function
+
+        ''' <summary>
+        ''' Gets the count of component pricing records that reference this option
+        ''' </summary>
+        Public Function GetOptionUsageCount(optionID As Integer) As Integer
+            Using conn As New SqlConnection(_connectionString)
+                Using cmd As New SqlCommand(PriceLockQueries.GetOptionUsageCount, conn)
+                    cmd.Parameters.AddWithValue("@OptionID", optionID)
+                    conn.Open()
+                    Return CInt(cmd.ExecuteScalar())
+                End Using
+            End Using
+        End Function
+
         Private Function MapOption(reader As SqlDataReader) As PLOption
             Return New PLOption() With {
                 .OptionID = reader.GetInt32(reader.GetOrdinal("OptionID")),
