@@ -205,6 +205,7 @@
     <Compile Include="DataAccess\HelperDataAccess.vb" />
     <Compile Include="DataAccess\IEDataAccess.vb" />
     <Compile Include="DataAccess\LumberDataAccess.vb" />
+    <Compile Include="DataAccess\PriceHistoryDataAccess.vb" />
     <Compile Include="DataAccess\PriceLockDataAccess.vb" />
     <Compile Include="DataAccess\PriceLockQueries.vb" />
     <Compile Include="DataAccess\PriceLockQueries_RandomLengths.vb" />
@@ -218,6 +219,24 @@
       <DependentUpon>frmActualsMatcher.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmActualsMatcher.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryCompare.Designer.vb">
+      <DependentUpon>frmPriceHistoryCompare.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryCompare.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryViewer.Designer.vb">
+      <DependentUpon>frmPriceHistoryViewer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryViewer.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmSelectSnapshotsToCompare.Designer.vb">
+      <DependentUpon>frmSelectSnapshotsToCompare.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmSelectSnapshotsToCompare.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\PriceLock\frmBuilderManagement.Designer.vb">
@@ -451,6 +470,7 @@
     <Compile Include="Models\LumberFutures.vb" />
     <Compile Include="Models\LumberTypeModel.vb" />
     <Compile Include="Models\MondayBoardItem.vb" />
+    <Compile Include="Models\PriceHistoryModel.vb" />
     <Compile Include="Models\PriceLockModels.vb" />
     <Compile Include="Models\ProductTypeModel.vb" />
     <Compile Include="Models\ProjectBearingStylesModel.vb" />
@@ -490,8 +510,12 @@
     <Compile Include="ProjectSummaryDataSet.vb">
       <DependentUpon>ProjectSummaryDataSet.xsd</DependentUpon>
     </Compile>
+    <Compile Include="Services\FuturesAdderCalculator.vb" />
+    <Compile Include="Services\PriceHistoryService.vb" />
     <Compile Include="Services\RollupCalculationService.vb" />
     <Compile Include="Services\RollupFormatter.vb" />
+    <Compile Include="Services\VarianceGridFormatter.vb" />
+    <Compile Include="Services\VarianceGridService.vb" />
     <Compile Include="Utilities\ActualsImporter.vb" />
     <Compile Include="Utilities\CurrentUser.vb" />
     <Compile Include="Utilities\MitekImportHelpers.vb" />
@@ -535,6 +559,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmMondaySearch.resx">
       <DependentUpon>frmMondaySearch.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmPriceHistoryCompare.resx">
+      <DependentUpon>frmPriceHistoryCompare.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmPriceHistoryViewer.resx">
+      <DependentUpon>frmPriceHistoryViewer.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmSelectSnapshotsToCompare.resx">
+      <DependentUpon>frmSelectSnapshotsToCompare.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\PriceLock\frmComponentPricingEdit.resx">
       <DependentUpon>frmComponentPricingEdit.vb</DependentUpon>

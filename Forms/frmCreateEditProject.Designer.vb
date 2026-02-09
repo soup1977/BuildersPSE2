@@ -159,6 +159,7 @@ Partial Class frmCreateEditProject
         Me.btnImportWalls = New System.Windows.Forms.Button()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
         Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
+        Me.btnViewPriceHistory = New System.Windows.Forms.Button()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -1343,7 +1344,7 @@ Partial Class frmCreateEditProject
         'btnRecalcRollup
         '
         Me.btnRecalcRollup.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnRecalcRollup.Location = New System.Drawing.Point(695, 288)
+        Me.btnRecalcRollup.Location = New System.Drawing.Point(695, 300)
         Me.btnRecalcRollup.Name = "btnRecalcRollup"
         Me.btnRecalcRollup.Size = New System.Drawing.Size(99, 44)
         Me.btnRecalcRollup.TabIndex = 46
@@ -1372,7 +1373,7 @@ Partial Class frmCreateEditProject
         'btnDeleteProject
         '
         Me.btnDeleteProject.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnDeleteProject.Location = New System.Drawing.Point(694, 371)
+        Me.btnDeleteProject.Location = New System.Drawing.Point(694, 383)
         Me.btnDeleteProject.Name = "btnDeleteProject"
         Me.btnDeleteProject.Size = New System.Drawing.Size(100, 27)
         Me.btnDeleteProject.TabIndex = 24
@@ -1392,7 +1393,7 @@ Partial Class frmCreateEditProject
         'btnClose
         '
         Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnClose.Location = New System.Drawing.Point(694, 404)
+        Me.btnClose.Location = New System.Drawing.Point(694, 416)
         Me.btnClose.Name = "btnClose"
         Me.btnClose.Size = New System.Drawing.Size(100, 27)
         Me.btnClose.TabIndex = 22
@@ -1411,7 +1412,7 @@ Partial Class frmCreateEditProject
         'btnSaveProjectInfo
         '
         Me.btnSaveProjectInfo.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(694, 338)
+        Me.btnSaveProjectInfo.Location = New System.Drawing.Point(694, 350)
         Me.btnSaveProjectInfo.Name = "btnSaveProjectInfo"
         Me.btnSaveProjectInfo.Size = New System.Drawing.Size(100, 27)
         Me.btnSaveProjectInfo.TabIndex = 20
@@ -1430,6 +1431,7 @@ Partial Class frmCreateEditProject
         '
         'SplitContainer1.Panel2
         '
+        Me.SplitContainer1.Panel2.Controls.Add(Me.btnViewPriceHistory)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnLinkMonday)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportWalls)
         Me.SplitContainer1.Panel2.Controls.Add(Me.btnImportMiTek)
@@ -1482,6 +1484,16 @@ Partial Class frmCreateEditProject
         '
         Me.FileSystemWatcher1.EnableRaisingEvents = True
         Me.FileSystemWatcher1.SynchronizingObject = Me
+        '
+        'btnViewPriceHistory
+        '
+        Me.btnViewPriceHistory.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnViewPriceHistory.Location = New System.Drawing.Point(695, 253)
+        Me.btnViewPriceHistory.Name = "btnViewPriceHistory"
+        Me.btnViewPriceHistory.Size = New System.Drawing.Size(97, 39)
+        Me.btnViewPriceHistory.TabIndex = 49
+        Me.btnViewPriceHistory.Text = "View Price History"
+        Me.btnViewPriceHistory.UseVisualStyleBackColor = True
         '
         'frmCreateEditProject
         '
@@ -1660,4 +1672,5 @@ Partial Class frmCreateEditProject
     Friend WithEvents txtArchPlanDate As MaskedTextBox
     Friend WithEvents cboProjectStatus As ComboBox
     Friend WithEvents Active As ColumnHeader
+    Friend WithEvents btnViewPriceHistory As Button
 End Class
