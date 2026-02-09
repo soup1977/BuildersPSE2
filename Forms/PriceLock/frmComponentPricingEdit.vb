@@ -25,6 +25,13 @@ Public Class frmComponentPricingEdit
 
     ' NEW: Track reference units for adder
     Private _referenceUnits As List(Of PLReferenceUnit)
+    ' =====================================================
+    ' ADD THESE FIELDS in the "Fields" region (around line 20)
+    ' =====================================================
+
+    ' Previous Price Lock reference data (for display only)
+    Private _hasPreviousPricing As Boolean = False
+
 
 #End Region
 
@@ -331,6 +338,13 @@ Public Class frmComponentPricingEdit
 
         CalculatePrice()
         lblPriceDiffWarning.Visible = _componentPricing.HasPriceDifference
+        ' =====================================================
+        ' ADD THIS LINE at the END of LoadComponentData method
+        ' (before the "End Sub", around line 285)
+        ' =====================================================
+
+        ' Populate the previous price lock comparison panel
+        PopulatePreviousPricingPanel()
 
         ' Disable key fields for existing records
         cboPlan.Enabled = False
@@ -342,6 +356,101 @@ Public Class frmComponentPricingEdit
         btnAddOption.Enabled = False
     End Sub
 
+    ' =====================================================
+    ' ADD THIS METHOD in the "Data Loading" region
+    ' (after LoadComponentData, around line 290)
+    ' =====================================================
+
+    ''' <summary>
+    ''' Populates the previous pricing comparison panel with data from the previous price lock
+    ''' </summary>
+    Private Sub PopulatePreviousPricingPanel()
+        ' Hide for new records
+        If _isNew Then
+            grpPreviousPricing.Visible = False
+            Return
+        End If
+
+        grpPreviousPricing.Visible = True
+        _hasPreviousPricing = _componentPricing.HasPreviousPricing
+
+        If Not _hasPreviousPricing Then
+            ' No previous data - show N/A for all
+            lblPrevSalesValue.Text = "N/A"
+            lblPrevSalesValue.ForeColor = Color.Gray
+            lblPctChgSalesValue.Text = "N/A"
+            lblPctChgSalesValue.ForeColor = Color.Gray
+            lblPrevBuilderValue.Text = "N/A"
+            lblPrevBuilderValue.ForeColor = Color.Gray
+            lblPctChgBuilderValue.Text = "N/A"
+            lblPctChgBuilderValue.ForeColor = Color.Gray
+            Return
+        End If
+
+        ' Previous Sent to Sales
+        If _componentPricing.PreviousPriceSentToSales.HasValue Then
+            lblPrevSalesValue.Text = _componentPricing.PreviousPriceSentToSales.Value.ToString("C2")
+            lblPrevSalesValue.ForeColor = Color.Black
+        Else
+            lblPrevSalesValue.Text = "N/A"
+            lblPrevSalesValue.ForeColor = Color.Gray
+        End If
+
+        ' % Change Sales
+        If _componentPricing.PctChangeSentToSales.HasValue Then
+            Dim pctChange = _componentPricing.PctChangeSentToSales.Value
+            lblPctChgSalesValue.Text = pctChange.ToString("P1")
+            ' Color code
+            If pctChange > 0.05D Then
+                lblPctChgSalesValue.ForeColor = Color.Red
+                lblPctChgSalesValue.Font = New Font(lblPctChgSalesValue.Font, FontStyle.Bold)
+            ElseIf pctChange < -0.05D Then
+                lblPctChgSalesValue.ForeColor = Color.Green
+                lblPctChgSalesValue.Font = New Font(lblPctChgSalesValue.Font, FontStyle.Bold)
+            ElseIf Math.Abs(pctChange) > 0.02D Then
+                lblPctChgSalesValue.ForeColor = Color.DarkOrange
+                lblPctChgSalesValue.Font = New Font(lblPctChgSalesValue.Font, FontStyle.Regular)
+            Else
+                lblPctChgSalesValue.ForeColor = Color.Black
+                lblPctChgSalesValue.Font = New Font(lblPctChgSalesValue.Font, FontStyle.Regular)
+            End If
+        Else
+            lblPctChgSalesValue.Text = "N/A"
+            lblPctChgSalesValue.ForeColor = Color.Gray
+        End If
+
+        ' Previous Sent to Builder
+        If _componentPricing.PreviousPriceSentToBuilder.HasValue Then
+            lblPrevBuilderValue.Text = _componentPricing.PreviousPriceSentToBuilder.Value.ToString("C2")
+            lblPrevBuilderValue.ForeColor = Color.Black
+        Else
+            lblPrevBuilderValue.Text = "N/A"
+            lblPrevBuilderValue.ForeColor = Color.Gray
+        End If
+
+        ' % Change Builder
+        If _componentPricing.PctChangeSentToBuilder.HasValue Then
+            Dim pctChange = _componentPricing.PctChangeSentToBuilder.Value
+            lblPctChgBuilderValue.Text = pctChange.ToString("P1")
+            ' Color code
+            If pctChange > 0.05D Then
+                lblPctChgBuilderValue.ForeColor = Color.Red
+                lblPctChgBuilderValue.Font = New Font(lblPctChgBuilderValue.Font, FontStyle.Bold)
+            ElseIf pctChange < -0.05D Then
+                lblPctChgBuilderValue.ForeColor = Color.Green
+                lblPctChgBuilderValue.Font = New Font(lblPctChgBuilderValue.Font, FontStyle.Bold)
+            ElseIf Math.Abs(pctChange) > 0.02D Then
+                lblPctChgBuilderValue.ForeColor = Color.DarkOrange
+                lblPctChgBuilderValue.Font = New Font(lblPctChgBuilderValue.Font, FontStyle.Regular)
+            Else
+                lblPctChgBuilderValue.ForeColor = Color.Black
+                lblPctChgBuilderValue.Font = New Font(lblPctChgBuilderValue.Font, FontStyle.Regular)
+            End If
+        Else
+            lblPctChgBuilderValue.Text = "N/A"
+            lblPctChgBuilderValue.ForeColor = Color.Gray
+        End If
+    End Sub
     Private Sub SelectComboItem(combo As ComboBox, value As Integer)
         For i = 0 To combo.Items.Count - 1
             Dim item = TryCast(combo.Items(i), ListItem)

@@ -63,12 +63,22 @@ Partial Class frmComponentPricingEdit
         Me.cboReferenceUnit = New System.Windows.Forms.ComboBox()
         Me.lblAdderCostLabel = New System.Windows.Forms.Label()
         Me.lblAdderCost = New System.Windows.Forms.Label()
+        Me.grpPreviousPricing = New System.Windows.Forms.GroupBox()
+        Me.lblPrevSalesCaption = New System.Windows.Forms.Label()
+        Me.lblPrevSalesValue = New System.Windows.Forms.Label()
+        Me.lblPctChgSalesCaption = New System.Windows.Forms.Label()
+        Me.lblPctChgSalesValue = New System.Windows.Forms.Label()
+        Me.lblPrevBuilderCaption = New System.Windows.Forms.Label()
+        Me.lblPrevBuilderValue = New System.Windows.Forms.Label()
+        Me.lblPctChgBuilderCaption = New System.Windows.Forms.Label()
+        Me.lblPctChgBuilderValue = New System.Windows.Forms.Label()
         CType(Me.nudMgmtSellPrice, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudCost, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudAppliedMargin, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudFinalPrice, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudPriceSentToBuilder, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.pnlAdderSettings.SuspendLayout()
+        Me.grpPreviousPricing.SuspendLayout()
         Me.SuspendLayout()
         '
         'lblMarginSource
@@ -389,7 +399,7 @@ Partial Class frmComponentPricingEdit
         '
         'btnOK
         '
-        Me.btnOK.Location = New System.Drawing.Point(300, 602)
+        Me.btnOK.Location = New System.Drawing.Point(300, 692)
         Me.btnOK.Name = "btnOK"
         Me.btnOK.Size = New System.Drawing.Size(80, 30)
         Me.btnOK.TabIndex = 32
@@ -399,7 +409,7 @@ Partial Class frmComponentPricingEdit
         'btnCancel
         '
         Me.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.btnCancel.Location = New System.Drawing.Point(390, 602)
+        Me.btnCancel.Location = New System.Drawing.Point(390, 692)
         Me.btnCancel.Name = "btnCancel"
         Me.btnCancel.Size = New System.Drawing.Size(80, 30)
         Me.btnCancel.TabIndex = 33
@@ -455,13 +465,107 @@ Partial Class frmComponentPricingEdit
         Me.lblAdderCost.Size = New System.Drawing.Size(0, 13)
         Me.lblAdderCost.TabIndex = 3
         '
+        'grpPreviousPricing
+        '
+        Me.grpPreviousPricing.Controls.Add(Me.lblPrevSalesCaption)
+        Me.grpPreviousPricing.Controls.Add(Me.lblPrevSalesValue)
+        Me.grpPreviousPricing.Controls.Add(Me.lblPctChgSalesCaption)
+        Me.grpPreviousPricing.Controls.Add(Me.lblPctChgSalesValue)
+        Me.grpPreviousPricing.Controls.Add(Me.lblPrevBuilderCaption)
+        Me.grpPreviousPricing.Controls.Add(Me.lblPrevBuilderValue)
+        Me.grpPreviousPricing.Controls.Add(Me.lblPctChgBuilderCaption)
+        Me.grpPreviousPricing.Controls.Add(Me.lblPctChgBuilderValue)
+        Me.grpPreviousPricing.Location = New System.Drawing.Point(12, 596)
+        Me.grpPreviousPricing.Name = "grpPreviousPricing"
+        Me.grpPreviousPricing.Size = New System.Drawing.Size(480, 85)
+        Me.grpPreviousPricing.TabIndex = 34
+        Me.grpPreviousPricing.TabStop = False
+        Me.grpPreviousPricing.Text = "Previous Price Lock Comparison"
+        '
+        'lblPrevSalesCaption
+        '
+        Me.lblPrevSalesCaption.Location = New System.Drawing.Point(10, 22)
+        Me.lblPrevSalesCaption.Name = "lblPrevSalesCaption"
+        Me.lblPrevSalesCaption.Size = New System.Drawing.Size(110, 20)
+        Me.lblPrevSalesCaption.TabIndex = 0
+        Me.lblPrevSalesCaption.Text = "Prev Sent to Sales:"
+        Me.lblPrevSalesCaption.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'lblPrevSalesValue
+        '
+        Me.lblPrevSalesValue.BackColor = System.Drawing.Color.WhiteSmoke
+        Me.lblPrevSalesValue.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.lblPrevSalesValue.Location = New System.Drawing.Point(125, 22)
+        Me.lblPrevSalesValue.Name = "lblPrevSalesValue"
+        Me.lblPrevSalesValue.Size = New System.Drawing.Size(90, 20)
+        Me.lblPrevSalesValue.TabIndex = 1
+        Me.lblPrevSalesValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'lblPctChgSalesCaption
+        '
+        Me.lblPctChgSalesCaption.Location = New System.Drawing.Point(220, 22)
+        Me.lblPctChgSalesCaption.Name = "lblPctChgSalesCaption"
+        Me.lblPctChgSalesCaption.Size = New System.Drawing.Size(70, 20)
+        Me.lblPctChgSalesCaption.TabIndex = 2
+        Me.lblPctChgSalesCaption.Text = "% Change:"
+        Me.lblPctChgSalesCaption.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'lblPctChgSalesValue
+        '
+        Me.lblPctChgSalesValue.BackColor = System.Drawing.Color.WhiteSmoke
+        Me.lblPctChgSalesValue.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.lblPctChgSalesValue.Location = New System.Drawing.Point(295, 22)
+        Me.lblPctChgSalesValue.Name = "lblPctChgSalesValue"
+        Me.lblPctChgSalesValue.Size = New System.Drawing.Size(70, 20)
+        Me.lblPctChgSalesValue.TabIndex = 3
+        Me.lblPctChgSalesValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
+        'lblPrevBuilderCaption
+        '
+        Me.lblPrevBuilderCaption.Location = New System.Drawing.Point(10, 50)
+        Me.lblPrevBuilderCaption.Name = "lblPrevBuilderCaption"
+        Me.lblPrevBuilderCaption.Size = New System.Drawing.Size(110, 20)
+        Me.lblPrevBuilderCaption.TabIndex = 4
+        Me.lblPrevBuilderCaption.Text = "Prev Sent to Builder:"
+        Me.lblPrevBuilderCaption.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'lblPrevBuilderValue
+        '
+        Me.lblPrevBuilderValue.BackColor = System.Drawing.Color.WhiteSmoke
+        Me.lblPrevBuilderValue.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.lblPrevBuilderValue.Location = New System.Drawing.Point(125, 50)
+        Me.lblPrevBuilderValue.Name = "lblPrevBuilderValue"
+        Me.lblPrevBuilderValue.Size = New System.Drawing.Size(90, 20)
+        Me.lblPrevBuilderValue.TabIndex = 5
+        Me.lblPrevBuilderValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'lblPctChgBuilderCaption
+        '
+        Me.lblPctChgBuilderCaption.Location = New System.Drawing.Point(220, 50)
+        Me.lblPctChgBuilderCaption.Name = "lblPctChgBuilderCaption"
+        Me.lblPctChgBuilderCaption.Size = New System.Drawing.Size(70, 20)
+        Me.lblPctChgBuilderCaption.TabIndex = 6
+        Me.lblPctChgBuilderCaption.Text = "% Change:"
+        Me.lblPctChgBuilderCaption.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'lblPctChgBuilderValue
+        '
+        Me.lblPctChgBuilderValue.BackColor = System.Drawing.Color.WhiteSmoke
+        Me.lblPctChgBuilderValue.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.lblPctChgBuilderValue.Location = New System.Drawing.Point(295, 50)
+        Me.lblPctChgBuilderValue.Name = "lblPctChgBuilderValue"
+        Me.lblPctChgBuilderValue.Size = New System.Drawing.Size(70, 20)
+        Me.lblPctChgBuilderValue.TabIndex = 7
+        Me.lblPctChgBuilderValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
         'frmComponentPricingEdit
         '
         Me.AcceptButton = Me.btnOK
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.btnCancel
-        Me.ClientSize = New System.Drawing.Size(504, 638)
+        Me.ClientSize = New System.Drawing.Size(504, 728)
+        Me.Controls.Add(Me.grpPreviousPricing)
         Me.Controls.Add(Me.pnlAdderSettings)
         Me.Controls.Add(Me.btnCancel)
         Me.Controls.Add(Me.btnOK)
@@ -512,6 +616,7 @@ Partial Class frmComponentPricingEdit
         CType(Me.nudPriceSentToBuilder, System.ComponentModel.ISupportInitialize).EndInit()
         Me.pnlAdderSettings.ResumeLayout(False)
         Me.pnlAdderSettings.PerformLayout()
+        Me.grpPreviousPricing.ResumeLayout(False)
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -554,12 +659,22 @@ Partial Class frmComponentPricingEdit
     Friend WithEvents cboMarginSource As ComboBox
     Friend WithEvents lblMarginSource As Label
 
-    ' Add these declarations at the class level (with the other Friend WithEvents)
+    ' Adder settings controls
     Friend WithEvents lblReferenceUnit As Label
     Friend WithEvents cboReferenceUnit As ComboBox
     Friend WithEvents lblAdderCostLabel As Label
     Friend WithEvents lblAdderCost As Label
     Friend WithEvents pnlAdderSettings As Panel
 
+    ' Previous Price Lock Comparison controls
+    Friend WithEvents grpPreviousPricing As GroupBox
+    Friend WithEvents lblPrevSalesCaption As Label
+    Friend WithEvents lblPrevSalesValue As Label
+    Friend WithEvents lblPctChgSalesCaption As Label
+    Friend WithEvents lblPctChgSalesValue As Label
+    Friend WithEvents lblPrevBuilderCaption As Label
+    Friend WithEvents lblPrevBuilderValue As Label
+    Friend WithEvents lblPctChgBuilderCaption As Label
+    Friend WithEvents lblPctChgBuilderValue As Label
 
 End Class

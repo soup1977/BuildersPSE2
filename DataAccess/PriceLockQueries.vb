@@ -431,6 +431,65 @@ Namespace DataAccess
      WHERE cp.PriceLockID = @PriceLockID
      ORDER BY p.PlanName, e.ElevationName, o.OptionName, pt.ProductTypeName"
 
+        ' =====================================================
+        ' ADD THIS QUERY after SelectComponentPricingByLock (around line 340)
+        ' =====================================================
+
+        ''' <summary>Select all component pricing for a price lock WITH previous price lock comparison data</summary>
+        Public Const SelectComponentPricingByLockWithPrevious As String =
+    "-- First, get the previous price lock ID for this subdivision
+     ;WITH PrevLock AS (
+         SELECT TOP 1 prev.PriceLockID AS PrevPriceLockID
+         FROM PL_PriceLocks curr
+         INNER JOIN PL_PriceLocks prev 
+             ON prev.SubdivisionID = curr.SubdivisionID
+             AND prev.PriceLockDate < curr.PriceLockDate
+         WHERE curr.PriceLockID = @PriceLockID
+         ORDER BY prev.PriceLockDate DESC
+     )
+     SELECT cp.ComponentPricingID, cp.PriceLockID, cp.PlanID, cp.ElevationID, cp.OptionID,
+            cp.ProductTypeID, cp.Cost, cp.MgmtSellPrice, cp.CalculatedPrice, cp.AppliedMargin,
+            cp.FinalPrice, cp.PriceSentToSales, cp.PriceSentToBuilder,
+            cp.IsAdder, cp.BaseElevationID, cp.BaseComponentPricingID, cp.PriceNote, cp.MarginSource,
+            cp.CreatedDate, cp.ModifiedDate, cp.ModifiedBy,
+            p.PlanName, e.ElevationName, o.OptionName, pt.ProductTypeName,
+            be.ElevationName AS BaseElevationName,
+            basecp.Cost AS BaseComponentCost,
+            basep.PlanName + ' ' + basee.ElevationName + ' (' + basept.ProductTypeName + ')' AS BaseComponentDescription,
+            -- Previous price lock comparison fields
+            prevcp.PriceSentToSales AS PreviousPriceSentToSales,
+            prevcp.PriceSentToBuilder AS PreviousPriceSentToBuilder,
+            -- Calculate percent changes
+            CASE 
+                WHEN prevcp.PriceSentToSales IS NULL OR prevcp.PriceSentToSales = 0 THEN NULL
+                ELSE (cp.PriceSentToSales - prevcp.PriceSentToSales) / prevcp.PriceSentToSales 
+            END AS PctChangeSentToSales,
+            CASE 
+                WHEN prevcp.PriceSentToBuilder IS NULL OR prevcp.PriceSentToBuilder = 0 THEN NULL
+                ELSE (cp.PriceSentToBuilder - prevcp.PriceSentToBuilder) / prevcp.PriceSentToBuilder 
+            END AS PctChangeSentToBuilder
+     FROM PL_ComponentPricing cp
+     INNER JOIN PL_Plans p ON cp.PlanID = p.PlanID
+     INNER JOIN PL_Elevations e ON cp.ElevationID = e.ElevationID
+     INNER JOIN PL_ProductTypes pt ON cp.ProductTypeID = pt.ProductTypeID
+     LEFT JOIN PL_Options o ON cp.OptionID = o.OptionID
+     LEFT JOIN PL_Elevations be ON cp.BaseElevationID = be.ElevationID
+     LEFT JOIN PL_ComponentPricing basecp ON cp.BaseComponentPricingID = basecp.ComponentPricingID
+     LEFT JOIN PL_Plans basep ON basecp.PlanID = basep.PlanID
+     LEFT JOIN PL_Elevations basee ON basecp.ElevationID = basee.ElevationID
+     LEFT JOIN PL_ProductTypes basept ON basecp.ProductTypeID = basept.ProductTypeID
+     -- Join to previous price lock's component pricing (matching by business key)
+     LEFT JOIN PrevLock ON 1=1
+     LEFT JOIN PL_ComponentPricing prevcp 
+         ON prevcp.PriceLockID = PrevLock.PrevPriceLockID
+         AND prevcp.PlanID = cp.PlanID
+         AND prevcp.ElevationID = cp.ElevationID
+         AND ISNULL(prevcp.OptionID, 0) = ISNULL(cp.OptionID, 0)
+         AND prevcp.ProductTypeID = cp.ProductTypeID
+     WHERE cp.PriceLockID = @PriceLockID
+     ORDER BY p.PlanName, e.ElevationName, o.OptionName, pt.ProductTypeName"
+
+
         ''' <summary>Select component pricing for a specific plan within a price lock</summary>
         Public Const SelectComponentPricingByPlan As String =
     "SELECT cp.ComponentPricingID, cp.PriceLockID, cp.PlanID, cp.ElevationID, cp.OptionID,

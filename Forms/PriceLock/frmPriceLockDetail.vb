@@ -248,6 +248,63 @@ Public Class frmPriceLockDetail
                 .Alignment = DataGridViewContentAlignment.MiddleRight
             }
         })
+        ' =====================================================
+        ' ADD THESE COLUMNS in SetupComponentGrid method
+        ' Insert AFTER the "PriceSentToBuilder" column (around line 169)
+        ' and BEFORE the "FinalMargin" column
+        ' =====================================================
+
+        ' Previous Price Lock Comparison Columns
+        dgvComponents.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .Name = "PrevSentToSales",
+            .HeaderText = "Prev Sales",
+            .DataPropertyName = "PreviousPriceSentToSales",
+            .Width = 90,
+            .ReadOnly = True,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Format = "C2",
+                .Alignment = DataGridViewContentAlignment.MiddleRight,
+                .ForeColor = Color.Gray
+            }
+        })
+
+        dgvComponents.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .Name = "PctChgSales",
+            .HeaderText = "% Chg Sales",
+            .DataPropertyName = "PctChangeSentToSales",
+            .Width = 85,
+            .ReadOnly = True,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Format = "P1",
+                .Alignment = DataGridViewContentAlignment.MiddleRight
+            }
+        })
+
+        dgvComponents.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .Name = "PrevSentToBuilder",
+            .HeaderText = "Prev Builder",
+            .DataPropertyName = "PreviousPriceSentToBuilder",
+            .Width = 90,
+            .ReadOnly = True,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Format = "C2",
+                .Alignment = DataGridViewContentAlignment.MiddleRight,
+                .ForeColor = Color.Gray
+            }
+        })
+
+        dgvComponents.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .Name = "PctChgBuilder",
+            .HeaderText = "% Chg Bldr",
+            .DataPropertyName = "PctChangeSentToBuilder",
+            .Width = 85,
+            .ReadOnly = True,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Format = "P1",
+                .Alignment = DataGridViewContentAlignment.MiddleRight
+            }
+        })
+
         ' Add these columns after the "PriceSentToBuilder" column (after line 169)
         ' Change the margin columns to be data-bound:
         dgvComponents.Columns.Add(New DataGridViewTextBoxColumn() With {
@@ -549,6 +606,65 @@ Public Class frmPriceLockDetail
         If comp.HasPriceDifference Then
             dgvComponents.Rows(e.RowIndex).DefaultCellStyle.BackColor = Color.LightYellow
         End If
+
+        ' =====================================================
+        ' ADD THIS CODE in dgvComponents_CellFormatting method
+        ' Insert BEFORE the "End Sub" (around line 530)
+        ' =====================================================
+
+        ' Format Previous Price columns - show "N/A" when no previous data
+        If columnName = "PrevSentToSales" OrElse columnName = "PrevSentToBuilder" Then
+            If Not comp.HasPreviousPricing Then
+                e.Value = "N/A"
+                e.CellStyle.ForeColor = Color.LightGray
+                e.CellStyle.Font = New Font(e.CellStyle.Font, FontStyle.Italic)
+                e.FormattingApplied = True
+            End If
+        End If
+
+        ' Format Percent Change columns with color coding
+        If columnName = "PctChgSales" Then
+            If Not comp.PctChangeSentToSales.HasValue Then
+                e.Value = "N/A"
+                e.CellStyle.ForeColor = Color.LightGray
+                e.CellStyle.Font = New Font(e.CellStyle.Font, FontStyle.Italic)
+                e.FormattingApplied = True
+            Else
+                Dim pctChange = comp.PctChangeSentToSales.Value
+                ' Color code: Red for increases > 5%, Green for decreases > 5%, Orange for moderate changes
+                If pctChange > 0.05D Then
+                    e.CellStyle.ForeColor = Color.Red
+                    e.CellStyle.Font = New Font(e.CellStyle.Font, FontStyle.Bold)
+                ElseIf pctChange < -0.05D Then
+                    e.CellStyle.ForeColor = Color.Green
+                    e.CellStyle.Font = New Font(e.CellStyle.Font, FontStyle.Bold)
+                ElseIf Math.Abs(pctChange) > 0.02D Then
+                    e.CellStyle.ForeColor = Color.DarkOrange
+                End If
+            End If
+        End If
+
+        If columnName = "PctChgBuilder" Then
+            If Not comp.PctChangeSentToBuilder.HasValue Then
+                e.Value = "N/A"
+                e.CellStyle.ForeColor = Color.LightGray
+                e.CellStyle.Font = New Font(e.CellStyle.Font, FontStyle.Italic)
+                e.FormattingApplied = True
+            Else
+                Dim pctChange = comp.PctChangeSentToBuilder.Value
+                ' Color code: Red for increases > 5%, Green for decreases > 5%, Orange for moderate changes
+                If pctChange > 0.05D Then
+                    e.CellStyle.ForeColor = Color.Red
+                    e.CellStyle.Font = New Font(e.CellStyle.Font, FontStyle.Bold)
+                ElseIf pctChange < -0.05D Then
+                    e.CellStyle.ForeColor = Color.Green
+                    e.CellStyle.Font = New Font(e.CellStyle.Font, FontStyle.Bold)
+                ElseIf Math.Abs(pctChange) > 0.02D Then
+                    e.CellStyle.ForeColor = Color.DarkOrange
+                End If
+            End If
+        End If
+
     End Sub
 
     Private Sub dgvMaterials_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvMaterials.CellDoubleClick

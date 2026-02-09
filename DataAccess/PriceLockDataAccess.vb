@@ -806,10 +806,16 @@ Namespace DataAccess
 
 #Region "Component Pricing"
 
+        ' =====================================================
+        ' MODIFY GetComponentPricingByLock function
+        ' Change the query constant reference (around line 765)
+        ' =====================================================
+
         Public Function GetComponentPricingByLock(priceLockID As Integer) As List(Of PLComponentPricing)
             Dim pricing As New List(Of PLComponentPricing)()
             Using conn As New SqlConnection(_connectionString)
-                Using cmd As New SqlCommand(PriceLockQueries.SelectComponentPricingByLock, conn)
+                ' CHANGE THIS LINE: Use the new query with previous price lock data
+                Using cmd As New SqlCommand(PriceLockQueries.SelectComponentPricingByLockWithPrevious, conn)
                     cmd.Parameters.AddWithValue("@PriceLockID", priceLockID)
                     conn.Open()
                     Using reader = cmd.ExecuteReader()
@@ -971,6 +977,24 @@ Namespace DataAccess
                 cp.MarginName = GetFriendlyMarginName(cp.MarginSource)
             Else
                 cp.MarginName = String.Empty
+            End If
+            ' =====================================================
+            ' ADD THESE LINES to MapComponentPricing function
+            ' Insert BEFORE the "Return cp" statement (around line 920)
+            ' =====================================================
+
+            ' Previous Price Lock Comparison Fields
+            If HasColumn(reader, "PreviousPriceSentToSales") AndAlso Not reader.IsDBNull(reader.GetOrdinal("PreviousPriceSentToSales")) Then
+                cp.PreviousPriceSentToSales = reader.GetDecimal(reader.GetOrdinal("PreviousPriceSentToSales"))
+            End If
+            If HasColumn(reader, "PreviousPriceSentToBuilder") AndAlso Not reader.IsDBNull(reader.GetOrdinal("PreviousPriceSentToBuilder")) Then
+                cp.PreviousPriceSentToBuilder = reader.GetDecimal(reader.GetOrdinal("PreviousPriceSentToBuilder"))
+            End If
+            If HasColumn(reader, "PctChangeSentToSales") AndAlso Not reader.IsDBNull(reader.GetOrdinal("PctChangeSentToSales")) Then
+                cp.PctChangeSentToSales = reader.GetDecimal(reader.GetOrdinal("PctChangeSentToSales"))
+            End If
+            If HasColumn(reader, "PctChangeSentToBuilder") AndAlso Not reader.IsDBNull(reader.GetOrdinal("PctChangeSentToBuilder")) Then
+                cp.PctChangeSentToBuilder = reader.GetDecimal(reader.GetOrdinal("PctChangeSentToBuilder"))
             End If
 
             Return cp

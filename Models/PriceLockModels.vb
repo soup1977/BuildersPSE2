@@ -343,6 +343,46 @@ Namespace Models
 
         ' NEW: Cost of the reference unit (for adder calculation display)
         Public Property BaseComponentCost As Decimal?
+        ' =====================================================
+        ' ADD THESE PROPERTIES TO THE PLComponentPricing CLASS
+        ' Insert after the existing "BaseComponentCost" property (around line 267)
+        ' =====================================================
+
+        ' Previous Price Lock Comparison Fields
+        ''' <summary>PriceSentToSales from the previous price lock for the same component</summary>
+        Public Property PreviousPriceSentToSales As Decimal?
+
+        ''' <summary>PriceSentToBuilder from the previous price lock for the same component</summary>
+        Public Property PreviousPriceSentToBuilder As Decimal?
+
+        ''' <summary>Percent change: (Current PriceSentToSales - Previous) / Previous</summary>
+        Public Property PctChangeSentToSales As Decimal?
+
+        ''' <summary>Percent change: (Current PriceSentToBuilder - Previous) / Previous</summary>
+        Public Property PctChangeSentToBuilder As Decimal?
+
+        ''' <summary>Indicates if this component existed in the previous price lock</summary>
+        Public ReadOnly Property HasPreviousPricing As Boolean
+            Get
+                Return PreviousPriceSentToSales.HasValue OrElse PreviousPriceSentToBuilder.HasValue
+            End Get
+        End Property
+
+        ''' <summary>Formatted percent change for Sent to Sales</summary>
+        Public ReadOnly Property PctChangeSentToSalesFormatted As String
+            Get
+                If Not PctChangeSentToSales.HasValue Then Return "N/A"
+                Return PctChangeSentToSales.Value.ToString("P1")
+            End Get
+        End Property
+
+        ''' <summary>Formatted percent change for Sent to Builder</summary>
+        Public ReadOnly Property PctChangeSentToBuilderFormatted As String
+            Get
+                If Not PctChangeSentToBuilder.HasValue Then Return "N/A"
+                Return PctChangeSentToBuilder.Value.ToString("P1")
+            End Get
+        End Property
 
         ' Computed properties
         Public ReadOnly Property HasPriceDifference As Boolean
