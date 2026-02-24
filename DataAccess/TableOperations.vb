@@ -40,14 +40,14 @@ Namespace DataAccess
         Public Function GetString(row As DataRow, columnName As String) As String
             If Not row.Table.Columns.Contains(columnName) Then Return String.Empty
             If row(columnName) Is DBNull.Value Then Return String.Empty
-            Return CStr(row(columnName))
+            Return CStr(row(columnName)).Trim()
         End Function
 
         ''' <summary>Gets String from DataRow by column index.</summary>
         Public Function GetString(row As DataRow, columnIndex As Integer) As String
             If columnIndex < 0 OrElse columnIndex >= row.Table.Columns.Count Then Return String.Empty
             If row(columnIndex) Is DBNull.Value Then Return String.Empty
-            Return CStr(row(columnIndex))
+            Return CStr(row(columnIndex)).Trim()
         End Function
 
         ''' <summary>Gets nullable Integer from DataRow by column index.</summary>

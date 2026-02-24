@@ -4,6 +4,7 @@ Imports BuildersPSE2.Utilities
 
 ''' <summary>
 ''' Service for building variance comparison DataTables for levels and buildings.
+''' Structure: Estimate | Design (LevelActuals) | Invoice (LevelActualsBistrack)
 ''' </summary>
 Public Class VarianceGridService
     Private ReadOnly _versionID As Integer
@@ -23,6 +24,7 @@ Public Class VarianceGridService
 
     ''' <summary>
     ''' Builds a variance DataTable for a specific level with estimate vs actuals columns.
+    ''' Structure: Estimate | Des-{SO} | BT-{SO} for each delivery
     ''' </summary>
     Public Function BuildLevelVarianceTable(levelID As Integer) As DataTable
         If levelID <= 0 OrElse _versionID <= 0 Then Return Nothing
@@ -32,7 +34,7 @@ Public Class VarianceGridService
         If estimateData Is Nothing Then Return Nothing
 
         InitializeVarianceColumns(dt, estimateData)
-        AddLevelActualsColumns(dt, levelID)
+        AddLevelActualsAndBistrackColumns(dt, levelID)
         AddMarginRow(dt)
 
         Return dt
@@ -40,6 +42,7 @@ Public Class VarianceGridService
 
     ''' <summary>
     ''' Builds a variance DataTable for a specific building with estimate vs actual columns.
+    ''' Structure: Estimate | Design | BT Invoice
     ''' </summary>
     Public Function BuildBuildingVarianceTable(buildingID As Integer) As DataTable
         If buildingID <= 0 OrElse _versionID <= 0 Then Return Nothing
@@ -48,20 +51,26 @@ Public Class VarianceGridService
         Dim estimateData = GetBuildingEstimateData(buildingID)
         If estimateData Is Nothing Then Return Nothing
 
-        ' Initialize with Metric, Estimate, and Actual columns
+        ' Initialize with Metric and Estimate columns
         dt.Columns.Add("Metric", GetType(String))
         dt.Columns.Add("Estimate", GetType(Decimal))
-        dt.Columns.Add("Actual", GetType(Decimal))
-
-        Dim actualData = GetBuildingActualData(buildingID)
 
         For Each kvp In estimateData
             Dim row = dt.NewRow()
             row("Metric") = kvp.Key
             row("Estimate") = kvp.Value
-            row("Actual") = If(actualData.ContainsKey(kvp.Key), actualData(kvp.Key), 0D)
             dt.Rows.Add(row)
         Next
+
+        ' Add Design actuals column (from LevelActuals)
+        Dim designData = GetBuildingActualData(buildingID)
+        AddColumnFromDictionary(dt, "Design", designData)
+
+        ' Add Bistrack Invoice column
+        Dim bistrackData = BisTrackDataAccess.GetBistrackActualsForBuilding(buildingID, _versionID)
+        If bistrackData.LevelCount > 0 Then
+            AddColumnFromDictionary(dt, "BT Invoice", bistrackData.ToDictionary())
+        End If
 
         AddMarginRow(dt)
         Return dt
@@ -81,17 +90,17 @@ Public Class VarianceGridService
             Dim avgSPF = LumberDataAccess.GetActiveSPFNo2ByProductType(_versionID, productTypeName)
 
             Return New Dictionary(Of String, Decimal) From {
-                {"Sell Price", CDec(row("OverallPrice"))},
-                {"BDFT", CDec(row("OverallBDFT"))},
+                {"Sell Price", SafeDecimalFromRow(row, "OverallPrice")},
+                {"BDFT", SafeDecimalFromRow(row, "OverallBDFT")},
                 {"AvgSPF2", avgSPF},
-                {"LumberCost", CDec(row("LumberCost"))},
-                {"PlateCost", CDec(row("PlateCost"))},
-                {"ManufLaborCost", CDec(row("LaborCost"))},
-                {"ManufLaborMH", CDec(row("LaborMH"))},
-                {"ItemCost", CDec(row("ItemsCost"))},
-                {"DeliveryCost", CDec(row("DeliveryCost"))},
-                {"MiscLaborCost", CDec(row("DesignCost")) + CDec(row("MGMTCost")) + CDec(row("JobSuppliesCost"))},
-                {"Total Cost", CDec(row("OverallCost"))}
+                {"LumberCost", SafeDecimalFromRow(row, "LumberCost")},
+                {"PlateCost", SafeDecimalFromRow(row, "PlateCost")},
+                {"ManufLaborCost", SafeDecimalFromRow(row, "LaborCost")},
+                {"ManufLaborMH", SafeDecimalFromRow(row, "LaborMH")},
+                {"ItemCost", SafeDecimalFromRow(row, "ItemsCost")},
+                {"DeliveryCost", SafeDecimalFromRow(row, "DeliveryCost")},
+                {"MiscLaborCost", SafeDecimalFromRow(row, "DesignCost") + SafeDecimalFromRow(row, "MGMTCost") + SafeDecimalFromRow(row, "JobSuppliesCost")},
+                {"Total Cost", SafeDecimalFromRow(row, "OverallCost")}
             }
         End Using
     End Function
@@ -162,7 +171,8 @@ Public Class VarianceGridService
         Dim actualLevelCount As Integer = 0
         Dim weightedActSPF As Decimal = 0D, totalActBDFT As Decimal = 0D
 
-        Dim sql As String = "SELECT la.* FROM LevelActuals la WHERE la.BuildingID = @BuildingID AND la.VersionID = @VersionID AND la.StageType = 1"
+        ' Get LevelActuals (Design data)
+        Dim sql As String = "SELECT la.* FROM LevelActuals la WHERE la.BuildingID = @BuildingID AND la.VersionID = @VersionID"
 
         Using r = SqlConnectionManager.Instance.ExecuteReader(sql,
             {New SqlParameter("@BuildingID", buildingID), New SqlParameter("@VersionID", _versionID)})
@@ -206,56 +216,102 @@ Public Class VarianceGridService
         Next
     End Sub
 
-    Private Sub AddLevelActualsColumns(dt As DataTable, levelID As Integer)
+    ''' <summary>
+    ''' Adds paired Design (LevelActuals) and Invoice (LevelActualsBistrack) columns for each delivery.
+    ''' </summary>
+    Private Sub AddLevelActualsAndBistrackColumns(dt As DataTable, levelID As Integer)
+        ' Get all LevelActuals records for this level
+        Dim levelActuals = GetLevelActualsRecords(levelID)
+
+        ' Get all Bistrack records for this level
+        Dim bistrackActuals = BisTrackDataAccess.GetBistrackActualsForLevel(levelID, _versionID)
+
+        ' Create a lookup for Bistrack data by SalesOrderNumber
+        Dim bistrackLookup As New Dictionary(Of String, BisTrackActualModel)(StringComparer.OrdinalIgnoreCase)
+        For Each bt In bistrackActuals
+            If Not String.IsNullOrEmpty(bt.SalesOrderNumber) AndAlso Not bistrackLookup.ContainsKey(bt.SalesOrderNumber) Then
+                bistrackLookup.Add(bt.SalesOrderNumber, bt)
+            End If
+        Next
+
+        Dim deliveryIndex As Integer = 1
+
+        For Each actual In levelActuals
+            Dim salesOrder As String = actual.BisTrackSalesOrder
+
+            ' Column header base - use sales order if available, otherwise index
+            Dim headerBase As String
+            If Not String.IsNullOrEmpty(salesOrder) Then
+                headerBase = salesOrder
+            ElseIf Not String.IsNullOrEmpty(actual.MiTekJobNumber) Then
+                headerBase = actual.MiTekJobNumber
+            Else
+                headerBase = $"Del{deliveryIndex}"
+            End If
+
+            ' Add Design column (from LevelActuals)
+            Dim designHeader As String = $"Des-{headerBase}"
+            AddColumnFromDictionary(dt, designHeader, actual.ToDictionary())
+
+            ' Add Invoice column (from LevelActualsBistrack) if matching record exists
+            If Not String.IsNullOrEmpty(salesOrder) AndAlso bistrackLookup.ContainsKey(salesOrder) Then
+                Dim invoiceHeader As String = $"BT-{headerBase}"
+                AddColumnFromDictionary(dt, invoiceHeader, bistrackLookup(salesOrder).ToDictionary())
+            End If
+
+            deliveryIndex += 1
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' Gets LevelActuals records as models for easier processing.
+    ''' </summary>
+    Private Function GetLevelActualsRecords(levelID As Integer) As List(Of LevelActualModel)
+        Dim results As New List(Of LevelActualModel)()
+
         Using reader = SqlConnectionManager.Instance.ExecuteReader(Queries.SelectAllActualsForLevel,
             {New SqlParameter("@LevelID", levelID), New SqlParameter("@VersionID", _versionID)})
 
-            Dim indexDesign As Integer = 1
-            Dim indexInvoice As Integer = 1
-
             While reader.Read()
-                Dim stageType As Integer = CInt(reader("StageType"))
-                Dim miTekJob As String = SafeString(reader, "MiTekJobNumber")
-                Dim bisTrackSO As String = SafeString(reader, "BisTrackSalesOrder")
-
-                ' Build column header
-                Dim header As String
-                If stageType = 1 Then
-                    header = If(String.IsNullOrEmpty(miTekJob), $"Design{indexDesign}", $"Des - {miTekJob}")
-                    indexDesign += 1
-                Else
-                    header = If(String.IsNullOrEmpty(bisTrackSO), $"Invoice{indexInvoice}", $"BT - {bisTrackSO}")
-                    indexInvoice += 1
-                End If
-
-                ' Add column if not exists
-                If Not dt.Columns.Contains(header) Then
-                    dt.Columns.Add(header, GetType(Decimal))
-                End If
-
-                ' Populate data
-                Dim data As New Dictionary(Of String, Decimal) From {
-                    {"Sell Price", SafeDecimal(reader, "ActualSoldAmount")},
-                    {"BDFT", SafeDecimal(reader, "ActualBDFT")},
-                    {"AvgSPF2", SafeDecimal(reader, "AvgSPFNo2Actual")},
-                    {"LumberCost", SafeDecimal(reader, "ActualLumberCost")},
-                    {"PlateCost", SafeDecimal(reader, "ActualPlateCost")},
-                    {"ManufLaborCost", SafeDecimal(reader, "ActualManufLaborCost")},
-                    {"ManufLaborMH", SafeDecimal(reader, "ActualManufMH")},
-                    {"ItemCost", SafeDecimal(reader, "ActualItemCost")},
-                    {"DeliveryCost", SafeDecimal(reader, "ActualDeliveryCost")},
-                    {"MiscLaborCost", SafeDecimal(reader, "ActualMiscLaborCost")},
-                    {"Total Cost", SafeDecimal(reader, "ActualTotalCost")}
+                Dim model As New LevelActualModel With {
+                    .ActualID = CInt(reader("ActualID")),
+                    .BisTrackSalesOrder = SafeString(reader, "BisTrackSalesOrder"),
+                    .MiTekJobNumber = SafeString(reader, "MiTekJobNumber"),
+                    .SellPrice = SafeDecimal(reader, "ActualSoldAmount"),
+                    .BDFT = SafeDecimal(reader, "ActualBDFT"),
+                    .AvgSPF2 = SafeDecimal(reader, "AvgSPFNo2Actual"),
+                    .LumberCost = SafeDecimal(reader, "ActualLumberCost"),
+                    .PlateCost = SafeDecimal(reader, "ActualPlateCost"),
+                    .ManufLaborCost = SafeDecimal(reader, "ActualManufLaborCost"),
+                    .ManufLaborMH = SafeDecimal(reader, "ActualManufMH"),
+                    .ItemCost = SafeDecimal(reader, "ActualItemCost"),
+                    .DeliveryCost = SafeDecimal(reader, "ActualDeliveryCost"),
+                    .MiscLaborCost = SafeDecimal(reader, "ActualMiscLaborCost"),
+                    .TotalCost = SafeDecimal(reader, "ActualTotalCost")
                 }
-
-                For Each row As DataRow In dt.Rows
-                    Dim metric = row("Metric").ToString()
-                    If data.ContainsKey(metric) Then
-                        row(header) = data(metric)
-                    End If
-                Next
+                results.Add(model)
             End While
         End Using
+
+        Return results
+    End Function
+
+    ''' <summary>
+    ''' Adds a column to the DataTable from a dictionary of metric values.
+    ''' </summary>
+    Private Sub AddColumnFromDictionary(dt As DataTable, columnName As String, data As Dictionary(Of String, Decimal))
+        If Not dt.Columns.Contains(columnName) Then
+            dt.Columns.Add(columnName, GetType(Decimal))
+        End If
+
+        For Each row As DataRow In dt.Rows
+            Dim metric = row("Metric").ToString()
+            If data.ContainsKey(metric) Then
+                row(columnName) = data(metric)
+            Else
+                row(columnName) = 0D
+            End If
+        Next
     End Sub
 
     Private Sub AddMarginRow(dt As DataTable)
@@ -280,12 +336,28 @@ Public Class VarianceGridService
     End Function
 
     Private Shared Function SafeDecimal(reader As IDataReader, columnName As String) As Decimal
-        If reader(columnName) Is DBNull.Value Then Return 0D
-        Return CDec(reader(columnName))
+        Try
+            Dim ordinal As Integer = reader.GetOrdinal(columnName)
+            If reader.IsDBNull(ordinal) Then Return 0D
+            Return CDec(reader(ordinal))
+        Catch
+            Return 0D
+        End Try
+    End Function
+
+    Private Shared Function SafeDecimalFromRow(row As DataRow, columnName As String) As Decimal
+        If row.IsNull(columnName) Then Return 0D
+        Return CDec(row(columnName))
     End Function
 
     Private Shared Function SafeString(reader As IDataReader, columnName As String) As String
-        If reader(columnName) Is DBNull.Value Then Return String.Empty
-        Return reader(columnName).ToString().Trim()
+        Try
+            Dim ordinal As Integer = reader.GetOrdinal(columnName)
+            If reader.IsDBNull(ordinal) Then Return String.Empty
+            Return reader(ordinal).ToString().Trim()
+        Catch
+            Return String.Empty
+        End Try
     End Function
+
 End Class

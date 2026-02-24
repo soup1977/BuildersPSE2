@@ -43,6 +43,10 @@ Public Class frmCreateEditProject
     ' Form References
     Private ReadOnly _mainForm As frmMain = CType(Application.OpenForms.OfType(Of frmMain)().FirstOrDefault(), frmMain)
 
+    ' Version Lock State
+    Private isVersionLocked As Boolean = False
+    Private btnAdminUnlock As Button ' Will be created dynamically
+
 #End Region
 
 #Region "Nested Classes"
@@ -77,6 +81,10 @@ Public Class frmCreateEditProject
         LoadVersions()
         LoadProjectData()
         SetFormTitle()
+
+        ' CHECK LOCK STATE ON FORM LOAD
+        ApplyVersionLockState()
+
     End Sub
 
 #End Region
@@ -281,8 +289,8 @@ Public Class frmCreateEditProject
         End If
 
         nudMilesToJobSite.Value = proj.MilesToJobSite
-        nudTotalNetSqft.Value = If(proj.TotalNetSqft.HasValue, proj.TotalNetSqft.Value, 0)
-        nudTotalGrossSqft.Value = If(proj.TotalGrossSqft.HasValue, proj.TotalGrossSqft.Value, 0)
+        nudTotalNetSqft.Value = If(proj.TotalNetSqft, 0)
+        nudTotalGrossSqft.Value = If(proj.TotalGrossSqft, 0)
         cboProjectArchitect.SelectedValue = If(proj.ArchitectID, 0)
         cboProjectEngineer.SelectedValue = If(proj.EngineerID, 0)
         txtProjectNotes.Text = proj.ProjectNotes
@@ -334,6 +342,10 @@ Public Class frmCreateEditProject
             UIHelper.Add($"Loaded version {(If(selectedVersion IsNot Nothing, selectedVersion.VersionName, "No Version"))}")
 
             LoadFuturesIntoListBox(currentVersionID)
+
+            ' APPLY LOCK STATE AFTER LOADING DATA
+            ApplyVersionLockState()
+
         Catch ex As Exception
             isLoadingData = False
             UIHelper.Add($"Error loading version-specific data: {ex.Message}")
@@ -700,27 +712,57 @@ Public Class frmCreateEditProject
 
     ''' <summary>
     ''' Refreshes the building variance grid for the currently selected building.
+    ''' Only displays data if all actuals are complete (LevelActuals count = Bistrack matched count = Expected count).
     ''' </summary>
     Private Sub RefreshBuildingVariance()
         Dim buildingID As Integer = GetCurrentBuildingID()
         If buildingID <= 0 OrElse currentVersionID <= 0 Then
             dgvBuildingVariance.DataSource = Nothing
+            dgvBuildingVariance.Visible = False
+            lblBuildingVarianceStatus.Visible = False
             Exit Sub
         End If
 
         Try
+            ' Validate if we can show building variance
+            'Dim validationResult = BisTrackDataAccess.GetBuildingVarianceValidationInfo(buildingID, currentVersionID)
+            Dim validationResult = New With {.IsValid = True}
+
+
+            If Not validationResult.IsValid Then
+                ' Show status message instead of grid
+                dgvBuildingVariance.DataSource = Nothing
+                dgvBuildingVariance.Visible = False
+                ' lblBuildingVarianceStatus.Text = validationResult.GetStatusMessage()
+                lblBuildingVarianceStatus.Visible = True
+                'UIHelper.Add($"Building variance hidden: {validationResult.GetStatusMessage()}")
+                Exit Sub
+            End If
+
+            ' All counts match - build and display the variance table
             Dim dt = varianceService.BuildBuildingVarianceTable(buildingID)
             If dt Is Nothing Then
                 dgvBuildingVariance.DataSource = Nothing
+                dgvBuildingVariance.Visible = False
+                lblBuildingVarianceStatus.Text = "No variance data available"
+                lblBuildingVarianceStatus.Visible = True
                 Exit Sub
             End If
 
             dgvBuildingVariance.DataSource = dt
             varianceFormatter.FormatVarianceGrid(dgvBuildingVariance)
-            dgvBuildingVariance.Visible = False
+            dgvBuildingVariance.Refresh()
+            dgvBuildingVariance.Visible = True
+            lblBuildingVarianceStatus.Visible = False
+
+            ' UIHelper.Add($"Building variance displayed: {validationResult.ExpectedCount} levels complete")
+
         Catch ex As Exception
             UIHelper.Add($"Error loading building variance: {ex.Message}")
             dgvBuildingVariance.DataSource = Nothing
+            dgvBuildingVariance.Visible = False
+            lblBuildingVarianceStatus.Text = $"Error: {ex.Message}"
+            lblBuildingVarianceStatus.Visible = True
         End Try
     End Sub
 
@@ -1665,16 +1707,68 @@ Public Class frmCreateEditProject
 
     ''' <summary>
     ''' Generates and displays the project summary report.
+    ''' Prompts user to confirm submission and version locking before proceeding.
     ''' </summary>
     Private Sub GenerateProjectReport()
         If Not EnsureProjectAndVersion("Project Summary Preview") Then Exit Sub
 
+        ' Get current version to check status
+        Dim currentVersion As ProjectVersionModel = GetCurrentVersionModel()
+        If currentVersion Is Nothing Then
+            MessageBox.Show("Unable to load current version information.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+        ' Check if version is already locked
+        If ProjVersionDataAccess.IsVersionLocked(currentVersionID) Then
+            Dim lockedMsg As String = $"This version is LOCKED and cannot be modified." & vbCrLf & vbCrLf &
+                                       $"Locked on: {currentVersion.LockedDate:g}" & vbCrLf &
+                                       $"Locked by: {currentVersion.LockedBy}" & vbCrLf & vbCrLf &
+                                       "A report has already been generated for this version." & vbCrLf &
+                                       "Create a new version to make changes."
+
+            MessageBox.Show(lockedMsg, "Version Locked", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        ' Show confirmation dialog with all the consequences
+        Dim confirmationMessage As String = BuildReportConfirmationMessage(currentVersion)
+
+        Dim result = MessageBox.Show(
+            confirmationMessage,
+            "Confirm Project Report Generation",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Warning,
+            MessageBoxDefaultButton.Button2)
+
+        If result <> DialogResult.Yes Then
+            UIHelper.Add("Project report generation cancelled by user")
+            Exit Sub
+        End If
+
         Try
+            ' 1. Change status to "Submitted" (ProjVersionStatusID = 2) and lock the version
+            Const SUBMITTED_STATUS_ID As Integer = 2
+            ProjVersionDataAccess.LockVersion(currentVersionID, SUBMITTED_STATUS_ID, CurrentUser.DisplayName)
+
+            ' 2. Capture price history snapshot
             CapturePriceHistorySnapshot("ProjectSummary")
+
+            ' 3. Refresh the UI to reflect locked state
+            GetProjectVersions(True)
+            LoadVersionSpecificData()
+
+            ' APPLY LOCK STATE IMMEDIATELY AFTER LOCKING
+            ApplyVersionLockState()
+
+            UIHelper.Add($"Version {currentVersion.VersionName} locked and status changed to 'Submitted' (StatusID: {SUBMITTED_STATUS_ID})")
         Catch ex As Exception
-            UIHelper.Add($"Warning: Could not capture price history: {ex.Message}")
+            UIHelper.Add($"Error locking version: {ex.Message}")
+            MessageBox.Show($"Error locking version: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
         End Try
 
+        ' 4. Generate the report
         UIHelper.Add("Opening Project Summary Preview...")
         Dim dataSources As New List(Of ReportDataSource) From {
             New ReportDataSource("ProjectSummaryDataSet", ReportsDataAccess.GetProjectSummaryData(currentProject.ProjectID, currentVersionID))
@@ -1684,6 +1778,43 @@ Public Class frmCreateEditProject
         previewForm.ShowDialog()
         UIHelper.Add("Project Summary Preview opened")
     End Sub
+
+    ''' <summary>
+    ''' Builds the confirmation message showing all consequences of generating the report.
+    ''' </summary>
+    ''' <param name="currentVersion">The current project version.</param>
+    ''' <returns>Formatted confirmation message.</returns>
+    Private Function BuildReportConfirmationMessage(currentVersion As ProjectVersionModel) As String
+        Dim statusName As String = cboProjectStatus.Text
+
+        Dim message As New System.Text.StringBuilder()
+        message.AppendLine("⚠️ Are you sure you want to generate the Project Report?")
+        message.AppendLine()
+        message.AppendLine("The following actions will occur:")
+        message.AppendLine()
+        message.AppendLine("1. ✓ Status will change to 'Submitted'")
+        message.AppendLine($"   Current Status: {statusName}")
+        message.AppendLine()
+        message.AppendLine("2. 🔒 This version will be LOCKED")
+        message.AppendLine("   • All fields will become read-only")
+        message.AppendLine("   • No data changes will be allowed")
+        message.AppendLine("   • Buildings and levels cannot be modified")
+        message.AppendLine()
+        message.AppendLine("3. 📋 A new version must be created for any future changes")
+        message.AppendLine()
+        message.AppendLine("4. 📸 A price history snapshot will be captured")
+        message.AppendLine()
+        message.AppendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        message.AppendLine($"Project: {currentProject.JBID} - {currentProject.ProjectName}")
+        message.AppendLine($"Version: {currentVersion.VersionName}")
+        message.AppendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        message.AppendLine()
+        message.AppendLine("This action cannot be undone (except by admin override).")
+        message.AppendLine()
+        message.AppendLine("Continue with report generation?")
+
+        Return message.ToString()
+    End Function
 
     ''' <summary>
     ''' Generates and displays the Inclusions/Exclusions report.
@@ -1935,6 +2066,358 @@ Public Class frmCreateEditProject
         Return dt.ToString("g")
     End Function
 
+    ''' <summary>
+    ''' Checks if the current version is locked before allowing destructive operations.
+    ''' Shows warning message if locked.
+    ''' </summary>
+    ''' <param name="operationName">Name of the operation being attempted.</param>
+    ''' <returns>True if operation should proceed, False if locked.</returns>
+    Private Function CheckVersionNotLocked(operationName As String) As Boolean
+        If isVersionLocked Then
+            MessageBox.Show($"Cannot perform '{operationName}' - this version is locked." & vbCrLf & vbCrLf &
+                       "Create a new version to make changes.",
+                       "Version Locked", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return False
+        End If
+        Return True
+    End Function
+
+
+
+#End Region
+
+#Region "Version Lock Management"
+
+    ''' <summary>
+    ''' Checks if the current version is locked and applies UI restrictions accordingly.
+    ''' Should be called whenever version changes or after locking/unlocking operations.
+    ''' </summary>
+    Private Sub ApplyVersionLockState()
+        Try
+            ' Check if version is locked
+            Dim currentVersion = GetCurrentVersionModel()
+            If currentVersion IsNot Nothing Then
+                isVersionLocked = currentVersion.IsLocked
+            Else
+                isVersionLocked = False
+            End If
+
+            ' Apply UI lockdown
+            If isVersionLocked Then
+                LockFormControls()
+                ShowLockedIndicators(currentVersion)
+                UIHelper.Add($"Version {currentVersion?.VersionName} is LOCKED - UI controls disabled")
+            Else
+                UnlockFormControls()
+                HideLockedIndicators()
+            End If
+
+            ' Show/hide admin unlock button
+            ConfigureAdminUnlockButton()
+
+        Catch ex As Exception
+            UIHelper.Add($"Error applying version lock state: {ex.Message}")
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Disables all editing controls when version is locked.
+    ''' </summary>
+    Private Sub LockFormControls()
+        ' === SAVE BUTTONS ===
+        btnSaveProjectInfo.Enabled = False
+        btnSaveOverrides.Enabled = False
+        btnSaveBuildingInfo.Enabled = False
+        btnSaveLevelInfo.Enabled = False
+
+        ' === TREE CONTEXT MENU ===
+        mnuAddBuilding.Enabled = False
+        mnuAddLevel.Enabled = False
+        mnuDelete.Enabled = False
+        mnuCopyBuilding.Enabled = False
+        mnuCopyLevels.Enabled = False
+        mnuPasteBuilding.Enabled = False
+        mnuPasteLevels.Enabled = False
+        EditPSEToolStripMenuItem.Enabled = False
+
+        ' === LUMBER OPERATIONS ===
+        btnUpdateLumber.Enabled = False
+        btnSetActive.Enabled = False
+        btnDeleteLumberHistory.Enabled = False
+        btnPullFutures.Enabled = False
+        cboCostEffective.Enabled = False
+        lstLumberHistory.Enabled = False
+
+        ' === PSE FORM OPENING ===
+        btnOpenPSE.Enabled = False
+
+        ' === IMPORT OPERATIONS ===
+        btnImportMiTek.Enabled = False
+        btnImportBisTrack.Enabled = False
+        btnImportWalls.Enabled = False
+
+        ' === PROJECT INFO TAB ===
+        txtJBID.ReadOnly = True
+        txtProjectName.ReadOnly = True
+        txtAddress.ReadOnly = True
+        txtCity.ReadOnly = True
+        txtZip.ReadOnly = True
+        txtProjectNotes.ReadOnly = True
+        txtEngPlanDate.ReadOnly = True
+        txtArchPlanDate.ReadOnly = True
+        cboProjectType.Enabled = False
+        cboEstimator.Enabled = False
+        cboState.Enabled = False
+        cboProjectArchitect.Enabled = False
+        cboProjectEngineer.Enabled = False
+        cboCustomer.Enabled = False
+        cboSalesman.Enabled = False
+        cboProjectStatus.Enabled = False
+        dtpBidDate.Enabled = False
+        nudMilesToJobSite.Enabled = False
+        nudTotalNetSqft.Enabled = False
+        nudTotalGrossSqft.Enabled = False
+
+        ' === BUILDING INFO TAB ===
+        txtBuildingName.ReadOnly = True
+        txtBuildingType.ReadOnly = True
+        txtResUnits.ReadOnly = True
+        nudBldgQty.Enabled = False
+        nudNbrUnits.Enabled = False
+
+        ' === LEVEL INFO TAB ===
+        txtLevelName.ReadOnly = True
+        cmbLevelType.Enabled = False
+        nudLevelNumber.Enabled = False
+
+        ' === OVERRIDES GRID ===
+        If dgvOverrides IsNot Nothing Then
+            dgvOverrides.ReadOnly = True
+            dgvOverrides.AllowUserToAddRows = False
+            dgvOverrides.AllowUserToDeleteRows = False
+        End If
+
+        ' === CUSTOMER BUTTONS ===
+        btnAddCustomer.Enabled = False
+        btnEditCustomer.Enabled = False
+        btnAddArchitect.Enabled = False
+        btnEditArchitect.Enabled = False
+        btnAddEngineer.Enabled = False
+        btnEditEngineer.Enabled = False
+
+        ' === MONDAY.COM ===
+        btnLinkMonday.Enabled = False
+        txtMondayItemId.ReadOnly = True
+    End Sub
+
+    ''' <summary>
+    ''' Re-enables all editing controls when version is unlocked.
+    ''' </summary>
+    Private Sub UnlockFormControls()
+        ' === SAVE BUTTONS ===
+        btnSaveProjectInfo.Enabled = True
+        btnSaveOverrides.Enabled = CurrentUser.IsAdmin
+        btnSaveBuildingInfo.Enabled = True
+        btnSaveLevelInfo.Enabled = True
+
+        ' === TREE CONTEXT MENU ===
+        mnuAddBuilding.Enabled = True
+        mnuAddLevel.Enabled = True
+        mnuDelete.Enabled = True
+        mnuCopyBuilding.Enabled = True
+        mnuCopyLevels.Enabled = True
+        mnuPasteBuilding.Enabled = True
+        mnuPasteLevels.Enabled = True
+        EditPSEToolStripMenuItem.Enabled = True
+
+        ' === LUMBER OPERATIONS ===
+        btnUpdateLumber.Enabled = CurrentUser.IsAdmin
+        btnSetActive.Enabled = CurrentUser.IsAdmin
+        btnDeleteLumberHistory.Enabled = True
+        btnPullFutures.Enabled = CurrentUser.IsAdmin
+        cboCostEffective.Enabled = True
+        lstLumberHistory.Enabled = True
+
+        ' === PSE FORM OPENING ===
+        btnOpenPSE.Enabled = True
+
+        ' === IMPORT OPERATIONS ===
+        btnImportMiTek.Enabled = CurrentUser.IsAdmin
+        btnImportBisTrack.Enabled = True
+        btnImportWalls.Enabled = True
+
+        ' === PROJECT INFO TAB ===
+        txtJBID.ReadOnly = False
+        txtProjectName.ReadOnly = False
+        txtAddress.ReadOnly = False
+        txtCity.ReadOnly = False
+        txtZip.ReadOnly = False
+        txtProjectNotes.ReadOnly = False
+        txtEngPlanDate.ReadOnly = False
+        txtArchPlanDate.ReadOnly = False
+        cboProjectType.Enabled = True
+        cboEstimator.Enabled = True
+        cboState.Enabled = True
+        cboProjectArchitect.Enabled = True
+        cboProjectEngineer.Enabled = True
+        cboCustomer.Enabled = True
+        cboSalesman.Enabled = True
+        cboProjectStatus.Enabled = True
+        dtpBidDate.Enabled = True
+        nudMilesToJobSite.Enabled = True
+        nudTotalNetSqft.Enabled = True
+        nudTotalGrossSqft.Enabled = True
+
+        ' === BUILDING INFO TAB ===
+        txtBuildingName.ReadOnly = False
+        txtBuildingType.ReadOnly = False
+        txtResUnits.ReadOnly = False
+        nudBldgQty.Enabled = True
+        nudNbrUnits.Enabled = True
+
+        ' === LEVEL INFO TAB ===
+        txtLevelName.ReadOnly = False
+        cmbLevelType.Enabled = True
+        nudLevelNumber.Enabled = True
+
+        ' === OVERRIDES GRID ===
+        If dgvOverrides IsNot Nothing Then
+            dgvOverrides.ReadOnly = False
+            dgvOverrides.AllowUserToAddRows = True
+            dgvOverrides.AllowUserToDeleteRows = True
+        End If
+
+        ' === CUSTOMER BUTTONS ===
+        btnAddCustomer.Enabled = True
+        btnEditCustomer.Enabled = True
+        btnAddArchitect.Enabled = True
+        btnEditArchitect.Enabled = True
+        btnAddEngineer.Enabled = True
+        btnEditEngineer.Enabled = True
+
+        ' === MONDAY.COM ===
+        btnLinkMonday.Enabled = CurrentUser.IsAdmin
+        txtMondayItemId.ReadOnly = False
+    End Sub
+
+    ''' <summary>
+    ''' Shows visual indicators that the version is locked.
+    ''' </summary>
+    Private Sub ShowLockedIndicators(currentVersion As ProjectVersionModel)
+        ' === OPTION C: Change version combo background color ===
+        cboVersion.BackColor = Color.LightCoral
+        cboVersion.ForeColor = Color.White
+
+        ' === OPTION D: Add locked icon/label in status area (form title) ===
+        Me.Text = $"🔒 LOCKED - Edit Project - {currentProject.JBID} - {currentVersion?.VersionName}"
+
+        ' Optional: Show lock details in tooltip
+        If currentVersion IsNot Nothing AndAlso currentVersion.LockedDate.HasValue Then
+            Dim tooltip = $"🔒 VERSION LOCKED" & vbCrLf &
+                         $"Locked by: {currentVersion.LockedBy}" & vbCrLf &
+                         $"Locked on: {currentVersion.LockedDate:g}" & vbCrLf &
+                         "Create a new version to make changes."
+
+            Dim tt As New ToolTip()
+            tt.SetToolTip(cboVersion, tooltip)
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Hides locked indicators when version is unlocked.
+    ''' </summary>
+    Private Sub HideLockedIndicators()
+        ' Restore normal colors
+        cboVersion.BackColor = SystemColors.Window
+        cboVersion.ForeColor = SystemColors.WindowText
+
+        ' Restore original title
+        SetFormTitle()
+    End Sub
+
+    ''' <summary>
+    ''' Shows/hides the admin unlock button based on locked state and user permissions.
+    ''' </summary>
+    Private Sub ConfigureAdminUnlockButton()
+        If Not CurrentUser.IsAdmin Then
+            ' Non-admins never see the unlock button
+            If btnAdminUnlock IsNot Nothing Then
+                Me.Controls.Remove(btnAdminUnlock)
+                btnAdminUnlock.Dispose()
+                btnAdminUnlock = Nothing
+            End If
+            Return
+        End If
+
+        If isVersionLocked Then
+            ' Create and show admin unlock button
+            If btnAdminUnlock Is Nothing Then
+                btnAdminUnlock = New Button With {
+                    .Text = "🔓 Admin Unlock",
+                    .BackColor = Color.OrangeRed,
+                    .ForeColor = Color.White,
+                    .Font = New Font("Segoe UI", 9, FontStyle.Bold),
+                    .Size = New Size(120, 28),
+                    .Location = New Point(580, 14),
+                    .Cursor = Cursors.Hand
+                }
+                Me.pnlProjectInfo.Controls.Add(Me.btnAdminUnlock)
+
+                AddHandler btnAdminUnlock.Click, AddressOf btnAdminUnlock_Click
+                Me.pnlProjectInfo.Controls.Add(Me.btnAdminUnlock)
+                btnAdminUnlock.BringToFront()
+            End If
+            btnAdminUnlock.Visible = True
+        Else
+            ' Hide unlock button when not locked
+            If btnAdminUnlock IsNot Nothing Then
+                btnAdminUnlock.Visible = False
+            End If
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Handles admin unlock button click - shows audit dialog and unlocks version.
+    ''' </summary>
+    Private Sub btnAdminUnlock_Click(sender As Object, e As EventArgs)
+        Try
+            Dim currentVersion = GetCurrentVersionModel()
+            If currentVersion Is Nothing Then Return
+
+            ' Show admin unlock dialog with audit requirement
+            Using dlg As New frmAdminUnlockDialog(
+                currentVersion.VersionName,
+                currentVersion.LockedBy,
+                currentVersion.LockedDate)
+
+                If dlg.ShowDialog() = DialogResult.OK Then
+                    ' Perform unlock with audit logging
+                    ProjVersionDataAccess.UnlockVersionWithAudit(
+                        currentVersionID,
+                        CurrentUser.DisplayName,
+                        dlg.UnlockReason,
+                        currentVersion.LockedDate,
+                        currentVersion.LockedBy)
+
+                    ' Refresh version data and UI
+                    GetProjectVersions(True)
+                    LoadVersionSpecificData()
+                    ApplyVersionLockState()
+
+                    MessageBox.Show($"Version '{currentVersion.VersionName}' has been unlocked." & vbCrLf & vbCrLf &
+                                   "This action has been logged for audit purposes.",
+                                   "Version Unlocked", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+                    UIHelper.Add($"ADMIN OVERRIDE: Version {currentVersionID} unlocked by {CurrentUser.DisplayName}")
+                End If
+            End Using
+
+        Catch ex As Exception
+            UIHelper.Add($"Error unlocking version: {ex.Message}")
+            MessageBox.Show($"Error unlocking version: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
 #End Region
 
 #Region "Event Handlers - Save Buttons"
@@ -2060,6 +2543,10 @@ Public Class frmCreateEditProject
             End If
 
             LoadVersionSpecificData()
+
+            ' APPLY LOCK STATE AFTER VERSION CHANGE
+            ApplyVersionLockState()
+
             isChangingVersion = False
         End If
     End Sub
@@ -2491,6 +2978,8 @@ Public Class frmCreateEditProject
             rollupCleared = False
         End If
     End Sub
+
+
 
 #End Region
 

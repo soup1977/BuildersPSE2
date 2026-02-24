@@ -155,11 +155,12 @@ Partial Class frmCreateEditProject
         Me.btnSaveProjectInfo = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.btnViewPriceHistory = New System.Windows.Forms.Button()
         Me.btnLinkMonday = New System.Windows.Forms.Button()
         Me.btnImportWalls = New System.Windows.Forms.Button()
         Me.btnOpenProjectBuilder = New System.Windows.Forms.Button()
         Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
-        Me.btnViewPriceHistory = New System.Windows.Forms.Button()
+        Me.lblBuildingVarianceStatus = New System.Windows.Forms.Label()
         Me.cmsTreeMenu.SuspendLayout()
         Me.tabControlRight.SuspendLayout()
         Me.tabProjectInfo.SuspendLayout()
@@ -1097,6 +1098,7 @@ Partial Class frmCreateEditProject
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.pnlBuildingInfo.AutoScroll = True
         Me.pnlBuildingInfo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.pnlBuildingInfo.Controls.Add(Me.lblBuildingVarianceStatus)
         Me.pnlBuildingInfo.Controls.Add(Me.dgvBuildingVariance)
         Me.pnlBuildingInfo.Controls.Add(Me.lblPlanUnits)
         Me.pnlBuildingInfo.Controls.Add(Me.txtResUnits)
@@ -1124,7 +1126,6 @@ Partial Class frmCreateEditProject
         Me.dgvBuildingVariance.ReadOnly = True
         Me.dgvBuildingVariance.Size = New System.Drawing.Size(679, 347)
         Me.dgvBuildingVariance.TabIndex = 10
-        Me.dgvBuildingVariance.Visible = False
         '
         'lblPlanUnits
         '
@@ -1450,6 +1451,16 @@ Partial Class frmCreateEditProject
         Me.SplitContainer1.SplitterDistance = 224
         Me.SplitContainer1.TabIndex = 2
         '
+        'btnViewPriceHistory
+        '
+        Me.btnViewPriceHistory.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnViewPriceHistory.Location = New System.Drawing.Point(695, 253)
+        Me.btnViewPriceHistory.Name = "btnViewPriceHistory"
+        Me.btnViewPriceHistory.Size = New System.Drawing.Size(97, 39)
+        Me.btnViewPriceHistory.TabIndex = 49
+        Me.btnViewPriceHistory.Text = "View Price History"
+        Me.btnViewPriceHistory.UseVisualStyleBackColor = True
+        '
         'btnLinkMonday
         '
         Me.btnLinkMonday.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
@@ -1485,15 +1496,16 @@ Partial Class frmCreateEditProject
         Me.FileSystemWatcher1.EnableRaisingEvents = True
         Me.FileSystemWatcher1.SynchronizingObject = Me
         '
-        'btnViewPriceHistory
+        'lblBuildingVarianceStatus
         '
-        Me.btnViewPriceHistory.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnViewPriceHistory.Location = New System.Drawing.Point(695, 253)
-        Me.btnViewPriceHistory.Name = "btnViewPriceHistory"
-        Me.btnViewPriceHistory.Size = New System.Drawing.Size(97, 39)
-        Me.btnViewPriceHistory.TabIndex = 49
-        Me.btnViewPriceHistory.Text = "View Price History"
-        Me.btnViewPriceHistory.UseVisualStyleBackColor = True
+        Me.lblBuildingVarianceStatus.AutoSize = True
+        Me.lblBuildingVarianceStatus.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblBuildingVarianceStatus.ForeColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(192, Byte), Integer), CType(CType(192, Byte), Integer))
+        Me.lblBuildingVarianceStatus.Location = New System.Drawing.Point(12, 131)
+        Me.lblBuildingVarianceStatus.Name = "lblBuildingVarianceStatus"
+        Me.lblBuildingVarianceStatus.Size = New System.Drawing.Size(0, 15)
+        Me.lblBuildingVarianceStatus.TabIndex = 11
+        Me.lblBuildingVarianceStatus.Visible = False
         '
         'frmCreateEditProject
         '
@@ -1673,4 +1685,5 @@ Partial Class frmCreateEditProject
     Friend WithEvents cboProjectStatus As ComboBox
     Friend WithEvents Active As ColumnHeader
     Friend WithEvents btnViewPriceHistory As Button
+    Friend WithEvents lblBuildingVarianceStatus As Label
 End Class

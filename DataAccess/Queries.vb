@@ -101,6 +101,47 @@ Namespace DataAccess
 
 #End Region
 
+#Region "Project Version Locking"
+
+        ''' <summary>Checks if a version is locked.</summary>
+        Public Const SelectVersionIsLocked As String =
+            "SELECT ISNULL(IsLocked, 0) FROM ProjectVersions WHERE VersionID = @VersionID"
+
+        ''' <summary>Locks a version and updates status to Submitted.</summary>
+        Public Const LockProjectVersion As String =
+            "UPDATE ProjectVersions 
+             SET IsLocked = 1, 
+                 ProjVersionStatusID = @StatusID,
+                 LockedDate = GETDATE(),
+                 LockedBy = @LockedBy,
+                 LastModifiedDate = GETDATE()
+             WHERE VersionID = @VersionID"
+
+        ''' <summary>Unlocks a version (admin override) and logs the change.</summary>
+        Public Const UnlockProjectVersion As String =
+            "UPDATE ProjectVersions 
+             SET IsLocked = 0, 
+                 LastModifiedDate = GETDATE()
+             WHERE VersionID = @VersionID"
+
+#Region "Version Unlock Audit Log"
+
+        ''' <summary>Logs an admin override unlock event</summary>
+        Public Const LogVersionUnlock As String =
+            "INSERT INTO VersionUnlockLog (VersionID, UnlockedBy, UnlockedDate, Reason, OriginalLockedDate, OriginalLockedBy)
+             VALUES (@VersionID, @UnlockedBy, GETDATE(), @Reason, @OriginalLockedDate, @OriginalLockedBy)"
+
+        ''' <summary>Gets unlock history for a version</summary>
+        Public Const SelectVersionUnlockHistory As String =
+            "SELECT UnlockLogID, VersionID, UnlockedBy, UnlockedDate, Reason, OriginalLockedDate, OriginalLockedBy
+             FROM VersionUnlockLog
+             WHERE VersionID = @VersionID
+             ORDER BY UnlockedDate DESC"
+
+#End Region
+
+#End Region
+
 #Region "Buildings"
 
         ''' <summary>Selects all buildings for a version.</summary>
@@ -1033,6 +1074,122 @@ Namespace DataAccess
         ''' <summary>Deletes a specific shipment row.</summary>
         Public Const DeleteShipmentActual As String =
             "DELETE FROM LevelActuals WHERE ActualID = @ActualID"
+
+        ' Add these new queries to the Queries class
+
+        ''' <summary>
+        ''' Selects Bistrack invoice data joined to LevelActuals for a specific level.
+        ''' </summary>
+        Public Const SelectBistrackActualsForLevel As String = "
+    SELECT 
+        la.ActualID,
+        la.LevelID,
+        la.BisTrackSalesOrder,
+        lab.SalesOrderNumber,
+        lab.TotalSellPrice,
+        lab.TotalCostPrice,
+        lab.TotalMargin,
+        lab.TaskActLumCost,
+        lab.TaskActPltCost,
+        lab.TaskActLabCost,
+        lab.TaskActItemCost,
+        lab.TaskActDelCost,
+        lab.TaskActHubCost,
+        lab.TaskActJobSupplies,
+        lab.TaskActManageCost,
+        lab.TaskActInvBDFT,
+        lab.InvoiceDate,
+        lab.DeliveryDate
+    FROM LevelActuals la
+    INNER JOIN LevelActualsBistrack lab 
+        ON la.BisTrackSalesOrder = CAST(lab.SalesOrderNumber AS VARCHAR(50))
+    WHERE la.LevelID = @LevelID 
+        AND la.VersionID = @VersionID
+        AND la.BisTrackSalesOrder IS NOT NULL 
+        AND la.BisTrackSalesOrder <> ''
+    ORDER BY lab.InvoiceDate"
+
+        ''' <summary>
+        ''' Selects Bistrack invoice data for a specific building (aggregated from all levels).
+        ''' </summary>
+        Public Const SelectBistrackActualsForBuilding As String = "
+    SELECT 
+        la.BuildingID,
+        la.LevelID,
+        la.BisTrackSalesOrder,
+        lab.SalesOrderNumber,
+        lab.TotalSellPrice,
+        lab.TotalCostPrice,
+        lab.TaskActLumCost,
+        lab.TaskActPltCost,
+        lab.TaskActLabCost,
+        lab.TaskActItemCost,
+        lab.TaskActDelCost,
+        lab.TaskActHubCost,
+        lab.TaskActJobSupplies,
+        lab.TaskActManageCost,
+        lab.TaskActInvBDFT
+    FROM LevelActuals la
+    INNER JOIN LevelActualsBistrack lab 
+        ON la.BisTrackSalesOrder = CAST(lab.SalesOrderNumber AS VARCHAR(50))
+    WHERE la.BuildingID = @BuildingID 
+        AND la.VersionID = @VersionID
+        AND la.BisTrackSalesOrder IS NOT NULL 
+        AND la.BisTrackSalesOrder <> ''"
+
+        ''' <summary>
+        ''' Gets the MFGLaborAVOCost configuration value for ManufLaborMH calculation.
+        ''' </summary>
+        Public Const SelectMFGLaborAVOCost As String = "
+    SELECT Value FROM Configuration WHERE ConfigKey = 'MFGLaborAVOCost'"
+
+
+#End Region
+
+#Region "Building Variance Validation"
+
+        ''' <summary>
+        ''' Gets the expected level count for a building (distinct levels × BldgQty).
+        ''' </summary>
+        Public Const SelectExpectedLevelCountForBuilding As String = "
+        SELECT 
+            b.BuildingID,
+            b.BldgQty,
+            COUNT(DISTINCT l.LevelID) AS DistinctLevelCount,
+            COUNT(DISTINCT l.LevelID) * b.BldgQty AS ExpectedTotalCount
+        FROM Buildings b
+        LEFT JOIN Levels l ON b.BuildingID = l.BuildingID AND b.VersionID = l.VersionID
+        WHERE b.BuildingID = @BuildingID AND b.VersionID = @VersionID
+        GROUP BY b.BuildingID, b.BldgQty"
+
+        ''' <summary>
+        ''' Gets the actual LevelActuals count and matched Bistrack count for a building.
+        ''' </summary>
+        Public Const SelectActualCountsForBuilding As String = "
+        SELECT 
+            COUNT(la.ActualID) AS LevelActualsCount,
+            COUNT(lab.SalesOrderNumber) AS BistrackMatchedCount
+        FROM LevelActuals la
+        LEFT JOIN LevelActualsBistrack lab 
+            ON la.BisTrackSalesOrder = CAST(lab.SalesOrderNumber AS VARCHAR(50))
+        WHERE la.BuildingID = @BuildingID AND la.VersionID = @VersionID"
+
+        ''' <summary>
+        ''' Gets complete building variance validation data in a single query.
+        ''' </summary>
+        Public Const SelectBuildingVarianceValidation As String = "
+        SELECT 
+            b.BuildingID,
+            b.BldgQty,
+            (SELECT COUNT(DISTINCT l.LevelID) FROM Levels l 
+             WHERE l.BuildingID = b.BuildingID AND l.VersionID = b.VersionID) AS DistinctLevelCount,
+            (SELECT COUNT(la.ActualID) FROM LevelActuals la 
+             WHERE la.BuildingID = b.BuildingID AND la.VersionID = b.VersionID) AS LevelActualsCount,
+            (SELECT COUNT(la2.ActualID) FROM LevelActuals la2 
+             INNER JOIN LevelActualsBistrack lab ON la2.BisTrackSalesOrder = CAST(lab.SalesOrderNumber AS VARCHAR(50))
+             WHERE la2.BuildingID = b.BuildingID AND la2.VersionID = b.VersionID) AS BistrackMatchedCount
+        FROM Buildings b
+        WHERE b.BuildingID = @BuildingID AND b.VersionID = @VersionID"
 
 #End Region
 

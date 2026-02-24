@@ -133,7 +133,13 @@ Namespace DataAccess
                 .FuturesAdderAmt = If(Not reader.IsDBNull(reader.GetOrdinal("FuturesAdderAmt")),
                     reader.GetDecimal(reader.GetOrdinal("FuturesAdderAmt")), Nothing),
                 .FuturesAdderProjTotal = If(Not reader.IsDBNull(reader.GetOrdinal("FuturesAdderProjTotal")),
-                    reader.GetDecimal(reader.GetOrdinal("FuturesAdderProjTotal")), Nothing)
+                    reader.GetDecimal(reader.GetOrdinal("FuturesAdderProjTotal")), Nothing),
+                .IsLocked = If(Not reader.IsDBNull(reader.GetOrdinal("IsLocked")),
+                    reader.GetBoolean(reader.GetOrdinal("IsLocked")), False),
+                .LockedDate = If(Not reader.IsDBNull(reader.GetOrdinal("LockedDate")),
+                    reader.GetDateTime(reader.GetOrdinal("LockedDate")), Nothing),
+                .LockedBy = If(Not reader.IsDBNull(reader.GetOrdinal("LockedBy")),
+                    reader.GetString(reader.GetOrdinal("LockedBy")), String.Empty)
             }
         End Function
 
@@ -456,6 +462,139 @@ Namespace DataAccess
                     Next
                 Next
             Next
+        End Sub
+
+#End Region
+
+#Region "Version Locking Operations"
+
+        ''' <summary>
+        ''' Checks if a project version is locked.
+        ''' </summary>
+        ''' <param name="versionID">The version ID to check.</param>
+        ''' <returns>True if locked, False otherwise.</returns>
+        Public Shared Function IsVersionLocked(versionID As Integer) As Boolean
+            Dim isLocked As Boolean = False
+
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using reader As SqlDataReader = SqlConnectionManager.Instance.ExecuteReader(
+                                                                           Queries.SelectVersionIsLocked, {New SqlParameter("@VersionID", versionID)})
+                                                                           If reader.Read() Then
+                                                                               isLocked = reader.GetBoolean(0)
+                                                                           End If
+                                                                       End Using
+                                                                   End Sub, $"Error checking lock status for version {versionID}")
+
+            Return isLocked
+        End Function
+
+        ''' <summary>
+        ''' Locks a project version and sets status to Submitted.
+        ''' </summary>
+        ''' <param name="versionID">The version ID to lock.</param>
+        ''' <param name="submittedStatusID">The status ID for Submitted (typically 2).</param>
+        ''' <param name="lockedBy">Username of person locking the version.</param>
+        Public Shared Sub LockVersion(versionID As Integer, submittedStatusID As Integer, lockedBy As String)
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                           conn.Open()
+                                                                           Using tran As SqlTransaction = conn.BeginTransaction()
+                                                                               Try
+                                                                                   Dim params As New Dictionary(Of String, Object) From {
+                                                                                       {"@VersionID", versionID},
+                                                                                       {"@StatusID", submittedStatusID},
+                                                                                       {"@LockedBy", lockedBy}
+                                                                                   }
+
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(
+                                                                                       Queries.LockProjectVersion,
+                                                                                       HelperDataAccess.BuildParameters(params),
+                                                                                       conn, tran)
+
+                                                                                   tran.Commit()
+                                                                               Catch
+                                                                                   tran.Rollback()
+                                                                                   Throw
+                                                                               End Try
+                                                                           End Using
+                                                                       End Using
+                                                                   End Sub, $"Error locking version {versionID}")
+        End Sub
+
+        ''' <summary>
+        ''' Unlocks a project version (admin override only).
+        ''' </summary>
+        ''' <param name="versionID">The version ID to unlock.</param>
+        Public Shared Sub UnlockVersion(versionID As Integer)
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                           conn.Open()
+                                                                           Using tran As SqlTransaction = conn.BeginTransaction()
+                                                                               Try
+                                                                                   Dim params As New Dictionary(Of String, Object) From {
+                                                                                       {"@VersionID", versionID}
+                                                                                   }
+
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(
+                                                                                       Queries.UnlockProjectVersion,
+                                                                                       HelperDataAccess.BuildParameters(params),
+                                                                                       conn, tran)
+
+                                                                                   tran.Commit()
+                                                                               Catch
+                                                                                   tran.Rollback()
+                                                                                   Throw
+                                                                               End Try
+                                                                           End Using
+                                                                       End Using
+                                                                   End Sub, $"Error unlocking version {versionID}")
+        End Sub
+
+        ''' <summary>
+        ''' Unlocks a project version (admin override only) with audit logging.
+        ''' </summary>
+        ''' <param name="versionID">The version ID to unlock.</param>
+        ''' <param name="unlockedBy">Admin username performing the override.</param>
+        ''' <param name="reason">Reason for unlocking (required for audit).</param>
+        ''' <param name="originalLockedDate">Original lock date (for audit trail).</param>
+        ''' <param name="originalLockedBy">Original person who locked it (for audit trail).</param>
+        Public Shared Sub UnlockVersionWithAudit(versionID As Integer, unlockedBy As String, reason As String,
+                                                 originalLockedDate As DateTime?, originalLockedBy As String)
+            SqlConnectionManager.Instance.ExecuteWithErrorHandling(Sub()
+                                                                       Using conn As New SqlConnection(SqlConnectionManager.Instance.ConnectionString)
+                                                                           conn.Open()
+                                                                           Using tran As SqlTransaction = conn.BeginTransaction()
+                                                                               Try
+                                                                                   ' 1. Unlock the version
+                                                                                   Dim unlockParams As New Dictionary(Of String, Object) From {
+                                                                                       {"@VersionID", versionID}
+                                                                                   }
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(
+                                                                                       Queries.UnlockProjectVersion,
+                                                                                       HelperDataAccess.BuildParameters(unlockParams),
+                                                                                       conn, tran)
+
+                                                                                   ' 2. Log the admin override
+                                                                                   Dim auditParams As New Dictionary(Of String, Object) From {
+                                                                                        {"@VersionID", versionID},
+                                                                                        {"@UnlockedBy", unlockedBy},
+                                                                                        {"@Reason", reason},
+                                                                                        {"@OriginalLockedDate", If(originalLockedDate.HasValue, CType(originalLockedDate.Value, Object), DBNull.Value)},
+                                                                                        {"@OriginalLockedBy", If(String.IsNullOrEmpty(originalLockedBy), DBNull.Value, CType(originalLockedBy, Object))}
+                                                                                    }
+                                                                                   SqlConnectionManager.Instance.ExecuteNonQueryTransactional(
+                                                                                       Queries.LogVersionUnlock,
+                                                                                       HelperDataAccess.BuildParameters(auditParams),
+                                                                                       conn, tran)
+
+                                                                                   tran.Commit()
+                                                                               Catch
+                                                                                   tran.Rollback()
+                                                                                   Throw
+                                                                               End Try
+                                                                           End Using
+                                                                       End Using
+                                                                   End Sub, $"Error unlocking version {versionID} with audit")
         End Sub
 
 #End Region
