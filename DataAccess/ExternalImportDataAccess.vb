@@ -96,16 +96,23 @@ Namespace DataAccess
                                                                                        UIHelper.Add($"Project '{projectName}' created with ID {projectID}, Version ID {newVersionID}.")
 
                                                                                        ' Step 3: Import RawUnits using TableOperations mapper
-                                                                                       Dim rawUnitMap As New Dictionary(Of String, Integer)
+                                                                                       Dim rawUnitMap As New Dictionary(Of String, Integer)(StringComparer.OrdinalIgnoreCase)
                                                                                        Dim rawUnitCount As Integer = 0
                                                                                        For Each sheet In {"FloorImport", "RoofImport"}
                                                                                            If spreadsheetData.ContainsKey(sheet) Then
                                                                                                Dim dt As DataTable = spreadsheetData(sheet)
+
+                                                                                               ' Check if DataTable is empty or missing required columns
+                                                                                               If dt.Rows.Count = 0 OrElse Not dt.Columns.Contains("JobNumber") OrElse Not dt.Columns.Contains("Elevation") Then
+                                                                                                   UIHelper.Add($"Skipping {sheet} - no data or missing required columns.")
+                                                                                                   Continue For
+                                                                                               End If
+
                                                                                                Dim productTypeID As Integer = If(sheet = "FloorImport", 1, 2)
                                                                                                For Each row As DataRow In dt.Rows
                                                                                                    If row("JobNumber") Is DBNull.Value Then Continue For
-                                                                                                   Dim planName As String = TableOperations.GetString(row, "Elevation")
-                                                                                                   Dim jobNumber As String = CStr(row("JobNumber"))
+                                                                                                   Dim planName As String = TableOperations.GetString(row, "Elevation").Trim()
+                                                                                                   Dim jobNumber As String = CStr(row("JobNumber")).Trim()
                                                                                                    Dim uniqueKey As String = If(String.IsNullOrEmpty(planName), "Unknown_" & jobNumber, planName & "_" & jobNumber)
 
                                                                                                    ' Use TableOperations mapper instead of inline 30+ line With block
@@ -117,7 +124,7 @@ Namespace DataAccess
                                                                                                    If rawModel.AvgSPFNo2.HasValue Then
                                                                                                        Dim fetchParams As SqlParameter() = {New SqlParameter("@SPFLumberCost", rawModel.AvgSPFNo2.Value)}
                                                                                                        costEffectiveID = SqlConnectionManager.Instance.ExecuteScalarTransactional(Of Object)(
-                                                                                                           Queries.SelectCostEffectiveDateIDByCost, fetchParams, conn, transaction)
+                                                                                                       Queries.SelectCostEffectiveDateIDByCost, fetchParams, conn, transaction)
                                                                                                    End If
 
                                                                                                    ' Use TableOperations for insert
@@ -128,7 +135,6 @@ Namespace DataAccess
                                                                                            End If
                                                                                        Next
                                                                                        UIHelper.Add($"Imported {rawUnitCount} raw units.")
-
                                                                                        ' Step 4: Import ActualUnits
                                                                                        Dim actualUnitMap As New Dictionary(Of String, Integer)
                                                                                        Dim actualUnitSet As New HashSet(Of String)
@@ -138,23 +144,40 @@ Namespace DataAccess
                                                                                            If Not spreadsheetData.ContainsKey(sheet) Then Continue For
                                                                                            Dim dt As DataTable = spreadsheetData(sheet)
                                                                                            Dim productTypeID As Integer = If(sheet.Contains("Floor"), 1, 2)
+                                                                                           Dim importSheetName As String = If(productTypeID = 1, "FloorImport", "RoofImport")
+
+                                                                                           ' Pre-build elevation to jobNumber lookup (case-insensitive)
+                                                                                           Dim elevationToJobNumber As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+                                                                                           If spreadsheetData.ContainsKey(importSheetName) Then
+                                                                                               Dim importDt As DataTable = spreadsheetData(importSheetName)
+                                                                                               If importDt.Rows.Count > 0 AndAlso importDt.Columns.Contains("Elevation") AndAlso importDt.Columns.Contains("JobNumber") Then
+                                                                                                   For Each r As DataRow In importDt.Rows
+                                                                                                       If r("Elevation") IsNot DBNull.Value AndAlso r("JobNumber") IsNot DBNull.Value Then
+                                                                                                           Dim elev As String = CStr(r("Elevation")).Trim()
+                                                                                                           Dim jn As String = CStr(r("JobNumber")).Trim()
+                                                                                                           If Not String.IsNullOrEmpty(elev) AndAlso Not elevationToJobNumber.ContainsKey(elev) Then
+                                                                                                               elevationToJobNumber(elev) = jn
+                                                                                                           End If
+                                                                                                       End If
+                                                                                                   Next
+                                                                                               End If
+                                                                                           End If
+
                                                                                            For col As Integer = 46 To dt.Columns.Count - 1
                                                                                                Dim rawName As String = dt.Columns(col).ColumnName.Trim()
                                                                                                Dim unitName As String = If(dt.Rows(0)(col) Is DBNull.Value, String.Empty, CStr(dt.Rows(0)(col)).Trim())
                                                                                                If String.IsNullOrEmpty(unitName) OrElse unitName = "<select>" Then Continue For
 
-                                                                                               Dim planName As String = Regex.Replace(rawName, "^Models-?", "", RegexOptions.IgnoreCase).Trim()
+                                                                                               ' FIX: Changed regex to match both "Model-" and "Models-" prefixes
+                                                                                               Dim planName As String = Regex.Replace(rawName, "^Models?-?", "", RegexOptions.IgnoreCase).Trim()
                                                                                                planName = Regex.Replace(planName, "[_]\d+$", "").Trim()
-                                                                                               Dim importSheetName As String = If(productTypeID = 1, "FloorImport", "RoofImport")
+
+                                                                                               ' Look up jobNumber from pre-built dictionary
                                                                                                Dim jobNumber As String = String.Empty
-                                                                                               If spreadsheetData.ContainsKey(importSheetName) Then
-                                                                                                   For Each r As DataRow In spreadsheetData(importSheetName).Rows
-                                                                                                       If r("Elevation") IsNot DBNull.Value AndAlso CStr(r("Elevation")).Trim() = planName Then
-                                                                                                           jobNumber = CStr(r("JobNumber"))
-                                                                                                           Exit For
-                                                                                                       End If
-                                                                                                   Next
+                                                                                               If elevationToJobNumber.ContainsKey(planName) Then
+                                                                                                   jobNumber = elevationToJobNumber(planName)
                                                                                                End If
+
                                                                                                Dim lookupKey As String = If(String.IsNullOrEmpty(planName), "Unknown_" & jobNumber, planName & "_" & jobNumber)
                                                                                                Dim rawID As Integer = If(rawUnitMap.ContainsKey(lookupKey), rawUnitMap(lookupKey), 0)
                                                                                                If rawID = 0 Then Continue For
@@ -174,15 +197,14 @@ Namespace DataAccess
                                                                                                Dim uniqueKey As String = $"{cleanUnitName}_{planSqft}_{col}"
 
                                                                                                Dim actualModel As New ActualUnitModel With {
-                                                                                                   .ProductTypeID = productTypeID,
-                                                                                                   .UnitName = unitName,
-                                                                                                   .PlanSQFT = planSqft,
-                                                                                                   .UnitType = unitType,
-                                                                                                   .MarginPercent = 0,
-                                                                                                   .OptionalAdder = 1D,
-                                                                                                   .SortOrder = currentSortOrder
-                                                                                               }
-                                                                                               ' Use TableOperations for insert
+                                                                                                     .ProductTypeID = productTypeID,
+                                                                                                     .UnitName = unitName,
+                                                                                                     .PlanSQFT = planSqft,
+                                                                                                     .UnitType = unitType,
+                                                                                                     .MarginPercent = 0,
+                                                                                                     .OptionalAdder = 1D,
+                                                                                                     .SortOrder = currentSortOrder
+                                                                                                 }
                                                                                                Dim newActualID As Integer = TableOperations.InsertActualUnit(actualModel, rawID, newVersionID, conn, transaction)
                                                                                                actualUnitMap(uniqueKey) = newActualID
                                                                                                actualUnitSet.Add(uniqueCombo)
@@ -191,7 +213,6 @@ Namespace DataAccess
                                                                                            Next
                                                                                        Next
                                                                                        UIHelper.Add($"Imported {actualUnitCount} actual units.")
-
                                                                                        ' Step 5: Import CalculatedComponents using TableOperations
                                                                                        Dim componentCount As Integer = 0
                                                                                        Dim rawUnitDataCache As New Dictionary(Of Integer, Dictionary(Of String, Decimal))

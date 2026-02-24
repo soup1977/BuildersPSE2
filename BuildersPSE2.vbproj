@@ -202,9 +202,11 @@
     <Compile Include="Controls\RichTextBoxWithToolbar.vb">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="DataAccess\BisTrackDataAccess.vb" />
     <Compile Include="DataAccess\HelperDataAccess.vb" />
     <Compile Include="DataAccess\IEDataAccess.vb" />
     <Compile Include="DataAccess\LumberDataAccess.vb" />
+    <Compile Include="DataAccess\PriceHistoryDataAccess.vb" />
     <Compile Include="DataAccess\PriceLockDataAccess.vb" />
     <Compile Include="DataAccess\PriceLockQueries.vb" />
     <Compile Include="DataAccess\PriceLockQueries_RandomLengths.vb" />
@@ -218,6 +220,30 @@
       <DependentUpon>frmActualsMatcher.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmActualsMatcher.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmAdminUnlockDialog.Designer.vb">
+      <DependentUpon>frmAdminUnlockDialog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmAdminUnlockDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryCompare.Designer.vb">
+      <DependentUpon>frmPriceHistoryCompare.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryCompare.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryViewer.Designer.vb">
+      <DependentUpon>frmPriceHistoryViewer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmPriceHistoryViewer.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmSelectSnapshotsToCompare.Designer.vb">
+      <DependentUpon>frmSelectSnapshotsToCompare.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmSelectSnapshotsToCompare.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\PriceLock\frmBuilderManagement.Designer.vb">
@@ -438,19 +464,23 @@
     </Compile>
     <Compile Include="Models\ActualToLevelMappingModel.vb" />
     <Compile Include="Models\ActualUnitModel.vb" />
+    <Compile Include="Models\BisTrackActualModel.vb" />
     <Compile Include="Models\BuildingModel.vb" />
+    <Compile Include="Models\BuildingVarianceValidationResult.vb" />
     <Compile Include="Models\CalculatedComponentModel.vb" />
     <Compile Include="Models\ConfigurationModel.vb" />
     <Compile Include="Models\CustomerModel.vb" />
     <Compile Include="Models\CustomerTypeModel.vb" />
     <Compile Include="Models\DisplayUnitData.vb" />
     <Compile Include="Models\EstimatorModel.vb" />
+    <Compile Include="Models\LevelActualModel.vb" />
     <Compile Include="Models\LevelModel.vb" />
     <Compile Include="Models\LumberCostEffectiveModel.vb" />
     <Compile Include="Models\LumberCostModel.vb" />
     <Compile Include="Models\LumberFutures.vb" />
     <Compile Include="Models\LumberTypeModel.vb" />
     <Compile Include="Models\MondayBoardItem.vb" />
+    <Compile Include="Models\PriceHistoryModel.vb" />
     <Compile Include="Models\PriceLockModels.vb" />
     <Compile Include="Models\ProductTypeModel.vb" />
     <Compile Include="Models\ProjectBearingStylesModel.vb" />
@@ -490,8 +520,12 @@
     <Compile Include="ProjectSummaryDataSet.vb">
       <DependentUpon>ProjectSummaryDataSet.xsd</DependentUpon>
     </Compile>
+    <Compile Include="Services\FuturesAdderCalculator.vb" />
+    <Compile Include="Services\PriceHistoryService.vb" />
     <Compile Include="Services\RollupCalculationService.vb" />
     <Compile Include="Services\RollupFormatter.vb" />
+    <Compile Include="Services\VarianceGridFormatter.vb" />
+    <Compile Include="Services\VarianceGridService.vb" />
     <Compile Include="Utilities\ActualsImporter.vb" />
     <Compile Include="Utilities\CurrentUser.vb" />
     <Compile Include="Utilities\MitekImportHelpers.vb" />
@@ -505,6 +539,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Forms\frmActualsMatcher.resx">
       <DependentUpon>frmActualsMatcher.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmAdminUnlockDialog.resx">
+      <DependentUpon>frmAdminUnlockDialog.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmCreateEditProject.resx">
       <DependentUpon>frmCreateEditProject.vb</DependentUpon>
@@ -535,6 +572,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmMondaySearch.resx">
       <DependentUpon>frmMondaySearch.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmPriceHistoryCompare.resx">
+      <DependentUpon>frmPriceHistoryCompare.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmPriceHistoryViewer.resx">
+      <DependentUpon>frmPriceHistoryViewer.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmSelectSnapshotsToCompare.resx">
+      <DependentUpon>frmSelectSnapshotsToCompare.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\PriceLock\frmComponentPricingEdit.resx">
       <DependentUpon>frmComponentPricingEdit.vb</DependentUpon>
@@ -596,6 +642,7 @@
   <ItemGroup>
     <None Include=".editorconfig" />
     <None Include="BuildersPSEKey.pfx" />
+    <None Include="DataAccess\P210922 - Hyatt Studios - 2026-02-18.xlsm" />
     <None Include="Forms\PriceLock\Market Report And Pricing 2.2.26.xlsx" />
     <None Include="Forms\PriceLock\Price Lock Running Spreadsheet 2024.xlsx" />
     <None Include="Forms\PriceLock\Trumark Homes - 35%27 Series - Jan 26 Pricelock 20 margin - Pricelock20260203-152532.80.csv" />
@@ -685,7 +732,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="BuildersPSEicon.ico" />
-    <Content Include="DataAccess\Pricelockquery.sql" />
+    <Content Include="DataAccess\BuildersPSETables.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

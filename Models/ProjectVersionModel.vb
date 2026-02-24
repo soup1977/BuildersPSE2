@@ -14,4 +14,9 @@
     Public Property FuturesAdderAmt As Decimal?
     Public Property FuturesAdderProjTotal As Decimal?
 
+    ' Version locking properties
+    Public Property IsLocked As Boolean
+    Public Property LockedDate As Date?
+    Public Property LockedBy As String
+
 End Class

@@ -53,8 +53,9 @@ Namespace Services
             dgv.Rows.Add("Margin w/ Delivery", result.MarginWithDelivery.ToString("P1"))
             dgv.Rows.Add("PricePerBDFT", result.PricePerBdft.ToString("C2"))
             dgv.Rows.Add("PricePerSQFT", result.PricePerSqft.ToString("C2"))
-            ' Add Futures Adder fields
-            dgv.Rows.Add("", "") ' Empty row as separator
+
+            ' Add Futures Adder fields (MOVED INSIDE FormatProjectRows)
+            dgv.Rows.Add("--- Futures Adder ---", "")  ' Changed from empty row to labeled separator
             dgv.Rows.Add("Futures Adder/MBF", result.FuturesAdderAmt.ToString("C2"))
             dgv.Rows.Add("Futures Adder Project Total", result.FuturesAdderProjTotal.ToString("C2"))
         End Sub
